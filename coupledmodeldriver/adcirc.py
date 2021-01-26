@@ -16,7 +16,7 @@ import numpy
 import requests
 
 from .job_script import EnsembleSlurmScript, HPC, SlurmEmailType
-from .utilities import get_logger, repository_root
+from .utilities import get_logger
 
 LOGGER = get_logger('configuration.adcirc')
 
@@ -177,7 +177,7 @@ def write_adcirc_configurations(
         spinup_time=timedelta(days=5),
         server_config=slurm,
     )
-    driver.import_stations(Path(repository_root()) / 'examples/data/stations.txt')
+    driver.import_stations(input_directory / 'stations.txt')
     driver.set_elevation_stations_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
     driver.set_elevation_surface_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
     driver.set_velocity_stations_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
