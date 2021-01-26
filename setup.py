@@ -1,18 +1,38 @@
 #!/usr/bin/env python
 import logging
+import os
 
 from setuptools import config, find_packages, setup
 
-try:
-    from dunamai import Version
-except ImportError:
-    import sys
+if os.name == 'nt':
     import subprocess
+    import sys
 
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
-    from dunamai import Version
+    try:
+        import pipwin
+    except ImportError:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
+
+    try:
+        import gdal
+    except ImportError:
+        subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', 'gdal==3.1.4'])
+
+    try:
+        import fiona
+    except ImportError:
+        subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', 'fiona'])
 
 try:
+    try:
+        from dunamai import Version
+    except ImportError:
+        import subprocess
+        import sys
+
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
+        from dunamai import Version
+
     version = Version.from_any_vcs().serialize()
 except RuntimeError as error:
     logging.exception(error)
