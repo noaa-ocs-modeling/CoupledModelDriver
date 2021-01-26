@@ -27,6 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install wheel
+          python setup.py install
           pip install -e .[testing]
       - name: Lint with flake8
         run: |
