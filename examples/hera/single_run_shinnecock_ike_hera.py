@@ -17,8 +17,8 @@ from coupledmodeldriver.job_script import HPC
 from coupledmodeldriver.utilities import repository_root
 
 DATA_DIRECTORY = repository_root() / 'examples/data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'stampede2'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'configuration' / 'stampede2'
+INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'hera'
+OUTPUT_DIRECTORY = DATA_DIRECTORY / 'configuration' / 'hera'
 
 if __name__ == '__main__':
     runs = {f'nems_shinnecock_test': (None, None)}
