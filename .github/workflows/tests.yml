@@ -4,12 +4,13 @@ on: [ push ]
 
 jobs:
   tests:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-        python-version: [ 3.8 ]
-    name: test in Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }} on ${{ runner.os }}
     runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: [ 3.8 ]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -36,4 +37,4 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with coverage
-        run: pytest --cov=nemspy
+        run: pytest --cov=coupledmodeldriver
