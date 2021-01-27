@@ -177,11 +177,22 @@ def write_adcirc_configurations(
         spinup_time=timedelta(days=5),
         server_config=slurm,
     )
-    driver.import_stations(input_directory / 'stations.txt')
-    driver.set_elevation_stations_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
-    driver.set_elevation_surface_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
-    driver.set_velocity_stations_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
-    driver.set_velocity_surface_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
+
+    spinup_start = spinup.start_time if spinup is not None else None
+    spinup_end = spinup.start_time + spinup.duration if spinup is not None else None
+    spinup_interval = spinup.interval if spinup is not None else None
+    stations_filename = input_directory / 'stations.txt'
+    if stations_filename.exists():
+        driver.import_stations(stations_filename)
+        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval,
+                                             spinup_start=spinup_start, spinup_end=spinup_end)
+        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval,
+                                            spinup_start=spinup_start, spinup_end=spinup_end)
+
+    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval,
+                                        spinup_start=spinup_start, spinup_end=spinup_end)
+    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval,
+                                       spinup_start=spinup_start, spinup_end=spinup_end)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = output_directory / run_name
