@@ -10,22 +10,17 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 
-sys.path.append(Path(__file__).parent.parent.parent.absolute())
+sys.path.append((Path(__file__).parent / '..' / '..').absolute())
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
-from coupledmodeldriver.job_script import HPC
-from coupledmodeldriver.utilities import repository_root
+from coupledmodeldriver.job_script import Platform
 
-DATA_DIRECTORY = repository_root() / 'examples/data'
-INPUT_DIRECTORY = Path("/scratch2/COASTAL/coastal/save/Saeed.Moghimi/setups/nems_inp/hsofs_grid_v1/")
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'configuration' / 'hsofs'
+MESH_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
+FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'forcings' / 'hsofs' / 'sandy'
+OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'stampede2' / 'hsofs' / 'sandy'
 
 if __name__ == '__main__':
     runs = {f'nems_hsofs_test': (None, None)}
-
-    fort14_filename = INPUT_DIRECTORY / 'fort.14'
-    if not fort14_filename.exists():
-        raise RuntimeError(f'file not found at {fort14_filename}')
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
@@ -37,10 +32,8 @@ if __name__ == '__main__':
         start_time=datetime(2012, 10, 22, 6),
         duration=timedelta(days=14.5),
         interval=timedelta(hours=1),
-        atm=AtmosphericMeshEntry('/scratch2/COASTAL/coastal/save/Saeed.Moghimi/setups/nems_inp/'
-                                 'hsofs_forcings/san_v2/inp_atmesh/SANDY_HWRF_HSOFS_Nov2018.nc'),
-        wav=WaveMeshEntry('/scratch2/COASTAL/coastal/save/Saeed.Moghimi/setups/nems_inp/'
-                          'hsofs_forcings/san_v2/inp_ww3/ww3.HWRF.NOV2018.2012_sxy.nc'),
+        atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'SANDY_HWRF_HSOFS_Nov2018.nc'),
+        wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
         ocn=ADCIRCEntry(382),
     )
 
@@ -57,11 +50,11 @@ if __name__ == '__main__':
     write_adcirc_configurations(
         nems,
         runs,
-        INPUT_DIRECTORY,
+        MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
         name='nems_hsofs_test',
         email_address='zachary.burnett@noaa.gov',
-        platform=HPC.HERA,
+        platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
