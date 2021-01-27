@@ -15,7 +15,7 @@ from nemspy.model import ADCIRCEntry
 import numpy
 import requests
 
-from .job_script import EnsembleSlurmScript, HPC, SlurmEmailType
+from .job_script import EnsembleSlurmScript, Platform, SlurmEmailType
 from .utilities import get_logger
 
 LOGGER = get_logger('configuration.adcirc')
@@ -24,9 +24,9 @@ LOGGER = get_logger('configuration.adcirc')
 def write_adcirc_configurations(
     nems: ModelingSystem,
     runs: {str: (float, str)},
-    input_directory: PathLike,
+    mesh_directory: PathLike,
     output_directory: PathLike,
-    platform: HPC,
+    platform: Platform,
     name: str = None,
     partition: str = None,
     email_address: str = None,
@@ -40,7 +40,7 @@ def write_adcirc_configurations(
 
     :param runs: dictionary of run name to run value and mesh attribute name
     :param nems: NEMSpy ModelingSystem object, populated with models and connections
-    :param input_directory: path to input data
+    :param mesh_directory: path to directory containing input mesh (fort.13 and fort.14) as well as stations file if applicable
     :param output_directory: path to store run configuration
     :param platform: HPC platform for which to configure
     :param name: name of this perturbation
@@ -50,13 +50,13 @@ def write_adcirc_configurations(
     :param spinup: spinup time for ADCIRC coldstart
     """
 
-    if not isinstance(input_directory, Path):
-        input_directory = Path(input_directory)
+    if not isinstance(mesh_directory, Path):
+        mesh_directory = Path(mesh_directory)
     if not isinstance(output_directory, Path):
-        input_directory = Path(output_directory)
+        output_directory = Path(output_directory)
 
-    if not input_directory.exists():
-        os.makedirs(input_directory, exist_ok=True)
+    if not mesh_directory.exists():
+        os.makedirs(mesh_directory, exist_ok=True)
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
 
@@ -69,9 +69,7 @@ def write_adcirc_configurations(
     if forcings is None:
         forcings = []
 
-    fort14_filename = input_directory / 'fort.14'
-
-    launcher = 'ibrun' if platform in [HPC.STAMPEDE2] else 'srun'
+    launcher = 'ibrun' if platform in [Platform.STAMPEDE2] else 'srun'
     run_name = 'ADCIRC_GAHM_GENERIC'
 
     if partition is None:
@@ -80,8 +78,15 @@ def write_adcirc_configurations(
     if wall_clock_time is None:
         wall_clock_time = timedelta(minutes=30)
 
-    if not fort14_filename.is_file():
-        raise FileNotFoundError(f'no input file at {fort14_filename}')
+    errors = []
+    fort13_filename = mesh_directory / 'fort.14'
+    fort14_filename = mesh_directory / 'fort.14'
+    if not fort13_filename.exists():
+        errors.append(f'mesh values (nodal attributes) not found at {fort13_filename}')
+    if not fort14_filename.exists():
+        errors.append(f'mesh XY not found at {fort14_filename}')
+    if len(errors) > 0:
+        raise FileNotFoundError('; '.join(errors))
 
     if spinup is not None and isinstance(spinup, timedelta):
         spinup = ModelingSystem(
@@ -99,14 +104,6 @@ def write_adcirc_configurations(
         mesh.add_forcing(forcing)
 
     mesh.generate_tau0()
-
-    if platform == HPC.STAMPEDE2:
-        platform_directory = 'stampede'
-    else:
-        platform_directory = str(platform)
-
-    if source_filename is None:
-        source_filename = f'/scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/{platform_directory}/ESMF_NUOPC'
 
     atm_namelist_filename = output_directory / 'atm_namelist.rc'
 
@@ -136,13 +133,20 @@ def write_adcirc_configurations(
             os.remove(hotstart_filename)
         filename.rename(hotstart_filename)
 
+    extra_commands = []
+    if platform == Platform.STAMPEDE2:
+        extra_commands.append('source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede')
+    elif platform == Platform.HERA:
+        extra_commands.append(
+            'source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera')
+
     ensemble_slurm_script = EnsembleSlurmScript(
         account=None,
         tasks=nems.processors,
         duration=wall_clock_time,
-        nodes=int(numpy.ceil(nems.processors / 68)) if platform == HPC.STAMPEDE2 else None,
+        nodes=int(numpy.ceil(nems.processors / 68)) if platform == Platform.STAMPEDE2 else None,
         partition=partition,
-        hpc=platform,
+        platform=platform,
         launcher=launcher,
         run=name,
         email_type=SlurmEmailType.ALL if email_address is not None else None,
@@ -150,7 +154,7 @@ def write_adcirc_configurations(
         error_filename=f'{name}.err.log',
         log_filename=f'{name}.out.log',
         modules=[],
-        commands=[f'source {source_filename}'],
+        commands=extra_commands,
     )
     ensemble_slurm_script.write(output_directory, overwrite=True)
 
@@ -160,13 +164,13 @@ def write_adcirc_configurations(
         run_name=run_name,
         partition=partition,
         walltime=wall_clock_time,
-        nodes=int(numpy.ceil(nems.processors / 68)) if platform == HPC.STAMPEDE2 else None,
+        nodes=int(numpy.ceil(nems.processors / 68)) if platform == Platform.STAMPEDE2 else None,
         mail_type='all' if email_address is not None else None,
         mail_user=email_address,
         log_filename=f'{name}.out.log',
         modules=[],
         launcher=launcher,
-        extra_commands=[f'source {source_filename}'],
+        extra_commands=extra_commands,
     )
 
     # instantiate AdcircRun object.
@@ -177,11 +181,22 @@ def write_adcirc_configurations(
         spinup_time=timedelta(days=5),
         server_config=slurm,
     )
-    driver.import_stations(input_directory / 'stations.txt')
-    driver.set_elevation_stations_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
-    driver.set_elevation_surface_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
-    driver.set_velocity_stations_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
-    driver.set_velocity_surface_output(timedelta(minutes=6), spinup=timedelta(minutes=6))
+
+    spinup_start = spinup.start_time if spinup is not None else None
+    spinup_end = spinup.start_time + spinup.duration if spinup is not None else None
+    spinup_interval = spinup.interval if spinup is not None else None
+    stations_filename = mesh_directory / 'stations.txt'
+    if stations_filename.exists():
+        driver.import_stations(stations_filename)
+        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval,
+                                             spinup_start=spinup_start, spinup_end=spinup_end)
+        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval,
+                                            spinup_start=spinup_start, spinup_end=spinup_end)
+
+    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval,
+                                        spinup_start=spinup_start, spinup_end=spinup_end)
+    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval,
+                                       spinup_start=spinup_start, spinup_end=spinup_end)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = output_directory / run_name
@@ -240,7 +255,7 @@ def write_adcirc_configurations(
                 job_file.write(text)
 
 
-def download_shinnecock_mesh(directory: str):
+def download_shinnecock_ike_mesh(directory: str):
     """
     fetch shinnecock inlet test data
     :param directory: local directory

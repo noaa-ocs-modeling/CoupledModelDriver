@@ -24,7 +24,8 @@ class SlurmEmailType(Enum):
     ARRAY_TASKS = 'ARRAY_TASKS'  # send emails for each array task
 
 
-class HPC(Enum):
+class Platform(Enum):
+    LOCAL = 'local'
     STAMPEDE2 = 'stampede2'
     ORION = 'orion'
     HERA = 'hera'
@@ -39,7 +40,7 @@ class EnsembleSlurmScript:
         tasks: int,
         duration: timedelta,
         partition: str,
-        hpc: HPC,
+        platform: Platform,
         basename: str = None,
         directory: str = None,
         launcher: str = None,
@@ -60,7 +61,7 @@ class EnsembleSlurmScript:
         :param tasks: number of total tasks for Slurm to run
         :param duration: duration to run job in job manager
         :param partition: partition to run on
-        :param hpc: HPC to run script on
+        :param platform: HPC to run script on
         :param basename: file name of driver shell script
         :param directory: directory to run in
         :param launcher: command to start processes on target system (`srun`, `ibrun`, etc.)
@@ -82,7 +83,7 @@ class EnsembleSlurmScript:
         self.tasks = tasks
         self.duration = duration
         self.partition = partition
-        self.hpc = hpc
+        self.hpc = platform
 
         self.basename = basename if basename is not None else 'slurm.job'
         self.directory = directory if directory is not None else '.'
@@ -113,7 +114,7 @@ class EnsembleSlurmScript:
 
     @nodes.setter
     def nodes(self, nodes: int):
-        if nodes is None and self.hpc == HPC.STAMPEDE2:
+        if nodes is None and self.hpc == Platform.STAMPEDE2:
             nodes = numpy.ceil(self.tasks / 68)
         if nodes is not None:
             nodes = int(nodes)
