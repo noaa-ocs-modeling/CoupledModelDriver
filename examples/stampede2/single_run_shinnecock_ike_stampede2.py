@@ -12,7 +12,7 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 
 sys.path.append(Path(__file__).parent.parent.parent.absolute())
 
-from coupledmodeldriver.adcirc import download_shinnecock_mesh, write_adcirc_configurations
+from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import HPC
 from coupledmodeldriver.utilities import repository_root
 
@@ -23,8 +23,9 @@ OUTPUT_DIRECTORY = DATA_DIRECTORY / 'configuration' / 'shinnecock'
 if __name__ == '__main__':
     runs = {f'nems_shinnecock_test': (None, None)}
 
-    if not (INPUT_DIRECTORY / 'fort.14').exists():
-        download_shinnecock_mesh(INPUT_DIRECTORY)
+    fort14_filename = INPUT_DIRECTORY / 'fort.14'
+    if not fort14_filename.exists():
+        raise RuntimeError(f'file not found at {fort14_filename}')
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()

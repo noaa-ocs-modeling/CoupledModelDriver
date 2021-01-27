@@ -23,8 +23,9 @@ OUTPUT_DIRECTORY = DATA_DIRECTORY / 'configuration' / 'hsofs'
 if __name__ == '__main__':
     runs = {f'nems_hsofs_test': (None, None)}
 
-    if not (INPUT_DIRECTORY / 'fort.14').exists():
-        raise RuntimeError(f'file not found at {INPUT_DIRECTORY / "fort.14"}')
+    fort14_filename = INPUT_DIRECTORY / 'fort.14'
+    if not fort14_filename.exists():
+        raise RuntimeError(f'file not found at {fort14_filename}')
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
