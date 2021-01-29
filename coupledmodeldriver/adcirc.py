@@ -5,7 +5,6 @@ import os
 from os import PathLike
 from pathlib import Path
 import re
-import tarfile
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.base import Forcing
@@ -13,7 +12,6 @@ from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
-import requests
 
 from .job_script import EnsembleSlurmScript, Platform, SlurmEmailType
 from .utilities import get_logger
@@ -78,15 +76,12 @@ def write_adcirc_configurations(
     if wall_clock_time is None:
         wall_clock_time = timedelta(minutes=30)
 
-    errors = []
-    fort13_filename = mesh_directory / 'fort.14'
-    fort14_filename = mesh_directory / 'fort.14'
+    fort13_filename = mesh_directory / 'fort.13'
     if not fort13_filename.exists():
-        errors.append(f'mesh values (nodal attributes) not found at {fort13_filename}')
+        LOGGER.warning(f'mesh values (nodal attributes) not found at {fort13_filename}')
+    fort14_filename = mesh_directory / 'fort.14'
     if not fort14_filename.exists():
-        errors.append(f'mesh XY not found at {fort14_filename}')
-    if len(errors) > 0:
-        raise FileNotFoundError('; '.join(errors))
+        raise FileNotFoundError(f'mesh XY not found at {fort14_filename}')
 
     if spinup is not None and isinstance(spinup, timedelta):
         spinup = ModelingSystem(
@@ -188,15 +183,11 @@ def write_adcirc_configurations(
     stations_filename = mesh_directory / 'stations.txt'
     if stations_filename.exists():
         driver.import_stations(stations_filename)
-        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval,
-                                             spinup_start=spinup_start, spinup_end=spinup_end)
-        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval,
-                                            spinup_start=spinup_start, spinup_end=spinup_end)
+        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval)
+        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval)
 
-    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval,
-                                        spinup_start=spinup_start, spinup_end=spinup_end)
-    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval,
-                                       spinup_start=spinup_start, spinup_end=spinup_end)
+    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval)
+    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = output_directory / run_name
@@ -253,25 +244,3 @@ def write_adcirc_configurations(
             text = re.sub(pattern, replacement, text)
             with open(job_filename, 'w') as job_file:
                 job_file.write(text)
-
-
-def download_shinnecock_ike_mesh(directory: str):
-    """
-    fetch shinnecock inlet test data
-    :param directory: local directory
-    """
-
-    if not isinstance(directory, Path):
-        directory = Path(directory)
-
-    if not directory.exists():
-        directory.mkdir(parents=True, exist_ok=True)
-
-    url = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
-    remote_file = requests.get(url, stream=True)
-    temporary_filename = directory / 'temp.tar.gz'
-    with open(temporary_filename, 'b+w') as local_file:
-        local_file.write(remote_file.raw.read())
-    with tarfile.open(temporary_filename, 'r:bz2') as local_file:
-        local_file.extractall(directory)
-    os.remove(temporary_filename)
