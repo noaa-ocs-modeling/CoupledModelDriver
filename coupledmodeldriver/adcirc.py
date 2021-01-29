@@ -30,7 +30,6 @@ def write_adcirc_configurations(
     email_address: str = None,
     wall_clock_time: timedelta = None,
     spinup: timedelta = None,
-    source_filename: PathLike = None,
     forcings: [Forcing] = None,
 ):
     """
@@ -172,14 +171,15 @@ def write_adcirc_configurations(
     driver = AdcircRun(
         mesh=mesh,
         start_date=nems.start_time,
-        end_date=nems.start_time + nems.duration,
+        end_date=nems.end_time,
         spinup_time=timedelta(days=5),
         server_config=slurm,
     )
 
     spinup_start = spinup.start_time if spinup is not None else None
-    spinup_end = spinup.start_time + spinup.duration if spinup is not None else None
+    spinup_end = spinup.end_time if spinup is not None else None
     spinup_interval = spinup.interval if spinup is not None else None
+
     stations_filename = mesh_directory / 'stations.txt'
     if stations_filename.exists():
         driver.import_stations(stations_filename)
