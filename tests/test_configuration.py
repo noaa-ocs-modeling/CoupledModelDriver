@@ -10,7 +10,7 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
-import requests
+import wget
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
@@ -86,11 +86,9 @@ def extract_download(url: str, directory: PathLike):
     if not directory.exists():
         directory.mkdir(parents=True, exist_ok=True)
 
-    remote_file = requests.get(url, stream=True)
     temporary_filename = directory / 'temp.tar.gz'
-    with open(temporary_filename, 'b+w') as local_file:
-        local_file.write(remote_file.raw.read())
-    with tarfile.open(temporary_filename, 'r:bz2') as local_file:
+    wget.download(url, str(temporary_filename))
+    with tarfile.open(temporary_filename) as local_file:
         local_file.extractall(directory)
     os.remove(temporary_filename)
 
