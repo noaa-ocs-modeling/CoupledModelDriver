@@ -1,5 +1,0 @@
-# `config.rc` generated with NEMSpy 0.2.2
- atm_dir: C:\Repositories\CoupledModelDriver\tests\data\test_shinnecock_configuration\input\forcings
- atm_nam: wind_atm_fin_ch_time_vec.nc
- wav_dir: C:\Repositories\CoupledModelDriver\tests\data\test_shinnecock_configuration\input\forcings
- wav_nam: ww3.Constant.20151214_sxy_ike_date.nc
