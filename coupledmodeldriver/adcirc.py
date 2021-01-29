@@ -85,7 +85,7 @@ def write_adcirc_configurations(
     if spinup is not None and isinstance(spinup, timedelta):
         spinup = ModelingSystem(
             nems.start_time - spinup,
-            spinup,
+            nems.start_time,
             nems.interval,
             ocn=copy.deepcopy(nems['OCN']),
             **nems.attributes,
@@ -186,8 +186,10 @@ def write_adcirc_configurations(
         driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval)
         driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval)
 
-    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval)
-    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
+    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval,
+                                        spinup_start=spinup_start, spinup_end=spinup_end)
+    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval,
+                                       spinup_start=spinup_start, spinup_end=spinup_end)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = output_directory / run_name

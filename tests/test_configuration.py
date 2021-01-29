@@ -47,7 +47,7 @@ def test_shinnecock_ike():
 
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
-        duration=timedelta(days=14.5),
+        end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
