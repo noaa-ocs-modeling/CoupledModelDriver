@@ -42,7 +42,7 @@ logging.info(f'using version {version}')
 
 metadata = config.read_configuration('setup.cfg')['metadata']
 
-subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'adcircpy' '--upgrade'])
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'adcircpy', '--upgrade'])
 
 setup(
     name=metadata['name'],
