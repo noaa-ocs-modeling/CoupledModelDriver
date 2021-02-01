@@ -31,11 +31,11 @@ def test_shinnecock_ike():
     tpxo_filename = Path(sys.executable).parent.parent / 'lib/h_tpxo9.v1.nc'
     if not tpxo_filename.exists():
         url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
-        extract_download(url, tpxo_filename.parent)
+        extract_download(url, tpxo_filename.parent, ['h_tpxo9.v1.nc'])
 
     if not (mesh_directory / 'fort.13').exists() or not (mesh_directory / 'fort.14').exists():
         url = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
-        extract_download(url, mesh_directory)
+        extract_download(url, mesh_directory, ['fort.13', 'fort.14'])
 
     runs = {f'nems_shinnecock_test': (None, None)}
 
@@ -79,9 +79,12 @@ def test_shinnecock_ike():
     check_reference_directory(output_directory, reference_directory)
 
 
-def extract_download(url: str, directory: PathLike):
+def extract_download(url: str, directory: PathLike, filenames: [str] = None):
     if not isinstance(directory, Path):
         directory = Path(directory)
+
+    if filenames is None:
+        filenames = []
 
     if not directory.exists():
         directory.mkdir(parents=True, exist_ok=True)
@@ -89,7 +92,13 @@ def extract_download(url: str, directory: PathLike):
     temporary_filename = directory / 'temp.tar.gz'
     wget.download(url, str(temporary_filename))
     with tarfile.open(temporary_filename) as local_file:
-        local_file.extractall(directory)
+        if len(filenames) > 0:
+            for filename in filenames:
+                if filename in local_file.getnames():
+                    local_file.extract(filename, directory)
+        else:
+            local_file.extractall(directory)
+
     os.remove(temporary_filename)
 
 
