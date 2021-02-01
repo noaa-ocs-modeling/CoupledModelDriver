@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
-        duration=timedelta(days=14.5),
+        end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc'),
