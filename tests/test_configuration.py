@@ -108,6 +108,9 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
     if not isinstance(reference_directory, Path):
         reference_directory = Path(reference_directory)
 
+    print(f'refs: {[filename + "/" if filename.is_dir() else filename for filename in reference_directory.iterdir()]}')
+    print(f'test: {[filename + "/" if filename.is_dir() else filename for filename in test_directory.iterdir()]}')
+
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
             check_reference_directory(test_directory / reference_filename.name, reference_filename)
