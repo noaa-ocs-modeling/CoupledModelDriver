@@ -20,7 +20,7 @@ FORCINGS_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'forcings' 
 OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local' / 'hsofs' / 'ike'
 
 if __name__ == '__main__':
-    runs = {f'nems_shinnecock_test': (None, None)}
+    runs = {f'test_case_1': (None, None)}
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_shinnecock_test',
+        name='test_case_1',
         email_address='zachary.burnett@noaa.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),

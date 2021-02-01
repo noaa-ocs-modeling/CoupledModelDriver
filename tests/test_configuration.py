@@ -37,7 +37,7 @@ def test_shinnecock_ike():
         url = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
         extract_download(url, mesh_directory, ['fort.13', 'fort.14'])
 
-    runs = {f'nems_shinnecock_test': (None, None)}
+    runs = {f'test_case_1': (None, None)}
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
@@ -69,7 +69,7 @@ def test_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
-        name='nems_shinnecock_test',
+        name='test_case_1',
         email_address='zachary.burnett@noaa.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
@@ -107,10 +107,6 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
         test_directory = Path(test_directory)
     if not isinstance(reference_directory, Path):
         reference_directory = Path(reference_directory)
-
-    print(
-        f'refs: {[str(filename) + "/" if filename.is_dir() else str(filename) for filename in reference_directory.iterdir()]}')
-    print(f'test: {[str(filename) + "/" if filename.is_dir() else str(filename) for filename in test_directory.iterdir()]}')
 
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
