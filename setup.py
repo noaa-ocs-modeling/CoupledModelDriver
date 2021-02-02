@@ -16,7 +16,7 @@ if os.name == 'nt':
     try:
         import gdal
     except ImportError:
-        subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', 'gdal==3.1.4'])
+        subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', 'gdal'])
 
     try:
         import fiona
@@ -54,7 +54,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6',
     setup_requires=['dunamai', 'setuptools>=41.2'],
-    install_requires=['adcircpy', 'nemspy', 'numpy', 'requests'],
+    install_requires=['adcircpy==1.0.16', 'nemspy>=0.6.2', 'numpy', 'requests'],
     extras_require={
         'testing': ['flake8', 'pytest', 'pytest-cov'],
         'development': ['oitnb']
