@@ -220,8 +220,7 @@ def write_adcirc_configurations(
 
     for filename in coldstart_filenames + [atm_namelist_filename]:
         coldstart_filename = Path(f'{filename}.coldstart')
-        if coldstart_filename.exists():
-            os.remove(coldstart_filename)
+        os.remove(coldstart_filename)
         filename.rename(coldstart_filename)
 
     if spinup is not None:
@@ -231,8 +230,7 @@ def write_adcirc_configurations(
 
     for filename in hotstart_filenames + [atm_namelist_filename]:
         hotstart_filename = Path(f'{filename}.hotstart')
-        if hotstart_filename.exists():
-            os.remove(hotstart_filename)
+        os.remove(hotstart_filename)
         filename.rename(hotstart_filename)
 
     pattern = re.compile(' p*adcirc')
