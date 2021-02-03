@@ -52,7 +52,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='test_case_1',
+        name='nems_test_shinnecock',
         email_address='zachary.burnett@noaa.gov',
         platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
