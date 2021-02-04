@@ -245,7 +245,7 @@ class EnsembleSlurmScript:
                         'ln -sf ../../model_configure.hotstart ./model_configure',
                         'ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc',
                         'ln -sf ../../config.rc.hotstart ./config.rc',
-                        'ln -sf ../../coldstart/fort.67.nc ./fort.67.nc',
+                        'ln -sf ../../../coldstart/fort.67.nc ./fort.67.nc',
                         'adcprep --np $SLURM_NTASKS --partmesh',
                         'adcprep --np $SLURM_NTASKS --prepall',
                         f'{self.launcher} NEMS.x',
