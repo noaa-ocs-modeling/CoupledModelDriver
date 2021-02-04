@@ -101,12 +101,12 @@ def write_adcirc_configurations(
 
     atm_namelist_filename = output_directory / 'atm_namelist.rc'
 
-    if spinup is None:
-        coldstart_filenames = nems.write(
+    if spinup is not None:
+        coldstart_filenames = spinup.write(
             output_directory, overwrite=True, include_version=True
         )
     else:
-        coldstart_filenames = spinup.write(
+        coldstart_filenames = nems.write(
             output_directory, overwrite=True, include_version=True
         )
 
@@ -206,32 +206,6 @@ def write_adcirc_configurations(
             directory = run_directory / phase
             if not directory.exists():
                 directory.mkdir()
-
-    atm_namelist_filename = output_directory / 'atm_namelist.rc'
-
-    if spinup is None:
-        coldstart_filenames = nems.write(
-            output_directory, overwrite=True, include_version=True
-        )
-    else:
-        coldstart_filenames = spinup.write(
-            output_directory, overwrite=True, include_version=True
-        )
-
-    for filename in coldstart_filenames + [atm_namelist_filename]:
-        coldstart_filename = Path(f'{filename}.coldstart')
-        os.remove(coldstart_filename)
-        filename.rename(coldstart_filename)
-
-    if spinup is not None:
-        hotstart_filenames = nems.write(output_directory, overwrite=True, include_version=True)
-    else:
-        hotstart_filenames = []
-
-    for filename in hotstart_filenames + [atm_namelist_filename]:
-        hotstart_filename = Path(f'{filename}.hotstart')
-        os.remove(hotstart_filename)
-        filename.rename(hotstart_filename)
 
     pattern = re.compile(' p*adcirc')
     replacement = ' NEMS.x'

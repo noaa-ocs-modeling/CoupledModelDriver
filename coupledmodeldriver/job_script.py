@@ -171,108 +171,116 @@ class EnsembleSlurmScript:
         if self.commands is not None:
             lines.extend([*(str(command) for command in self.commands), ''])
 
+        coldstart_function = bash_function(
+            'run_coldstart_phase',
+            [
+                'rm -rf ./coldstart/*',
+                'cd ./coldstart',
+                'ln -sf ../fort.13 ./fort.13',
+                'ln -sf ../fort.14 ./fort.14',
+                'ln -sf ../fort.15.coldstart ./fort.15',
+                'ln -sf ../../nems.configure.coldstart ./nems.configure',
+                'ln -sf ../../model_configure.coldstart ./model_configure',
+                'ln -sf ../../atm_namelist.rc.coldstart ./atm_namelist.rc',
+                'ln -sf ../../config.rc.coldstart ./config.rc',
+                'adcprep --np $SLURM_NTASKS --partmesh',
+                'adcprep --np $SLURM_NTASKS --prepall',
+                'ibrun NEMS.x',
+                'clean_directory',
+                'cd ..',
+            ],
+        )
+
+        hotstart_function = bash_function(
+            'run_hotstart_phase',
+            [
+                'rm -rf ./hotstart/*',
+                'cd ./hotstart',
+                'ln -sf ../fort.13 ./fort.13',
+                'ln -sf ../fort.14 ./fort.14',
+                'ln -sf ../fort.15.hotstart ./fort.15',
+                'ln -sf ../coldstart/fort.67.nc ./fort.67.nc',
+                'ln -sf ../../nems.configure.hotstart ./nems.configure',
+                'ln -sf ../../nems.configure.hotstart ./nems.configure',
+                'ln -sf ../../model_configure.hotstart ./model_configure',
+                'ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc',
+                'ln -sf ../../config.rc.hotstart ./config.rc',
+                'adcprep --np $SLURM_NTASKS --partmesh',
+                'adcprep --np $SLURM_NTASKS --prepall',
+                'ibrun NEMS.x',
+                'clean_directory',
+                'cd ..',
+            ],
+        )
+
+        directory_clean_function = bash_function(
+            'clean_directory',
+            [
+                f'rm -rf {pattern}' for pattern in
+                [
+                    'PE*',
+                    'partmesh.txt',
+                    'metis_graph.txt',
+                    'fort.13',
+                    'fort.14',
+                    'fort.15',
+                    'fort.16',
+                    'fort.80',
+                    'fort.68.nc',
+                    'nems.configure',
+                    'model_configure',
+                    'atm_namelist.rc',
+                    'config.rc',
+                ]
+            ],
+        )
+
         lines.extend(
             [
                 bash_function(
                     'main',
-                    bash_for_loop(
-                        'for directory in ./*/',
-                        [
-                            'echo "Starting configuration $directory..."',
-                            'cd "$directory"',
-                            'SECONDS=0',
-                            'run_coldstart_phase',
-                            bash_if_statement(
-                                f'if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self.log_filename}',
-                                [
-                                    'duration=$SECONDS',
-                                    'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."',
-                                    'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
-                                    'exit -1',
-                                ],
-                                'else',
-                                [
-                                    'run_hotstart_phase',
-                                    'duration=$SECONDS',
-                                    bash_if_statement(
-                                        f'if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self.log_filename}',
-                                        [
-                                            'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."',
-                                            'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
-                                            'exit -1',
-                                        ],
-                                    ),
-                                ],
-                            ),
-                            'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
-                            'cd ..',
-                        ],
-                    ),
-                ),
-                '',
-                bash_function(
-                    'run_coldstart_phase',
                     [
-                        'rm -rf ./coldstart/*',
-                        'cd ./coldstart',
-                        'ln -sf ../fort.13 ./fort.13',
-                        'ln -sf ../fort.14 ./fort.14',
-                        'ln -sf ../fort.15.coldstart ./fort.15',
-                        'ln -sf ../../nems.configure.coldstart ./nems.configure',
-                        'ln -sf ../../model_configure.coldstart ./model_configure',
-                        'ln -sf ../../atm_namelist.rc.coldstart ./atm_namelist.rc',
-                        'ln -sf ../../config.rc.coldstart ./config.rc',
-                        'adcprep --np $SLURM_NTASKS --partmesh',
-                        'adcprep --np $SLURM_NTASKS --prepall',
-                        'ibrun NEMS.x',
-                        'clean_directory',
-                        'cd ..',
+                        'run_coldstart_phase',
+                        bash_for_loop(
+                            'for directory in ./*/',
+                            [
+                                'echo "Starting configuration $directory..."',
+                                'cd "$directory"',
+                                'SECONDS=0',
+                                bash_if_statement(
+                                    f'if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self.log_filename}',
+                                    [
+                                        'duration=$SECONDS',
+                                        'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."',
+                                        'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
+                                        'exit -1',
+                                    ],
+                                    'else',
+                                    [
+                                        'run_hotstart_phase',
+                                        'duration=$SECONDS',
+                                        bash_if_statement(
+                                            f'if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self.log_filename}',
+                                            [
+                                                'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."',
+                                                'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
+                                                'exit -1',
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                                'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
+                                'cd ..',
+                            ],
+                        ),
                     ],
                 ),
                 '',
-                bash_function(
-                    'run_hotstart_phase',
-                    [
-                        'rm -rf ./hotstart/*',
-                        'cd ./hotstart',
-                        'ln -sf ../fort.13 ./fort.13',
-                        'ln -sf ../fort.14 ./fort.14',
-                        'ln -sf ../fort.15.hotstart ./fort.15',
-                        'ln -sf ../coldstart/fort.67.nc ./fort.67.nc',
-                        'ln -sf ../../nems.configure.hotstart ./nems.configure',
-                        'ln -sf ../../nems.configure.hotstart ./nems.configure',
-                        'ln -sf ../../model_configure.hotstart ./model_configure',
-                        'ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc',
-                        'ln -sf ../../config.rc.hotstart ./config.rc',
-                        'adcprep --np $SLURM_NTASKS --partmesh',
-                        'adcprep --np $SLURM_NTASKS --prepall',
-                        'ibrun NEMS.x',
-                        'clean_directory',
-                        'cd ..',
-                    ],
-                ),
+                coldstart_function,
                 '',
-                bash_function(
-                    'clean_directory',
-                    [
-                        f'rm -rf {pattern}'
-                        for pattern in [
-                        'PE*',
-                        'partmesh.txt',
-                        'metis_graph.txt',
-                        'fort.13',
-                        'fort.14',
-                        'fort.15',
-                        'fort.16',
-                        'fort.80',
-                        'fort.68.nc',
-                        'nems.configure',
-                        'model_configure',
-                        'atm_namelist.rc',
-                        'config.rc',
-                    ]
-                    ],
-                ),
+                hotstart_function,
+                '',
+                directory_clean_function,
                 '',
                 'main',
             ]
