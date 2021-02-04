@@ -83,7 +83,7 @@ class EnsembleSlurmScript:
         self.tasks = tasks
         self.duration = duration
         self.partition = partition
-        self.hpc = platform
+        self.platform = platform
 
         self.basename = basename if basename is not None else 'slurm.job'
         self.directory = directory if directory is not None else '.'
@@ -114,14 +114,14 @@ class EnsembleSlurmScript:
 
     @nodes.setter
     def nodes(self, nodes: int):
-        if nodes is None and self.hpc == Platform.STAMPEDE2:
+        if nodes is None and self.platform == Platform.STAMPEDE2:
             nodes = numpy.ceil(self.tasks / 68)
         if nodes is not None:
             nodes = int(nodes)
         self.__nodes = nodes
 
     @property
-    def configuration(self) -> str:
+    def slurm_parameters(self) -> str:
         lines = [f'#SBATCH -D {self.directory}', f'#SBATCH -J {self.run}']
 
         if self.account is not None:
@@ -155,11 +155,15 @@ class EnsembleSlurmScript:
     def __str__(self) -> str:
         lines = [
             self.shebang,
-            self.configuration,
-            '',
-            'set -e',
-            '',
         ]
+
+        if self.platform != Platform.LOCAL:
+            lines.extend([
+                self.slurm_parameters,
+                '',
+                'set -e',
+                '',
+            ])
 
         if self.modules is not None:
             modules_string = ' '.join(module for module in self.modules)
@@ -294,7 +298,7 @@ class EnsembleSlurmScript:
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / 'slurm.job'
+            filename = filename / f'run_{self.platform}.sh'
 
         output = f'{self}\n'
         if overwrite or not filename.exists():
