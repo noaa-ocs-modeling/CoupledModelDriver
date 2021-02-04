@@ -66,7 +66,13 @@ def write_adcirc_configurations(
     if forcings is None:
         forcings = []
 
-    launcher = 'ibrun' if platform in [Platform.STAMPEDE2] else 'srun'
+    if platform in [Platform.HERA, Platform.ORION]:
+        launcher = 'srun'
+    elif platform in [Platform.STAMPEDE2]:
+        launcher = 'ibrun'
+    else:
+        launcher = ''
+
     run_name = 'ADCIRC_GAHM_GENERIC'
 
     if partition is None:
