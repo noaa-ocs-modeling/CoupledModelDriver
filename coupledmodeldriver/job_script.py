@@ -298,7 +298,7 @@ class EnsembleSlurmScript:
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'run_{self.platform}.sh'
+            filename = filename / f'run_{self.platform.value}.sh'
 
         output = f'{self}\n'
         if overwrite or not filename.exists():
