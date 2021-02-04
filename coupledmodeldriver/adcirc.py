@@ -193,13 +193,15 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
-    for phase in ['coldstart']:
-        directory = output_directory / phase
+    coldstart_directory = output_directory / 'coldstart'
+    runs_directory = output_directory / 'runs'
+
+    for directory in [coldstart_directory, runs_directory]:
         if not directory.exists():
             directory.mkdir()
 
     for run_name, (value, attribute_name) in runs.items():
-        run_directory = output_directory / run_name
+        run_directory = runs_directory / run_name
         LOGGER.info(f'writing config to "{run_directory}"')
         if not isinstance(value, numpy.ndarray):
             value = numpy.full([len(driver.mesh.coords)], fill_value=value)

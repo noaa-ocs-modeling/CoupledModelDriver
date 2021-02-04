@@ -171,70 +171,6 @@ class EnsembleSlurmScript:
         if self.commands is not None:
             lines.extend([*(str(command) for command in self.commands), ''])
 
-        coldstart_function = bash_function(
-            'run_coldstart_phase',
-            [
-                'rm -rf ./coldstart/*',
-                'cd ./coldstart',
-                'ln -sf ../fort.13 ./fort.13',
-                'ln -sf ../fort.14 ./fort.14',
-                'ln -sf ../fort.15.coldstart ./fort.15',
-                'ln -sf ../../nems.configure.coldstart ./nems.configure',
-                'ln -sf ../../model_configure.coldstart ./model_configure',
-                'ln -sf ../../atm_namelist.rc.coldstart ./atm_namelist.rc',
-                'ln -sf ../../config.rc.coldstart ./config.rc',
-                'adcprep --np $SLURM_NTASKS --partmesh',
-                'adcprep --np $SLURM_NTASKS --prepall',
-                f'{self.launcher} NEMS.x',
-                'clean_directory',
-                'cd ..',
-            ],
-        )
-
-        hotstart_function = bash_function(
-            'run_hotstart_phase',
-            [
-                'rm -rf ./hotstart/*',
-                'cd ./hotstart',
-                'ln -sf ../fort.13 ./fort.13',
-                'ln -sf ../fort.14 ./fort.14',
-                'ln -sf ../fort.15.hotstart ./fort.15',
-                'ln -sf ../../nems.configure.hotstart ./nems.configure',
-                'ln -sf ../../nems.configure.hotstart ./nems.configure',
-                'ln -sf ../../model_configure.hotstart ./model_configure',
-                'ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc',
-                'ln -sf ../../config.rc.hotstart ./config.rc',
-                'ln -sf ../../coldstart/fort.67.nc ./fort.67.nc',
-                'adcprep --np $SLURM_NTASKS --partmesh',
-                'adcprep --np $SLURM_NTASKS --prepall',
-                f'{self.launcher} NEMS.x',
-                'clean_directory',
-                'cd ..',
-            ],
-        )
-
-        directory_clean_function = bash_function(
-            'clean_directory',
-            [
-                f'rm -rf {pattern}' for pattern in
-                [
-                    'PE*',
-                    'partmesh.txt',
-                    'metis_graph.txt',
-                    'fort.13',
-                    'fort.14',
-                    'fort.15',
-                    'fort.16',
-                    'fort.80',
-                    'fort.68.nc',
-                    'nems.configure',
-                    'model_configure',
-                    'atm_namelist.rc',
-                    'config.rc',
-                ]
-            ],
-        )
-
         lines.extend(
             [
                 bash_function(
@@ -242,7 +178,7 @@ class EnsembleSlurmScript:
                     [
                         'run_coldstart_phase',
                         bash_for_loop(
-                            'for directory in ./*/',
+                            'for directory in ./runs/*/',
                             [
                                 'echo "Starting configuration $directory..."',
                                 'cd "$directory"',
@@ -276,11 +212,69 @@ class EnsembleSlurmScript:
                     ],
                 ),
                 '',
-                coldstart_function,
+                bash_function(
+                    'run_coldstart_phase',
+                    [
+                        'rm -rf ./coldstart/*',
+                        'cd ./coldstart',
+                        'ln -sf ../fort.13 ./fort.13',
+                        'ln -sf ../fort.14 ./fort.14',
+                        'ln -sf ../fort.15.coldstart ./fort.15',
+                        'ln -sf ../../nems.configure.coldstart ./nems.configure',
+                        'ln -sf ../../model_configure.coldstart ./model_configure',
+                        'ln -sf ../../atm_namelist.rc.coldstart ./atm_namelist.rc',
+                        'ln -sf ../../config.rc.coldstart ./config.rc',
+                        'adcprep --np $SLURM_NTASKS --partmesh',
+                        'adcprep --np $SLURM_NTASKS --prepall',
+                        f'{self.launcher} NEMS.x',
+                        'clean_directory',
+                        'cd ..',
+                    ],
+                ),
                 '',
-                hotstart_function,
+                bash_function(
+                    'run_hotstart_phase',
+                    [
+                        'rm -rf ./hotstart/*',
+                        'cd ./hotstart',
+                        'ln -sf ../fort.13 ./fort.13',
+                        'ln -sf ../fort.14 ./fort.14',
+                        'ln -sf ../fort.15.hotstart ./fort.15',
+                        'ln -sf ../../nems.configure.hotstart ./nems.configure',
+                        'ln -sf ../../nems.configure.hotstart ./nems.configure',
+                        'ln -sf ../../model_configure.hotstart ./model_configure',
+                        'ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc',
+                        'ln -sf ../../config.rc.hotstart ./config.rc',
+                        'ln -sf ../../coldstart/fort.67.nc ./fort.67.nc',
+                        'adcprep --np $SLURM_NTASKS --partmesh',
+                        'adcprep --np $SLURM_NTASKS --prepall',
+                        f'{self.launcher} NEMS.x',
+                        'clean_directory',
+                        'cd ..',
+                    ],
+                ),
                 '',
-                directory_clean_function,
+                bash_function(
+                    'clean_directory',
+                    [
+                        f'rm -rf {pattern}' for pattern in
+                        [
+                            'PE*',
+                            'partmesh.txt',
+                            'metis_graph.txt',
+                            'fort.13',
+                            'fort.14',
+                            'fort.15',
+                            'fort.16',
+                            'fort.80',
+                            'fort.68.nc',
+                            'nems.configure',
+                            'model_configure',
+                            'atm_namelist.rc',
+                            'config.rc',
+                        ]
+                    ],
+                ),
                 '',
                 'main',
             ]
