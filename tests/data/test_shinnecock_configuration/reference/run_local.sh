@@ -1,16 +1,4 @@
 #!/bin/bash --login
-#SBATCH -D .
-#SBATCH -J test_case_1
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=zachary.burnett@noaa.gov
-#SBATCH --error=test_case_1.err.log
-#SBATCH --output=test_case_1.out.log
-#SBATCH -n 384
-#SBATCH --time=00:30:00
-#SBATCH --partition=development
-
-set -e
-
 
 main() {
   run_coldstart_phase
@@ -49,7 +37,7 @@ run_coldstart_phase() {
   ln -sf ../../config.rc.coldstart ./config.rc
   adcprep --np $SLURM_NTASKS --partmesh
   adcprep --np $SLURM_NTASKS --prepall
-  srun NEMS.x
+   NEMS.x
   clean_directory
   cd ..
 }
@@ -68,7 +56,7 @@ run_hotstart_phase() {
   ln -sf ../../../coldstart/fort.67.nc ./fort.67.nc
   adcprep --np $SLURM_NTASKS --partmesh
   adcprep --np $SLURM_NTASKS --prepall
-  srun NEMS.x
+   NEMS.x
   clean_directory
   cd ..
 }
