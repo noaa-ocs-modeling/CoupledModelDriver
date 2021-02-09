@@ -130,5 +130,5 @@ dmypy.json
 
 .idea/
 /examples/data
-/tests/data/*/output/*
-/tests/data/*/input/*
+/tests/data/output/*
+/tests/data/input/*

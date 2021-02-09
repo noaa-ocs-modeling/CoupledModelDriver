@@ -1,23 +1,11 @@
 #!/bin/bash --login
-#SBATCH -D .
-#SBATCH -J test_case_1
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=zachary.burnett@noaa.gov
-#SBATCH --error=test_case_1.err.log
-#SBATCH --output=test_case_1.out.log
-#SBATCH -n 384
-#SBATCH --time=00:30:00
-#SBATCH --partition=development
-
-set -e
-
 
 main() {
-  for directory in ./*/; do
+  run_coldstart_phase
+  for directory in ./runs/*/; do
     echo "Starting configuration $directory..."
     cd "$directory"
     SECONDS=0
-    run_coldstart_phase
     if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." test_case_1.out.log; then
       duration=$SECONDS
       echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."
@@ -49,7 +37,7 @@ run_coldstart_phase() {
   ln -sf ../../config.rc.coldstart ./config.rc
   adcprep --np $SLURM_NTASKS --partmesh
   adcprep --np $SLURM_NTASKS --prepall
-  ibrun NEMS.x
+   NEMS.x
   clean_directory
   cd ..
 }
@@ -60,15 +48,15 @@ run_hotstart_phase() {
   ln -sf ../fort.13 ./fort.13
   ln -sf ../fort.14 ./fort.14
   ln -sf ../fort.15.hotstart ./fort.15
-  ln -sf ../coldstart/fort.67.nc ./fort.67.nc
   ln -sf ../../nems.configure.hotstart ./nems.configure
   ln -sf ../../nems.configure.hotstart ./nems.configure
   ln -sf ../../model_configure.hotstart ./model_configure
   ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc
   ln -sf ../../config.rc.hotstart ./config.rc
+  ln -sf ../../../coldstart/fort.67.nc ./fort.67.nc
   adcprep --np $SLURM_NTASKS --partmesh
   adcprep --np $SLURM_NTASKS --prepall
-  ibrun NEMS.x
+   NEMS.x
   clean_directory
   cd ..
 }

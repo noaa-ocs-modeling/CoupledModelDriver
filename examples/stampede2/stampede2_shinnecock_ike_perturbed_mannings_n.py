@@ -62,7 +62,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_mannings_n_perturbation',
+        name='nems_mannings_n_perturbation_shinnecock',
         email_address='zachary.burnett@noaa.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),

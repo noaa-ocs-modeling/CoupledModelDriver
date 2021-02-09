@@ -52,7 +52,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_hsofs_test',
+        name='nems_test_hsofs',
         email_address='zachary.burnett@noaa.gov',
         platform=Platform.HERA,
         spinup=timedelta(days=12.5),

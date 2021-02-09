@@ -66,7 +66,13 @@ def write_adcirc_configurations(
     if forcings is None:
         forcings = []
 
-    launcher = 'ibrun' if platform in [Platform.STAMPEDE2] else 'srun'
+    if platform in [Platform.HERA, Platform.ORION]:
+        launcher = 'srun'
+    elif platform in [Platform.STAMPEDE2]:
+        launcher = 'ibrun'
+    else:
+        launcher = ''
+
     run_name = 'ADCIRC_GAHM_GENERIC'
 
     if partition is None:
@@ -101,12 +107,12 @@ def write_adcirc_configurations(
 
     atm_namelist_filename = output_directory / 'atm_namelist.rc'
 
-    if spinup is None:
-        coldstart_filenames = nems.write(
+    if spinup is not None:
+        coldstart_filenames = spinup.write(
             output_directory, overwrite=True, include_version=True
         )
     else:
-        coldstart_filenames = spinup.write(
+        coldstart_filenames = nems.write(
             output_directory, overwrite=True, include_version=True
         )
 
@@ -193,8 +199,15 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
+    coldstart_directory = output_directory / 'coldstart'
+    runs_directory = output_directory / 'runs'
+
+    for directory in [coldstart_directory, runs_directory]:
+        if not directory.exists():
+            directory.mkdir()
+
     for run_name, (value, attribute_name) in runs.items():
-        run_directory = output_directory / run_name
+        run_directory = runs_directory / run_name
         LOGGER.info(f'writing config to "{run_directory}"')
         if not isinstance(value, numpy.ndarray):
             value = numpy.full([len(driver.mesh.coords)], fill_value=value)
@@ -202,36 +215,10 @@ def write_adcirc_configurations(
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
         driver.write(run_directory, overwrite=True)
-        for phase in ['coldstart', 'hotstart']:
+        for phase in ['hotstart']:
             directory = run_directory / phase
             if not directory.exists():
                 directory.mkdir()
-
-    atm_namelist_filename = output_directory / 'atm_namelist.rc'
-
-    if spinup is None:
-        coldstart_filenames = nems.write(
-            output_directory, overwrite=True, include_version=True
-        )
-    else:
-        coldstart_filenames = spinup.write(
-            output_directory, overwrite=True, include_version=True
-        )
-
-    for filename in coldstart_filenames + [atm_namelist_filename]:
-        coldstart_filename = Path(f'{filename}.coldstart')
-        os.remove(coldstart_filename)
-        filename.rename(coldstart_filename)
-
-    if spinup is not None:
-        hotstart_filenames = nems.write(output_directory, overwrite=True, include_version=True)
-    else:
-        hotstart_filenames = []
-
-    for filename in hotstart_filenames + [atm_namelist_filename]:
-        hotstart_filename = Path(f'{filename}.hotstart')
-        os.remove(hotstart_filename)
-        filename.rename(hotstart_filename)
 
     pattern = re.compile(' p*adcirc')
     replacement = ' NEMS.x'
