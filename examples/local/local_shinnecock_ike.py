@@ -17,7 +17,7 @@ from coupledmodeldriver.job_script import Platform
 
 MESH_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'ike' / 'grid_v1'
 FORCINGS_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'ike'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local' / 'hsofs' / 'ike'
+OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local_hsofs_ike'
 
 if __name__ == '__main__':
     runs = {f'test_case_1': (None, None)}

@@ -17,7 +17,7 @@ from coupledmodeldriver.job_script import Platform
 
 MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
 FORCINGS_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'hsofs' / 'sandy'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'hera' / 'hsofs' / 'sandy'
+OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'hera_hsofs_sandy'
 
 if __name__ == '__main__':
     runs = {f'nems_hsofs_test': (None, None)}

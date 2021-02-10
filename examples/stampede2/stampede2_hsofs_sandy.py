@@ -17,7 +17,7 @@ from coupledmodeldriver.job_script import Platform
 
 MESH_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
 FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'forcings' / 'hsofs' / 'sandy'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'stampede2' / 'hsofs' / 'sandy'
+OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'stampede2_hsofs_sandy'
 
 if __name__ == '__main__':
     runs = {f'nems_hsofs_test': (None, None)}

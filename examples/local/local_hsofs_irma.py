@@ -17,7 +17,7 @@ from coupledmodeldriver.job_script import Platform
 
 MESH_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'irma' / 'grid_v1'
 FORCINGS_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'irma'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local' / 'hsofs' / 'irma'
+OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local_hsofs_irma'
 
 if __name__ == '__main__':
     runs = {f'nems_hsofs_test': (None, None)}
