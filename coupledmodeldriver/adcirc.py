@@ -141,7 +141,7 @@ def write_adcirc_configurations(
             'source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera')
 
     ensemble_slurm_script = EnsembleSlurmScript(
-        account=None,
+        account='coastal',
         tasks=nems.processors,
         duration=wall_clock_time,
         nodes=int(numpy.ceil(nems.processors / 68)) if platform == Platform.STAMPEDE2 else None,
@@ -159,7 +159,7 @@ def write_adcirc_configurations(
     ensemble_slurm_script.write(output_directory, overwrite=True)
 
     slurm = SlurmConfig(
-        account=None,
+        account='coastal',
         ntasks=nems.processors,
         run_name=run_name,
         partition=partition,
