@@ -1,0 +1,21 @@
+#!/bin/bash --login
+#SBATCH -J ADCIRC_COLDSTART
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_COLDSTART.err.log
+#SBATCH --output=ADCIRC_COLDSTART.out.log
+#SBATCH -n 11
+#SBATCH -N 1
+#SBATCH --time=00:30:00
+#SBATCH --partition=development
+
+set -e
+
+source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\stampede2_shinnecock_ike\fort.15.coldstart ./fort.15
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\stampede2_shinnecock_ike\nems.configure.coldstart ./nems.configure
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\stampede2_shinnecock_ike\model_configure.coldstart ./model_configure
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\stampede2_shinnecock_ike\atm_namelist.rc.coldstart ./atm_namelist.rc
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\stampede2_shinnecock_ike\config.rc.coldstart ./config.rc
+ibrun NEMS.x

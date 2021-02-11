@@ -54,7 +54,7 @@ def test_local_shinnecock_ike():
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(11),
     )
 
     nems.connect('ATM', 'OCN')
@@ -72,8 +72,7 @@ def test_local_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
-        name='test_case_1',
-        email_address='zachary.burnett@noaa.gov',
+        email_address='example@email.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
@@ -108,7 +107,7 @@ def test_hera_shinnecock_ike():
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(11),
     )
 
     nems.connect('ATM', 'OCN')
@@ -126,9 +125,8 @@ def test_hera_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
-        name='test_case_1',
-        email_address='zachary.burnett@noaa.gov',
-        platform=Platform.LOCAL,
+        email_address='example@email.gov',
+        platform=Platform.HERA,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
@@ -162,7 +160,7 @@ def test_stampede2_shinnecock_ike():
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(11),
     )
 
     nems.connect('ATM', 'OCN')
@@ -180,9 +178,8 @@ def test_stampede2_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
-        name='test_case_1',
-        email_address='zachary.burnett@noaa.gov',
-        platform=Platform.LOCAL,
+        email_address='example@email.gov',
+        platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
@@ -198,7 +195,9 @@ def tpxo():
         extract_download(url, tpxo_filename.parent, ['h_tpxo9.v1.nc'])
 
 
-def download_mesh(mesh: str, storm: str, input_directory: PathLike = None, overwrite: bool = False):
+def download_mesh(
+    mesh: str, storm: str, input_directory: PathLike = None, overwrite: bool = False
+):
     try:
         url = MESH_URLS[mesh][storm]
     except KeyError:
@@ -208,14 +207,16 @@ def download_mesh(mesh: str, storm: str, input_directory: PathLike = None, overw
         input_directory = INPUT_DIRECTORY / f'{mesh}_{storm}'
 
     mesh_directory = input_directory / 'mesh'
-    if not (mesh_directory / 'fort.13').exists() or not (mesh_directory / 'fort.14').exists() or overwrite:
+    if not (mesh_directory / 'fort.14').exists() or overwrite:
         logging.info(f'downloading mesh files to {mesh_directory}')
         extract_download(url, mesh_directory, ['fort.13', 'fort.14'])
 
     return mesh_directory
 
 
-def extract_download(url: str, directory: PathLike, filenames: [str] = None, overwrite: bool = False):
+def extract_download(
+    url: str, directory: PathLike, filenames: [str] = None, overwrite: bool = False
+):
     if not isinstance(directory, Path):
         directory = Path(directory)
 
@@ -250,7 +251,9 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
 
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
-            check_reference_directory(test_directory / reference_filename.name, reference_filename)
+            check_reference_directory(
+                test_directory / reference_filename.name, reference_filename
+            )
         else:
             test_filename = test_directory / reference_filename.name
             with open(test_filename) as test_file, open(reference_filename) as reference_file:

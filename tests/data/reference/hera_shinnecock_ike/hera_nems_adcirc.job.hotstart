@@ -1,0 +1,20 @@
+#!/bin/bash --login
+#SBATCH -J ADCIRC_HOTSTART
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_HOTSTART.err.log
+#SBATCH --output=ADCIRC_HOTSTART.out.log
+#SBATCH -n 13
+#SBATCH --time=00:30:00
+
+set -e
+
+source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\hera_shinnecock_ike\fort.15.hotstart ./fort.15
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\hera_shinnecock_ike\nems.configure.hotstart ./nems.configure
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\hera_shinnecock_ike\model_configure.hotstart ./model_configure
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\hera_shinnecock_ike\atm_namelist.rc.hotstart ./atm_namelist.rc
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\hera_shinnecock_ike\config.rc.hotstart ./config.rc
+ln -sf C:\Repositories\CoupledModelDriver\tests\data\output\hera_shinnecock_ike\coldstart\fort.67.nc ./fort.67.nc
+srun NEMS.x
