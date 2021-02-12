@@ -413,7 +413,7 @@ class RunScript(Script):
             lines.extend(
                 [
                     'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
-                    'sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job',
+                    'coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job)',
                 ]
             )
         else:
