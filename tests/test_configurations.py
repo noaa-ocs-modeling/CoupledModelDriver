@@ -261,5 +261,9 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
             )
         else:
             test_filename = test_directory / reference_filename.name
+            if not reference_filename.exists():
+                reference_filename = DATA_DIRECTORY / reference_filename
+            if not test_filename.exists():
+                test_filename = DATA_DIRECTORY / test_filename
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
                 assert test_file.readlines()[1:] == reference_file.readlines()[1:]
