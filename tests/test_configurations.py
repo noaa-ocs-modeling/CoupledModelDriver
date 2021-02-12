@@ -33,12 +33,12 @@ def test_local_shinnecock_ike():
     mesh = 'shinnecock'
     storm = 'ike'
 
-    input_directory = DATA_DIRECTORY / 'input' / f'{mesh}_{storm}'
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = DATA_DIRECTORY / 'output' / f'{platform}_{mesh}_{storm}'
-    reference_directory = DATA_DIRECTORY / 'reference' / f'{platform}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / f'{platform}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / f'{platform}_{mesh}_{storm}'
 
     runs = {f'test_case_1': (None, None)}
 
@@ -86,12 +86,12 @@ def test_hera_shinnecock_ike():
     mesh = 'shinnecock'
     storm = 'ike'
 
-    input_directory = DATA_DIRECTORY / 'input' / f'{mesh}_{storm}'
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = DATA_DIRECTORY / 'output' / f'{platform}_{mesh}_{storm}'
-    reference_directory = DATA_DIRECTORY / 'reference' / f'{platform}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / f'{platform}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / f'{platform}_{mesh}_{storm}'
 
     runs = {f'test_case_1': (None, None)}
 
@@ -139,12 +139,12 @@ def test_stampede2_shinnecock_ike():
     mesh = 'shinnecock'
     storm = 'ike'
 
-    input_directory = DATA_DIRECTORY / 'input' / f'{mesh}_{storm}'
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = DATA_DIRECTORY / 'output' / f'{platform}_{mesh}_{storm}'
-    reference_directory = DATA_DIRECTORY / 'reference' / f'{platform}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / f'{platform}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / f'{platform}_{mesh}_{storm}'
 
     runs = {f'test_case_1': (None, None)}
 
@@ -193,6 +193,11 @@ def tpxo():
     if not tpxo_filename.exists():
         url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
         extract_download(url, tpxo_filename.parent, ['h_tpxo9.v1.nc'])
+
+
+@pytest.fixture(scope='session', autouse=True)
+def data_directory():
+    os.chdir(DATA_DIRECTORY)
 
 
 def download_mesh(

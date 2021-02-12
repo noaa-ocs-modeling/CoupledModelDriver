@@ -5,7 +5,7 @@
 #SBATCH --mail-type=all
 #SBATCH --mail-user=example@email.gov
 #SBATCH --output=ADCIRCPY.out.log
-#SBATCH -n 384
+#SBATCH -n 13
 #SBATCH --time=00:30:00
 #SBATCH --partition=None
 

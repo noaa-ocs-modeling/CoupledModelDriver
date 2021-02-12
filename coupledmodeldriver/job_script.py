@@ -1,7 +1,7 @@
 from datetime import timedelta
 from enum import Enum
 from os import PathLike
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import textwrap
 from typing import Sequence
 import uuid
@@ -273,12 +273,12 @@ class AdcircRunScript(AdcircJobScript):
         commands: [str] = None,
         **kwargs,
     ):
-        self.fort15_filename = fort15_filename
-        self.nems_configure_filename = nems_configure_filename
-        self.model_configure_filename = model_configure_filename
-        self.atm_namelist_rc_filename = atm_namelist_rc_filename
-        self.config_rc_filename = config_rc_filename
-        self.fort67_filename = fort67_filename
+        self.fort15_filename = PurePosixPath(fort15_filename)
+        self.nems_configure_filename = PurePosixPath(nems_configure_filename)
+        self.model_configure_filename = PurePosixPath(model_configure_filename)
+        self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
+        self.config_rc_filename = PurePosixPath(config_rc_filename)
+        self.fort67_filename = PurePosixPath(fort67_filename) if fort67_filename is not None else None
 
         super().__init__(
             platform,
