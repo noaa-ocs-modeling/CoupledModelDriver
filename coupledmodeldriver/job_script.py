@@ -360,7 +360,7 @@ class RunScript(Script):
 
     def __str__(self) -> str:
         lines = [
-            f'cd coldstart'
+            f'cd coldstart',
             f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
             f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
             'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
@@ -395,7 +395,7 @@ class RunScript(Script):
 
 
 def bash_if_statement(
-    condition: str, then: [str], *else_then: [[str]], indentation: str = '  '
+    condition: str, then: [str], *else_then: [[str]], indentation: str = '    '
 ) -> str:
     """
     Create a if statement in Bash syntax using the given condition, then statement(s), and else condition(s) / statement(s).
@@ -448,7 +448,7 @@ def bash_if_statement(
     return '\n'.join(lines)
 
 
-def bash_for_loop(iteration: str, do: [str], indentation='  ') -> str:
+def bash_for_loop(iteration: str, do: [str], indentation='    ') -> str:
     """
     Create a for loop in Bash syntax using the given variable, iterator, and do statement(s).
 
@@ -464,7 +464,7 @@ def bash_for_loop(iteration: str, do: [str], indentation='  ') -> str:
     return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done',))
 
 
-def bash_function(name: str, body: [str], indentation: str = '  ') -> str:
+def bash_function(name: str, body: [str], indentation: str = '    ') -> str:
     """
     Create a function in Bash syntax using the given name and function statement(s).
 
