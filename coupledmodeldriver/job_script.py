@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from enum import Enum
 from os import PathLike
@@ -31,7 +32,19 @@ class Platform(Enum):
     HERA = 'hera'
 
 
-class JobScript:
+class Script(ABC):
+    shebang = '#!/bin/bash --login'
+
+    @abstractmethod
+    def __str__(self) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def write(self, filename: PathLike, overwrite: bool = False):
+        raise NotImplementedError
+
+
+class JobScript(Script):
     shebang = '#!/bin/bash --login'
 
     def __init__(
@@ -50,6 +63,7 @@ class JobScript:
         slurm_partition: str = None,
         modules: [PathLike] = None,
         path_prefix: str = None,
+        write_slurm_directory: bool = False,
     ):
         """
         Instantiate a new job script, to run locally or from a job manager.
@@ -68,6 +82,7 @@ class JobScript:
         :param slurm_partition: partition to run on (stampede2 only)
         :param modules: file paths to modules to load
         :param path_prefix: file path to prepend to the PATH
+        :param write_slurm_directory: explicitly add directory to Slurm header when writing file
         """
 
         if isinstance(modules, Sequence) and len(modules) == 0:
@@ -102,6 +117,7 @@ class JobScript:
 
         self.modules = modules
         self.path_prefix = path_prefix
+        self.write_slurm_directory = write_slurm_directory
 
     @property
     def launcher(self) -> str:
@@ -191,24 +207,21 @@ class JobScript:
 
         return '\n'.join(lines)
 
-    def write(
-        self, filename: PathLike, overwrite: bool = False, use_as_slurm_directory: bool = False
-    ):
+    def write(self, filename: PathLike, overwrite: bool = False):
         """
-        Write Slurm script to file.
+        Write script to file.
 
         :param filename: path to output file
         :param overwrite: whether to overwrite existing files
-        :param use_as_slurm_directory: use given directory in Slurm header
         """
 
         if not isinstance(filename, Path):
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'{self.platform.value}_job.sh'
+            filename = filename / f'{self.platform.value}.job'
 
-        if use_as_slurm_directory:
+        if self.write_slurm_directory:
             self.__slurm_run_directory = filename.parent
 
         output = f'{self}\n'
@@ -216,7 +229,7 @@ class JobScript:
             with open(filename, 'w') as file:
                 file.write(output)
 
-        if use_as_slurm_directory:
+        if self.write_slurm_directory:
             self.__slurm_run_directory = None
 
 
@@ -339,6 +352,46 @@ class AdcircMeshPartitionScript(AdcircJobScript):
                 f'{self.launcher} adcprep --np {self.adcirc_partitions} --prepall',
             ]
         )
+
+
+class RunScript(Script):
+    def __init__(self, platform: Platform):
+        self.platform = platform
+
+    def __str__(self) -> str:
+        lines = [
+            f'cd coldstart'
+            f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
+            f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
+            'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
+            'coldstart_jobid=$(sbatch --dependency=afterany:$adcprep_jobid nems_adcirc.job)',
+            'cd ..',
+            bash_for_loop(
+                'for directory in ./runs/*/',
+                [
+                    'cd "$directory"',
+                    f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
+                    f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
+                    'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
+                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
+                ]
+            ),
+            'squeue -u $USER -o "%.8A %.4C %.10m %.20E"'
+        ]
+
+        return '\n'.join(lines)
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'run.sh'
+
+        output = f'{self}\n'
+        if overwrite or not filename.exists():
+            with open(filename, 'w') as file:
+                file.write(output)
 
 
 def bash_if_statement(
