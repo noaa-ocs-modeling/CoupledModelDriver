@@ -15,9 +15,13 @@ sys.path.append((Path(__file__).parent / '..').absolute())
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
-MESH_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'ike' / 'grid_v1'
-FORCINGS_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'ike'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local_hsofs_ike'
+MESH_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+)
+FORCINGS_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'shinnecock' / 'ike'
+)
+OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local_shinnecock_ike'
 
 if __name__ == '__main__':
     runs = {f'test_case_1': (None, None)}
@@ -34,7 +38,7 @@ if __name__ == '__main__':
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(11),
     )
 
     nems.connect('ATM', 'OCN')
@@ -52,8 +56,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_test_shinnecock',
-        email_address='zachary.burnett@noaa.gov',
+        email_address='example@email.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
