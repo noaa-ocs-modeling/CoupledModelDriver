@@ -263,10 +263,7 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
-    driver.write(coldstart_directory, overwrite=True, coldstart='fort.15', hotstart=None)
-    slurm_filename = coldstart_directory / 'slurm.job'
-    if slurm_filename.exists():
-        os.remove(slurm_filename)
+    driver.write(coldstart_directory, overwrite=True, coldstart='fort.15', hotstart=None, driver=None)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -276,10 +273,7 @@ def write_adcirc_configurations(
         if not driver.mesh.has_attribute(attribute_name):
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
-        driver.write(run_directory, overwrite=True, coldstart=None, hotstart='fort.15')
-        slurm_filename = run_directory / 'slurm.job'
-        if slurm_filename.exists():
-            os.remove(slurm_filename)
+        driver.write(run_directory, overwrite=True, coldstart=None, hotstart='fort.15', driver=None)
         for phase in ['hotstart']:
             directory = run_directory / phase
             if not directory.exists():
