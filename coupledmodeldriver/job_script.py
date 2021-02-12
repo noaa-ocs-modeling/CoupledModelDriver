@@ -363,22 +363,65 @@ class RunScript(Script):
             f'cd coldstart',
             f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
             f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
-            'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
-            'coldstart_jobid=$(sbatch --dependency=afterany:$adcprep_jobid nems_adcirc.job)',
-            'cd ..',
-            bash_for_loop(
-                'for directory in ./runs/*/',
+        ]
+        lines.append(self.coldstart)
+        lines.extend(
+            [
+                'cd ..',
+                bash_for_loop(
+                    'for hotstart_directory in ./runs/*/',
+                    [
+                        'cd "$hotstart_directory"',
+                        f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
+                        f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
+                        self.hotstart,
+                        'cd ../..'
+                    ]
+                ),
+            ]
+        )
+
+        if self.platform != Platform.LOCAL:
+            lines.append('squeue -u $USER -o "%.8A %.4C %.10m %.20E"')
+
+        return '\n'.join(lines)
+
+    @property
+    def hotstart(self) -> str:
+        lines = []
+        if self.platform != Platform.LOCAL:
+            lines.extend(
                 [
-                    'cd "$directory"',
-                    f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
-                    f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
                     'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
                     'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
                 ]
-            ),
-            'squeue -u $USER -o "%.8A %.4C %.10m %.20E"'
-        ]
+            )
+        else:
+            lines.extend(
+                [
+                    'sh adcprep.job',
+                    'sh nems_adcirc.job',
+                ]
+            )
+        return '\n'.join(lines)
 
+    @property
+    def coldstart(self) -> str:
+        lines = []
+        if self.platform != Platform.LOCAL:
+            lines.extend(
+                [
+                    'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
+                    'sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job',
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    'sh adcprep.job',
+                    'sh nems_adcirc.job',
+                ]
+            )
         return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):

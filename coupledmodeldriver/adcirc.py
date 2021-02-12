@@ -294,4 +294,4 @@ def write_adcirc_configurations(
                 job_file.write(text)
 
     run_script = RunScript(platform)
-    run_script.write(output_directory / 'run.sh')
+    run_script.write(output_directory / 'run.sh', overwrite=True)
