@@ -13,7 +13,7 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
-from .job_script import EnsembleSlurmScript, Platform, SlurmEmailType
+from .job_script import AdcircMeshPartitionScript, AdcircRunScript, Platform, RunScript, SlurmEmailType
 from .utilities import get_logger
 
 LOGGER = get_logger('configuration.adcirc')
@@ -25,7 +25,6 @@ def write_adcirc_configurations(
     mesh_directory: PathLike,
     output_directory: PathLike,
     platform: Platform,
-    name: str = None,
     partition: str = None,
     email_address: str = None,
     wall_clock_time: timedelta = None,
@@ -40,7 +39,6 @@ def write_adcirc_configurations(
     :param mesh_directory: path to directory containing input mesh (fort.13 and fort.14) as well as stations file if applicable
     :param output_directory: path to store run configuration
     :param platform: HPC platform for which to configure
-    :param name: name of this perturbation
     :param partition: Slurm partition
     :param email_address: email address
     :param wall_clock_time: wall clock time of job
@@ -57,26 +55,11 @@ def write_adcirc_configurations(
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
 
-    if name is None:
-        name = 'nems_run'
-
     if 'ocn' not in nems or not isinstance(nems['ocn'], ADCIRCEntry):
         nems['ocn'] = ADCIRCEntry(11)
 
     if forcings is None:
         forcings = []
-
-    if platform in [Platform.HERA, Platform.ORION]:
-        launcher = 'srun'
-    elif platform in [Platform.STAMPEDE2]:
-        launcher = 'ibrun'
-    else:
-        launcher = ''
-
-    run_name = 'ADCIRC_GAHM_GENERIC'
-
-    if partition is None:
-        partition = 'development'
 
     if wall_clock_time is None:
         wall_clock_time = timedelta(minutes=30)
@@ -128,49 +111,130 @@ def write_adcirc_configurations(
         hotstart_filenames = []
 
     for filename in hotstart_filenames + [atm_namelist_filename]:
-        hotstart_filename = Path(f'{filename}.hotstart')
-        if hotstart_filename.exists():
-            os.remove(hotstart_filename)
-        filename.rename(hotstart_filename)
+        coldstart_filename = Path(f'{filename}.hotstart')
+        if coldstart_filename.exists():
+            os.remove(coldstart_filename)
+        filename.rename(coldstart_filename)
 
-    extra_commands = []
-    if platform == Platform.STAMPEDE2:
-        extra_commands.append('source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede')
-    elif platform == Platform.HERA:
-        extra_commands.append(
-            'source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera')
+    coldstart_directory = output_directory / 'coldstart'
+    runs_directory = output_directory / 'runs'
 
-    ensemble_slurm_script = EnsembleSlurmScript(
-        account=None,
-        tasks=nems.processors,
-        duration=wall_clock_time,
-        nodes=int(numpy.ceil(nems.processors / 68)) if platform == Platform.STAMPEDE2 else None,
-        partition=partition,
-        platform=platform,
-        launcher=launcher,
-        run=name,
-        email_type=SlurmEmailType.ALL if email_address is not None else None,
-        email_address=email_address,
-        error_filename=f'{name}.err.log',
-        log_filename=f'{name}.out.log',
-        modules=[],
-        commands=extra_commands,
+    for directory in [coldstart_directory, runs_directory]:
+        if not directory.exists():
+            directory.mkdir()
+
+    slurm_account = 'coastal'
+    slurm_nodes = (
+        int(numpy.ceil(nems.processors / 68)) if platform == Platform.STAMPEDE2 else None
     )
-    ensemble_slurm_script.write(output_directory, overwrite=True)
+
+    adcprep_run_name = 'ADCIRC_MESH_PARTITION'
+    adcirc_coldstart_run_name = 'ADCIRC_COLDSTART'
+    adcirc_hotstart_run_name = 'ADCIRC_HOTSTART'
+    adcircpy_run_name = 'ADCIRCPY'
+
+    adcprep_script = AdcircMeshPartitionScript(
+        platform=platform,
+        adcirc_mesh_partitions=spinup.processors,
+        slurm_account=slurm_account,
+        slurm_duration=wall_clock_time,
+        slurm_nodes=slurm_nodes,
+        slurm_partition=partition,
+        slurm_run_name=adcprep_run_name,
+        slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
+        slurm_email_address=email_address,
+        slurm_error_filename=f'{adcprep_run_name}.err.log',
+        slurm_log_filename=f'{adcprep_run_name}.out.log',
+    )
+    adcprep_script.write(
+        output_directory / f'{adcprep_script.platform.value}_adcprep.job', overwrite=True
+    )
+
+    if spinup is not None:
+        coldstart_run_script = AdcircRunScript(
+            platform=platform,
+            fort15_filename=output_directory / 'fort.15.coldstart',
+            nems_configure_filename=output_directory / 'nems.configure.coldstart',
+            model_configure_filename=output_directory / 'model_configure.coldstart',
+            atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
+            config_rc_filename=output_directory / 'config.rc.coldstart',
+            slurm_tasks=spinup.processors,
+            slurm_account=slurm_account,
+            slurm_duration=wall_clock_time,
+            slurm_run_name=adcirc_coldstart_run_name,
+            slurm_nodes=slurm_nodes,
+            slurm_partition=partition,
+            slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
+            slurm_email_address=email_address,
+            slurm_error_filename=f'{adcirc_coldstart_run_name}.err.log',
+            slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
+        )
+    else:
+        coldstart_run_script = AdcircRunScript(
+            platform=platform,
+            fort15_filename=output_directory / 'fort.15.coldstart',
+            nems_configure_filename=output_directory / 'nems.configure.coldstart',
+            model_configure_filename=output_directory / 'model_configure.coldstart',
+            atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
+            config_rc_filename=output_directory / 'config.rc.coldstart',
+            slurm_tasks=nems.processors,
+            slurm_account=slurm_account,
+            slurm_duration=wall_clock_time,
+            slurm_run_name=adcirc_coldstart_run_name,
+            slurm_nodes=slurm_nodes,
+            slurm_partition=partition,
+            slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
+            slurm_email_address=email_address,
+            slurm_error_filename=f'{adcirc_coldstart_run_name}.err.log',
+            slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
+        )
+
+    coldstart_run_script.write(
+        output_directory / f'{coldstart_run_script.platform.value}_nems_adcirc.job.coldstart',
+        overwrite=True,
+    )
+
+    if spinup is not None:
+        hotstart_run_script = AdcircRunScript(
+            platform=platform,
+            fort15_filename=output_directory / 'fort.15.hotstart',
+            nems_configure_filename=output_directory / 'nems.configure.hotstart',
+            model_configure_filename=output_directory / 'model_configure.hotstart',
+            atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.hotstart',
+            config_rc_filename=output_directory / 'config.rc.hotstart',
+            fort67_filename=coldstart_directory / 'fort.67.nc',
+            slurm_tasks=nems.processors,
+            slurm_account=slurm_account,
+            slurm_duration=wall_clock_time,
+            slurm_run_name=adcirc_hotstart_run_name,
+            slurm_nodes=slurm_nodes,
+            slurm_partition=partition,
+            slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
+            slurm_email_address=email_address,
+            slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
+            slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
+        )
+
+        hotstart_run_script.write(
+            output_directory
+            / f'{hotstart_run_script.platform.value}_nems_adcirc.job.hotstart',
+            overwrite=True,
+        )
 
     slurm = SlurmConfig(
-        account=None,
+        account=slurm_account,
         ntasks=nems.processors,
-        run_name=run_name,
+        run_name=adcircpy_run_name,
         partition=partition,
         walltime=wall_clock_time,
-        nodes=int(numpy.ceil(nems.processors / 68)) if platform == Platform.STAMPEDE2 else None,
+        nodes=int(numpy.ceil(nems.processors / 68))
+        if platform == Platform.STAMPEDE2
+        else None,
         mail_type='all' if email_address is not None else None,
         mail_user=email_address,
-        log_filename=f'{name}.out.log',
+        log_filename=f'{adcircpy_run_name}.out.log',
         modules=[],
-        launcher=launcher,
-        extra_commands=extra_commands,
+        launcher=coldstart_run_script.launcher,
     )
 
     # instantiate AdcircRun object.
@@ -199,12 +263,7 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
-    coldstart_directory = output_directory / 'coldstart'
-    runs_directory = output_directory / 'runs'
-
-    for directory in [coldstart_directory, runs_directory]:
-        if not directory.exists():
-            directory.mkdir()
+    driver.write(coldstart_directory, overwrite=True, coldstart='fort.15', hotstart=None, driver=None)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -214,7 +273,7 @@ def write_adcirc_configurations(
         if not driver.mesh.has_attribute(attribute_name):
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
-        driver.write(run_directory, overwrite=True)
+        driver.write(run_directory, overwrite=True, coldstart=None, hotstart='fort.15', driver=None)
         for phase in ['hotstart']:
             directory = run_directory / phase
             if not directory.exists():
@@ -233,3 +292,6 @@ def write_adcirc_configurations(
             text = re.sub(pattern, replacement, text)
             with open(job_filename, 'w') as job_file:
                 job_file.write(text)
+
+    run_script = RunScript(platform)
+    run_script.write(output_directory / f'run_{platform.value}.sh', overwrite=True)

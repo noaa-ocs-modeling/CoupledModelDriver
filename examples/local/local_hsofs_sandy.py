@@ -15,8 +15,12 @@ sys.path.append((Path(__file__).parent / '..').absolute())
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
-MESH_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
-FORCINGS_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'sandy'
+MESH_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
+)
+FORCINGS_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'sandy'
+)
 OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local_hsofs_sandy'
 
 if __name__ == '__main__':
@@ -52,8 +56,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_test_hsofs',
-        email_address='zachary.burnett@noaa.gov',
+        email_address='example@email.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],

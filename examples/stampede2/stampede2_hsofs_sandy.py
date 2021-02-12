@@ -17,7 +17,9 @@ from coupledmodeldriver.job_script import Platform
 
 MESH_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
 FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'forcings' / 'hsofs' / 'sandy'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'stampede2_hsofs_sandy'
+OUTPUT_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'configuration' / 'stampede2_hsofs_sandy'
+)
 
 if __name__ == '__main__':
     runs = {f'nems_hsofs_test': (None, None)}
@@ -52,8 +54,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_test_hsofs',
-        email_address='zachary.burnett@noaa.gov',
+        email_address='example@email.gov',
         platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],

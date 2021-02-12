@@ -16,9 +16,17 @@ sys.path.append((Path(__file__).parent / '..' / '..').absolute())
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
-MESH_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'ike' / 'grid_v1'
-FORCINGS_DIRECTORY = (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'ike'
-OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'local_hsofs_ike_perturbed_mannings_n'
+MESH_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+)
+FORCINGS_DIRECTORY = (
+    (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'shinnecock' / 'ike'
+)
+OUTPUT_DIRECTORY = (
+    (Path(__file__).parent / '../data')
+    / 'configuration'
+    / 'local_shinnecock_ike_perturbed_mannings_n'
+)
 
 if __name__ == '__main__':
     range = [0.016, 0.08]
@@ -62,8 +70,7 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
-        name='nems_mannings_n_perturbation_shinnecock',
-        email_address='zachary.burnett@noaa.gov',
+        email_address='example@email.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],

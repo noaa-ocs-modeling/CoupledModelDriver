@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from enum import Enum
 from os import PathLike
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import textwrap
 from typing import Sequence
 import uuid
@@ -31,124 +32,157 @@ class Platform(Enum):
     HERA = 'hera'
 
 
-class EnsembleSlurmScript:
+class Script(ABC):
+    shebang = '#!/bin/bash --login'
+
+    @abstractmethod
+    def __str__(self) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def write(self, filename: PathLike, overwrite: bool = False):
+        raise NotImplementedError
+
+
+class JobScript(Script):
     shebang = '#!/bin/bash --login'
 
     def __init__(
         self,
-        account: str,
-        tasks: int,
-        duration: timedelta,
-        partition: str,
         platform: Platform,
-        basename: str = None,
-        directory: str = None,
-        launcher: str = None,
-        run: str = None,
-        email_type: SlurmEmailType = None,
-        email_address: str = None,
-        error_filename: str = None,
-        log_filename: str = None,
-        nodes: int = None,
-        modules: [str] = None,
+        commands: [str],
+        slurm_tasks: int,
+        slurm_account: str,
+        slurm_duration: timedelta,
+        slurm_run_name: str = None,
+        slurm_email_type: SlurmEmailType = None,
+        slurm_email_address: str = None,
+        slurm_error_filename: PathLike = None,
+        slurm_log_filename: PathLike = None,
+        slurm_nodes: int = None,
+        slurm_partition: str = None,
+        modules: [PathLike] = None,
         path_prefix: str = None,
-        commands: [str] = None,
+        write_slurm_directory: bool = False,
     ):
         """
-        Instantiate a new Slurm shell script (`*.job`).
+        Instantiate a new job script, to run locally or from a job manager.
 
-        :param account: Slurm account name
-        :param tasks: number of total tasks for Slurm to run
-        :param duration: duration to run job in job manager
-        :param partition: partition to run on
         :param platform: HPC to run script on
-        :param basename: file name of driver shell script
-        :param directory: directory to run in
-        :param launcher: command to start processes on target system (`srun`, `ibrun`, etc.)
-        :param run: Slurm run name
-        :param email_type: email type
-        :param email_address: email address
-        :param error_filename: file path to error log file
-        :param log_filename: file path to output log file
-        :param nodes: number of physical nodes to run on
-        :param modules: list of file paths to modules to load
+        :param commands: shell commands to run in script
+        :param slurm_tasks: number of total tasks for Slurm to run
+        :param slurm_account: Slurm account name
+        :param slurm_duration: duration to run job in job manager
+        :param slurm_run_name: Slurm run name
+        :param slurm_email_type: email type
+        :param slurm_email_address: email address
+        :param slurm_error_filename: file path to error log file
+        :param slurm_log_filename: file path to output log file
+        :param slurm_nodes: number of physical nodes to run on
+        :param slurm_partition: partition to run on (stampede2 only)
+        :param modules: file paths to modules to load
         :param path_prefix: file path to prepend to the PATH
-        :param commands: list of extra shell commands to insert into script
+        :param write_slurm_directory: explicitly add directory to Slurm header when writing file
         """
 
         if isinstance(modules, Sequence) and len(modules) == 0:
             modules = None
 
-        self.account = account
-        self.tasks = tasks
-        self.duration = duration
-        self.partition = partition
+        if platform == Platform.STAMPEDE2 and slurm_partition is None:
+            slurm_partition = 'development'
+
         self.platform = platform
+        self.commands = commands if commands is not None else []
 
-        self.basename = basename if basename is not None else 'slurm.job'
-        self.directory = directory if directory is not None else '.'
-        self.launcher = launcher if launcher is not None else 'srun'
+        self.slurm_tasks = slurm_tasks
+        self.slurm_account = slurm_account
+        self.slurm_duration = slurm_duration
 
-        self.run = run if run is not None else uuid.uuid4().hex
-        self.email_type = email_type
-        self.email_address = email_address
+        self.__slurm_run_directory = None
+        self.slurm_run_name = (
+            slurm_run_name if slurm_run_name is not None else uuid.uuid4().hex
+        )
+        self.slurm_email_type = slurm_email_type
+        self.slurm_email_address = slurm_email_address
 
-        self.error_filename = error_filename if error_filename is not None else 'slurm.log'
-        self.log_filename = log_filename if log_filename is not None else 'slurm.log'
-        self.nodes = nodes
+        self.slurm_error_filename = (
+            slurm_error_filename if slurm_error_filename is not None else 'slurm.log'
+        )
+        self.slurm_log_filename = (
+            slurm_log_filename if slurm_log_filename is not None else 'slurm.log'
+        )
+        self.slurm_nodes = slurm_nodes
+
+        self.slurm_partition = slurm_partition
+
         self.modules = modules
         self.path_prefix = path_prefix
-        self.commands = commands
+        self.write_slurm_directory = write_slurm_directory
 
     @property
-    def tasks(self) -> int:
-        return self.__tasks
+    def launcher(self) -> str:
+        """
+        :return: command to start processes on target system (`srun`, `ibrun`, etc.)
+        """
 
-    @tasks.setter
-    def tasks(self, tasks: int = 1):
-        self.__tasks = int(tasks)
-
-    @property
-    def nodes(self) -> int:
-        return self.__nodes
-
-    @nodes.setter
-    def nodes(self, nodes: int):
-        if nodes is None and self.platform == Platform.STAMPEDE2:
-            nodes = numpy.ceil(self.tasks / 68)
-        if nodes is not None:
-            nodes = int(nodes)
-        self.__nodes = nodes
+        if self.platform in [Platform.HERA, Platform.ORION]:
+            return 'srun'
+        elif self.platform in [Platform.STAMPEDE2]:
+            return 'ibrun'
+        else:
+            return ''
 
     @property
-    def slurm_parameters(self) -> str:
-        lines = [f'#SBATCH -D {self.directory}', f'#SBATCH -J {self.run}']
+    def slurm_tasks(self) -> int:
+        return self.__slurm_tasks
 
-        if self.account is not None:
-            lines.append(f'#SBATCH -A {self.account}')
-        if self.email_type not in (None, SlurmEmailType.NONE):
-            lines.append(f'#SBATCH --mail-type={self.email_type.value}')
-            if self.email_address is None or len(self.email_address) == 0:
+    @slurm_tasks.setter
+    def slurm_tasks(self, slurm_tasks: int = 1):
+        self.__slurm_tasks = int(slurm_tasks)
+
+    @property
+    def slurm_nodes(self) -> int:
+        return self.__slurm_nodes
+
+    @slurm_nodes.setter
+    def slurm_nodes(self, slurm_nodes: int):
+        if slurm_nodes is None and self.platform == Platform.STAMPEDE2:
+            slurm_nodes = numpy.ceil(self.slurm_tasks / 68)
+        if slurm_nodes is not None:
+            slurm_nodes = int(slurm_nodes)
+        self.__slurm_nodes = slurm_nodes
+
+    @property
+    def slurm_header(self) -> str:
+        lines = [f'#SBATCH -J {self.slurm_run_name}']
+
+        if self.__slurm_run_directory is not None:
+            lines.append(f'#SBATCH -D {self.__slurm_run_directory}')
+
+        if self.slurm_account is not None:
+            lines.append(f'#SBATCH -A {self.slurm_account}')
+        if self.slurm_email_type not in (None, SlurmEmailType.NONE):
+            lines.append(f'#SBATCH --mail-type={self.slurm_email_type.value}')
+            if self.slurm_email_address is not None and len(self.slurm_email_address) > 0:
+                lines.append(f'#SBATCH --mail-user={self.slurm_email_address}')
+            else:
                 raise ValueError('missing email address')
-            lines.append(f'#SBATCH --mail-user={self.email_address}')
-        if self.error_filename is not None:
-            lines.append(f'#SBATCH --error={self.error_filename}')
-        if self.log_filename is not None:
-            lines.append(f'#SBATCH --output={self.log_filename}')
+        if self.slurm_error_filename is not None:
+            lines.append(f'#SBATCH --error={self.slurm_error_filename}')
+        if self.slurm_log_filename is not None:
+            lines.append(f'#SBATCH --output={self.slurm_log_filename}')
 
-        if self.nodes is not None:
-            lines.append(f'#SBATCH -N {self.nodes}')
-        lines.append(f'#SBATCH -n {self.tasks}')
+        lines.append(f'#SBATCH -n {self.slurm_tasks}')
+        if self.slurm_nodes is not None:
+            lines.append(f'#SBATCH -N {self.slurm_nodes}')
 
-        hours, remainder = divmod(self.duration, timedelta(hours=1))
+        hours, remainder = divmod(self.slurm_duration, timedelta(hours=1))
         minutes, remainder = divmod(remainder, timedelta(minutes=1))
         seconds = round(remainder / timedelta(seconds=1))
-        lines.extend(
-            [
-                f'#SBATCH --time={hours:02}:{minutes:02}:{seconds:02}',
-                f'#SBATCH --partition={self.partition}',
-            ]
-        )
+
+        lines.append(f'#SBATCH --time={hours:02}:{minutes:02}:{seconds:02}')
+        if self.slurm_partition is not None:
+            lines.append(f'#SBATCH --partition={self.slurm_partition}')
 
         return '\n'.join(lines)
 
@@ -158,12 +192,9 @@ class EnsembleSlurmScript:
         ]
 
         if self.platform != Platform.LOCAL:
-            lines.extend([
-                self.slurm_parameters,
-                '',
-                'set -e',
-                '',
-            ])
+            lines.extend(
+                [self.slurm_header, '', 'set -e', '', ]
+            )
 
         if self.modules is not None:
             modules_string = ' '.join(module for module in self.modules)
@@ -172,123 +203,13 @@ class EnsembleSlurmScript:
         if self.path_prefix is not None:
             lines.extend([f'PATH={self.path_prefix}:$PATH', ''])
 
-        if self.commands is not None:
-            lines.extend([*(str(command) for command in self.commands), ''])
-
-        lines.extend(
-            [
-                bash_function(
-                    'main',
-                    [
-                        'run_coldstart_phase',
-                        bash_for_loop(
-                            'for directory in ./runs/*/',
-                            [
-                                'echo "Starting configuration $directory..."',
-                                'cd "$directory"',
-                                'SECONDS=0',
-                                bash_if_statement(
-                                    f'if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self.log_filename}',
-                                    [
-                                        'duration=$SECONDS',
-                                        'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."',
-                                        'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
-                                        'exit -1',
-                                    ],
-                                    'else',
-                                    [
-                                        'run_hotstart_phase',
-                                        'duration=$SECONDS',
-                                        bash_if_statement(
-                                            f'if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self.log_filename}',
-                                            [
-                                                'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."',
-                                                'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
-                                                'exit -1',
-                                            ],
-                                        ),
-                                    ],
-                                ),
-                                'echo "Wallclock time: $($duration / 60) minutes and $($duration % 60) seconds."',
-                                'cd ..',
-                            ],
-                        ),
-                    ],
-                ),
-                '',
-                bash_function(
-                    'run_coldstart_phase',
-                    [
-                        'rm -rf ./coldstart/*',
-                        'cd ./coldstart',
-                        'ln -sf ../fort.13 ./fort.13',
-                        'ln -sf ../fort.14 ./fort.14',
-                        'ln -sf ../fort.15.coldstart ./fort.15',
-                        'ln -sf ../../nems.configure.coldstart ./nems.configure',
-                        'ln -sf ../../model_configure.coldstart ./model_configure',
-                        'ln -sf ../../atm_namelist.rc.coldstart ./atm_namelist.rc',
-                        'ln -sf ../../config.rc.coldstart ./config.rc',
-                        'adcprep --np $SLURM_NTASKS --partmesh',
-                        'adcprep --np $SLURM_NTASKS --prepall',
-                        f'{self.launcher} NEMS.x',
-                        'clean_directory',
-                        'cd ..',
-                    ],
-                ),
-                '',
-                bash_function(
-                    'run_hotstart_phase',
-                    [
-                        'rm -rf ./hotstart/*',
-                        'cd ./hotstart',
-                        'ln -sf ../fort.13 ./fort.13',
-                        'ln -sf ../fort.14 ./fort.14',
-                        'ln -sf ../fort.15.hotstart ./fort.15',
-                        'ln -sf ../../nems.configure.hotstart ./nems.configure',
-                        'ln -sf ../../nems.configure.hotstart ./nems.configure',
-                        'ln -sf ../../model_configure.hotstart ./model_configure',
-                        'ln -sf ../../atm_namelist.rc.hotstart ./atm_namelist.rc',
-                        'ln -sf ../../config.rc.hotstart ./config.rc',
-                        'ln -sf ../../../coldstart/fort.67.nc ./fort.67.nc',
-                        'adcprep --np $SLURM_NTASKS --partmesh',
-                        'adcprep --np $SLURM_NTASKS --prepall',
-                        f'{self.launcher} NEMS.x',
-                        'clean_directory',
-                        'cd ..',
-                    ],
-                ),
-                '',
-                bash_function(
-                    'clean_directory',
-                    [
-                        f'rm -rf {pattern}' for pattern in
-                        [
-                            'PE*',
-                            'partmesh.txt',
-                            'metis_graph.txt',
-                            'fort.13',
-                            'fort.14',
-                            'fort.15',
-                            'fort.16',
-                            'fort.80',
-                            'fort.68.nc',
-                            'nems.configure',
-                            'model_configure',
-                            'atm_namelist.rc',
-                            'config.rc',
-                        ]
-                    ],
-                ),
-                '',
-                'main',
-            ]
-        )
+        lines.extend(str(command) for command in self.commands)
 
         return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):
         """
-        Write Slurm script to file.
+        Write script to file.
 
         :param filename: path to output file
         :param overwrite: whether to overwrite existing files
@@ -298,7 +219,218 @@ class EnsembleSlurmScript:
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'run_{self.platform.value}.sh'
+            filename = filename / f'{self.platform.value}.job'
+
+        if self.write_slurm_directory:
+            self.__slurm_run_directory = filename.parent
+
+        output = f'{self}\n'
+        if overwrite or not filename.exists():
+            with open(filename, 'w') as file:
+                file.write(output)
+
+        if self.write_slurm_directory:
+            self.__slurm_run_directory = None
+
+
+class AdcircJobScript(JobScript):
+    def __init__(
+        self,
+        platform: Platform,
+        commands: [str],
+        slurm_tasks: int,
+        slurm_account: str,
+        slurm_duration: timedelta,
+        slurm_run_name: str,
+        **kwargs,
+    ):
+        if slurm_run_name is None:
+            slurm_run_name = 'ADCIRC_JOB'
+
+        super().__init__(
+            platform,
+            commands,
+            slurm_tasks,
+            slurm_account,
+            slurm_duration,
+            slurm_run_name,
+            **kwargs,
+        )
+
+        if self.platform == Platform.STAMPEDE2:
+            self.commands.append(
+                'source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede'
+            )
+        elif self.platform == Platform.HERA:
+            self.commands.append(
+                'source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
+            )
+
+
+class AdcircRunScript(AdcircJobScript):
+    """ script for running ADCIRC via a NEMS configuration """
+
+    def __init__(
+        self,
+        platform: Platform,
+        fort15_filename: PathLike,
+        nems_configure_filename: PathLike,
+        model_configure_filename: PathLike,
+        atm_namelist_rc_filename: PathLike,
+        config_rc_filename: PathLike,
+        slurm_tasks: int,
+        slurm_account: str,
+        slurm_duration: timedelta,
+        slurm_run_name: str,
+        fort67_filename: PathLike = None,
+        commands: [str] = None,
+        **kwargs,
+    ):
+        self.fort15_filename = PurePosixPath(fort15_filename)
+        self.nems_configure_filename = PurePosixPath(nems_configure_filename)
+        self.model_configure_filename = PurePosixPath(model_configure_filename)
+        self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
+        self.config_rc_filename = PurePosixPath(config_rc_filename)
+        self.fort67_filename = PurePosixPath(fort67_filename) if fort67_filename is not None else None
+
+        super().__init__(
+            platform,
+            commands,
+            slurm_tasks,
+            slurm_account,
+            slurm_duration,
+            slurm_run_name,
+            **kwargs,
+        )
+
+        self.commands.extend(
+            [
+                f'ln -sf {self.fort15_filename} ./fort.15',
+                f'ln -sf {self.nems_configure_filename} ./nems.configure',
+                f'ln -sf {self.model_configure_filename} ./model_configure',
+                f'ln -sf {self.atm_namelist_rc_filename} ./atm_namelist.rc',
+                f'ln -sf {self.config_rc_filename} ./config.rc',
+            ]
+        )
+
+        if self.fort67_filename is not None:
+            self.commands.append(f'ln -sf {self.fort67_filename} ./fort.67.nc')
+
+        self.commands.append(f'{self.launcher} NEMS.x')
+
+
+class AdcircMeshPartitionScript(AdcircJobScript):
+    """ script for performing domain decomposition with `adcprep` """
+
+    def __init__(
+        self,
+        platform: Platform,
+        adcirc_mesh_partitions: int,
+        slurm_account: str,
+        slurm_duration: timedelta,
+        slurm_run_name: str,
+        slurm_tasks: int = 1,
+        commands: [str] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            platform,
+            commands,
+            slurm_tasks,
+            slurm_account,
+            slurm_duration,
+            slurm_run_name,
+            **kwargs,
+        )
+
+        self.adcirc_partitions = adcirc_mesh_partitions
+
+        self.commands.extend(
+            [
+                '',
+                f'{self.launcher} adcprep --np {self.adcirc_partitions} --partmesh',
+                f'{self.launcher} adcprep --np {self.adcirc_partitions} --prepall',
+            ]
+        )
+
+
+class RunScript(Script):
+    def __init__(self, platform: Platform):
+        self.platform = platform
+
+    def __str__(self) -> str:
+        lines = [
+            f'cd coldstart',
+            f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
+            f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
+            self.coldstart,
+            'cd ..'
+        ]
+        lines.append('')
+        lines.extend(
+            [
+                bash_for_loop(
+                    'for hotstart in ./runs/*/',
+                    [
+                        'cd "$hotstart"',
+                        f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
+                        f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
+                        self.hotstart,
+                        'cd ../..'
+                    ]
+                ),
+            ]
+        )
+
+        if self.platform != Platform.LOCAL:
+            lines.append('squeue -u $USER -o "%.8A %.4C %.10m %.20E"')
+
+        return '\n'.join(lines)
+
+    @property
+    def hotstart(self) -> str:
+        lines = []
+        if self.platform != Platform.LOCAL:
+            lines.extend(
+                [
+                    'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
+                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    'sh adcprep.job',
+                    'sh nems_adcirc.job',
+                ]
+            )
+        return '\n'.join(lines)
+
+    @property
+    def coldstart(self) -> str:
+        lines = []
+        if self.platform != Platform.LOCAL:
+            lines.extend(
+                [
+                    'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
+                    'sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job',
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    'sh adcprep.job',
+                    'sh nems_adcirc.job',
+                ]
+            )
+        return '\n'.join(lines)
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'run.sh'
 
         output = f'{self}\n'
         if overwrite or not filename.exists():
@@ -307,7 +439,7 @@ class EnsembleSlurmScript:
 
 
 def bash_if_statement(
-    condition: str, then: [str], *else_then: [[str]], indentation: str = '  '
+    condition: str, then: [str], *else_then: [[str]], indentation: str = '    '
 ) -> str:
     """
     Create a if statement in Bash syntax using the given condition, then statement(s), and else condition(s) / statement(s).
@@ -360,7 +492,7 @@ def bash_if_statement(
     return '\n'.join(lines)
 
 
-def bash_for_loop(iteration: str, do: [str], indentation='  ') -> str:
+def bash_for_loop(iteration: str, do: [str], indentation='    ') -> str:
     """
     Create a for loop in Bash syntax using the given variable, iterator, and do statement(s).
 
@@ -376,7 +508,7 @@ def bash_for_loop(iteration: str, do: [str], indentation='  ') -> str:
     return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done',))
 
 
-def bash_function(name: str, body: [str], indentation: str = '  ') -> str:
+def bash_function(name: str, body: [str], indentation: str = '    ') -> str:
     """
     Create a function in Bash syntax using the given name and function statement(s).
 
