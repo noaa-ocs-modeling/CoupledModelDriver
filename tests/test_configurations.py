@@ -78,7 +78,7 @@ def test_local_shinnecock_ike():
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
 
-    check_reference_directory(output_directory, reference_directory)
+    check_reference_directory(DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory)
 
 
 def test_hera_shinnecock_ike():
@@ -131,7 +131,7 @@ def test_hera_shinnecock_ike():
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
 
-    check_reference_directory(output_directory, reference_directory)
+    check_reference_directory(DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory)
 
 
 def test_stampede2_shinnecock_ike():
@@ -184,7 +184,7 @@ def test_stampede2_shinnecock_ike():
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
 
-    check_reference_directory(output_directory, reference_directory)
+    check_reference_directory(DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory)
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -253,11 +253,6 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
         test_directory = Path(test_directory)
     if not isinstance(reference_directory, Path):
         reference_directory = Path(reference_directory)
-
-    if not test_directory.exists():
-        test_directory = DATA_DIRECTORY / test_directory
-    if not reference_directory.exists():
-        reference_directory = DATA_DIRECTORY / reference_directory
 
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
