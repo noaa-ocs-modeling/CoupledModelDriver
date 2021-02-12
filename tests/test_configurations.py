@@ -232,7 +232,9 @@ def extract_download(
         directory.mkdir(parents=True, exist_ok=True)
 
     temporary_filename = directory / 'temp.tar.gz'
-    wget.download(url, str(temporary_filename))
+    logging.debug(f'downloading {url} -> {temporary_filename}')
+    wget.download(url, f'{temporary_filename}')
+    logging.debug(f'extracting {temporary_filename} -> {directory}')
     with tarfile.open(temporary_filename) as local_file:
         if len(filenames) > 0:
             for filename in filenames:
