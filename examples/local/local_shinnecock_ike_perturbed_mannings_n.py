@@ -17,15 +17,15 @@ from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
 MESH_DIRECTORY = (
-    (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'hsofs' / 'ike' / 'grid_v1'
+    (Path(__file__).parent / '../data') / 'input' / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
 )
 FORCINGS_DIRECTORY = (
-    (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'hsofs' / 'ike'
+    (Path(__file__).parent / '../data') / 'input' / 'forcings' / 'shinnecock' / 'ike'
 )
 OUTPUT_DIRECTORY = (
     (Path(__file__).parent / '../data')
     / 'configuration'
-    / 'local_hsofs_ike_perturbed_mannings_n'
+    / 'local_shinnecock_ike_perturbed_mannings_n'
 )
 
 if __name__ == '__main__':
