@@ -363,15 +363,16 @@ class RunScript(Script):
             f'cd coldstart',
             f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
             f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
+            self.coldstart,
+            'cd ..'
         ]
-        lines.append(self.coldstart)
+        lines.append('')
         lines.extend(
             [
-                'cd ..',
                 bash_for_loop(
-                    'for hotstart_directory in ./runs/*/',
+                    'for hotstart in ./runs/*/',
                     [
-                        'cd "$hotstart_directory"',
+                        'cd "$hotstart"',
                         f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
                         f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
                         self.hotstart,
