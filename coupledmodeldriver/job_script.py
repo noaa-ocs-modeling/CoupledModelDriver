@@ -388,13 +388,13 @@ class RunScript(Script):
         return '\n'.join(lines)
 
     @property
-    def hotstart(self) -> str:
+    def coldstart(self) -> str:
         lines = []
         if self.platform != Platform.LOCAL:
             lines.extend(
                 [
-                    'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
-                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
+                    'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
+                    'coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job)',
                 ]
             )
         else:
@@ -407,13 +407,13 @@ class RunScript(Script):
         return '\n'.join(lines)
 
     @property
-    def coldstart(self) -> str:
+    def hotstart(self) -> str:
         lines = []
         if self.platform != Platform.LOCAL:
             lines.extend(
                 [
-                    'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
-                    'coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job)',
+                    'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
+                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
                 ]
             )
         else:
