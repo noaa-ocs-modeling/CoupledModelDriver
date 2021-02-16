@@ -428,8 +428,8 @@ class RunScript(Script):
         if self.platform != Platform.LOCAL:
             lines.extend(
                 [
-                    'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
-                    'coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job)',
+                    "coldstart_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
+                    "coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job | awk '{print $NF}')",
                 ]
             )
         else:
@@ -447,7 +447,7 @@ class RunScript(Script):
         if self.platform != Platform.LOCAL:
             lines.extend(
                 [
-                    'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
+                    "hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job | awk '{print $NF}')",
                     'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
                 ]
             )
