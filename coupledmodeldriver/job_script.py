@@ -283,6 +283,7 @@ class AdcircRunScript(AdcircJobScript):
         slurm_duration: timedelta,
         slurm_run_name: str,
         fort67_filename: PathLike = None,
+        nems_path: PathLike = None,
         commands: [str] = None,
         **kwargs,
     ):
@@ -292,6 +293,13 @@ class AdcircRunScript(AdcircJobScript):
         self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
         self.config_rc_filename = PurePosixPath(config_rc_filename)
         self.fort67_filename = PurePosixPath(fort67_filename) if fort67_filename is not None else None
+
+        if nems_path is None:
+            if self.platform == Platform.HERA:
+                nems_path = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
+            else:
+                nems_path = 'NEMS.x'
+        self.nems_path = nems_path
 
         super().__init__(
             platform,
@@ -323,7 +331,7 @@ class AdcircRunScript(AdcircJobScript):
                 ]
             )
 
-        self.commands.append(f'{self.launcher} NEMS.x')
+        self.commands.append(f'{self.launcher} {self.nems_path}')
 
 
 class AdcircMeshPartitionScript(AdcircJobScript):
@@ -336,6 +344,7 @@ class AdcircMeshPartitionScript(AdcircJobScript):
         slurm_account: str,
         slurm_duration: timedelta,
         slurm_run_name: str,
+        adcprep_path: PathLike = None,
         slurm_tasks: int = 1,
         commands: [str] = None,
         **kwargs,
@@ -352,11 +361,18 @@ class AdcircMeshPartitionScript(AdcircJobScript):
 
         self.adcirc_partitions = adcirc_mesh_partitions
 
+        if adcprep_path is None:
+            if self.platform == Platform.HERA:
+                adcprep_path = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+            else:
+                adcprep_path = 'adcprep'
+        self.adcprep_path = adcprep_path
+
         self.commands.extend(
             [
                 '',
-                f'{self.launcher} adcprep --np {self.adcirc_partitions} --partmesh',
-                f'{self.launcher} adcprep --np {self.adcirc_partitions} --prepall',
+                f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
+                f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
             ]
         )
 
