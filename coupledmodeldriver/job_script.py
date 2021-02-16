@@ -263,7 +263,7 @@ class AdcircJobScript(JobScript):
             )
         elif self.platform == Platform.HERA:
             self.commands.append(
-                'source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
+                'source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
             )
 
 
