@@ -360,27 +360,38 @@ class RunScript(Script):
 
     def __str__(self) -> str:
         lines = [
+            '# prepare single coldstart directory',
             f'cd coldstart',
             f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
             f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
+            'cd ..',
+            '',
+            '# prepare every hotstart directory',
+            bash_for_loop(
+                'for hotstart in ./runs/*/',
+                [
+                    'cd "$hotstart"',
+                    f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
+                    f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
+                    'cd ../..',
+                ]
+            ),
+            '',
+            '# run single coldstart configuration',
+            'cd coldstart',
             self.coldstart,
-            'cd ..'
+            'cd ..',
+            '',
+            '# run every hotstart configuration',
+            bash_for_loop(
+                'for hotstart in ./runs/*/',
+                [
+                    'cd "$hotstart"',
+                    self.hotstart,
+                    'cd ../..',
+                ]
+            ),
         ]
-        lines.append('')
-        lines.extend(
-            [
-                bash_for_loop(
-                    'for hotstart in ./runs/*/',
-                    [
-                        'cd "$hotstart"',
-                        f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
-                        f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
-                        self.hotstart,
-                        'cd ../..'
-                    ]
-                ),
-            ]
-        )
 
         if self.platform != Platform.LOCAL:
             lines.append('squeue -u $USER -o "%.8A %.4C %.10m %.20E"')
