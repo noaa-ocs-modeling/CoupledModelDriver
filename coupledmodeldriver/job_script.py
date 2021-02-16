@@ -305,16 +305,23 @@ class AdcircRunScript(AdcircJobScript):
 
         self.commands.extend(
             [
+                '',
                 f'ln -sf {self.fort15_filename} ./fort.15',
                 f'ln -sf {self.nems_configure_filename} ./nems.configure',
                 f'ln -sf {self.model_configure_filename} ./model_configure',
                 f'ln -sf {self.atm_namelist_rc_filename} ./atm_namelist.rc',
                 f'ln -sf {self.config_rc_filename} ./config.rc',
+                '',
             ]
         )
 
         if self.fort67_filename is not None:
-            self.commands.append(f'ln -sf {self.fort67_filename} ./fort.67.nc')
+            self.commands.extend(
+                [
+                    f'ln -sf {self.fort67_filename} ./fort.67.nc',
+                    '',
+                ]
+            )
 
         self.commands.append(f'{self.launcher} NEMS.x')
 
