@@ -287,6 +287,16 @@ class AdcircRunScript(AdcircJobScript):
         commands: [str] = None,
         **kwargs,
     ):
+        super().__init__(
+            platform,
+            commands,
+            slurm_tasks,
+            slurm_account,
+            slurm_duration,
+            slurm_run_name,
+            **kwargs,
+        )
+
         self.fort15_filename = PurePosixPath(fort15_filename)
         self.nems_configure_filename = PurePosixPath(nems_configure_filename)
         self.model_configure_filename = PurePosixPath(model_configure_filename)
@@ -300,16 +310,6 @@ class AdcircRunScript(AdcircJobScript):
             else:
                 nems_path = 'NEMS.x'
         self.nems_path = nems_path
-
-        super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
-            **kwargs,
-        )
 
         self.commands.extend(
             [
