@@ -22,7 +22,7 @@ OUTPUT_DIRECTORY = (
 )
 
 if __name__ == '__main__':
-    runs = {f'nems_hsofs_test': (None, None)}
+    runs = {f'test_case_1': (None, None)}
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()

@@ -418,7 +418,12 @@ class RunScript(Script):
         ]
 
         if self.platform != Platform.LOCAL:
-            lines.append('squeue -u $USER -o "%.8A %.4C %.10m %.20E"')
+            # slurm queue output https://slurm.schedmd.com/squeue.html
+            squeue_command = 'squeue -u $USER -o "%.8F %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"'
+            lines.extend([
+                f'echo {squeue_command}',
+                squeue_command,
+            ])
 
         return '\n'.join(lines)
 
@@ -428,8 +433,8 @@ class RunScript(Script):
         if self.platform != Platform.LOCAL:
             lines.extend(
                 [
-                    'coldstart_adcprep_jobid=$(sbatch adcprep.job)',
-                    'coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job)',
+                    "coldstart_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
+                    "coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job | awk '{print $NF}')",
                 ]
             )
         else:
@@ -447,7 +452,7 @@ class RunScript(Script):
         if self.platform != Platform.LOCAL:
             lines.extend(
                 [
-                    'hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job)',
+                    "hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job | awk '{print $NF}')",
                     'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
                 ]
             )
