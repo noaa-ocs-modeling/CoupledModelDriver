@@ -418,7 +418,8 @@ class RunScript(Script):
         ]
 
         if self.platform != Platform.LOCAL:
-            lines.append('squeue -u $USER -o "%.8A %.4C %.10m %.20E"')
+            # slurm queue output https://slurm.schedmd.com/squeue.html
+            lines.append('squeue -u $USER -o "%.8A %.21j %.4C %.31E %.7a"')
 
         return '\n'.join(lines)
 
