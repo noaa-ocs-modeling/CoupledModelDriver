@@ -28,7 +28,7 @@ FORCINGS_DIRECTORY = (
 OUTPUT_DIRECTORY = (Path(__file__).parent / '../data') / 'configuration' / 'hera_hsofs_sandy'
 
 if __name__ == '__main__':
-    runs = {f'nems_hsofs_test': (None, None)}
+    runs = {f'test_case_1': (None, None)}
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
