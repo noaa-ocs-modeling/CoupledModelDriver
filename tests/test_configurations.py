@@ -42,12 +42,6 @@ def test_local_shinnecock_ike():
 
     runs = {f'test_case_1': (None, None)}
 
-    # init tidal forcing and setup requests
-    tidal_forcing = Tides()
-    tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
-    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
-
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
         end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
@@ -66,6 +60,11 @@ def test_local_shinnecock_ike():
         'WAV',
         'OCN',
     ]
+
+    tidal_forcing = Tides()
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     write_adcirc_configurations(
         nems,
@@ -95,12 +94,6 @@ def test_hera_shinnecock_ike():
 
     runs = {f'test_case_1': (None, None)}
 
-    # init tidal forcing and setup requests
-    tidal_forcing = Tides()
-    tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
-    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
-
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
         end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
@@ -119,6 +112,11 @@ def test_hera_shinnecock_ike():
         'WAV',
         'OCN',
     ]
+
+    tidal_forcing = Tides()
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     write_adcirc_configurations(
         nems,
@@ -148,12 +146,6 @@ def test_stampede2_shinnecock_ike():
 
     runs = {f'test_case_1': (None, None)}
 
-    # init tidal forcing and setup requests
-    tidal_forcing = Tides()
-    tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
-    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
-
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
         end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
@@ -172,6 +164,11 @@ def test_stampede2_shinnecock_ike():
         'WAV',
         'OCN',
     ]
+
+    tidal_forcing = Tides()
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     write_adcirc_configurations(
         nems,
