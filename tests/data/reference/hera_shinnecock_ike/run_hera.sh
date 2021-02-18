@@ -1,7 +1,4 @@
-DIRECTORY="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
-)"
+DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # prepare single coldstart directory
 cd $DIRECTORY/coldstart
@@ -30,5 +27,7 @@ for hotstart in $DIRECTORY/runs/*/; do
     sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job
     cd $DIRECTORY
 done
-echo squeue -u $USER -o \"%.8F %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e\"
-squeue -u $USER -o "%.8F %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"
+
+# display job queue with dependencies
+echo squeue -u $USER -o \"%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e\"
+squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"

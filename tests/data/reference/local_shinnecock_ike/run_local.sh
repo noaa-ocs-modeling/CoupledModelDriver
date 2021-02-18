@@ -1,7 +1,4 @@
-DIRECTORY="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
-)"
+DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # prepare single coldstart directory
 cd $DIRECTORY/coldstart

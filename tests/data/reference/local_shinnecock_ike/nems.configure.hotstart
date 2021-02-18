@@ -1,4 +1,4 @@
-# `nems.configure` generated with NEMSpy 0.2.3.post31.dev0+60a023e
+# `nems.configure` generated with NEMSpy 0.3.1.post7.dev0+cbce95d
 # EARTH #
 EARTH_component_list: ATM WAV OCN
 EARTH_attributes::
