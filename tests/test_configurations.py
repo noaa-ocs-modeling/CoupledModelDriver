@@ -45,8 +45,8 @@ def test_local_shinnecock_ike():
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
     tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(17, 3600)
-    wave_forcing = WaveWatch3DataForcing(5, 3600)
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
@@ -98,8 +98,8 @@ def test_hera_shinnecock_ike():
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
     tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(17, 3600)
-    wave_forcing = WaveWatch3DataForcing(5, 3600)
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),
@@ -151,8 +151,8 @@ def test_stampede2_shinnecock_ike():
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
     tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(17, 3600)
-    wave_forcing = WaveWatch3DataForcing(5, 3600)
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     nems = ModelingSystem(
         start_time=datetime(2008, 8, 23),

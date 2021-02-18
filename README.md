@@ -5,3 +5,97 @@
 [![version](https://img.shields.io/pypi/v/CoupledModelDriver)](https://pypi.org/project/CoupledModelDriver)
 [![license](https://img.shields.io/github/license/noaa-ocs-modeling/CoupledModelDriver)](https://creativecommons.org/share-your-work/public-domain/cc0)
 [![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
+
+`coupledmodeldriver` generates an overlying job submission framework and configuration directories for NEMS-coupled coastal
+ocean model ensembles.
+
+It utilizes [`nemspy`](https://github.com/noaa-ocs-modeling/NEMSpy) to generate NEMS configuration files, shares common
+configurations between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
+
+### Supported models and inputs:
+
+- circulation models
+    - ADCIRC (uses [`adcircpy`](https://github.com/JaimeCalzadaNOAA/adcircpy))
+- forcing
+    - ATMESH
+    - WW3DATA
+
+### Supported platforms:
+
+- local (no job manager)
+- Hera (Slurm)
+- Stampede2 (Slurm)
+
+### Usage
+
+Example scripts can be found at `examples/<platform>`.
+
+Here is an example for running a simple mesh over the Shinnecock Inlet with a coupled `(ATMESH + WW3DATA) -> ADCIRC` scenario,
+and prepping a configuration directory with run script for job submission on Hera. After running the following example on Hera,
+the user would then run `sh run.sh` to submit the jobs.
+
+```python
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from adcircpy import Tides
+from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
+from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+from nemspy import ModelingSystem
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
+
+from coupledmodeldriver.adcirc import write_adcirc_configurations
+from coupledmodeldriver.job_script import Platform
+
+# directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
+MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+
+# directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
+FORCINGS_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'shinnecock' / 'ike'
+
+# directory to which to write configuration
+OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_shinnecock_ike'
+
+if __name__ == '__main__':
+    # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
+    runs = {f'test_case_1': (None, None)}
+
+    # initialize `nemspy` configuration object with forcing file locations, start and end times,  and processor assignment
+    nems = ModelingSystem(
+        start_time=datetime(2008, 8, 23),
+        end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
+        interval=timedelta(hours=1),
+        atm=AtmosphericMeshEntry(filename=FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc', processors=1),
+        wav=WaveMeshEntry(filename=FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc', processors=1),
+        ocn=ADCIRCEntry(processors=11),
+    )
+
+    # describe connections between coupled components
+    nems.connect('ATM', 'OCN')
+    nems.connect('WAV', 'OCN')
+    nems.sequence = [
+        'ATM -> OCN',
+        'WAV -> OCN',
+        'ATM',
+        'WAV',
+        'OCN',
+    ]
+
+    # initialize `adcircpy` forcing objects
+    tidal_forcing = Tides()
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
+
+    # send run information to `adcircpy` and write the resulting configuration to output directory
+    write_adcirc_configurations(
+        nems,
+        runs,
+        MESH_DIRECTORY,
+        OUTPUT_DIRECTORY,
+        email_address='example@email.gov',
+        platform=Platform.HERA,
+        spinup=timedelta(days=12.5),
+        forcings=[tidal_forcing, wind_forcing, wave_forcing],
+    )
+```
