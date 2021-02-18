@@ -1,0 +1,16 @@
+#!/bin/bash --login
+#SBATCH -J ADCIRC_MESH_PARTITION
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_MESH_PARTITION.err.log
+#SBATCH --output=ADCIRC_MESH_PARTITION.out.log
+#SBATCH -n 1
+#SBATCH --time=00:30:00
+
+set -e
+
+source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/hera/ESMF_NUOPC
+
+srun /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep --np 11 --partmesh
+srun /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep --np 11 --prepall
