@@ -193,7 +193,7 @@ class JobScript(Script):
 
         if self.platform != Platform.LOCAL:
             lines.extend(
-                [self.slurm_header, '', 'set -e', '', ]
+                [self.slurm_header, '', 'set -e', '']
             )
 
         if self.modules is not None:
@@ -384,12 +384,15 @@ class RunScript(Script):
 
     def __str__(self) -> str:
         lines = [
-            'DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"',
+            'DIRECTORY="$(',
+            '    cd "$(dirname "$0")" >/dev/null 2>&1',
+            '    pwd -P',
+            ')"',
             '',
             '# prepare single coldstart directory',
             f'cd $DIRECTORY/coldstart',
-            f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
-            f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
+            f'ln -sf ../job_adcprep_{self.platform.value}.job adcprep.job',
+            f'ln -sf ../job_nems_adcirc_{self.platform.value}.job.coldstart nems_adcirc.job',
             'cd $DIRECTORY',
             '',
             '# prepare every hotstart directory',
@@ -397,8 +400,8 @@ class RunScript(Script):
                 'for hotstart in $DIRECTORY//runs/*/',
                 [
                     'cd "$hotstart"',
-                    f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
-                    f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
+                    f'ln -sf ../../job_adcprep_{self.platform.value}.job adcprep.job',
+                    f'ln -sf ../../job_nems_adcirc_{self.platform.value}.job.hotstart nems_adcirc.job',
                     'cd $DIRECTORY/',
                 ]
             ),
@@ -475,7 +478,7 @@ class RunScript(Script):
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'run.sh'
+            filename = filename / f'run_{self.platform.value}.sh'
 
         output = f'{self}\n'
         if overwrite or not filename.exists():

@@ -102,26 +102,26 @@ write_adcirc_configurations(
 This code will generate a directory `hera_shinnecock_ike/` with the following structure:
 
 ```
-hera_shinnecock_ike/
-├── coldstart/
-│   ├── fort.13
-│   ├── fort.14
-│   └── fort.15
-├── runs/
-│   └── test_case_1/
-│       ├── fort.13
-│       ├── fort.14
-│       └── fort.15
-├── config.rc.coldstart
-├── config.rc.hotstart
-├── model_configure.coldstart
-├── model_configure.hotstart
-├── nems.configure.coldstart
-├── nems.configure.hotstart
-├── hera_adcprep.job
-├── hera_nems_adcirc.job.coldstart
-├── hera_nems_adcirc.job.hotstart
-└── run_hera.sh
+📦 hera_shinnecock_ike/
+┣ 📂 coldstart/
+┃  ┣ 📜 fort.13
+┃  ┣ 📜 fort.14
+┃  ┗ 📜 fort.15
+┣ 📂 runs/
+┃  ┗ 📂 test_case_1/
+┃    ┣ 📜 fort.13
+┃    ┣ 📜 fort.14
+┃    ┗ 📜 fort.15
+┣ 📜 config.rc.coldstart
+┣ 📜 config.rc.hotstart
+┣ 📜 model_configure.coldstart
+┣ 📜 model_configure.hotstart
+┣ 📜 nems.configure.coldstart
+┣ 📜 nems.configure.hotstart
+┣ 📜 job_adcprep_hera.job
+┣ 📜 job_nems_adcirc_hera.job.coldstart
+┣ 📜 job_nems_adcirc_hera.job.hotstart
+┗ 📜 run_hera.sh
 ```
 
 _**Note:** the required NEMS configuration files (`nems.configure`, `model_configure`) do not yet exist in the run
@@ -129,43 +129,48 @@ directories (`coldstart/`, `runs/test_case_1/`). These will be populated in the 
 
 ### 2. run job submission script `run_<platform>.sh`
 
-Run `sh run_hera.sh` to submit the jobs as a batch. This will create symbolic links to populate configuration directories
-within the structure, as so:
+Run `run_hera.sh`:
+
+```bash
+sh run_hera.sh
+``` 
+
+This will first create symbolic links to populate configuration directories,
 
 ```
-hera_shinnecock_ike/
-├── coldstart/
-│   ├── fort.13
-│   ├── fort.14
-│   ├── fort.15
-│   ├── config.rc -> ../config.rc.coldstart
-│   ├── model_configure -> ../model_configure.coldstart
-│   ├── nems.configure -> ../nems.configure.coldstart
-│   ├── hera_adcprep.job -> ../hera_adcprep.job
-│   └── hera_nems_adcirc.job -> ../hera_nems_adcirc.job.coldstart
-├── runs/
-│   └── test_case_1/
-│       ├── fort.13
-│       ├── fort.14
-│       ├── fort.15
-│       ├── config.rc -> ../../config.rc.hotstart
-│       ├── model_configure -> ../../model_configure.hotstart
-│       ├── nems.configure -> ../../nems.configure.hotstart
-│       ├── hera_adcprep.job -> ../../hera_adcprep.job
-│       └── hera_nems_adcirc.job -> ../../hera_nems_adcirc.job.hotstart
-├── config.rc.coldstart
-├── config.rc.hotstart
-├── model_configure.coldstart
-├── model_configure.hotstart
-├── nems.configure.coldstart
-├── nems.configure.hotstart
-├── hera_adcprep.job
-├── hera_nems_adcirc.job.coldstart
-├── hera_nems_adcirc.job.hotstart
-└── run_hera.sh
+📦 hera_shinnecock_ike/
+┣ 📂 coldstart/
+┃  ┣ 📜 fort.13
+┃  ┣ 📜 fort.14
+┃  ┣ 📜 fort.15
+┃  ┣ 🔗 config.rc -> ../config.rc.coldstart
+┃  ┣ 🔗 model_configure -> ../model_configure.hotstart
+┃  ┣ 🔗 nems.configure -> ../nems.configure.coldstart
+┃  ┣ 🔗 hera_adcprep.job -> ../job_adcprep_hera.job
+┃  ┗ 🔗 hera_nems_adcirc.job -> ../job_nems_adcirc_hera.job.coldstart
+┣ 📂 runs/
+┃  ┗ 📂 test_case_1/
+┃    ┣ 📜 fort.13
+┃    ┣ 📜 fort.14
+┃    ┣ 📜 fort.15
+┃    ┣ 🔗 config.rc -> ../../config.rc.hotstart
+┃    ┣ 🔗 model_configure -> ../../model_configure.hotstart
+┃    ┣ 🔗 nems.configure -> ../../nems.configure.hotstart
+┃    ┣ 🔗 hera_adcprep.job -> ../../job_adcprep_hera.job
+┃    ┗ 🔗 hera_nems_adcirc.job -> ../../job_nems_adcirc_hera.job.hotstart
+┣ 📜 config.rc.coldstart
+┣ 📜 config.rc.hotstart
+┣ 📜 model_configure.coldstart
+┣ 📜 model_configure.hotstart
+┣ 📜 nems.configure.coldstart
+┣ 📜 nems.configure.hotstart
+┣ 📜 job_adcprep_hera.job
+┣ 📜 job_nems_adcirc_hera.job.coldstart
+┣ 📜 job_nems_adcirc_hera.job.hotstart
+┗ 📜 run_hera.sh
 ```
 
-The script then submits the requested jobs to the queue:
+and then submit the requested jobs to the queue:
 
 ```bash
    JOBID                  NAME CPUS NODE                      DEPENDENCY ACCOUNT PARTITION          SUBMIT_TIME           START_TIME             END_TIME

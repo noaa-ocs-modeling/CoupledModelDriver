@@ -1,10 +1,8 @@
 import copy
 from datetime import timedelta
-from glob import glob
 import os
 from os import PathLike
 from pathlib import Path
-import re
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.base import Forcing
@@ -147,7 +145,7 @@ def write_adcirc_configurations(
         slurm_log_filename=f'{adcprep_run_name}.out.log',
     )
     adcprep_script.write(
-        output_directory / f'{adcprep_script.platform.value}_adcprep.job', overwrite=True
+        output_directory / f'job_adcprep_{adcprep_script.platform.value}.job', overwrite=True
     )
 
     if spinup is not None:
@@ -190,7 +188,7 @@ def write_adcirc_configurations(
         )
 
     coldstart_run_script.write(
-        output_directory / f'{coldstart_run_script.platform.value}_nems_adcirc.job.coldstart',
+        output_directory / f'job_nems_adcirc_{coldstart_run_script.platform.value}.job.coldstart',
         overwrite=True,
     )
 
@@ -215,11 +213,8 @@ def write_adcirc_configurations(
             slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
         )
 
-        hotstart_run_script.write(
-            output_directory
-            / f'{hotstart_run_script.platform.value}_nems_adcirc.job.hotstart',
-            overwrite=True,
-        )
+        hotstart_run_script.write(output_directory / f'job_nems_adcirc_{hotstart_run_script.platform.value}.job.hotstart',
+                                  overwrite=True)
 
     slurm = SlurmConfig(
         account=slurm_account,
@@ -274,20 +269,6 @@ def write_adcirc_configurations(
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
         driver.write(run_directory, overwrite=True, coldstart=None, hotstart='fort.15', driver=None)
-
-    pattern = re.compile(' p*adcirc')
-    replacement = ' NEMS.x'
-    for job_filename in glob(str(output_directory / '**' / 'slurm.job'), recursive=True):
-        with open(job_filename) as job_file:
-            text = job_file.read()
-        matched = pattern.search(text)
-        if matched:
-            LOGGER.debug(
-                f'replacing `{matched.group(0)}` with `{replacement}`' f' in "{job_filename}"'
-            )
-            text = re.sub(pattern, replacement, text)
-            with open(job_filename, 'w') as job_file:
-                job_file.write(text)
 
     run_script = RunScript(platform)
     run_script.write(output_directory / f'run_{platform.value}.sh', overwrite=True)
