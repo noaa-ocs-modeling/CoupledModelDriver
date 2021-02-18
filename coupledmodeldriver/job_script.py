@@ -384,35 +384,37 @@ class RunScript(Script):
 
     def __str__(self) -> str:
         lines = [
+            'DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"',
+            '',
             '# prepare single coldstart directory',
-            f'cd coldstart',
+            f'cd $DIRECTORY/coldstart',
             f'ln -sf ../{self.platform.value}_adcprep.job adcprep.job',
             f'ln -sf ../{self.platform.value}_nems_adcirc.job.coldstart nems_adcirc.job',
-            'cd ..',
+            'cd $DIRECTORY',
             '',
             '# prepare every hotstart directory',
             bash_for_loop(
-                'for hotstart in ./runs/*/',
+                'for hotstart in $DIRECTORY//runs/*/',
                 [
                     'cd "$hotstart"',
                     f'ln -sf ../../{self.platform.value}_adcprep.job adcprep.job',
                     f'ln -sf ../../{self.platform.value}_nems_adcirc.job.hotstart nems_adcirc.job',
-                    'cd ../..',
+                    'cd $DIRECTORY/',
                 ]
             ),
             '',
             '# run single coldstart configuration',
-            'cd coldstart',
+            'cd $DIRECTORY/coldstart',
             self.coldstart,
-            'cd ..',
+            'cd $DIRECTORY',
             '',
             '# run every hotstart configuration',
             bash_for_loop(
-                'for hotstart in ./runs/*/',
+                'for hotstart in $DIRECTORY/runs/*/',
                 [
                     'cd "$hotstart"',
                     self.hotstart,
-                    'cd ../..',
+                    'cd $DIRECTORY',
                 ]
             ),
         ]
@@ -420,8 +422,9 @@ class RunScript(Script):
         if self.platform != Platform.LOCAL:
             # slurm queue output https://slurm.schedmd.com/squeue.html
             squeue_command = 'squeue -u $USER -o "%.8F %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"'
+            echo_squeue_command = squeue_command.replace('"', r'\"')
             lines.extend([
-                f'echo {squeue_command}',
+                f'echo {echo_squeue_command}',
                 squeue_command,
             ])
 
