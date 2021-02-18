@@ -424,6 +424,8 @@ class RunScript(Script):
             squeue_command = 'squeue -u $USER -o "%.8F %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"'
             echo_squeue_command = squeue_command.replace('"', r'\"')
             lines.extend([
+                '',
+                '# display job queue with depdencies',
                 f'echo {echo_squeue_command}',
                 squeue_command,
             ])
