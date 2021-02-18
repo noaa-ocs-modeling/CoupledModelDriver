@@ -274,10 +274,6 @@ def write_adcirc_configurations(
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
         driver.write(run_directory, overwrite=True, coldstart=None, hotstart='fort.15', driver=None)
-        for phase in ['hotstart']:
-            directory = run_directory / phase
-            if not directory.exists():
-                directory.mkdir()
 
     pattern = re.compile(' p*adcirc')
     replacement = ' NEMS.x'
