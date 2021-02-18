@@ -10,7 +10,7 @@
 
 set -e
 
-source /scratch2/COASTAL/coastal/save/Zachary.Burnett/nems/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera
+source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/hera/ESMF_NUOPC
 
-srun adcprep --np 11 --partmesh
-srun adcprep --np 11 --prepall
+srun /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep --np 11 --partmesh
+srun /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep --np 11 --prepall

@@ -13,9 +13,11 @@
 set -e
 
 source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede
+
 ln -sf output/stampede2_shinnecock_ike/fort.15.coldstart ./fort.15
 ln -sf output/stampede2_shinnecock_ike/nems.configure.coldstart ./nems.configure
 ln -sf output/stampede2_shinnecock_ike/model_configure.coldstart ./model_configure
 ln -sf output/stampede2_shinnecock_ike/atm_namelist.rc.coldstart ./atm_namelist.rc
 ln -sf output/stampede2_shinnecock_ike/config.rc.coldstart ./config.rc
+
 ibrun NEMS.x
