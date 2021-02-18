@@ -425,7 +425,7 @@ class RunScript(Script):
             echo_squeue_command = squeue_command.replace('"', r'\"')
             lines.extend([
                 '',
-                '# display job queue with depdencies',
+                '# display job queue with dependencies',
                 f'echo {echo_squeue_command}',
                 squeue_command,
             ])
