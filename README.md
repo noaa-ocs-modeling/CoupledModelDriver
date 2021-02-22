@@ -14,16 +14,17 @@ configurations between runs, and organizes spinup and mesh partition into separa
 
 ## Supported models and platforms
 
-- ### models
-    - #### circulation models
+- **models**
+    - circulation models
         - ADCIRC (uses [`adcircpy`](https://github.com/JaimeCalzadaNOAA/adcircpy))
-    - #### forcings
+    - forcings
         - ATMESH
         - WW3DATA
-- ### platforms
-    - #### local (no job manager)
-    - #### Hera (Slurm)
-    - #### Stampede2 (Slurm)
+- **platforms**
+    - local
+    - Slurm
+        - Hera
+        - Stampede2
 
 ## Usage
 
@@ -173,6 +174,7 @@ This will first create symbolic links to populate configuration directories,
 and then submit the requested jobs to the queue:
 
 ```bash
+squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"
    JOBID                  NAME CPUS NODE                      DEPENDENCY ACCOUNT PARTITION          SUBMIT_TIME           START_TIME             END_TIME
 16368044 ADCIRC_MESH_PARTITION    1    1                          (null) coastal      hera  2021-02-18T19:29:17                  N/A                  N/A
 16368045      ADCIRC_COLDSTART   11    1  afterany:16368044(unfulfilled) coastal      hera  2021-02-18T19:29:17                  N/A                  N/A
