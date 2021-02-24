@@ -266,7 +266,8 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
-    driver.write(coldstart_directory, overwrite=True, fort14=None, coldstart='fort.15', hotstart=None, driver=None)
+    driver.write(coldstart_directory, overwrite=True, fort13='fort.13' if not fort13_filename.exists() else None, fort14=None,
+                 coldstart='fort.15', hotstart=None, driver=None)
 
     # symlink mesh files to run directory
     for filename in [fort13_filename, fort14_filename]:
@@ -283,7 +284,8 @@ def write_adcirc_configurations(
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
 
-        driver.write(run_directory, overwrite=True, fort14=None, coldstart=None, hotstart='fort.15', driver=None)
+        driver.write(run_directory, overwrite=True, fort13='fort.13' if not fort13_filename.exists() else None, fort14=None,
+                     coldstart=None, hotstart='fort.15', driver=None)
 
         # symlink mesh files to run directory
         for filename in [fort13_filename, fort14_filename]:
