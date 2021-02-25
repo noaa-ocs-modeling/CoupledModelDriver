@@ -22,7 +22,9 @@ MESH_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'meshes' / 'hsofs' / 'sandy
 FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'forcings' / 'hsofs' / 'sandy'
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'stampede2_hsofs_sandy'
+OUTPUT_DIRECTORY = (
+    Path(__file__).parent.parent / 'data' / 'configuration' / 'stampede2_hsofs_sandy'
+)
 
 if __name__ == '__main__':
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation

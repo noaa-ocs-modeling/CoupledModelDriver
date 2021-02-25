@@ -77,7 +77,9 @@ def test_local_shinnecock_ike():
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
 
-    check_reference_directory(DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory)
+    check_reference_directory(
+        DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory
+    )
 
 
 def test_hera_shinnecock_ike():
@@ -129,7 +131,9 @@ def test_hera_shinnecock_ike():
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
 
-    check_reference_directory(DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory)
+    check_reference_directory(
+        DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory
+    )
 
 
 def test_stampede2_shinnecock_ike():
@@ -181,7 +185,9 @@ def test_stampede2_shinnecock_ike():
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
     )
 
-    check_reference_directory(DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory)
+    check_reference_directory(
+        DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory
+    )
 
 
 @pytest.fixture(scope='session', autouse=True)

@@ -16,10 +16,14 @@ from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'hsofs' / 'grid_v1'
+MESH_DIRECTORY = (
+    Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'hsofs' / 'grid_v1'
+)
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
-FORCINGS_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'hsofs' / 'sandy'
+FORCINGS_DIRECTORY = (
+    Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'hsofs' / 'sandy'
+)
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_hsofs_sandy'
@@ -33,7 +37,9 @@ if __name__ == '__main__':
         start_time=datetime(2012, 10, 22, 6),
         end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
         interval=timedelta(hours=1),
-        atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+        atm=AtmosphericMeshEntry(
+            FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'
+        ),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
         ocn=ADCIRCEntry(382),
     )
