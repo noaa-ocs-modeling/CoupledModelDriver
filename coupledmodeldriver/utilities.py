@@ -86,7 +86,7 @@ def create_symlink(from_filename: PathLike, to_filename: PathLike):
         to_filename = Path(to_filename)
 
     try:
-        from_filename.symlink_to(to_filename)
+        to_filename.symlink_to(from_filename)
     except Exception as error:
         LOGGER.warning(f'could not create symbolic link: {error}')
         shutil.copyfile(from_filename, to_filename)
