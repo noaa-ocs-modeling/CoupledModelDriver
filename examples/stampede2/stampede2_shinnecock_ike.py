@@ -16,13 +16,17 @@ from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+MESH_DIRECTORY = (
+    Path('/work/07531/zrb/stampede2') / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+)
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
 FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'forcings' / 'shinnecock' / 'ike'
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'stampede2_shinnecock_ike'
+OUTPUT_DIRECTORY = (
+    Path(__file__).parent.parent / 'data' / 'configuration' / 'stampede2_shinnecock_ike'
+)
 
 if __name__ == '__main__':
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
@@ -65,4 +69,5 @@ if __name__ == '__main__':
         platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        overwrite=True,
     )

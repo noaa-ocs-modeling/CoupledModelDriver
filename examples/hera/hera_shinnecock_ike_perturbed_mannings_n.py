@@ -17,13 +17,22 @@ from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'grid_v1'
+MESH_DIRECTORY = (
+    Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'grid_v1'
+)
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
-FORCINGS_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'shinnecock' / 'ike'
+FORCINGS_DIRECTORY = (
+    Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'shinnecock' / 'ike'
+)
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_shinnecock_ike_perturbed_mannings_n'
+OUTPUT_DIRECTORY = (
+    Path(__file__).parent.parent
+    / 'data'
+    / 'configuration'
+    / 'hera_shinnecock_ike_perturbed_mannings_n'
+)
 
 if __name__ == '__main__':
     # dictionary defining runs with ADCIRC value perturbations - in this case, a range of Manning's N values
@@ -73,4 +82,5 @@ if __name__ == '__main__':
         platform=Platform.HERA,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        overwrite=True,
     )

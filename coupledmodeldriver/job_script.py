@@ -192,9 +192,7 @@ class JobScript(Script):
         ]
 
         if self.platform != Platform.LOCAL:
-            lines.extend(
-                [self.slurm_header, '', 'set -e', '']
-            )
+            lines.extend([self.slurm_header, '', 'set -e', ''])
 
         if self.modules is not None:
             modules_string = ' '.join(module for module in self.modules)
@@ -303,7 +301,9 @@ class AdcircRunScript(AdcircJobScript):
         self.model_configure_filename = PurePosixPath(model_configure_filename)
         self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
         self.config_rc_filename = PurePosixPath(config_rc_filename)
-        self.fort67_filename = PurePosixPath(fort67_filename) if fort67_filename is not None else None
+        self.fort67_filename = (
+            PurePosixPath(fort67_filename) if fort67_filename is not None else None
+        )
 
         if nems_path is None:
             if self.platform == Platform.HERA:
@@ -326,10 +326,7 @@ class AdcircRunScript(AdcircJobScript):
 
         if self.fort67_filename is not None:
             self.commands.extend(
-                [
-                    f'ln -sf {self.fort67_filename} ./fort.67.nc',
-                    '',
-                ]
+                [f'ln -sf {self.fort67_filename} ./fort.67.nc', '', ]
             )
 
         self.commands.append(f'{self.launcher} {self.nems_path}')
@@ -403,7 +400,7 @@ class RunScript(Script):
                     f'ln -sf ../../job_adcprep_{self.platform.value}.job adcprep.job',
                     f'ln -sf ../../job_nems_adcirc_{self.platform.value}.job.hotstart nems_adcirc.job',
                     'cd $DIRECTORY/',
-                ]
+                ],
             ),
             '',
             '# run single coldstart configuration',
@@ -414,24 +411,24 @@ class RunScript(Script):
             '# run every hotstart configuration',
             bash_for_loop(
                 'for hotstart in $DIRECTORY/runs/*/',
-                [
-                    'cd "$hotstart"',
-                    self.hotstart,
-                    'cd $DIRECTORY',
-                ]
+                ['cd "$hotstart"', self.hotstart, 'cd $DIRECTORY', ],
             ),
         ]
 
         if self.platform != Platform.LOCAL:
             # slurm queue output https://slurm.schedmd.com/squeue.html
-            squeue_command = 'squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"'
+            squeue_command = (
+                'squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"'
+            )
             echo_squeue_command = squeue_command.replace('"', r'\"')
-            lines.extend([
-                '',
-                '# display job queue with dependencies',
-                f'echo {echo_squeue_command}',
-                squeue_command,
-            ])
+            lines.extend(
+                [
+                    '',
+                    '# display job queue with dependencies',
+                    f'echo {echo_squeue_command}',
+                    squeue_command,
+                ]
+            )
 
         return '\n'.join(lines)
 
@@ -447,10 +444,7 @@ class RunScript(Script):
             )
         else:
             lines.extend(
-                [
-                    'sh adcprep.job',
-                    'sh nems_adcirc.job',
-                ]
+                ['sh adcprep.job', 'sh nems_adcirc.job', ]
             )
         return '\n'.join(lines)
 
@@ -466,10 +460,7 @@ class RunScript(Script):
             )
         else:
             lines.extend(
-                [
-                    'sh adcprep.job',
-                    'sh nems_adcirc.job',
-                ]
+                ['sh adcprep.job', 'sh nems_adcirc.job', ]
             )
         return '\n'.join(lines)
 

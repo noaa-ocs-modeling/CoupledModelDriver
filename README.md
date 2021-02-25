@@ -97,6 +97,7 @@ write_adcirc_configurations(
     platform=Platform.HERA,
     spinup=timedelta(days=12.5),
     forcings=[tidal_forcing, wind_forcing, wave_forcing],
+    overwrite=True,
 )
 ```
 
