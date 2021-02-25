@@ -75,6 +75,7 @@ def test_local_shinnecock_ike():
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        overwrite=True,
     )
 
     check_reference_directory(
@@ -129,6 +130,7 @@ def test_hera_shinnecock_ike():
         platform=Platform.HERA,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        overwrite=True,
     )
 
     check_reference_directory(
@@ -183,6 +185,7 @@ def test_stampede2_shinnecock_ike():
         platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        overwrite=True,
     )
 
     check_reference_directory(

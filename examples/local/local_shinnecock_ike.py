@@ -77,4 +77,5 @@ if __name__ == '__main__':
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        overwrite=True,
     )
