@@ -273,7 +273,7 @@ def write_adcirc_configurations(
     for filename in [fort13_filename, fort14_filename]:
         symbolic_link_filename = coldstart_directory / filename.name
         if filename.exists():
-            create_symlink(filename, symbolic_link_filename)
+            create_symlink(filename, symbolic_link_filename, overwrite=True)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -291,7 +291,7 @@ def write_adcirc_configurations(
         for filename in [fort13_filename, fort14_filename]:
             symbolic_link_filename = run_directory / filename.name
             if filename.exists():
-                create_symlink(filename, symbolic_link_filename)
+                create_symlink(filename, symbolic_link_filename, overwrite=True)
 
     run_script = RunScript(platform)
     run_script.write(output_directory / f'run_{platform.value}.sh', overwrite=True)

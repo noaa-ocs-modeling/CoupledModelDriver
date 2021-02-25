@@ -1,4 +1,5 @@
 import logging
+import os
 from os import PathLike
 from pathlib import Path
 import shutil
@@ -79,11 +80,14 @@ def get_logger(
 LOGGER = get_logger('utilities')
 
 
-def create_symlink(from_filename: PathLike, to_filename: PathLike):
+def create_symlink(from_filename: PathLike, to_filename: PathLike, overwrite: bool = False):
     if not isinstance(from_filename, Path):
         from_filename = Path(from_filename)
     if not isinstance(to_filename, Path):
         to_filename = Path(to_filename)
+
+    if to_filename.exists() and overwrite:
+        os.remove(to_filename)
 
     try:
         to_filename.symlink_to(from_filename)
