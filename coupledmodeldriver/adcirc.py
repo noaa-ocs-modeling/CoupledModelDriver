@@ -12,9 +12,9 @@ from nemspy.model import ADCIRCEntry
 import numpy
 
 from .job_script import AdcircMeshPartitionScript, AdcircRunScript, Platform, RunScript, SlurmEmailType
-from .utilities import get_logger
+from .utilities import create_symlink, get_logger
 
-LOGGER = get_logger('configuration.adcirc')
+LOGGER = get_logger('adcirc')
 
 
 def write_adcirc_configurations(
@@ -84,7 +84,15 @@ def write_adcirc_configurations(
     for forcing in forcings:
         mesh.add_forcing(forcing)
 
-    mesh.generate_tau0()
+    generate_tau0 = True
+    if fort13_filename.exists():
+        with open(fort13_filename) as fort13_file:
+            for line in fort13_file:
+                if 'primitive_weighting_in_continuity_equation' in line:
+                    generate_tau0 = False
+                    break
+    if generate_tau0:
+        mesh.generate_tau0()
 
     atm_namelist_filename = output_directory / 'atm_namelist.rc'
 
@@ -258,7 +266,14 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
-    driver.write(coldstart_directory, overwrite=True, coldstart='fort.15', hotstart=None, driver=None)
+    driver.write(coldstart_directory, overwrite=True, fort13='fort.13' if not fort13_filename.exists() else None, fort14=None,
+                 coldstart='fort.15', hotstart=None, driver=None)
+
+    # symlink mesh files to run directory
+    for filename in [fort13_filename, fort14_filename]:
+        symbolic_link_filename = coldstart_directory / filename.name
+        if filename.exists():
+            create_symlink(filename, symbolic_link_filename)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -268,7 +283,15 @@ def write_adcirc_configurations(
         if not driver.mesh.has_attribute(attribute_name):
             driver.mesh.add_attribute(attribute_name)
         driver.mesh.set_attribute(attribute_name, value)
-        driver.write(run_directory, overwrite=True, coldstart=None, hotstart='fort.15', driver=None)
+
+        driver.write(run_directory, overwrite=True, fort13='fort.13' if not fort13_filename.exists() else None, fort14=None,
+                     coldstart=None, hotstart='fort.15', driver=None)
+
+        # symlink mesh files to run directory
+        for filename in [fort13_filename, fort14_filename]:
+            symbolic_link_filename = run_directory / filename.name
+            if filename.exists():
+                create_symlink(filename, symbolic_link_filename)
 
     run_script = RunScript(platform)
     run_script.write(output_directory / f'run_{platform.value}.sh', overwrite=True)

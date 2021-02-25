@@ -1,6 +1,7 @@
 import logging
 from os import PathLike
 from pathlib import Path
+import shutil
 import sys
 
 import numpy
@@ -73,6 +74,22 @@ def get_logger(
         handler.setFormatter(log_formatter)
 
     return logger
+
+
+LOGGER = get_logger('utilities')
+
+
+def create_symlink(from_filename: PathLike, to_filename: PathLike):
+    if not isinstance(from_filename, Path):
+        from_filename = Path(from_filename)
+    if not isinstance(to_filename, Path):
+        to_filename = Path(to_filename)
+
+    try:
+        from_filename.symlink_to(to_filename)
+    except Exception as error:
+        LOGGER.warning(f'could not create symbolic link: {error}')
+        shutil.copyfile(from_filename, to_filename)
 
 
 def ellipsoidal_distance(
