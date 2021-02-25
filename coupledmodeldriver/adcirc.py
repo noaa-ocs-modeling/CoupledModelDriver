@@ -170,7 +170,6 @@ def write_adcirc_configurations(
     if spinup is not None:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
-            fort15_filename=output_directory / 'fort.15.coldstart',
             nems_configure_filename=output_directory / 'nems.configure.coldstart',
             model_configure_filename=output_directory / 'model_configure.coldstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
@@ -189,7 +188,6 @@ def write_adcirc_configurations(
     else:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
-            fort15_filename=output_directory / 'fort.15.coldstart',
             nems_configure_filename=output_directory / 'nems.configure.coldstart',
             model_configure_filename=output_directory / 'model_configure.coldstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
@@ -215,7 +213,6 @@ def write_adcirc_configurations(
     if spinup is not None:
         hotstart_run_script = AdcircRunScript(
             platform=platform,
-            fort15_filename=output_directory / 'fort.15.hotstart',
             nems_configure_filename=output_directory / 'nems.configure.hotstart',
             model_configure_filename=output_directory / 'model_configure.hotstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.hotstart',
