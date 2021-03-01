@@ -272,7 +272,6 @@ class AdcircRunScript(AdcircJobScript):
     def __init__(
         self,
         platform: Platform,
-        fort15_filename: PathLike,
         nems_configure_filename: PathLike,
         model_configure_filename: PathLike,
         atm_namelist_rc_filename: PathLike,
@@ -296,7 +295,6 @@ class AdcircRunScript(AdcircJobScript):
             **kwargs,
         )
 
-        self.fort15_filename = PurePosixPath(fort15_filename)
         self.nems_configure_filename = PurePosixPath(nems_configure_filename)
         self.model_configure_filename = PurePosixPath(model_configure_filename)
         self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
@@ -315,7 +313,6 @@ class AdcircRunScript(AdcircJobScript):
         self.commands.extend(
             [
                 '',
-                f'ln -sf {self.fort15_filename} ./fort.15',
                 f'ln -sf {self.nems_configure_filename} ./nems.configure',
                 f'ln -sf {self.model_configure_filename} ./model_configure',
                 f'ln -sf {self.atm_namelist_rc_filename} ./atm_namelist.rc',

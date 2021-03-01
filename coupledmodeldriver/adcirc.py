@@ -18,7 +18,7 @@ from .job_script import (
     RunScript,
     SlurmEmailType,
 )
-from .utilities import create_symlink, get_logger
+from .utilities import get_logger
 
 LOGGER = get_logger('adcirc')
 
@@ -170,7 +170,6 @@ def write_adcirc_configurations(
     if spinup is not None:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
-            fort15_filename=output_directory / 'fort.15.coldstart',
             nems_configure_filename=output_directory / 'nems.configure.coldstart',
             model_configure_filename=output_directory / 'model_configure.coldstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
@@ -189,7 +188,6 @@ def write_adcirc_configurations(
     else:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
-            fort15_filename=output_directory / 'fort.15.coldstart',
             nems_configure_filename=output_directory / 'nems.configure.coldstart',
             model_configure_filename=output_directory / 'model_configure.coldstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
@@ -215,7 +213,6 @@ def write_adcirc_configurations(
     if spinup is not None:
         hotstart_run_script = AdcircRunScript(
             platform=platform,
-            fort15_filename=output_directory / 'fort.15.hotstart',
             nems_configure_filename=output_directory / 'nems.configure.hotstart',
             model_configure_filename=output_directory / 'model_configure.hotstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.hotstart',
@@ -284,18 +281,10 @@ def write_adcirc_configurations(
     driver.write(
         coldstart_directory,
         overwrite=overwrite,
-        fort13='fort.13' if not fort13_filename.exists() else None,
-        fort14=None,
         coldstart='fort.15',
         hotstart=None,
         driver=None,
     )
-
-    # symlink mesh files to run directory
-    for filename in [fort13_filename, fort14_filename]:
-        symbolic_link_filename = coldstart_directory / filename.name
-        if filename.exists():
-            create_symlink(filename, symbolic_link_filename, overwrite=overwrite)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -309,18 +298,10 @@ def write_adcirc_configurations(
         driver.write(
             run_directory,
             overwrite=overwrite,
-            fort13='fort.13' if not fort13_filename.exists() else None,
-            fort14=None,
             coldstart=None,
             hotstart='fort.15',
             driver=None,
         )
-
-        # symlink mesh files to run directory
-        for filename in [fort13_filename, fort14_filename]:
-            symbolic_link_filename = run_directory / filename.name
-            if filename.exists():
-                create_symlink(filename, symbolic_link_filename, overwrite=overwrite)
 
     run_script = RunScript(platform)
     run_script.write(output_directory / f'run_{platform.value}.sh', overwrite=overwrite)
