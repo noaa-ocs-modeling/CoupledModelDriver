@@ -146,7 +146,7 @@ This will first create symbolic links to populate configuration directories,
 ┃  ┣ 📜 fort.14
 ┃  ┣ 📜 fort.15
 ┃  ┣ 🔗 config.rc -> ../config.rc.coldstart
-┃  ┣ 🔗 model_configure -> ../model_configure.hotstart
+┃  ┣ 🔗 model_configure -> ../model_configure.coldstart
 ┃  ┣ 🔗 nems.configure -> ../nems.configure.coldstart
 ┃  ┣ 🔗 hera_adcprep.job -> ../job_adcprep_hera.job
 ┃  ┗ 🔗 hera_nems_adcirc.job -> ../job_nems_adcirc_hera.job.coldstart
