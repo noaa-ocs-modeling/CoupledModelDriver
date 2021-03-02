@@ -72,10 +72,10 @@ def write_adcirc_configurations(
 
     fort13_filename = mesh_directory / 'fort.13'
     if not fort13_filename.exists():
-        LOGGER.warning(f'mesh values (nodal attributes) not found at {fort13_filename}')
+        LOGGER.warning(f'mesh values (nodal attributes) not found at "{fort13_filename}"')
     fort14_filename = mesh_directory / 'fort.14'
     if not fort14_filename.exists():
-        raise FileNotFoundError(f'mesh XY not found at {fort14_filename}')
+        raise FileNotFoundError(f'mesh XY not found at "{fort14_filename}"')
 
     if spinup is not None and isinstance(spinup, timedelta):
         spinup = ModelingSystem(
