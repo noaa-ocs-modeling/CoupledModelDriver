@@ -194,7 +194,7 @@ def test_stampede2_shinnecock_ike():
 
 
 @pytest.fixture(scope='session', autouse=False)
-def tpxo():
+def download_tpxo():
     tpxo_filename = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
     if not tpxo_filename.exists():
         url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
