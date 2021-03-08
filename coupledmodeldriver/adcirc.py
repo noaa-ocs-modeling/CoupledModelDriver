@@ -120,7 +120,7 @@ def write_adcirc_configurations(
             os.remove(coldstart_filename)
         if filename.is_symlink():
             target = filename.resolve()
-            if target in [str(path) for path in coldstart_filenames]:
+            if target in coldstart_filenames:
                 target = f'{target}.coldstart'
             create_symlink(target, coldstart_filename)
             os.remove(filename)
@@ -140,7 +140,7 @@ def write_adcirc_configurations(
             os.remove(hotstart_filename)
         if filename.is_symlink():
             target = filename.resolve()
-            if target in [str(path) for path in hotstart_filenames]:
+            if target in hotstart_filenames:
                 target = f'{target}.coldstart'
             create_symlink(target, hotstart_filename)
             os.remove(filename)
