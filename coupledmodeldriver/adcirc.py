@@ -119,6 +119,7 @@ def write_adcirc_configurations(
             os.remove(coldstart_filename)
         if filename.is_symlink():
             create_symlink(filename.resolve(), coldstart_filename)
+            os.remove(filename)
         else:
             filename.rename(coldstart_filename)
 
@@ -135,6 +136,7 @@ def write_adcirc_configurations(
             os.remove(hotstart_filename)
         if filename.is_symlink():
             create_symlink(filename.resolve(), hotstart_filename)
+            os.remove(filename)
         else:
             filename.rename(hotstart_filename)
 
