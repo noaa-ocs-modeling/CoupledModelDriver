@@ -267,21 +267,22 @@ def write_adcirc_configurations(
         server_config=slurm,
     )
 
-    spinup_start = spinup.start_time if spinup is not None else None
-    spinup_end = spinup.end_time if spinup is not None else None
+    # spinup_start = spinup.start_time if spinup is not None else None
+    # spinup_end = spinup.end_time if spinup is not None else None
     spinup_interval = spinup.interval if spinup is not None else None
 
     stations_filename = mesh_directory / 'stations.txt'
     if stations_filename.exists():
         driver.import_stations(stations_filename)
-        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval, spinup_start=spinup_start,
-                                             spinup_end=spinup_end)
-        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval, spinup_start=spinup_start,
-                                            spinup_end=spinup_end)
+        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval)
+        # spinup_start=spinup_start, spinup_end=spinup_end)
+        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval)
+        # spinup_start=spinup_start, spinup_end=spinup_end)
 
-    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval, spinup_start=spinup_start,
-                                        spinup_end=spinup_end)
-    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval, spinup_start=spinup_start, spinup_end=spinup_end)
+    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval)
+    # spinup_start=spinup_start, spinup_end=spinup_end)
+    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
+    # spinup_start=spinup_start, spinup_end=spinup_end)
 
     driver.write(
         coldstart_directory,
