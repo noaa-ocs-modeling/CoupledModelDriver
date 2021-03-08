@@ -86,7 +86,8 @@ def create_symlink(source_filename: PathLike, symlink_filename: PathLike):
     if not isinstance(symlink_filename, Path):
         symlink_filename = Path(symlink_filename)
 
-    if symlink_filename.exists():
+    if symlink_filename.is_symlink():
+        LOGGER.info(f'removing symlink {symlink_filename}')
         os.remove(symlink_filename)
 
     try:
