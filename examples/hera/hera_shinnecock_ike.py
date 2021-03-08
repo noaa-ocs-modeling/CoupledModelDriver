@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from adcircpy import Tides
+from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
@@ -29,6 +30,8 @@ FORCINGS_DIRECTORY = (
 OUTPUT_DIRECTORY = (
     Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_shinnecock_ike'
 )
+
+HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 
 if __name__ == '__main__':
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
@@ -60,7 +63,7 @@ if __name__ == '__main__':
     ]
 
     # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides()
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)

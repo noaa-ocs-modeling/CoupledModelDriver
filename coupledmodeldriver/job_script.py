@@ -323,7 +323,7 @@ class AdcircRunScript(AdcircJobScript):
 
         if self.fort67_filename is not None:
             self.commands.extend(
-                [f'ln -sf {self.fort67_filename} ./fort.67.nc', '', ]
+                [f'ln -sf {self.fort67_filename} ./fort.67.nc', '']
             )
 
         self.commands.append(f'{self.launcher} {self.nems_path}')
@@ -408,7 +408,7 @@ class RunScript(Script):
             '# run every hotstart configuration',
             bash_for_loop(
                 'for hotstart in $DIRECTORY/runs/*/',
-                ['cd "$hotstart"', self.hotstart, 'cd $DIRECTORY', ],
+                ['cd "$hotstart"', self.hotstart, 'cd $DIRECTORY'],
             ),
         ]
 
@@ -441,7 +441,7 @@ class RunScript(Script):
             )
         else:
             lines.extend(
-                ['sh adcprep.job', 'sh nems_adcirc.job', ]
+                ['sh adcprep.job', 'sh nems_adcirc.job']
             )
         return '\n'.join(lines)
 
@@ -457,7 +457,7 @@ class RunScript(Script):
             )
         else:
             lines.extend(
-                ['sh adcprep.job', 'sh nems_adcirc.job', ]
+                ['sh adcprep.job', 'sh nems_adcirc.job']
             )
         return '\n'.join(lines)
 

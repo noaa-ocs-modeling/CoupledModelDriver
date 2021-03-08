@@ -18,7 +18,7 @@ from .job_script import (
     RunScript,
     SlurmEmailType,
 )
-from .utilities import get_logger
+from .utilities import create_symlink, get_logger
 
 LOGGER = get_logger('adcirc')
 
@@ -113,11 +113,19 @@ def write_adcirc_configurations(
             output_directory, overwrite=overwrite, include_version=True
         )
 
-    for filename in coldstart_filenames + [atm_namelist_filename]:
+    coldstart_filenames.append(atm_namelist_filename)
+    for filename in coldstart_filenames:
         coldstart_filename = Path(f'{filename}.coldstart')
         if coldstart_filename.exists():
             os.remove(coldstart_filename)
-        filename.rename(coldstart_filename)
+        if filename.is_symlink():
+            target = filename.resolve()
+            if target in coldstart_filenames:
+                target = f'{target}.coldstart'
+            create_symlink(target, coldstart_filename)
+            os.remove(filename)
+        else:
+            filename.rename(coldstart_filename)
 
     if spinup is not None:
         hotstart_filenames = nems.write(
@@ -127,10 +135,17 @@ def write_adcirc_configurations(
         hotstart_filenames = []
 
     for filename in hotstart_filenames + [atm_namelist_filename]:
-        coldstart_filename = Path(f'{filename}.hotstart')
-        if coldstart_filename.exists():
-            os.remove(coldstart_filename)
-        filename.rename(coldstart_filename)
+        hotstart_filename = Path(f'{filename}.hotstart')
+        if hotstart_filename.exists():
+            os.remove(hotstart_filename)
+        if filename.is_symlink():
+            target = filename.resolve()
+            if target in hotstart_filenames:
+                target = f'{target}.coldstart'
+            create_symlink(target, hotstart_filename)
+            os.remove(filename)
+        else:
+            filename.rename(hotstart_filename)
 
     coldstart_directory = output_directory / 'coldstart'
     runs_directory = output_directory / 'runs'

@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from adcircpy import Tides
+from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
@@ -17,7 +18,7 @@ from coupledmodeldriver.job_script import Platform
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
 MESH_DIRECTORY = (
-    Path(__file__).parent.parent / 'data' / 'input' / 'meshes' / 'hsofs' / 'sandy' / 'grid_v1'
+    Path(__file__).parent.parent / 'data' / 'input' / 'meshes' / 'hsofs' / 'grid_v1'
 )
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     ]
 
     # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides()
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=None)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)

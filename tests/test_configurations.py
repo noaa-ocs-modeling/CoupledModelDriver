@@ -3,12 +3,12 @@ import logging
 import os
 from os import PathLike
 from pathlib import Path
-import sys
 import tarfile
 
 from adcircpy import Tides
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+import appdirs
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 import pytest
@@ -193,9 +193,9 @@ def test_stampede2_shinnecock_ike():
     )
 
 
-@pytest.fixture(scope='session', autouse=True)
-def tpxo():
-    tpxo_filename = Path(sys.executable).parent.parent / 'lib/h_tpxo9.v1.nc'
+@pytest.fixture(scope='session', autouse=False)
+def download_tpxo():
+    tpxo_filename = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
     if not tpxo_filename.exists():
         url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
         extract_download(url, tpxo_filename.parent, ['h_tpxo9.v1.nc'])
