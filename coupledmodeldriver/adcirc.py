@@ -18,7 +18,7 @@ from .job_script import (
     RunScript,
     SlurmEmailType,
 )
-from .utilities import get_logger
+from .utilities import create_symlink, get_logger
 
 LOGGER = get_logger('adcirc')
 
@@ -117,7 +117,10 @@ def write_adcirc_configurations(
         coldstart_filename = Path(f'{filename}.coldstart')
         if coldstart_filename.exists():
             os.remove(coldstart_filename)
-        filename.rename(coldstart_filename)
+        if filename.is_symlink():
+            create_symlink(filename.resolve(), coldstart_filename)
+        else:
+            filename.rename(coldstart_filename)
 
     if spinup is not None:
         hotstart_filenames = nems.write(
@@ -127,10 +130,13 @@ def write_adcirc_configurations(
         hotstart_filenames = []
 
     for filename in hotstart_filenames + [atm_namelist_filename]:
-        coldstart_filename = Path(f'{filename}.hotstart')
-        if coldstart_filename.exists():
-            os.remove(coldstart_filename)
-        filename.rename(coldstart_filename)
+        hotstart_filename = Path(f'{filename}.hotstart')
+        if hotstart_filename.exists():
+            os.remove(hotstart_filename)
+        if filename.is_symlink():
+            create_symlink(filename.resolve(), hotstart_filename)
+        else:
+            filename.rename(hotstart_filename)
 
     coldstart_directory = output_directory / 'coldstart'
     runs_directory = output_directory / 'runs'
