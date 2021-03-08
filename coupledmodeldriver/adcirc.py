@@ -113,12 +113,16 @@ def write_adcirc_configurations(
             output_directory, overwrite=overwrite, include_version=True
         )
 
-    for filename in coldstart_filenames + [atm_namelist_filename]:
+    coldstart_filenames.append(atm_namelist_filename)
+    for filename in coldstart_filenames:
         coldstart_filename = Path(f'{filename}.coldstart')
         if coldstart_filename.exists():
             os.remove(coldstart_filename)
         if filename.is_symlink():
-            create_symlink(filename.resolve(), coldstart_filename)
+            target = filename.resolve()
+            if target in [str(path) for path in coldstart_filenames]:
+                target = f'{target}.coldstart'
+            create_symlink(target, coldstart_filename)
             os.remove(filename)
         else:
             filename.rename(coldstart_filename)
@@ -135,7 +139,10 @@ def write_adcirc_configurations(
         if hotstart_filename.exists():
             os.remove(hotstart_filename)
         if filename.is_symlink():
-            create_symlink(filename.resolve(), hotstart_filename)
+            target = filename.resolve()
+            if target in [str(path) for path in hotstart_filenames]:
+                target = f'{target}.coldstart'
+            create_symlink(target, hotstart_filename)
             os.remove(filename)
         else:
             filename.rename(hotstart_filename)
