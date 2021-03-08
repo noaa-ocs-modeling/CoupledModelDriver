@@ -80,13 +80,13 @@ def get_logger(
 LOGGER = get_logger('utilities')
 
 
-def create_symlink(from_filename: PathLike, to_filename: PathLike, overwrite: bool = False):
+def create_symlink(from_filename: PathLike, to_filename: PathLike):
     if not isinstance(from_filename, Path):
         from_filename = Path(from_filename)
     if not isinstance(to_filename, Path):
         to_filename = Path(to_filename)
 
-    if to_filename.exists() and overwrite:
+    if to_filename.exists():
         os.remove(to_filename)
 
     try:
