@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from adcircpy import Tides
+from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     ]
 
     # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides()
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=None)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
