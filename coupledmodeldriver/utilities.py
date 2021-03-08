@@ -80,20 +80,20 @@ def get_logger(
 LOGGER = get_logger('utilities')
 
 
-def create_symlink(from_filename: PathLike, to_filename: PathLike):
-    if not isinstance(from_filename, Path):
-        from_filename = Path(from_filename)
-    if not isinstance(to_filename, Path):
-        to_filename = Path(to_filename)
+def create_symlink(source_filename: PathLike, symlink_filename: PathLike):
+    if not isinstance(source_filename, Path):
+        source_filename = Path(source_filename)
+    if not isinstance(symlink_filename, Path):
+        symlink_filename = Path(symlink_filename)
 
-    if to_filename.exists():
-        os.remove(to_filename)
+    if symlink_filename.exists():
+        os.remove(symlink_filename)
 
     try:
-        from_filename.symlink_to(to_filename)
+        symlink_filename.symlink_to(source_filename)
     except Exception as error:
         LOGGER.warning(f'could not create symbolic link: {error}')
-        shutil.copyfile(from_filename, to_filename)
+        shutil.copyfile(source_filename, symlink_filename)
 
 
 def ellipsoidal_distance(
