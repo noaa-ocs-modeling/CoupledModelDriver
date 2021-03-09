@@ -1,23 +1,49 @@
 #!/usr/bin/env python
+import importlib
 import logging
 import os
+from pathlib import Path
+import subprocess
+import sys
 
 from setuptools import config, find_packages, setup
 
+BUILT_PACKAGES = {'fiona': ['gdal'], 'numpy': [], 'pyproj': ['proj']}
+is_conda = (Path(sys.prefix) / 'conda-meta').exists()
+
+if is_conda:
+    conda_packages = []
+    for conda_package in BUILT_PACKAGES:
+        try:
+            importlib.import_module(conda_package)
+        except:
+            conda_packages.append(conda_package)
+    if len(conda_packages) > 0:
+        subprocess.check_call(['conda', 'install', '-y', *conda_packages])
+
 if os.name == 'nt':
-    import subprocess
-    import sys
+    for required_package, pipwin_dependencies in BUILT_PACKAGES.items():
+        try:
+            importlib.import_module(required_package)
+        except:
+            try:
+                import pipwin
+            except:
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
 
-    try:
-        import pipwin
-    except ImportError:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
+            failed_pipwin_packages = []
+            for pipwin_package in pipwin_dependencies + [required_package]:
+                try:
+                    subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', pipwin_package.lower()])
+                except subprocess.CalledProcessError:
+                    failed_pipwin_packages.append(pipwin_package)
 
-    try:
-        import fiona
-    except ImportError:
-        subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', 'gdal'])
-        subprocess.check_call([sys.executable, '-m', 'pipwin', 'install', 'fiona'])
+            if len(failed_pipwin_packages) > 0:
+                raise RuntimeError(
+                    f'failed to download or install non-conda Windows build(s) of {" and ".join(failed_pipwin_packages)}; you can either\n'
+                    '1) install within an Anaconda environment, or\n'
+                    f'2) `pip install <file>.whl`, with `<file>.whl` downloaded from {" and ".join("https://www.lfd.uci.edu/~gohlke/pythonlibs/#" + value.lower() for value in failed_pipwin_packages)} for your Python version'
+                )
 
 try:
     try:
