@@ -261,8 +261,7 @@ class AdcircJobScript(JobScript):
             )
         elif self.platform == Platform.HERA:
             self.commands.append(
-                # 'source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
-                'source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/hera/ESMF_NUOPC'
+                'source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
             )
 
 
