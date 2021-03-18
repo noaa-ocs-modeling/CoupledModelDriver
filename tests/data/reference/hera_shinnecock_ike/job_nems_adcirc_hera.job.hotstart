@@ -10,13 +10,4 @@
 
 set -e
 
-source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera
-
-ln -sf output/hera_shinnecock_ike/nems.configure.hotstart ./nems.configure
-ln -sf output/hera_shinnecock_ike/model_configure.hotstart ./model_configure
-ln -sf output/hera_shinnecock_ike/atm_namelist.rc.hotstart ./atm_namelist.rc
-ln -sf output/hera_shinnecock_ike/config.rc.hotstart ./config.rc
-
-ln -sf output/hera_shinnecock_ike/coldstart/fort.67.nc ./fort.67.nc
-
-srun /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x
+srun NEMS.x
