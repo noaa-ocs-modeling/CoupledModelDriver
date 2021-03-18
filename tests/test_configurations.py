@@ -10,12 +10,16 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import appdirs
 from nemspy import ModelingSystem
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
+    WaveMeshEntry
 import pytest
 import wget
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
+
+NEMS_PATH = 'NEMS.x'
+ADCPREP_PATH = 'adcprep'
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 
@@ -71,6 +75,8 @@ def test_local_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
+        nems_executable=NEMS_PATH,
+        adcprep_executable=ADCPREP_PATH,
         email_address='example@email.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
@@ -126,6 +132,8 @@ def test_hera_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
+        nems_executable=NEMS_PATH,
+        adcprep_executable=ADCPREP_PATH,
         email_address='example@email.gov',
         platform=Platform.HERA,
         spinup=timedelta(days=12.5),
@@ -181,6 +189,8 @@ def test_stampede2_shinnecock_ike():
         runs,
         mesh_directory,
         output_directory,
+        nems_executable=NEMS_PATH,
+        adcprep_executable=ADCPREP_PATH,
         email_address='example@email.gov',
         platform=Platform.STAMPEDE2,
         spinup=timedelta(days=12.5),
