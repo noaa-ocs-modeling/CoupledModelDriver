@@ -1,4 +1,4 @@
-sh setup_stampede2.sh
+sh setup_stampede2
 
 DIRECTORY="$(
     cd "$(dirname "$0")" >/dev/null 2>&1
@@ -7,6 +7,7 @@ DIRECTORY="$(
 
 # run single coldstart configuration
 cd $DIRECTORY/coldstart
+sh setup.sh
 coldstart_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')
 coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job | awk '{print $NF}')
 cd $DIRECTORY
@@ -14,6 +15,7 @@ cd $DIRECTORY
 # run every hotstart configuration
 for hotstart in $DIRECTORY/runs/*/; do
     cd "$hotstart"
+    sh setup.sh
     hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job | awk '{print $NF}')
     sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job
     cd $DIRECTORY

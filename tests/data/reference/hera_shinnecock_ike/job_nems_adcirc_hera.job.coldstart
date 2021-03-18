@@ -10,4 +10,5 @@
 
 set -e
 
+source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera
 srun NEMS.x

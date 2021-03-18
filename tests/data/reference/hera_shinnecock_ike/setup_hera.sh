@@ -5,7 +5,7 @@ DIRECTORY="$(
 
 # prepare single coldstart directory
 cd $DIRECTORY/coldstart
-sh ../setup_coldstart.sh
+ln -sf ../setup_coldstart.sh setup.sh
 ln -sf ../job_adcprep_hera.job adcprep.job
 ln -sf ../job_nems_adcirc_hera.job.coldstart nems_adcirc.job
 cd $DIRECTORY
@@ -13,7 +13,7 @@ cd $DIRECTORY
 # prepare every hotstart directory
 for hotstart in $DIRECTORY//runs/*/; do
     cd "$hotstart"
-    sh ../../setup_hotstart.sh.hotstart
+    ln -sf ../setup_hotstart.sh setup.sh
     ln -sf ../../job_adcprep_hera.job adcprep.job
     ln -sf ../../job_nems_adcirc_hera.job.hotstart nems_adcirc.job
     cd $DIRECTORY/

@@ -406,7 +406,7 @@ class EnsembleSetupScript(Script):
             '',
             '# prepare single coldstart directory',
             f'cd $DIRECTORY/coldstart',
-            f'sh ../{self.coldstart_setup_script}',
+            f'ln -sf ../{self.coldstart_setup_script} setup.sh',
             f'ln -sf ../job_adcprep_{self.platform.value}.job adcprep.job',
             f'ln -sf ../job_nems_adcirc_{self.platform.value}.job.coldstart nems_adcirc.job',
             'cd $DIRECTORY',
@@ -416,7 +416,7 @@ class EnsembleSetupScript(Script):
                 'for hotstart in $DIRECTORY//runs/*/',
                 [
                     'cd "$hotstart"',
-                    f'sh ../../{self.hotstart_setup_script}.hotstart',
+                    f'ln -sf ../{self.hotstart_setup_script} setup.sh',
                     f'ln -sf ../../job_adcprep_{self.platform.value}.job adcprep.job',
                     f'ln -sf ../../job_nems_adcirc_{self.platform.value}.job.hotstart nems_adcirc.job',
                     'cd $DIRECTORY/',
@@ -457,13 +457,19 @@ class EnsembleRunScript(Script):
             '',
             '# run single coldstart configuration',
             'cd $DIRECTORY/coldstart',
+            'sh setup.sh',
             self.coldstart,
             'cd $DIRECTORY',
             '',
             '# run every hotstart configuration',
             bash_for_loop(
                 'for hotstart in $DIRECTORY/runs/*/',
-                ['cd "$hotstart"', self.hotstart, 'cd $DIRECTORY'],
+                [
+                    'cd "$hotstart"',
+                    'sh setup.sh',
+                    self.hotstart,
+                    'cd $DIRECTORY'
+                ],
             ),
         ]
 
