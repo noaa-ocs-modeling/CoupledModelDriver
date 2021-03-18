@@ -138,7 +138,9 @@ class JobScript(Script):
 
     @slurm_tasks.setter
     def slurm_tasks(self, slurm_tasks: int = 1):
-        self.__slurm_tasks = int(slurm_tasks)
+        if slurm_tasks is not None:
+            slurm_tasks = int(slurm_tasks)
+        self.__slurm_tasks = slurm_tasks
 
     @property
     def slurm_nodes(self) -> int:
@@ -154,7 +156,10 @@ class JobScript(Script):
 
     @property
     def slurm_header(self) -> str:
-        lines = [f'#SBATCH -J {self.slurm_run_name}']
+        lines = []
+
+        if self.slurm_run_name is not None:
+            lines.append(f'#SBATCH -J {self.slurm_run_name}')
 
         if self.__slurm_run_directory is not None:
             lines.append(f'#SBATCH -D {self.__slurm_run_directory}')
@@ -172,15 +177,17 @@ class JobScript(Script):
         if self.slurm_log_filename is not None:
             lines.append(f'#SBATCH --output={self.slurm_log_filename}')
 
-        lines.append(f'#SBATCH -n {self.slurm_tasks}')
+        if self.slurm_tasks is not None:
+            lines.append(f'#SBATCH -n {self.slurm_tasks}')
         if self.slurm_nodes is not None:
             lines.append(f'#SBATCH -N {self.slurm_nodes}')
 
-        hours, remainder = divmod(self.slurm_duration, timedelta(hours=1))
-        minutes, remainder = divmod(remainder, timedelta(minutes=1))
-        seconds = round(remainder / timedelta(seconds=1))
+        if self.slurm_duration is not None:
+            hours, remainder = divmod(self.slurm_duration, timedelta(hours=1))
+            minutes, remainder = divmod(remainder, timedelta(minutes=1))
+            seconds = round(remainder / timedelta(seconds=1))
+            lines.append(f'#SBATCH --time={hours:02}:{minutes:02}:{seconds:02}')
 
-        lines.append(f'#SBATCH --time={hours:02}:{minutes:02}:{seconds:02}')
         if self.slurm_partition is not None:
             lines.append(f'#SBATCH --partition={self.slurm_partition}')
 
@@ -240,6 +247,7 @@ class AdcircJobScript(JobScript):
         slurm_account: str,
         slurm_duration: timedelta,
         slurm_run_name: str,
+        source_filename: PathLike = None,
         **kwargs,
     ):
         if slurm_run_name is None:
@@ -255,42 +263,30 @@ class AdcircJobScript(JobScript):
             **kwargs,
         )
 
-        if self.platform == Platform.STAMPEDE2:
-            self.commands.append(
-                'source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede'
-            )
-        elif self.platform == Platform.HERA:
-            self.commands.append(
-                'source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
-            )
+        if source_filename is not None and len(source_filename) > 0:
+            self.commands.insert(0, f'source {source_filename}')
 
 
-class AdcircRunScript(AdcircJobScript):
+class AdcircSetupScript(AdcircJobScript):
     """ script for running ADCIRC via a NEMS configuration """
 
     def __init__(
         self,
-        platform: Platform,
         nems_configure_filename: PathLike,
         model_configure_filename: PathLike,
         atm_namelist_rc_filename: PathLike,
         config_rc_filename: PathLike,
-        slurm_tasks: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
-        slurm_run_name: str,
         fort67_filename: PathLike = None,
-        nems_path: PathLike = None,
         commands: [str] = None,
         **kwargs,
     ):
         super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
+            platform=Platform.LOCAL,
+            commands=commands,
+            slurm_tasks=None,
+            slurm_account=None,
+            slurm_duration=None,
+            slurm_run_name=None,
             **kwargs,
         )
 
@@ -301,13 +297,6 @@ class AdcircRunScript(AdcircJobScript):
         self.fort67_filename = (
             PurePosixPath(fort67_filename) if fort67_filename is not None else None
         )
-
-        if nems_path is None:
-            if self.platform == Platform.HERA:
-                nems_path = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
-            else:
-                nems_path = 'NEMS.x'
-        self.nems_path = nems_path
 
         self.commands.extend(
             [
@@ -324,6 +313,35 @@ class AdcircRunScript(AdcircJobScript):
             self.commands.extend(
                 [f'ln -sf {self.fort67_filename} ./fort.67.nc', '']
             )
+
+
+class AdcircRunScript(AdcircJobScript):
+    """ script for running ADCIRC via a NEMS configuration """
+
+    def __init__(
+        self,
+        platform: Platform,
+        slurm_tasks: int,
+        slurm_account: str,
+        slurm_duration: timedelta,
+        slurm_run_name: str,
+        nems_path: PathLike = None,
+        commands: [str] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            platform,
+            commands,
+            slurm_tasks,
+            slurm_account,
+            slurm_duration,
+            slurm_run_name,
+            **kwargs,
+        )
+
+        if nems_path is None:
+            nems_path = 'NEMS.x'
+        self.nems_path = nems_path
 
         self.commands.append(f'{self.launcher} {self.nems_path}')
 
@@ -356,10 +374,7 @@ class AdcircMeshPartitionScript(AdcircJobScript):
         self.adcirc_partitions = adcirc_mesh_partitions
 
         if adcprep_path is None:
-            if self.platform == Platform.HERA:
-                adcprep_path = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
-            else:
-                adcprep_path = 'adcprep'
+            adcprep_path = 'adcprep'
         self.adcprep_path = adcprep_path
 
         self.commands.extend(
@@ -371,9 +386,16 @@ class AdcircMeshPartitionScript(AdcircJobScript):
         )
 
 
-class RunScript(Script):
-    def __init__(self, platform: Platform):
+class EnsembleSetupScript(Script):
+    def __init__(self, platform: Platform, coldstart_setup_script: PathLike = None, hotstart_setup_script: PathLike = None):
+        if coldstart_setup_script is None:
+            coldstart_setup_script = 'setup_coldstart.sh'
+        if hotstart_setup_script is None:
+            hotstart_setup_script = 'setup_hotstart.sh'
+
         self.platform = platform
+        self.coldstart_setup_script = coldstart_setup_script
+        self.hotstart_setup_script = hotstart_setup_script
 
     def __str__(self) -> str:
         lines = [
@@ -384,6 +406,7 @@ class RunScript(Script):
             '',
             '# prepare single coldstart directory',
             f'cd $DIRECTORY/coldstart',
+            f'sh ../{self.coldstart_setup_script}',
             f'ln -sf ../job_adcprep_{self.platform.value}.job adcprep.job',
             f'ln -sf ../job_nems_adcirc_{self.platform.value}.job.coldstart nems_adcirc.job',
             'cd $DIRECTORY',
@@ -393,11 +416,44 @@ class RunScript(Script):
                 'for hotstart in $DIRECTORY//runs/*/',
                 [
                     'cd "$hotstart"',
+                    f'sh ../../{self.hotstart_setup_script}.hotstart',
                     f'ln -sf ../../job_adcprep_{self.platform.value}.job adcprep.job',
                     f'ln -sf ../../job_nems_adcirc_{self.platform.value}.job.hotstart nems_adcirc.job',
                     'cd $DIRECTORY/',
                 ],
             ),
+        ]
+
+        return '\n'.join(lines)
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'setup_{self.platform.value}.sh'
+
+        output = f'{self}\n'
+        if overwrite or not filename.exists():
+            with open(filename, 'w') as file:
+                file.write(output)
+
+
+class EnsembleRunScript(Script):
+    def __init__(self, platform: Platform, setup_script_name: PathLike = None):
+        self.platform = platform
+        if setup_script_name is None:
+            setup_script_name = f'setup_{self.platform.value}.sh'
+        self.setup_script_name = setup_script_name
+
+    def __str__(self) -> str:
+        lines = [
+            f'sh {self.setup_script_name}',
+            '',
+            'DIRECTORY="$(',
+            '    cd "$(dirname "$0")" >/dev/null 2>&1',
+            '    pwd -P',
+            ')"',
             '',
             '# run single coldstart configuration',
             'cd $DIRECTORY/coldstart',

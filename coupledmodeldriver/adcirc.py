@@ -11,13 +11,9 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
-from .job_script import (
-    AdcircMeshPartitionScript,
-    AdcircRunScript,
-    Platform,
-    RunScript,
-    SlurmEmailType,
-)
+from .job_script import (AdcircMeshPartitionScript, AdcircRunScript,
+                         AdcircSetupScript, EnsembleRunScript,
+                         EnsembleSetupScript, Platform, SlurmEmailType)
 from .utilities import create_symlink, get_logger
 
 LOGGER = get_logger('adcirc')
@@ -28,6 +24,8 @@ def write_adcirc_configurations(
     runs: {str: (float, str)},
     mesh_directory: PathLike,
     output_directory: PathLike,
+    nems_executable: PathLike,
+    adcprep_executable: PathLike,
     platform: Platform,
     partition: str = None,
     email_address: str = None,
@@ -35,6 +33,7 @@ def write_adcirc_configurations(
     spinup: timedelta = None,
     forcings: [Forcing] = None,
     overwrite: bool = False,
+    source_filename: PathLike = None,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
@@ -43,12 +42,15 @@ def write_adcirc_configurations(
     :param nems: NEMSpy ModelingSystem object, populated with models and connections
     :param mesh_directory: path to directory containing input mesh (fort.13 and fort.14) as well as stations file if applicable
     :param output_directory: path to store run configuration
+    :param nems_executable: filename of compiled `NEMS.x`
+    :param adcprep_executable: filename of compiled `adcprep`
     :param platform: HPC platform for which to configure
     :param partition: Slurm partition
     :param email_address: email address
     :param wall_clock_time: wall clock time of job
     :param spinup: spinup time for ADCIRC coldstart
     :param overwrite: whether to overwrite existing files
+    :param source_filename: path to modulefile to `source`
     """
 
     if not isinstance(mesh_directory, Path):
@@ -69,6 +71,12 @@ def write_adcirc_configurations(
 
     if wall_clock_time is None:
         wall_clock_time = timedelta(minutes=30)
+
+    if source_filename is not None:
+        if platform == Platform.STAMPEDE2:
+            source_filename = '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede'
+        elif platform == Platform.HERA:
+            source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
     fort13_filename = mesh_directory / 'fort.13'
     if not fort13_filename.exists():
@@ -172,6 +180,7 @@ def write_adcirc_configurations(
         slurm_nodes=slurm_nodes,
         slurm_partition=partition,
         slurm_run_name=adcprep_run_name,
+        adcprep_path=adcprep_executable,
         slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
         slurm_email_address=email_address,
         slurm_error_filename=f'{adcprep_run_name}.err.log',
@@ -182,31 +191,31 @@ def write_adcirc_configurations(
         overwrite=overwrite,
     )
 
+    coldstart_setup_script = AdcircSetupScript(
+        nems_configure_filename=output_directory / 'nems.configure.coldstart',
+        model_configure_filename=output_directory / 'model_configure.coldstart',
+        atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
+        config_rc_filename=output_directory / 'config.rc.coldstart',
+    )
     if spinup is not None:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
-            nems_configure_filename=output_directory / 'nems.configure.coldstart',
-            model_configure_filename=output_directory / 'model_configure.coldstart',
-            atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
-            config_rc_filename=output_directory / 'config.rc.coldstart',
             slurm_tasks=spinup.processors,
             slurm_account=slurm_account,
             slurm_duration=wall_clock_time,
             slurm_run_name=adcirc_coldstart_run_name,
+            nems_path=nems_executable,
             slurm_nodes=slurm_nodes,
             slurm_partition=partition,
             slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
             slurm_email_address=email_address,
             slurm_error_filename=f'{adcirc_coldstart_run_name}.err.log',
             slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
+            source_filename=source_filename,
         )
     else:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
-            nems_configure_filename=output_directory / 'nems.configure.coldstart',
-            model_configure_filename=output_directory / 'model_configure.coldstart',
-            atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
-            config_rc_filename=output_directory / 'config.rc.coldstart',
             slurm_tasks=nems.processors,
             slurm_account=slurm_account,
             slurm_duration=wall_clock_time,
@@ -217,37 +226,46 @@ def write_adcirc_configurations(
             slurm_email_address=email_address,
             slurm_error_filename=f'{adcirc_coldstart_run_name}.err.log',
             slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
+            source_filename=source_filename,
         )
-
+    coldstart_setup_script.write(
+        output_directory / f'setup_coldstart.sh',
+        overwrite=overwrite,
+    )
     coldstart_run_script.write(
-        output_directory
-        / f'job_nems_adcirc_{coldstart_run_script.platform.value}.job.coldstart',
+        output_directory / f'job_nems_adcirc_{coldstart_run_script.platform.value}.job.coldstart',
         overwrite=overwrite,
     )
 
     if spinup is not None:
-        hotstart_run_script = AdcircRunScript(
-            platform=platform,
+        hotstart_setup_script = AdcircSetupScript(
             nems_configure_filename=output_directory / 'nems.configure.hotstart',
             model_configure_filename=output_directory / 'model_configure.hotstart',
             atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.hotstart',
             config_rc_filename=output_directory / 'config.rc.hotstart',
             fort67_filename=coldstart_directory / 'fort.67.nc',
+        )
+        hotstart_run_script = AdcircRunScript(
+            platform=platform,
             slurm_tasks=nems.processors,
             slurm_account=slurm_account,
             slurm_duration=wall_clock_time,
             slurm_run_name=adcirc_hotstart_run_name,
+            nems_path=nems_executable,
             slurm_nodes=slurm_nodes,
             slurm_partition=partition,
             slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
             slurm_email_address=email_address,
             slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
             slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
+            source_filename=source_filename,
         )
-
+        hotstart_setup_script.write(
+            output_directory / f'setup_hotstart.sh',
+            overwrite=overwrite,
+        )
         hotstart_run_script.write(
-            output_directory
-            / f'job_nems_adcirc_{hotstart_run_script.platform.value}.job.hotstart',
+            output_directory / f'job_nems_adcirc_{hotstart_run_script.platform.value}.job.hotstart',
             overwrite=overwrite,
         )
 
@@ -318,5 +336,11 @@ def write_adcirc_configurations(
             driver=None,
         )
 
-    run_script = RunScript(platform)
-    run_script.write(output_directory / f'run_{platform.value}.sh', overwrite=overwrite)
+    setup_script_name = f'setup_{platform.value}.sh'
+    run_script_name = f'run_{platform.value}.sh'
+
+    setup_script = EnsembleSetupScript(platform)
+    run_script = EnsembleRunScript(platform, setup_script_name)
+
+    setup_script.write(output_directory / setup_script_name, overwrite=overwrite)
+    run_script.write(output_directory / run_script_name, overwrite=overwrite)

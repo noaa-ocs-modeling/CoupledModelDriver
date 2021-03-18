@@ -9,12 +9,17 @@ from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
+    WaveMeshEntry
 
 sys.path.append((Path(__file__).parent / '..').absolute())
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
+
+# paths to compiled `NEMS.x` and `adcprep`
+NEMS_EXECUTABLE = 'NEMS.x'
+ADCPREP_EXECUTABLE = 'adcprep'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
 MESH_DIRECTORY = (
@@ -68,6 +73,8 @@ if __name__ == '__main__':
         runs,
         MESH_DIRECTORY,
         OUTPUT_DIRECTORY,
+        nems_executable=NEMS_EXECUTABLE,
+        adcprep_executable=ADCPREP_EXECUTABLE,
         email_address='example@email.gov',
         platform=Platform.LOCAL,
         spinup=timedelta(days=12.5),
