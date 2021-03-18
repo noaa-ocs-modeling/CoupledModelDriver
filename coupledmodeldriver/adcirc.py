@@ -34,6 +34,7 @@ def write_adcirc_configurations(
     forcings: [Forcing] = None,
     overwrite: bool = False,
     source_filename: PathLike = None,
+    use_original_fort14: bool = False,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
@@ -51,6 +52,7 @@ def write_adcirc_configurations(
     :param spinup: spinup time for ADCIRC coldstart
     :param overwrite: whether to overwrite existing files
     :param source_filename: path to modulefile to `source`
+    :param use_original_fort14: whether to use the original `fort.14` file instead of rewriting with `adcircpy`
     """
 
     if not isinstance(mesh_directory, Path):
@@ -314,10 +316,13 @@ def write_adcirc_configurations(
     driver.write(
         coldstart_directory,
         overwrite=overwrite,
+        fort14=None if use_original_fort14 else 'fort.14',
         coldstart='fort.15',
         hotstart=None,
         driver=None,
     )
+    if use_original_fort14:
+        create_symlink(fort14_filename, coldstart_directory / 'fort.14')
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -332,9 +337,12 @@ def write_adcirc_configurations(
             run_directory,
             overwrite=overwrite,
             coldstart=None,
+            fort14=None if use_original_fort14 else 'fort.14',
             hotstart='fort.15',
             driver=None,
         )
+        if use_original_fort14:
+            create_symlink(fort14_filename, run_directory / 'fort.14')
 
     setup_script_name = f'setup_{platform.value}.sh'
     run_script_name = f'run_{platform.value}.sh'
