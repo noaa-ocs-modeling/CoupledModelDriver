@@ -94,4 +94,5 @@ if __name__ == '__main__':
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
         use_original_mesh=False,
+        verbose=True,
     )

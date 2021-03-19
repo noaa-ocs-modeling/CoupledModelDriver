@@ -9,14 +9,14 @@
 `coupledmodeldriver` generates an overlying job submission framework and configuration directories for NEMS-coupled coastal
 ocean model ensembles.
 
-It utilizes [`nemspy`](https://github.com/noaa-ocs-modeling/NEMSpy) to generate NEMS configuration files, shares common
-configurations between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
+It utilizes [`nemspy`](https://pypi.org/project/nemspy) to generate NEMS configuration files, shares common configurations
+between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
 
 ## Supported models and platforms
 
 - **models**
     - circulation models
-        - ADCIRC (uses [`adcircpy`](https://github.com/JaimeCalzadaNOAA/adcircpy))
+        - ADCIRC (uses [`adcircpy`](https://pypi.org/project/adcircpy))
     - forcings
         - ATMESH
         - WW3DATA
@@ -38,24 +38,34 @@ on Hera, over a small Shinnecock Inlet mesh:
 ```python
 from datetime import datetime, timedelta
 from pathlib import Path
+import sys
 
 from adcircpy import Tides
+from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 
+sys.path.append((Path(__file__).parent / '..').absolute())
+
 from coupledmodeldriver.adcirc import write_adcirc_configurations
 from coupledmodeldriver.job_script import Platform
 
+# paths to compiled `NEMS.x` and `adcprep`
+NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'
+ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/adcprep'
+
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'grid_v1'
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
 FORCINGS_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'shinnecock' / 'ike'
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_shinnecock_ike'
+
+HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 
 # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
 runs = {f'test_case_1': (None, None)}
@@ -82,7 +92,7 @@ nems.sequence = [
 ]
 
 # initialize `adcircpy` forcing objects
-tidal_forcing = Tides()
+tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
 tidal_forcing.use_all()
 wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
 wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
@@ -93,11 +103,15 @@ write_adcirc_configurations(
     runs,
     MESH_DIRECTORY,
     OUTPUT_DIRECTORY,
+    nems_executable=NEMS_EXECUTABLE,
+    adcprep_executable=ADCPREP_EXECUTABLE,
     email_address='example@email.gov',
     platform=Platform.HERA,
     spinup=timedelta(days=12.5),
     forcings=[tidal_forcing, wind_forcing, wave_forcing],
     overwrite=True,
+    use_original_mesh=False,
+    verbose=True,
 )
 ```
 
@@ -114,15 +128,18 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┃    ┣ 📜 fort.13
 ┃    ┣ 📜 fort.14
 ┃    ┗ 📜 fort.15
+┣ 📜 nems.configure.coldstart
+┣ 📜 nems.configure.hotstart
 ┣ 📜 config.rc.coldstart
 ┣ 📜 config.rc.hotstart
 ┣ 📜 model_configure.coldstart
 ┣ 📜 model_configure.hotstart
-┣ 📜 nems.configure.coldstart
-┣ 📜 nems.configure.hotstart
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ 📜 setup.sh.coldstart
+┣ 📜 setup.sh.hotstart
+┣ 📜 setup_hera.sh
 ┗ 📜 run_hera.sh
 ```
 
@@ -137,7 +154,7 @@ Run `run_hera.sh`:
 sh run_hera.sh
 ``` 
 
-This will first create symbolic links to populate configuration directories,
+This will first create symbolic links to populate configuration directories (by calling `setup_hera.sh`),
 
 ```
 📦 hera_shinnecock_ike/
@@ -145,9 +162,10 @@ This will first create symbolic links to populate configuration directories,
 ┃  ┣ 📜 fort.13
 ┃  ┣ 📜 fort.14
 ┃  ┣ 📜 fort.15
+┃  ┣ 🔗 nems.configure -> ../nems.configure.coldstart
 ┃  ┣ 🔗 config.rc -> ../config.rc.coldstart
 ┃  ┣ 🔗 model_configure -> ../model_configure.coldstart
-┃  ┣ 🔗 nems.configure -> ../nems.configure.coldstart
+┃  ┣ 🔗 setup.sh -> ../setup.sh.coldstart
 ┃  ┣ 🔗 hera_adcprep.job -> ../job_adcprep_hera.job
 ┃  ┗ 🔗 hera_nems_adcirc.job -> ../job_nems_adcirc_hera.job.coldstart
 ┣ 📂 runs/
@@ -155,30 +173,37 @@ This will first create symbolic links to populate configuration directories,
 ┃    ┣ 📜 fort.13
 ┃    ┣ 📜 fort.14
 ┃    ┣ 📜 fort.15
+┃    ┣ 🔗 nems.configure -> ../../nems.configure.hotstart
 ┃    ┣ 🔗 config.rc -> ../../config.rc.hotstart
 ┃    ┣ 🔗 model_configure -> ../../model_configure.hotstart
-┃    ┣ 🔗 nems.configure -> ../../nems.configure.hotstart
+┃    ┣ 🔗 setup.sh -> ../../setup.sh.hotstart
 ┃    ┣ 🔗 hera_adcprep.job -> ../../job_adcprep_hera.job
 ┃    ┗ 🔗 hera_nems_adcirc.job -> ../../job_nems_adcirc_hera.job.hotstart
+┣ 📜 nems.configure.coldstart
+┣ 📜 nems.configure.hotstart
 ┣ 📜 config.rc.coldstart
 ┣ 📜 config.rc.hotstart
 ┣ 📜 model_configure.coldstart
 ┣ 📜 model_configure.hotstart
-┣ 📜 nems.configure.coldstart
-┣ 📜 nems.configure.hotstart
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ 📜 setup.sh.coldstart
+┣ 📜 setup.sh.hotstart
+┣ 📜 setup_hera.sh
 ┗ 📜 run_hera.sh
 ```
 
 and then submit the requested jobs to the queue:
 
 ```bash
-squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"
-   JOBID                  NAME CPUS NODE                      DEPENDENCY ACCOUNT PARTITION          SUBMIT_TIME           START_TIME             END_TIME
-16368044 ADCIRC_MESH_PARTITION    1    1                          (null) coastal      hera  2021-02-18T19:29:17                  N/A                  N/A
-16368045      ADCIRC_COLDSTART   11    1  afterany:16368044(unfulfilled) coastal      hera  2021-02-18T19:29:17                  N/A                  N/A
-16368046 ADCIRC_MESH_PARTITION    1    1  afterany:16368045(unfulfilled) coastal      hera  2021-02-18T19:29:17                  N/A                  N/A
-16368047       ADCIRC_HOTSTART   13    1  afterany:16368046(unfulfilled) coastal      hera  2021-02-18T19:29:17                  N/A                  N/A
+squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"
+```
+
+```
+   JOBID                  NAME CPUS NODE                      DEPENDENCY          SUBMIT_TIME           START_TIME             END_TIME
+16368044 ADCIRC_MESH_PARTITION    1    1                          (null)  2021-02-18T19:29:17                  N/A                  N/A
+16368045      ADCIRC_COLDSTART   11    1  afterany:16368044(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
+16368046 ADCIRC_MESH_PARTITION    1    1  afterany:16368045(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
+16368047       ADCIRC_HOTSTART   13    1  afterany:16368046(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
 ```
