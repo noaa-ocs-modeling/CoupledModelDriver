@@ -387,9 +387,9 @@ class AdcircMeshPartitionScript(AdcircJobScript):
 class EnsembleSetupScript(Script):
     def __init__(self, platform: Platform, coldstart_setup_script: PathLike = None, hotstart_setup_script: PathLike = None):
         if coldstart_setup_script is None:
-            coldstart_setup_script = 'setup_coldstart.sh'
+            coldstart_setup_script = 'setup.sh.coldstart'
         if hotstart_setup_script is None:
-            hotstart_setup_script = 'setup_hotstart.sh'
+            hotstart_setup_script = 'setup.sh.hotstart'
 
         self.platform = platform
         self.coldstart_setup_script = coldstart_setup_script
@@ -481,8 +481,8 @@ class EnsembleRunScript(Script):
                 [
                     '',
                     '# display job queue with dependencies',
-                    f'echo {echo_squeue_command}',
                     squeue_command,
+                    f'echo {echo_squeue_command}',
                 ]
             )
 
