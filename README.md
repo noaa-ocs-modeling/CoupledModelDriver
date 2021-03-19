@@ -173,6 +173,7 @@ This will first create symbolic links to populate configuration directories (by 
 ┃    ┣ 📜 fort.13
 ┃    ┣ 📜 fort.14
 ┃    ┣ 📜 fort.15
+┃    ┣ 🔗 fort.67.nc -> ../../coldstart/fort.67.nc
 ┃    ┣ 🔗 nems.configure -> ../../nems.configure.hotstart
 ┃    ┣ 🔗 config.rc -> ../../config.rc.hotstart
 ┃    ┣ 🔗 model_configure -> ../../model_configure.hotstart
