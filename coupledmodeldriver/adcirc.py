@@ -65,6 +65,11 @@ def write_adcirc_configurations(
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
 
+    if output_directory.is_absolute():
+        output_directory = output_directory.resolve()
+    else:
+        output_directory = output_directory.resolve().relative_to(Path().cwd())
+
     if not isinstance(nems_executable, Path):
         nems_executable = Path(nems_executable)
     if not isinstance(adcprep_executable, Path):
@@ -86,10 +91,9 @@ def write_adcirc_configurations(
             source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
     LOGGER.info(f'generating {len(runs)} "{platform.value}" configuration(s) in "{output_directory}"')
-    LOGGER.info(f'using meshes from "{mesh_directory}"')
 
-    LOGGER.info(f'using NEMS executable "{nems_executable}"')
-    LOGGER.info(f'using mesh partitioner "{adcprep_executable}"')
+    LOGGER.info(f'setting NEMS executable "{nems_executable}"')
+    LOGGER.info(f'setting mesh partitioner "{adcprep_executable}"')
 
     if source_filename is not None:
         LOGGER.info(f'sourcing modules from "{source_filename}"')
@@ -112,7 +116,7 @@ def write_adcirc_configurations(
         )
 
     # open mesh file
-    LOGGER.info(f'opening mesh file "{fort14_filename}"')
+    LOGGER.info(f'opening mesh "{fort14_filename}"')
     mesh = AdcircMesh.open(fort14_filename, crs=4326)
 
     LOGGER.info(f'adding {len(forcings)} forcing(s) to mesh')
@@ -130,28 +134,28 @@ def write_adcirc_configurations(
         LOGGER.info(f'generating tau0 in mesh')
         mesh.generate_tau0()
 
-    atm_namelist_filename = output_directory / 'atm_namelist.rc'
-
     LOGGER.info(f'writing base NEMS configuration for coldstart')
     if spinup is not None:
         coldstart_filenames = spinup.write(
-            output_directory, overwrite=overwrite, include_version=True
+            output_directory, overwrite=overwrite, include_version=True,
+            create_atm_namelist_rc=False,
         )
     else:
         coldstart_filenames = nems.write(
-            output_directory, overwrite=overwrite, include_version=True
+            output_directory, overwrite=overwrite, include_version=True,
+            create_atm_namelist_rc=False,
         )
 
-    coldstart_filenames.append(atm_namelist_filename)
     for filename in coldstart_filenames:
         coldstart_filename = Path(f'{filename}.coldstart')
         if coldstart_filename.exists():
             os.remove(coldstart_filename)
-        if filename.is_symlink():
+        if filename.absolute().is_symlink():
             target = filename.resolve()
-            if target in coldstart_filenames:
-                target = f'{target}.coldstart'
-            create_symlink(target, coldstart_filename)
+            if target.absolute() in [value.resolve()
+                                     for value in coldstart_filenames]:
+                target = Path(f'{target}.coldstart')
+            create_symlink(target, coldstart_filename, relative=True)
             os.remove(filename)
         else:
             filename.rename(coldstart_filename)
@@ -159,20 +163,22 @@ def write_adcirc_configurations(
     if spinup is not None:
         LOGGER.info(f'writing base NEMS configuration for hotstart')
         hotstart_filenames = nems.write(
-            output_directory, overwrite=overwrite, include_version=True
+            output_directory, overwrite=overwrite, include_version=True,
+            create_atm_namelist_rc=False,
         )
     else:
         hotstart_filenames = []
 
-    for filename in hotstart_filenames + [atm_namelist_filename]:
+    for filename in hotstart_filenames:
         hotstart_filename = Path(f'{filename}.hotstart')
         if hotstart_filename.exists():
             os.remove(hotstart_filename)
-        if filename.is_symlink():
+        if filename.absolute().is_symlink():
             target = filename.resolve()
-            if target in hotstart_filenames:
-                target = f'{target}.coldstart'
-            create_symlink(target, hotstart_filename)
+            if target.absolute() in [value.resolve()
+                                     for value in hotstart_filenames]:
+                target = Path(f'{target}.hotstart')
+            create_symlink(target, hotstart_filename, relative=True)
             os.remove(filename)
         else:
             filename.rename(hotstart_filename)
@@ -218,17 +224,16 @@ def write_adcirc_configurations(
         source_filename=source_filename,
     )
 
-    LOGGER.info(f'writing mesh partitioning job script to "{mesh_partitioning_job_script_filename}"')
+    LOGGER.info(f'writing mesh partitioning job script "{mesh_partitioning_job_script_filename}"')
     adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
 
     coldstart_setup_script = AdcircSetupScript(
-        nems_configure_filename=output_directory / 'nems.configure.coldstart',
-        model_configure_filename=output_directory / 'model_configure.coldstart',
-        atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.coldstart',
-        config_rc_filename=output_directory / 'config.rc.coldstart',
+        nems_configure_filename=Path('..') / 'nems.configure.coldstart',
+        model_configure_filename=Path('..') / 'model_configure.coldstart',
+        config_rc_filename=Path('..') / 'config.rc.coldstart',
     )
 
-    LOGGER.info(f'writing coldstart setup script to "{coldstart_setup_script_filename}"')
+    LOGGER.info(f'writing coldstart setup script "{coldstart_setup_script_filename}"')
     coldstart_setup_script.write(coldstart_setup_script_filename, overwrite=overwrite)
 
     if spinup is not None:
@@ -263,15 +268,14 @@ def write_adcirc_configurations(
             source_filename=source_filename,
         )
 
-    LOGGER.info(f'writing coldstart run script to "{coldstart_run_script_filename}"')
+    LOGGER.info(f'writing coldstart run script "{coldstart_run_script_filename}"')
     coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
     if spinup is not None:
         hotstart_setup_script = AdcircSetupScript(
-            nems_configure_filename=output_directory / 'nems.configure.hotstart',
-            model_configure_filename=output_directory / 'model_configure.hotstart',
-            atm_namelist_rc_filename=output_directory / 'atm_namelist.rc.hotstart',
-            config_rc_filename=output_directory / 'config.rc.hotstart',
+            nems_configure_filename=Path('../..') / 'nems.configure.hotstart',
+            model_configure_filename=Path('../..') / 'model_configure.hotstart',
+            config_rc_filename=Path('../..') / 'config.rc.hotstart',
             fort67_filename=coldstart_directory / 'fort.67.nc',
         )
         hotstart_run_script = AdcircRunScript(
@@ -290,10 +294,10 @@ def write_adcirc_configurations(
             source_filename=source_filename,
         )
 
-        LOGGER.info(f'writing hotstart setup script to "{hotstart_setup_script_filename}"')
+        LOGGER.info(f'writing hotstart setup script "{hotstart_setup_script_filename}"')
         hotstart_setup_script.write(hotstart_setup_script_filename, overwrite=overwrite)
 
-        LOGGER.info(f'writing hotstart run script to "{hotstart_run_script_filename}"')
+        LOGGER.info(f'writing hotstart run script "{hotstart_run_script_filename}"')
         hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     slurm = SlurmConfig(
@@ -348,7 +352,7 @@ def write_adcirc_configurations(
         driver=None,
     )
     if use_original_mesh:
-        create_symlink(fort14_filename, coldstart_directory / 'fort.14')
+        create_symlink(fort14_filename, coldstart_directory / 'fort.14', relative=True)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -368,12 +372,12 @@ def write_adcirc_configurations(
             driver=None,
         )
         if use_original_mesh:
-            create_symlink(fort14_filename, run_directory / 'fort.14')
+            create_symlink(fort14_filename, run_directory / 'fort.14', relative=True)
 
-    LOGGER.info(f'writing ensemble setup script to "{setup_script_filename}"')
+    LOGGER.info(f'writing ensemble setup script "{setup_script_filename}"')
     setup_script = EnsembleSetupScript(platform)
     setup_script.write(setup_script_filename, overwrite=overwrite)
 
-    LOGGER.info(f'writing ensemble run script to "{run_script_filename}"')
+    LOGGER.info(f'writing ensemble run script "{run_script_filename}"')
     run_script = EnsembleRunScript(platform, setup_script_filename.stem)
     run_script.write(run_script_filename, overwrite=overwrite)

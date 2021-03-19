@@ -274,7 +274,6 @@ class AdcircSetupScript(AdcircJobScript):
         self,
         nems_configure_filename: PathLike,
         model_configure_filename: PathLike,
-        atm_namelist_rc_filename: PathLike,
         config_rc_filename: PathLike,
         fort67_filename: PathLike = None,
         commands: [str] = None,
@@ -292,7 +291,6 @@ class AdcircSetupScript(AdcircJobScript):
 
         self.nems_configure_filename = PurePosixPath(nems_configure_filename)
         self.model_configure_filename = PurePosixPath(model_configure_filename)
-        self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
         self.config_rc_filename = PurePosixPath(config_rc_filename)
         self.fort67_filename = (
             PurePosixPath(fort67_filename) if fort67_filename is not None else None
@@ -303,8 +301,8 @@ class AdcircSetupScript(AdcircJobScript):
                 '',
                 f'ln -sf {self.nems_configure_filename} ./nems.configure',
                 f'ln -sf {self.model_configure_filename} ./model_configure',
-                f'ln -sf {self.atm_namelist_rc_filename} ./atm_namelist.rc',
                 f'ln -sf {self.config_rc_filename} ./config.rc',
+                f'ln -sf ./model_configure ./atm_namelist.rc',
                 '',
             ]
         )
