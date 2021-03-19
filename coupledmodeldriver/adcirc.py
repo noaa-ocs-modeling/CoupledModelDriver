@@ -379,5 +379,5 @@ def write_adcirc_configurations(
     setup_script.write(setup_script_filename, overwrite=overwrite)
 
     LOGGER.info(f'writing ensemble run script "{run_script_filename}"')
-    run_script = EnsembleRunScript(platform, setup_script_filename.stem)
+    run_script = EnsembleRunScript(platform, setup_script_filename.name)
     run_script.write(run_script_filename, overwrite=overwrite)
