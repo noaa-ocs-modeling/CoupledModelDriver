@@ -46,6 +46,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -80,7 +81,9 @@ def get_logger(
 LOGGER = get_logger('utilities')
 
 
-def create_symlink(source_filename: PathLike, symlink_filename: PathLike, relative: bool = False):
+def create_symlink(
+    source_filename: PathLike, symlink_filename: PathLike, relative: bool = False
+):
     if not isinstance(source_filename, Path):
         source_filename = Path(source_filename)
     if not isinstance(symlink_filename, Path):

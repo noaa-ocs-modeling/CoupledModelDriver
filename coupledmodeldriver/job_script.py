@@ -308,9 +308,7 @@ class AdcircSetupScript(AdcircJobScript):
         )
 
         if self.fort67_filename is not None:
-            self.commands.extend(
-                [f'ln -sf {self.fort67_filename} ./fort.67.nc', '']
-            )
+            self.commands.extend([f'ln -sf {self.fort67_filename} ./fort.67.nc', ''])
 
 
 class AdcircRunScript(AdcircJobScript):
@@ -385,7 +383,12 @@ class AdcircMeshPartitionScript(AdcircJobScript):
 
 
 class EnsembleSetupScript(Script):
-    def __init__(self, platform: Platform, coldstart_setup_script: PathLike = None, hotstart_setup_script: PathLike = None):
+    def __init__(
+        self,
+        platform: Platform,
+        coldstart_setup_script: PathLike = None,
+        hotstart_setup_script: PathLike = None,
+    ):
         if coldstart_setup_script is None:
             coldstart_setup_script = 'setup.sh.coldstart'
         if hotstart_setup_script is None:
@@ -466,7 +469,7 @@ class EnsembleRunScript(Script):
                     'pushd ${hotstart} >/dev/null 2>&1',
                     'sh setup.sh',
                     self.hotstart,
-                    'popd >/dev/null 2>&1'
+                    'popd >/dev/null 2>&1',
                 ],
             ),
         ]
@@ -499,9 +502,7 @@ class EnsembleRunScript(Script):
                 ]
             )
         else:
-            lines.extend(
-                ['sh adcprep.job', 'sh nems_adcirc.job']
-            )
+            lines.extend(['sh adcprep.job', 'sh nems_adcirc.job'])
         return '\n'.join(lines)
 
     @property
@@ -515,9 +516,7 @@ class EnsembleRunScript(Script):
                 ]
             )
         else:
-            lines.extend(
-                ['sh adcprep.job', 'sh nems_adcirc.job']
-            )
+            lines.extend(['sh adcprep.job', 'sh nems_adcirc.job'])
         return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):

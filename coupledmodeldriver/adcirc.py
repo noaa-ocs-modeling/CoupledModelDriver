@@ -11,9 +11,15 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
-from .job_script import (AdcircMeshPartitionScript, AdcircRunScript,
-                         AdcircSetupScript, EnsembleRunScript,
-                         EnsembleSetupScript, Platform, SlurmEmailType)
+from .job_script import (
+    AdcircMeshPartitionScript,
+    AdcircRunScript,
+    AdcircSetupScript,
+    EnsembleRunScript,
+    EnsembleSetupScript,
+    Platform,
+    SlurmEmailType,
+)
 from .utilities import create_symlink, get_logger
 
 LOGGER = get_logger('adcirc')
@@ -90,7 +96,9 @@ def write_adcirc_configurations(
         elif platform == Platform.HERA:
             source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
-    LOGGER.info(f'generating {len(runs)} "{platform.value}" configuration(s) in "{output_directory}"')
+    LOGGER.info(
+        f'generating {len(runs)} "{platform.value}" configuration(s) in "{output_directory}"'
+    )
 
     LOGGER.info(f'setting NEMS executable "{nems_executable}"')
     LOGGER.info(f'setting mesh partitioner "{adcprep_executable}"')
@@ -137,12 +145,16 @@ def write_adcirc_configurations(
     LOGGER.info(f'writing base NEMS configuration for coldstart')
     if spinup is not None:
         coldstart_filenames = spinup.write(
-            output_directory, overwrite=overwrite, include_version=True,
+            output_directory,
+            overwrite=overwrite,
+            include_version=True,
             create_atm_namelist_rc=False,
         )
     else:
         coldstart_filenames = nems.write(
-            output_directory, overwrite=overwrite, include_version=True,
+            output_directory,
+            overwrite=overwrite,
+            include_version=True,
             create_atm_namelist_rc=False,
         )
 
@@ -152,8 +164,7 @@ def write_adcirc_configurations(
             os.remove(coldstart_filename)
         if filename.absolute().is_symlink():
             target = filename.resolve()
-            if target.absolute() in [value.resolve()
-                                     for value in coldstart_filenames]:
+            if target.absolute() in [value.resolve() for value in coldstart_filenames]:
                 target = Path(f'{target}.coldstart')
             create_symlink(target, coldstart_filename, relative=True)
             os.remove(filename)
@@ -163,7 +174,9 @@ def write_adcirc_configurations(
     if spinup is not None:
         LOGGER.info(f'writing base NEMS configuration for hotstart')
         hotstart_filenames = nems.write(
-            output_directory, overwrite=overwrite, include_version=True,
+            output_directory,
+            overwrite=overwrite,
+            include_version=True,
             create_atm_namelist_rc=False,
         )
     else:
@@ -175,8 +188,7 @@ def write_adcirc_configurations(
             os.remove(hotstart_filename)
         if filename.absolute().is_symlink():
             target = filename.resolve()
-            if target.absolute() in [value.resolve()
-                                     for value in hotstart_filenames]:
+            if target.absolute() in [value.resolve() for value in hotstart_filenames]:
                 target = Path(f'{target}.hotstart')
             create_symlink(target, hotstart_filename, relative=True)
             os.remove(filename)
@@ -200,11 +212,17 @@ def write_adcirc_configurations(
     adcirc_hotstart_run_name = 'ADCIRC_HOTSTART'
     adcircpy_run_name = 'ADCIRCPY'
 
-    mesh_partitioning_job_script_filename = output_directory / f'job_adcprep_{platform.value}.job'
+    mesh_partitioning_job_script_filename = (
+        output_directory / f'job_adcprep_{platform.value}.job'
+    )
     coldstart_setup_script_filename = output_directory / f'setup.sh.coldstart'
-    coldstart_run_script_filename = output_directory / f'job_nems_adcirc_{platform.value}.job.coldstart'
+    coldstart_run_script_filename = (
+        output_directory / f'job_nems_adcirc_{platform.value}.job.coldstart'
+    )
     hotstart_setup_script_filename = output_directory / f'setup.sh.hotstart'
-    hotstart_run_script_filename = output_directory / f'job_nems_adcirc_{platform.value}.job.hotstart'
+    hotstart_run_script_filename = (
+        output_directory / f'job_nems_adcirc_{platform.value}.job.hotstart'
+    )
     setup_script_filename = output_directory / f'setup_{platform.value}.sh'
     run_script_filename = output_directory / f'run_{platform.value}.sh'
 
@@ -224,7 +242,9 @@ def write_adcirc_configurations(
         source_filename=source_filename,
     )
 
-    LOGGER.info(f'writing mesh partitioning job script "{mesh_partitioning_job_script_filename}"')
+    LOGGER.info(
+        f'writing mesh partitioning job script "{mesh_partitioning_job_script_filename}"'
+    )
     adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
 
     coldstart_setup_script = AdcircSetupScript(
