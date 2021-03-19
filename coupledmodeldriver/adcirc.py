@@ -375,7 +375,7 @@ def write_adcirc_configurations(
         driver=None,
     )
     if use_original_mesh:
-        create_symlink(fort14_filename, coldstart_directory / 'fort.14', relative=True)
+        create_symlink(fort14_filename, coldstart_directory / 'fort.14')
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -395,7 +395,7 @@ def write_adcirc_configurations(
             driver=None,
         )
         if use_original_mesh:
-            create_symlink(fort14_filename, run_directory / 'fort.14', relative=True)
+            create_symlink(fort14_filename, run_directory / 'fort.14')
 
     LOGGER.info(f'writing ensemble setup script "{setup_script_filename}"')
     setup_script = EnsembleSetupScript(platform)
