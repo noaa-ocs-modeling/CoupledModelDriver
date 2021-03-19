@@ -342,6 +342,9 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
+    if use_original_mesh:
+        LOGGER.info(f'using original mesh "{fort14_filename}"')
+
     LOGGER.info(f'writing coldstart configuration to "{coldstart_directory}"')
     driver.write(
         coldstart_directory,
