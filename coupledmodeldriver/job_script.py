@@ -9,6 +9,8 @@ import uuid
 
 import numpy
 
+from coupledmodeldriver.utilities import make_executable
+
 
 class SlurmEmailType(Enum):
     NONE = 'NONE'
@@ -530,6 +532,7 @@ class EnsembleRunScript(Script):
         if overwrite or not filename.exists():
             with open(filename, 'w') as file:
                 file.write(output)
+            make_executable(filename)
 
 
 def bash_if_statement(

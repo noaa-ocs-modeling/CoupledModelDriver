@@ -46,7 +46,6 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
-
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -129,3 +128,10 @@ def ellipsoidal_distance(
     ellipsoid = crs_a.datum.to_json_dict()['ellipsoid']
     geodetic = Geod(a=ellipsoid['semi_major_axis'], rf=ellipsoid['inverse_flattening'])
     return geodetic.line_length(points[:, 0], points[:, 1])
+
+
+def make_executable(path: PathLike):
+    """ https://stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python """
+    mode = os.stat(path).st_mode
+    mode |= (mode & 0o444) >> 2  # copy R bits to X
+    os.chmod(path, mode)
