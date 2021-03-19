@@ -22,5 +22,5 @@ for hotstart in ${DIRECTORY}/runs/*/; do
 done
 
 # display job queue with dependencies
-squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e"
-echo squeue -u $USER -o \"%.8i %.21j %.4C %.4D %.31E %.7a %.9P %.20V %.20S %.20e\"
+squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"
+echo squeue -u $USER -o \"%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e\"
