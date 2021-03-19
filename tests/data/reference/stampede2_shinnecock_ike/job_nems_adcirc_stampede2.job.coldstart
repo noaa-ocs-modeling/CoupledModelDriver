@@ -12,4 +12,5 @@
 
 set -e
 
+source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede
 ibrun NEMS.x

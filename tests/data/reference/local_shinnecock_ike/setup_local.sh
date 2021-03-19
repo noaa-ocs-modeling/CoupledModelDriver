@@ -4,17 +4,17 @@ DIRECTORY="$(
 )"
 
 # prepare single coldstart directory
-cd $DIRECTORY/coldstart
-sh ../setup_coldstart.sh
+pushd ${DIRECTORY}/coldstart >/dev/null 2>&1
+ln -sf ../setup.sh.coldstart setup.sh
 ln -sf ../job_adcprep_local.job adcprep.job
 ln -sf ../job_nems_adcirc_local.job.coldstart nems_adcirc.job
-cd $DIRECTORY
+popd >/dev/null 2>&1
 
 # prepare every hotstart directory
-for hotstart in $DIRECTORY//runs/*/; do
-    cd "$hotstart"
-    sh ../../setup_hotstart.sh.hotstart
+for hotstart in ${DIRECTORY}/runs/*/; do
+    pushd ${hotstart} >/dev/null 2>&1
+    ln -sf ../../setup.sh.hotstart setup.sh
     ln -sf ../../job_adcprep_local.job adcprep.job
     ln -sf ../../job_nems_adcirc_local.job.hotstart nems_adcirc.job
-    cd $DIRECTORY/
+    popd >/dev/null 2>&1
 done

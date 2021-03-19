@@ -9,6 +9,8 @@ import uuid
 
 import numpy
 
+from coupledmodeldriver.utilities import make_executable
+
 
 class SlurmEmailType(Enum):
     NONE = 'NONE'
@@ -274,7 +276,6 @@ class AdcircSetupScript(AdcircJobScript):
         self,
         nems_configure_filename: PathLike,
         model_configure_filename: PathLike,
-        atm_namelist_rc_filename: PathLike,
         config_rc_filename: PathLike,
         fort67_filename: PathLike = None,
         commands: [str] = None,
@@ -292,7 +293,6 @@ class AdcircSetupScript(AdcircJobScript):
 
         self.nems_configure_filename = PurePosixPath(nems_configure_filename)
         self.model_configure_filename = PurePosixPath(model_configure_filename)
-        self.atm_namelist_rc_filename = PurePosixPath(atm_namelist_rc_filename)
         self.config_rc_filename = PurePosixPath(config_rc_filename)
         self.fort67_filename = (
             PurePosixPath(fort67_filename) if fort67_filename is not None else None
@@ -303,16 +303,14 @@ class AdcircSetupScript(AdcircJobScript):
                 '',
                 f'ln -sf {self.nems_configure_filename} ./nems.configure',
                 f'ln -sf {self.model_configure_filename} ./model_configure',
-                f'ln -sf {self.atm_namelist_rc_filename} ./atm_namelist.rc',
                 f'ln -sf {self.config_rc_filename} ./config.rc',
+                f'ln -sf ./model_configure ./atm_namelist.rc',
                 '',
             ]
         )
 
         if self.fort67_filename is not None:
-            self.commands.extend(
-                [f'ln -sf {self.fort67_filename} ./fort.67.nc', '']
-            )
+            self.commands.extend([f'ln -sf {self.fort67_filename} ./fort.67.nc', ''])
 
 
 class AdcircRunScript(AdcircJobScript):
@@ -387,11 +385,16 @@ class AdcircMeshPartitionScript(AdcircJobScript):
 
 
 class EnsembleSetupScript(Script):
-    def __init__(self, platform: Platform, coldstart_setup_script: PathLike = None, hotstart_setup_script: PathLike = None):
+    def __init__(
+        self,
+        platform: Platform,
+        coldstart_setup_script: PathLike = None,
+        hotstart_setup_script: PathLike = None,
+    ):
         if coldstart_setup_script is None:
-            coldstart_setup_script = 'setup_coldstart.sh'
+            coldstart_setup_script = 'setup.sh.coldstart'
         if hotstart_setup_script is None:
-            hotstart_setup_script = 'setup_hotstart.sh'
+            hotstart_setup_script = 'setup.sh.hotstart'
 
         self.platform = platform
         self.coldstart_setup_script = coldstart_setup_script
@@ -405,21 +408,21 @@ class EnsembleSetupScript(Script):
             ')"',
             '',
             '# prepare single coldstart directory',
-            f'cd $DIRECTORY/coldstart',
-            f'sh ../{self.coldstart_setup_script}',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
+            f'ln -sf ../{self.coldstart_setup_script} setup.sh',
             f'ln -sf ../job_adcprep_{self.platform.value}.job adcprep.job',
             f'ln -sf ../job_nems_adcirc_{self.platform.value}.job.coldstart nems_adcirc.job',
-            'cd $DIRECTORY',
+            'popd >/dev/null 2>&1',
             '',
             '# prepare every hotstart directory',
             bash_for_loop(
-                'for hotstart in $DIRECTORY//runs/*/',
+                'for hotstart in ${DIRECTORY}/runs/*/',
                 [
-                    'cd "$hotstart"',
-                    f'sh ../../{self.hotstart_setup_script}.hotstart',
+                    'pushd ${hotstart} >/dev/null 2>&1',
+                    f'ln -sf ../../{self.hotstart_setup_script} setup.sh',
                     f'ln -sf ../../job_adcprep_{self.platform.value}.job adcprep.job',
                     f'ln -sf ../../job_nems_adcirc_{self.platform.value}.job.hotstart nems_adcirc.job',
-                    'cd $DIRECTORY/',
+                    'popd >/dev/null 2>&1',
                 ],
             ),
         ]
@@ -456,14 +459,20 @@ class EnsembleRunScript(Script):
             ')"',
             '',
             '# run single coldstart configuration',
-            'cd $DIRECTORY/coldstart',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
+            'sh setup.sh',
             self.coldstart,
-            'cd $DIRECTORY',
+            'popd >/dev/null 2>&1',
             '',
             '# run every hotstart configuration',
             bash_for_loop(
-                'for hotstart in $DIRECTORY/runs/*/',
-                ['cd "$hotstart"', self.hotstart, 'cd $DIRECTORY'],
+                'for hotstart in ${DIRECTORY}/runs/*/',
+                [
+                    'pushd ${hotstart} >/dev/null 2>&1',
+                    'sh setup.sh',
+                    self.hotstart,
+                    'popd >/dev/null 2>&1',
+                ],
             ),
         ]
 
@@ -477,8 +486,8 @@ class EnsembleRunScript(Script):
                 [
                     '',
                     '# display job queue with dependencies',
-                    f'echo {echo_squeue_command}',
                     squeue_command,
+                    f'echo {echo_squeue_command}',
                 ]
             )
 
@@ -495,9 +504,7 @@ class EnsembleRunScript(Script):
                 ]
             )
         else:
-            lines.extend(
-                ['sh adcprep.job', 'sh nems_adcirc.job']
-            )
+            lines.extend(['sh adcprep.job', 'sh nems_adcirc.job'])
         return '\n'.join(lines)
 
     @property
@@ -511,9 +518,7 @@ class EnsembleRunScript(Script):
                 ]
             )
         else:
-            lines.extend(
-                ['sh adcprep.job', 'sh nems_adcirc.job']
-            )
+            lines.extend(['sh adcprep.job', 'sh nems_adcirc.job'])
         return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):
@@ -527,6 +532,7 @@ class EnsembleRunScript(Script):
         if overwrite or not filename.exists():
             with open(filename, 'w') as file:
                 file.write(output)
+            make_executable(filename)
 
 
 def bash_if_statement(

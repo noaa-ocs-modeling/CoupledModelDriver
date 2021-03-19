@@ -80,7 +80,9 @@ def get_logger(
 LOGGER = get_logger('utilities')
 
 
-def create_symlink(source_filename: PathLike, symlink_filename: PathLike):
+def create_symlink(
+    source_filename: PathLike, symlink_filename: PathLike, relative: bool = False
+):
     if not isinstance(source_filename, Path):
         source_filename = Path(source_filename)
     if not isinstance(symlink_filename, Path):
@@ -90,11 +92,26 @@ def create_symlink(source_filename: PathLike, symlink_filename: PathLike):
         LOGGER.debug(f'removing symlink {symlink_filename}')
         os.remove(symlink_filename)
 
+    symlink_filename = symlink_filename.parent.absolute().resolve() / symlink_filename.name
+    source_filename = source_filename.absolute().resolve()
+
+    starting_directory = None
+    if relative:
+        starting_directory = Path().cwd().resolve()
+        os.chdir(source_filename.parent)
+        try:
+            source_filename = source_filename.relative_to(symlink_filename.parent)
+        except ValueError as error:
+            LOGGER.warning(error)
+
     try:
         symlink_filename.symlink_to(source_filename)
     except Exception as error:
         LOGGER.warning(f'could not create symbolic link: {error}')
         shutil.copyfile(source_filename, symlink_filename)
+
+    if starting_directory is not None:
+        os.chdir(starting_directory)
 
 
 def ellipsoidal_distance(
@@ -111,3 +128,10 @@ def ellipsoidal_distance(
     ellipsoid = crs_a.datum.to_json_dict()['ellipsoid']
     geodetic = Geod(a=ellipsoid['semi_major_axis'], rf=ellipsoid['inverse_flattening'])
     return geodetic.line_length(points[:, 0], points[:, 1])
+
+
+def make_executable(path: PathLike):
+    """ https://stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python """
+    mode = os.stat(path).st_mode
+    mode |= (mode & 0o444) >> 2  # copy R bits to X
+    os.chmod(path, mode)
