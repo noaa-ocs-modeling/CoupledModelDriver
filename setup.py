@@ -78,6 +78,6 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6',
     setup_requires=['dunamai', 'setuptools>=41.2'],
-    install_requires=['adcircpy>=1.0.21', 'nemspy>=0.6.5', 'numpy', 'requests'],
+    install_requires=['adcircpy>=1.0.22', 'nemspy>=0.6.8', 'numpy', 'requests'],
     extras_require={'testing': ['flake8', 'pytest', 'pytest-cov'], 'development': ['oitnb']},
 )
