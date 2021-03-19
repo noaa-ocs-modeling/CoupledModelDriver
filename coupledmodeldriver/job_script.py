@@ -454,19 +454,19 @@ class EnsembleRunScript(Script):
             ')"',
             '',
             '# run single coldstart configuration',
-            'cd $DIRECTORY/coldstart',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
             'sh setup.sh',
             self.coldstart,
-            'cd $DIRECTORY',
+            'popd >/dev/null 2>&1',
             '',
             '# run every hotstart configuration',
             bash_for_loop(
                 'for hotstart in $DIRECTORY/runs/*/',
                 [
-                    'cd "$hotstart"',
+                    'pushd ${hotstart} >/dev/null 2>&1',
                     'sh setup.sh',
                     self.hotstart,
-                    'cd $DIRECTORY'
+                    'popd >/dev/null 2>&1'
                 ],
             ),
         ]
