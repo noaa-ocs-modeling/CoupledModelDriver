@@ -403,21 +403,21 @@ class EnsembleSetupScript(Script):
             ')"',
             '',
             '# prepare single coldstart directory',
-            f'cd $DIRECTORY/coldstart',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
             f'ln -sf ../{self.coldstart_setup_script} setup.sh',
             f'ln -sf ../job_adcprep_{self.platform.value}.job adcprep.job',
             f'ln -sf ../job_nems_adcirc_{self.platform.value}.job.coldstart nems_adcirc.job',
-            'cd $DIRECTORY',
+            'popd >/dev/null 2>&1',
             '',
             '# prepare every hotstart directory',
             bash_for_loop(
-                'for hotstart in $DIRECTORY//runs/*/',
+                'for hotstart in ${DIRECTORY}/runs/*/',
                 [
-                    'cd "$hotstart"',
-                    f'ln -sf ../{self.hotstart_setup_script} setup.sh',
+                    'pushd ${hotstart} >/dev/null 2>&1',
+                    f'ln -sf ../../{self.hotstart_setup_script} setup.sh',
                     f'ln -sf ../../job_adcprep_{self.platform.value}.job adcprep.job',
                     f'ln -sf ../../job_nems_adcirc_{self.platform.value}.job.hotstart nems_adcirc.job',
-                    'cd $DIRECTORY/',
+                    'popd >/dev/null 2>&1',
                 ],
             ),
         ]
@@ -461,7 +461,7 @@ class EnsembleRunScript(Script):
             '',
             '# run every hotstart configuration',
             bash_for_loop(
-                'for hotstart in $DIRECTORY/runs/*/',
+                'for hotstart in ${DIRECTORY}/runs/*/',
                 [
                     'pushd ${hotstart} >/dev/null 2>&1',
                     'sh setup.sh',

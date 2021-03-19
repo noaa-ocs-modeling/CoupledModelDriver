@@ -276,7 +276,7 @@ def write_adcirc_configurations(
             nems_configure_filename=Path('../..') / 'nems.configure.hotstart',
             model_configure_filename=Path('../..') / 'model_configure.hotstart',
             config_rc_filename=Path('../..') / 'config.rc.hotstart',
-            fort67_filename=coldstart_directory / 'fort.67.nc',
+            fort67_filename=Path('../..') / 'coldstart/fort.67.nc',
         )
         hotstart_run_script = AdcircRunScript(
             platform=platform,
