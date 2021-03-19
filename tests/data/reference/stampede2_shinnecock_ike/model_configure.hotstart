@@ -1,4 +1,4 @@
-# `model_configure` generated with NEMSpy 0.3.6.post23.dev0+f5f55c7
+# `model_configure` generated with NEMSpy 0.3.6.post26.dev0+1637d96
 total_member:            1
 print_esmf:              .true.
 namelist:                atm_namelist
