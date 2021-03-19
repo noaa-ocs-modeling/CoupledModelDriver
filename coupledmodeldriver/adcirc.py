@@ -1,5 +1,6 @@
 import copy
 from datetime import timedelta
+import logging
 import os
 from os import PathLike
 from pathlib import Path
@@ -41,6 +42,7 @@ def write_adcirc_configurations(
     overwrite: bool = False,
     source_filename: PathLike = None,
     use_original_mesh: bool = False,
+    verbose: bool = False,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
@@ -59,6 +61,7 @@ def write_adcirc_configurations(
     :param overwrite: whether to overwrite existing files
     :param source_filename: path to modulefile to `source`
     :param use_original_mesh: whether to use the original `fort.14` file instead of rewriting with `adcircpy`
+    :param verbose: show log messages
     """
 
     if not isinstance(mesh_directory, Path):
@@ -96,15 +99,18 @@ def write_adcirc_configurations(
         elif platform == Platform.HERA:
             source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
+    if verbose:
+        get_logger('adcirc', console_level=logging.DEBUG)
+
     LOGGER.info(
         f'generating {len(runs)} "{platform.value}" configuration(s) in "{output_directory}"'
     )
 
-    LOGGER.info(f'setting NEMS executable "{nems_executable}"')
-    LOGGER.info(f'setting mesh partitioner "{adcprep_executable}"')
+    LOGGER.debug(f'setting NEMS executable "{nems_executable}"')
+    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
 
     if source_filename is not None:
-        LOGGER.info(f'sourcing modules from "{source_filename}"')
+        LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
     fort13_filename = mesh_directory / 'fort.13'
     if not fort13_filename.exists():
@@ -114,7 +120,7 @@ def write_adcirc_configurations(
         raise FileNotFoundError(f'mesh XY not found at "{fort14_filename}"')
 
     if spinup is not None and isinstance(spinup, timedelta):
-        LOGGER.info(f'setting spinup to {spinup}')
+        LOGGER.debug(f'setting spinup to {spinup}')
         spinup = ModelingSystem(
             nems.start_time - spinup,
             nems.start_time,
@@ -127,7 +133,7 @@ def write_adcirc_configurations(
     LOGGER.info(f'opening mesh "{fort14_filename}"')
     mesh = AdcircMesh.open(fort14_filename, crs=4326)
 
-    LOGGER.info(f'adding {len(forcings)} forcing(s) to mesh')
+    LOGGER.debug(f'adding {len(forcings)} forcing(s) to mesh')
     for forcing in forcings:
         mesh.add_forcing(forcing)
 
@@ -139,10 +145,9 @@ def write_adcirc_configurations(
                     generate_tau0 = False
                     break
     if generate_tau0:
-        LOGGER.info(f'generating tau0 in mesh')
+        LOGGER.debug(f'generating tau0 in mesh')
         mesh.generate_tau0()
 
-    LOGGER.info(f'writing base NEMS configuration for coldstart')
     if spinup is not None:
         coldstart_filenames = spinup.write(
             output_directory,
@@ -157,6 +162,7 @@ def write_adcirc_configurations(
             include_version=True,
             create_atm_namelist_rc=False,
         )
+    LOGGER.info(f'wrote NEMS coldstart configuration: {", ".join((filename.name for filename in coldstart_filenames))}')
 
     for filename in coldstart_filenames:
         coldstart_filename = Path(f'{filename}.coldstart')
@@ -172,13 +178,13 @@ def write_adcirc_configurations(
             filename.rename(coldstart_filename)
 
     if spinup is not None:
-        LOGGER.info(f'writing base NEMS configuration for hotstart')
         hotstart_filenames = nems.write(
             output_directory,
             overwrite=overwrite,
             include_version=True,
             create_atm_namelist_rc=False,
         )
+        LOGGER.info(f'writing NEMS hotstart configuration: {", ".join((filename.name for filename in hotstart_filenames))}')
     else:
         hotstart_filenames = []
 
@@ -242,8 +248,8 @@ def write_adcirc_configurations(
         source_filename=source_filename,
     )
 
-    LOGGER.info(
-        f'writing mesh partitioning job script "{mesh_partitioning_job_script_filename}"'
+    LOGGER.debug(
+        f'writing mesh partitioning job script "{mesh_partitioning_job_script_filename.name}"'
     )
     adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
 
@@ -253,7 +259,7 @@ def write_adcirc_configurations(
         config_rc_filename=Path('..') / 'config.rc.coldstart',
     )
 
-    LOGGER.info(f'writing coldstart setup script "{coldstart_setup_script_filename}"')
+    LOGGER.debug(f'writing coldstart setup script "{coldstart_setup_script_filename.name}"')
     coldstart_setup_script.write(coldstart_setup_script_filename, overwrite=overwrite)
 
     if spinup is not None:
@@ -288,7 +294,7 @@ def write_adcirc_configurations(
             source_filename=source_filename,
         )
 
-    LOGGER.info(f'writing coldstart run script "{coldstart_run_script_filename}"')
+    LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
     coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
     if spinup is not None:
@@ -314,10 +320,10 @@ def write_adcirc_configurations(
             source_filename=source_filename,
         )
 
-        LOGGER.info(f'writing hotstart setup script "{hotstart_setup_script_filename}"')
+        LOGGER.debug(f'writing hotstart setup script "{hotstart_setup_script_filename.name}"')
         hotstart_setup_script.write(hotstart_setup_script_filename, overwrite=overwrite)
 
-        LOGGER.info(f'writing hotstart run script "{hotstart_run_script_filename}"')
+        LOGGER.debug(f'writing hotstart run script "{hotstart_run_script_filename.name}"')
         hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     slurm = SlurmConfig(
@@ -363,9 +369,9 @@ def write_adcirc_configurations(
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
     if use_original_mesh:
-        LOGGER.info(f'using original mesh "{fort14_filename}"')
+        LOGGER.debug(f'using original mesh "{fort14_filename}"')
 
-    LOGGER.info(f'writing coldstart configuration to "{coldstart_directory}"')
+    LOGGER.debug(f'writing coldstart configuration to "{coldstart_directory}"')
     driver.write(
         coldstart_directory,
         overwrite=overwrite,
@@ -379,7 +385,7 @@ def write_adcirc_configurations(
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
-        LOGGER.info(f'writing hotstart configuration to "{run_directory}"')
+        LOGGER.debug(f'writing hotstart configuration to "{run_directory}"')
         if not isinstance(value, numpy.ndarray):
             value = numpy.full([len(driver.mesh.coords)], fill_value=value)
         if not driver.mesh.has_attribute(attribute_name):
@@ -397,10 +403,10 @@ def write_adcirc_configurations(
         if use_original_mesh:
             create_symlink(fort14_filename, run_directory / 'fort.14')
 
-    LOGGER.info(f'writing ensemble setup script "{setup_script_filename}"')
+    LOGGER.debug(f'writing ensemble setup script "{setup_script_filename.name}"')
     setup_script = EnsembleSetupScript(platform)
     setup_script.write(setup_script_filename, overwrite=overwrite)
 
-    LOGGER.info(f'writing ensemble run script "{run_script_filename}"')
+    LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
     run_script = EnsembleRunScript(platform, setup_script_filename.name)
     run_script.write(run_script_filename, overwrite=overwrite)
