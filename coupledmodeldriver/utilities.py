@@ -97,7 +97,10 @@ def create_symlink(source_filename: PathLike, symlink_filename: PathLike, relati
     if relative:
         starting_directory = Path().cwd().resolve()
         os.chdir(source_filename.parent)
-        source_filename = source_filename.relative_to(symlink_filename.parent)
+        try:
+            source_filename = source_filename.relative_to(symlink_filename.parent)
+        except ValueError as error:
+            LOGGER.warning(error)
 
     try:
         symlink_filename.symlink_to(source_filename)
