@@ -76,6 +76,6 @@ if __name__ == '__main__':
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
-        use_original_mesh=True,
+        use_original_mesh=False,
         verbose=True,
     )
