@@ -40,7 +40,6 @@ def write_adcirc_configurations(
     overwrite: bool = False,
     source_filename: PathLike = None,
     use_original_mesh: bool = False,
-    mesh_partitions: int = None,
     verbose: bool = False,
 ):
     """
@@ -60,7 +59,6 @@ def write_adcirc_configurations(
     :param overwrite: whether to overwrite existing files
     :param source_filename: path to modulefile to `source`
     :param use_original_mesh: whether to use the original `fort.14` file instead of rewriting with `adcircpy`
-    :param mesh_partitions: number of partitions to split with `adcprep`; defaults to number of processors
     :param verbose: show log messages
     """
 
@@ -98,9 +96,6 @@ def write_adcirc_configurations(
             source_filename = '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede'
         elif platform == Platform.HERA:
             source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
-
-    if mesh_partitions is None:
-        mesh_partitions = nems.processors
 
     if verbose:
         get_logger(LOGGER.name, console_level=logging.DEBUG)
@@ -235,7 +230,7 @@ def write_adcirc_configurations(
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
     adcprep_script = AdcircMeshPartitionScript(
         platform=platform,
-        adcirc_mesh_partitions=mesh_partitions,
+        adcirc_mesh_partitions=nems['OCN'].processors,
         slurm_account=slurm_account,
         slurm_duration=wall_clock_time,
         slurm_nodes=slurm_nodes,
