@@ -47,7 +47,7 @@ if __name__ == '__main__':
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'SANDY_HWRF_HSOFS_Nov2018.nc'),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(600),
     )
 
     # describe connections between coupled components
@@ -80,6 +80,6 @@ if __name__ == '__main__':
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
-        use_original_mesh=True,
+        use_original_mesh=False,
         verbose=True,
     )

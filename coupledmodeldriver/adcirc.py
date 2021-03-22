@@ -104,9 +104,6 @@ def write_adcirc_configurations(
         f'generating {len(runs)} "{platform.value}" configuration(s) in "{output_directory}"'
     )
 
-    LOGGER.debug(f'setting NEMS executable "{nems_executable}"')
-    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
-
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
@@ -230,9 +227,10 @@ def write_adcirc_configurations(
     setup_script_filename = output_directory / f'setup_{platform.value}.sh'
     run_script_filename = output_directory / f'run_{platform.value}.sh'
 
+    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
     adcprep_script = AdcircMeshPartitionScript(
         platform=platform,
-        adcirc_mesh_partitions=spinup.processors,
+        adcirc_mesh_partitions=nems['OCN'].processors,
         slurm_account=slurm_account,
         slurm_duration=wall_clock_time,
         slurm_nodes=slurm_nodes,
@@ -260,6 +258,7 @@ def write_adcirc_configurations(
     LOGGER.debug(f'writing coldstart setup script "{coldstart_setup_script_filename.name}"')
     coldstart_setup_script.write(coldstart_setup_script_filename, overwrite=overwrite)
 
+    LOGGER.debug(f'setting NEMS executable "{nems_executable}"')
     if spinup is not None:
         coldstart_run_script = AdcircRunScript(
             platform=platform,
@@ -283,6 +282,7 @@ def write_adcirc_configurations(
             slurm_account=slurm_account,
             slurm_duration=wall_clock_time,
             slurm_run_name=adcirc_coldstart_run_name,
+            nems_path=nems_executable,
             slurm_nodes=slurm_nodes,
             slurm_partition=partition,
             slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
