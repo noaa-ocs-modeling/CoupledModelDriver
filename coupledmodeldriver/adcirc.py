@@ -12,6 +12,7 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
+from . import LOGGER
 from .job_script import (
     AdcircMeshPartitionScript,
     AdcircRunScript,
@@ -22,8 +23,6 @@ from .job_script import (
     SlurmEmailType,
 )
 from .utilities import create_symlink, get_logger
-
-LOGGER = get_logger('adcirc')
 
 
 def write_adcirc_configurations(
@@ -100,7 +99,7 @@ def write_adcirc_configurations(
             source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
     if verbose:
-        get_logger('adcirc', console_level=logging.DEBUG)
+        get_logger(LOGGER.name, console_level=logging.DEBUG)
 
     LOGGER.info(
         f'generating {len(runs)} "{platform.value}" configuration(s) in "{output_directory}"'
