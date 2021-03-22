@@ -77,7 +77,7 @@ def get_logger(
     return logger
 
 
-from . import LOGGER
+LOGGER = get_logger('cplmdldrv')
 
 
 def create_symlink(

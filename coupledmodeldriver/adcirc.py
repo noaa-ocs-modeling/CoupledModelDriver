@@ -12,7 +12,6 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
-from . import LOGGER
 from .job_script import (
     AdcircMeshPartitionScript,
     AdcircRunScript,
@@ -22,7 +21,7 @@ from .job_script import (
     Platform,
     SlurmEmailType,
 )
-from .utilities import create_symlink, get_logger
+from .utilities import LOGGER, create_symlink, get_logger
 
 
 def write_adcirc_configurations(
