@@ -43,7 +43,7 @@ if __name__ == '__main__':
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'SANDY_HWRF_HSOFS_Nov2018.nc'),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(600),
     )
 
     # describe connections between coupled components
