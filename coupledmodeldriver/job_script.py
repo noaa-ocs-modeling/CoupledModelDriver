@@ -300,7 +300,7 @@ class AdcircSetupScript(AdcircJobScript):
 
         self.commands.extend(
             [
-                'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
+                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
                 '',
                 'pushd ${DIRECTORY} >/dev/null 2>&1',
                 f'ln -sf {self.nems_configure_filename} ./nems.configure',
@@ -382,7 +382,7 @@ class AdcircMeshPartitionScript(AdcircJobScript):
 
         self.commands.extend(
             [
-                'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
+                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
                 '',
                 'pushd ${DIRECTORY} >/dev/null 2>&1',
                 f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
@@ -410,7 +410,7 @@ class EnsembleSetupScript(Script):
 
     def __str__(self) -> str:
         lines = [
-            'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
+            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
             '# prepare single coldstart directory',
             'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
@@ -458,7 +458,7 @@ class EnsembleRunScript(Script):
         lines = [
             f'sh {self.setup_script_name}',
             '',
-            'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
+            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
             '# run single coldstart configuration',
             'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
