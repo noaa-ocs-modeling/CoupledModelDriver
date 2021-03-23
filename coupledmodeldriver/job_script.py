@@ -458,10 +458,7 @@ class EnsembleRunScript(Script):
         lines = [
             f'sh {self.setup_script_name}',
             '',
-            'DIRECTORY="$(',
-            '    cd "$(dirname "$0")" >/dev/null 2>&1',
-            '    pwd -P',
-            ')"',
+            'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
             '',
             '# run single coldstart configuration',
             'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
