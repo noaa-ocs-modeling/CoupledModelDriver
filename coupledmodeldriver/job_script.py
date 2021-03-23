@@ -300,17 +300,22 @@ class AdcircSetupScript(AdcircJobScript):
 
         self.commands.extend(
             [
+                'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
                 '',
+                'pushd ${DIRECTORY} >/dev/null 2>&1',
                 f'ln -sf {self.nems_configure_filename} ./nems.configure',
                 f'ln -sf {self.model_configure_filename} ./model_configure',
                 f'ln -sf {self.config_rc_filename} ./config.rc',
                 f'ln -sf ./model_configure ./atm_namelist.rc',
-                '',
+                'popd >/dev/null 2>&1',
             ]
         )
 
         if self.fort67_filename is not None:
-            self.commands.extend([f'ln -sf {self.fort67_filename} ./fort.67.nc', ''])
+            self.commands.extend([
+                '',
+                f'ln -sf {self.fort67_filename} ./fort.67.nc',
+            ])
 
 
 class AdcircRunScript(AdcircJobScript):
@@ -377,9 +382,12 @@ class AdcircMeshPartitionScript(AdcircJobScript):
 
         self.commands.extend(
             [
+                'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
                 '',
+                'pushd ${DIRECTORY} >/dev/null 2>&1',
                 f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
                 f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
+                'popd >/dev/null 2>&1',
             ]
         )
 
@@ -402,10 +410,7 @@ class EnsembleSetupScript(Script):
 
     def __str__(self) -> str:
         lines = [
-            'DIRECTORY="$(',
-            '    cd "$(dirname "$0")" >/dev/null 2>&1',
-            '    pwd -P',
-            ')"',
+            'DIRECTORY="$(cd “$(dirname “${BASH_SOURCE[0]}”)” && pwd -P)"',
             '',
             '# prepare single coldstart directory',
             'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
