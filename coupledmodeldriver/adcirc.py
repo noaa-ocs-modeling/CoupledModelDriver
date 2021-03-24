@@ -13,14 +13,14 @@ from nemspy.model import ADCIRCEntry
 import numpy
 
 from .job_script import (
-    AdcircMeshPartitionScript,
-    AdcircRunScript,
+    AdcircMeshPartitionJob,
+    AdcircRunJob,
     AdcircSetupScript,
     EnsembleRunScript,
     EnsembleSetupScript,
-    Platform,
     SlurmEmailType,
 )
+from .platforms import Platform
 from .utilities import LOGGER, create_symlink, get_logger
 
 
@@ -85,6 +85,9 @@ def write_adcirc_configurations(
     if not isinstance(adcprep_executable, Path):
         adcprep_executable = Path(adcprep_executable)
 
+    if not isinstance(platform, Platform):
+        platform = Platform[str(platform).upper()]
+
     if 'ocn' not in nems or not isinstance(nems['ocn'], ADCIRCEntry):
         nems['ocn'] = ADCIRCEntry(11)
 
@@ -99,16 +102,13 @@ def write_adcirc_configurations(
             model_timestep = timedelta(seconds=model_timestep)
 
     if source_filename is None:
-        if platform == Platform.STAMPEDE2:
-            source_filename = '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede'
-        elif platform == Platform.HERA:
-            source_filename = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
+        source_filename = platform.value['source_filename']
 
     if verbose:
         get_logger(LOGGER.name, console_level=logging.DEBUG)
 
     LOGGER.info(f'generating {len(runs)} '
-                f'"{platform.value}" configuration(s) in "{output_directory}"')
+                f'"{platform.name.lower()}" configuration(s) in "{output_directory}"')
 
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
@@ -214,8 +214,8 @@ def write_adcirc_configurations(
 
     slurm_account = 'coastal'
     slurm_nodes = (
-        int(numpy.ceil(
-            nems.processors / 68)) if platform == Platform.STAMPEDE2 else None
+        int(numpy.ceil(nems.processors / platform.value['processors_per_node']))
+        if platform.value['virtual_nodes'] else None
     )
 
     adcprep_run_name = 'ADCIRC_MESH_PARTITION'
@@ -224,23 +224,22 @@ def write_adcirc_configurations(
     adcircpy_run_name = 'ADCIRCPY'
 
     mesh_partitioning_job_script_filename = output_directory / \
-                                            f'job_adcprep_{platform.value}.job'
+                                            f'job_adcprep_{platform.name.lower()}.job'
     coldstart_setup_script_filename = output_directory / f'setup.sh.coldstart'
     coldstart_run_script_filename = output_directory / \
-                                    f'job_nems_adcirc_{platform.value}.job.coldstart'
+                                    f'job_nems_adcirc_{platform.name.lower()}.job.coldstart'
     hotstart_setup_script_filename = output_directory / f'setup.sh.hotstart'
     hotstart_run_script_filename = output_directory / \
-                                   f'job_nems_adcirc_{platform.value}.job.hotstart'
-    setup_script_filename = output_directory / f'setup_{platform.value}.sh'
-    run_script_filename = output_directory / f'run_{platform.value}.sh'
+                                   f'job_nems_adcirc_{platform.name.lower()}.job.hotstart'
+    setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
+    run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
 
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
-    adcprep_script = AdcircMeshPartitionScript(
+    adcprep_script = AdcircMeshPartitionJob(
         platform=platform,
         adcirc_mesh_partitions=nems['OCN'].processors,
         slurm_account=slurm_account,
         slurm_duration=wall_clock_time,
-        slurm_nodes=slurm_nodes,
         slurm_partition=partition,
         slurm_run_name=adcprep_run_name,
         adcprep_path=adcprep_executable,
@@ -271,7 +270,7 @@ def write_adcirc_configurations(
 
     LOGGER.debug(f'setting NEMS executable "{nems_executable}"')
     if spinup is not None:
-        coldstart_run_script = AdcircRunScript(
+        coldstart_run_script = AdcircRunJob(
             platform=platform,
             slurm_tasks=spinup.processors,
             slurm_account=slurm_account,
@@ -287,7 +286,7 @@ def write_adcirc_configurations(
             source_filename=source_filename,
         )
     else:
-        coldstart_run_script = AdcircRunScript(
+        coldstart_run_script = AdcircRunJob(
             platform=platform,
             slurm_tasks=nems.processors,
             slurm_account=slurm_account,
@@ -317,7 +316,7 @@ def write_adcirc_configurations(
             config_rc_filename=Path('../..') / 'config.rc.hotstart',
             fort67_filename=Path('../..') / 'coldstart/fort.67.nc',
         )
-        hotstart_run_script = AdcircRunScript(
+        hotstart_run_script = AdcircRunJob(
             platform=platform,
             slurm_tasks=nems.processors,
             slurm_account=slurm_account,
@@ -349,9 +348,7 @@ def write_adcirc_configurations(
         run_name=adcircpy_run_name,
         partition=partition,
         walltime=wall_clock_time,
-        nodes=int(numpy.ceil(nems.processors / 68))
-        if platform == Platform.STAMPEDE2
-        else None,
+        nodes=slurm_nodes,
         mail_type='all' if email_address is not None else None,
         mail_user=email_address,
         log_filename=f'{adcircpy_run_name}.out.log',

@@ -6,7 +6,9 @@
 #SBATCH --error=ADCIRC_HOTSTART.err.log
 #SBATCH --output=ADCIRC_HOTSTART.out.log
 #SBATCH -n 13
+#SBATCH -N 1
 #SBATCH --time=00:30:00
+#SBATCH --partition=coastal
 
 set -e
 

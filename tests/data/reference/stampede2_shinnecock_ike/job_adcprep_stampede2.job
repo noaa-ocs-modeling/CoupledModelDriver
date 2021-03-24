@@ -13,6 +13,9 @@
 set -e
 
 source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede
+DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
+pushd ${DIRECTORY} >/dev/null 2>&1
 ibrun adcprep --np 11 --partmesh
 ibrun adcprep --np 11 --prepall
+popd >/dev/null 2>&1
