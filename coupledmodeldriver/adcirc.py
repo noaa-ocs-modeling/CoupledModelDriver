@@ -392,12 +392,15 @@ def write_adcirc_configurations(
     driver.write(
         coldstart_directory,
         overwrite=overwrite,
+        fort13=None if use_original_mesh else 'fort.13',
         fort14=None if use_original_mesh else 'fort.14',
         coldstart='fort.15',
         hotstart=None,
         driver=None,
     )
     if use_original_mesh:
+        if fort13_filename.exists():
+            create_symlink(fort13_filename, coldstart_directory / 'fort.13')
         create_symlink(fort14_filename, coldstart_directory / 'fort.14')
 
     for run_name, (value, attribute_name) in runs.items():
@@ -415,11 +418,14 @@ def write_adcirc_configurations(
             run_directory,
             overwrite=overwrite,
             coldstart=None,
+            fort13=None if use_original_mesh else 'fort.13',
             fort14=None if use_original_mesh else 'fort.14',
             hotstart='fort.15',
             driver=None,
         )
         if use_original_mesh:
+            if fort13_filename.exists():
+                create_symlink(fort13_filename, run_directory / 'fort.13')
             create_symlink(fort14_filename, run_directory / 'fort.14')
 
     LOGGER.debug(f'writing ensemble setup script '
