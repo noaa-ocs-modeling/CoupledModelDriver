@@ -94,6 +94,10 @@ def write_adcirc_configurations(
     if wall_clock_time is None:
         wall_clock_time = timedelta(minutes=30)
 
+    if model_timestep is not None:
+        if not isinstance(model_timestep, timedelta):
+            model_timestep = timedelta(seconds=model_timestep)
+
     if source_filename is None:
         if platform == Platform.STAMPEDE2:
             source_filename = '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede'
@@ -365,7 +369,7 @@ def write_adcirc_configurations(
     )
 
     if model_timestep is not None:
-        driver.timestep = model_timestep
+        driver.timestep = model_timestep / timedelta(seconds=1)
 
     # spinup_start = spinup.start_time if spinup is not None else None
     # spinup_end = spinup.end_time if spinup is not None else None
