@@ -393,7 +393,7 @@ def write_adcirc_configurations(
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
     if use_original_mesh:
-        LOGGER.debug(f'using original mesh "{fort14_filename}"')
+        LOGGER.info(f'using original mesh "{fort14_filename}"')
 
     LOGGER.debug(f'writing coldstart configuration to '
                  f'"{coldstart_directory}"')
