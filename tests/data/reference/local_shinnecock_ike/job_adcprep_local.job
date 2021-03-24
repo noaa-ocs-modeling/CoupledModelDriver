@@ -1,7 +1,3 @@
 #!/bin/bash --login
-DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-
-pushd ${DIRECTORY} >/dev/null 2>&1
-adcprep --np 11 --partmesh
-adcprep --np 11 --prepall
-popd >/dev/null 2>&1
+ adcprep --np 11 --partmesh
+ adcprep --np 11 --prepall

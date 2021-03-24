@@ -1,9 +1,5 @@
 #!/bin/bash --login
-DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-
-pushd ${DIRECTORY} >/dev/null 2>&1
 ln -sf ../nems.configure.coldstart ./nems.configure
 ln -sf ../model_configure.coldstart ./model_configure
 ln -sf ../config.rc.coldstart ./config.rc
 ln -sf ./model_configure ./atm_namelist.rc
-popd >/dev/null 2>&1

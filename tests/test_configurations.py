@@ -33,16 +33,17 @@ MESH_URLS = {
 
 
 def test_local_shinnecock_ike():
-    platform = 'local'
+    platform = Platform.LOCAL
     mesh = 'shinnecock'
     storm = 'ike'
+    adcirc_processors = 11
 
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / f'{platform}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / f'{platform}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': (None, None)}
 
@@ -52,7 +53,7 @@ def test_local_shinnecock_ike():
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(11),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     nems.connect('ATM', 'OCN')
@@ -78,7 +79,7 @@ def test_local_shinnecock_ike():
         nems_executable=NEMS_PATH,
         adcprep_executable=ADCPREP_PATH,
         email_address='example@email.gov',
-        platform=Platform.LOCAL,
+        platform=platform,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
@@ -92,16 +93,17 @@ def test_local_shinnecock_ike():
 
 
 def test_hera_shinnecock_ike():
-    platform = 'hera'
+    platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
+    adcirc_processors = 15 * platform.value['processors_per_node']
 
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / f'{platform}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / f'{platform}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': (None, None)}
 
@@ -111,7 +113,7 @@ def test_hera_shinnecock_ike():
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(11),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     nems.connect('ATM', 'OCN')
@@ -137,7 +139,7 @@ def test_hera_shinnecock_ike():
         nems_executable=NEMS_PATH,
         adcprep_executable=ADCPREP_PATH,
         email_address='example@email.gov',
-        platform=Platform.HERA,
+        platform=platform,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
@@ -151,16 +153,17 @@ def test_hera_shinnecock_ike():
 
 
 def test_stampede2_shinnecock_ike():
-    platform = 'stampede2'
+    platform = Platform.STAMPEDE2
     mesh = 'shinnecock'
     storm = 'ike'
+    adcirc_processors = 15 * platform.value['processors_per_node']
 
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / f'{platform}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / f'{platform}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': (None, None)}
 
@@ -170,7 +173,7 @@ def test_stampede2_shinnecock_ike():
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(forcings_directory / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(11),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     nems.connect('ATM', 'OCN')
@@ -196,7 +199,7 @@ def test_stampede2_shinnecock_ike():
         nems_executable=NEMS_PATH,
         adcprep_executable=ADCPREP_PATH,
         email_address='example@email.gov',
-        platform=Platform.STAMPEDE2,
+        platform=platform,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
