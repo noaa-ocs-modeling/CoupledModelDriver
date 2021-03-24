@@ -283,14 +283,10 @@ class AdcircSetupScript(Script):
             if fort67_filename is not None else None
 
         commands = [
-            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
-            '',
-            'pushd ${DIRECTORY} >/dev/null 2>&1',
             f'ln -sf {self.nems_configure_filename} ./nems.configure',
             f'ln -sf {self.model_configure_filename} ./model_configure',
             f'ln -sf {self.config_rc_filename} ./config.rc',
             f'ln -sf ./model_configure ./atm_namelist.rc',
-            'popd >/dev/null 2>&1',
         ]
 
         if self.fort67_filename is not None:
@@ -370,12 +366,8 @@ class AdcircMeshPartitionJob(AdcircJob):
 
         self.commands.extend(
             [
-                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
-                '',
-                'pushd ${DIRECTORY} >/dev/null 2>&1',
                 f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
                 f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
-                'popd >/dev/null 2>&1',
             ]
         )
 
