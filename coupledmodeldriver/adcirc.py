@@ -213,10 +213,6 @@ def write_adcirc_configurations(
             directory.mkdir()
 
     slurm_account = platform.value['slurm_account']
-    slurm_nodes = (
-        int(numpy.ceil(nems.processors / platform.value['processors_per_node']))
-        if platform.value['nodes_are_virtual'] else None
-    )
 
     adcprep_run_name = 'ADC_MESH_DECOMP'
     adcirc_coldstart_run_name = 'ADC_COLD_RUN'
@@ -277,7 +273,6 @@ def write_adcirc_configurations(
             slurm_duration=wall_clock_time,
             slurm_run_name=adcirc_coldstart_run_name,
             nems_path=nems_executable,
-            slurm_nodes=slurm_nodes,
             slurm_partition=partition,
             slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
             slurm_email_address=email_address,
@@ -293,7 +288,6 @@ def write_adcirc_configurations(
             slurm_duration=wall_clock_time,
             slurm_run_name=adcirc_coldstart_run_name,
             nems_path=nems_executable,
-            slurm_nodes=slurm_nodes,
             slurm_partition=partition,
             slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
             slurm_email_address=email_address,
@@ -323,7 +317,6 @@ def write_adcirc_configurations(
             slurm_duration=wall_clock_time,
             slurm_run_name=adcirc_hotstart_run_name,
             nems_path=nems_executable,
-            slurm_nodes=slurm_nodes,
             slurm_partition=partition,
             slurm_email_type=SlurmEmailType.ALL if email_address is not None else None,
             slurm_email_address=email_address,
@@ -348,7 +341,7 @@ def write_adcirc_configurations(
         run_name=adcircpy_run_name,
         partition=partition,
         walltime=wall_clock_time,
-        nodes=slurm_nodes,
+        nodes=coldstart_run_script.slurm_nodes,
         mail_type='all' if email_address is not None else None,
         mail_user=email_address,
         log_filename=f'{adcircpy_run_name}.out.log',

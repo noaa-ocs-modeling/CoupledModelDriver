@@ -157,7 +157,7 @@ class JobScript(Script):
 
     @slurm_nodes.setter
     def slurm_nodes(self, slurm_nodes: int):
-        if slurm_nodes is None and self.platform.value['nodes_are_virtual']:
+        if slurm_nodes is None:
             slurm_nodes = numpy.ceil(self.slurm_tasks / self.platform.value['processors_per_node'])
         if slurm_nodes is not None:
             slurm_nodes = int(slurm_nodes)
