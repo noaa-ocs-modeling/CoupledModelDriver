@@ -212,10 +212,10 @@ def write_adcirc_configurations(
         if not directory.exists():
             directory.mkdir()
 
-    slurm_account = 'coastal'
+    slurm_account = platform.value['slurm_account']
     slurm_nodes = (
         int(numpy.ceil(nems.processors / platform.value['processors_per_node']))
-        if platform.value['virtual_nodes'] else None
+        if platform.value['nodes_are_virtual'] else None
     )
 
     adcprep_run_name = 'ADCIRC_MESH_PARTITION'

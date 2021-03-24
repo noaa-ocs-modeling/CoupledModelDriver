@@ -104,7 +104,7 @@ class JobScript(Script):
             modules = None
 
         if slurm_partition is None:
-            slurm_partition = platform.value['partition']
+            slurm_partition = platform.value['default_partition']
 
         self.platform = platform
 
@@ -157,7 +157,7 @@ class JobScript(Script):
 
     @slurm_nodes.setter
     def slurm_nodes(self, slurm_nodes: int):
-        if slurm_nodes is None and self.platform.value['virtual_nodes']:
+        if slurm_nodes is None and self.platform.value['nodes_are_virtual']:
             slurm_nodes = numpy.ceil(self.slurm_tasks / self.platform.value['processors_per_node'])
         if slurm_nodes is not None:
             slurm_nodes = int(slurm_nodes)
@@ -207,7 +207,7 @@ class JobScript(Script):
             self.shebang,
         ]
 
-        if self.platform.value['slurm']:
+        if self.platform.value['uses_slurm']:
             lines.extend([self.slurm_header, '', 'set -e', ''])
 
         if self.modules is not None:
@@ -348,7 +348,7 @@ class AdcircMeshPartitionJob(AdcircJob):
         commands: [str] = None,
         **kwargs,
     ):
-        if platform.value['virtual_nodes']:
+        if platform.value['nodes_are_virtual']:
             if 'slurm_nodes' not in kwargs or kwargs['slurm_nodes'] is None:
                 kwargs['slurm_nodes'] = int(numpy.ceil(slurm_tasks / platform.value['processors_per_node']))
 
@@ -474,7 +474,7 @@ class EnsembleRunScript(Script):
             *(str(command) for command in self.commands),
         ]
 
-        if self.platform.value['slurm']:
+        if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html
             squeue_command = (
                 'squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"'
@@ -494,7 +494,7 @@ class EnsembleRunScript(Script):
     @property
     def coldstart(self) -> str:
         lines = []
-        if self.platform.value['slurm']:
+        if self.platform.value['uses_slurm']:
             lines.extend(
                 [
                     "coldstart_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
@@ -508,7 +508,7 @@ class EnsembleRunScript(Script):
     @property
     def hotstart(self) -> str:
         lines = []
-        if self.platform.value['slurm']:
+        if self.platform.value['uses_slurm']:
             lines.extend(
                 [
                     "hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job | awk '{print $NF}')",
