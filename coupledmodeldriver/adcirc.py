@@ -218,9 +218,9 @@ def write_adcirc_configurations(
         if platform.value['nodes_are_virtual'] else None
     )
 
-    adcprep_run_name = 'ADCIRC_MESH_PARTITION'
-    adcirc_coldstart_run_name = 'ADCIRC_COLDSTART'
-    adcirc_hotstart_run_name = 'ADCIRC_HOTSTART'
+    adcprep_run_name = 'ADC_MESH_DECOMP'
+    adcirc_coldstart_run_name = 'ADC_COLD_RUN'
+    adcirc_hotstart_run_name = 'ADC_HOT_RUN'
     adcircpy_run_name = 'ADCIRCPY'
 
     mesh_partitioning_job_script_filename = output_directory / \
