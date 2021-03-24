@@ -35,6 +35,7 @@ def write_adcirc_configurations(
     partition: str = None,
     email_address: str = None,
     wall_clock_time: timedelta = None,
+    model_timestep: timedelta = None,
     spinup: timedelta = None,
     forcings: [Forcing] = None,
     overwrite: bool = False,
@@ -55,6 +56,7 @@ def write_adcirc_configurations(
     :param partition: Slurm partition
     :param email_address: email address
     :param wall_clock_time: wall clock time of job
+    :param model_timestep: model time step
     :param spinup: spinup time for ADCIRC coldstart
     :param overwrite: whether to overwrite existing files
     :param source_filename: path to modulefile to `source`
@@ -108,8 +110,6 @@ def write_adcirc_configurations(
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
     fort13_filename = mesh_directory / 'fort.13'
-    if not fort13_filename.exists():
-        LOGGER.warning(f'mesh values (nodal attributes) not found at "{fort13_filename}"')
     fort14_filename = mesh_directory / 'fort.14'
     if not fort14_filename.exists():
         raise FileNotFoundError(f'mesh XY not found at "{fort14_filename}"')
@@ -132,14 +132,14 @@ def write_adcirc_configurations(
     for forcing in forcings:
         mesh.add_forcing(forcing)
 
-    generate_tau0 = True
     if fort13_filename.exists():
-        with open(fort13_filename) as fort13_file:
-            for line in fort13_file:
-                if 'primitive_weighting_in_continuity_equation' in line:
-                    generate_tau0 = False
-                    break
-    if generate_tau0:
+        mesh.import_nodal_attributes(fort13_filename)
+    else:
+        LOGGER.warning(f'mesh values (nodal attributes) not found at '
+                       f'"{fort13_filename}"')
+
+    if not mesh.has_nodal_attribute(
+        'primitive_weighting_in_continuity_equation'):
         LOGGER.debug(f'generating tau0 in mesh')
         mesh.generate_tau0()
 
@@ -348,6 +348,9 @@ def write_adcirc_configurations(
         spinup_time=timedelta(days=5),
         server_config=slurm,
     )
+
+    if model_timestep is not None:
+        driver.timestep = model_timestep
 
     # spinup_start = spinup.start_time if spinup is not None else None
     # spinup_end = spinup.end_time if spinup is not None else None
