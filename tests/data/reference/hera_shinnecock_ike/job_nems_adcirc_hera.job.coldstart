@@ -6,7 +6,7 @@
 #SBATCH --error=ADC_COLD_RUN.err.log
 #SBATCH --output=ADC_COLD_RUN.out.log
 #SBATCH -n 600
-#SBATCH -N 16
+#SBATCH -N 15
 #SBATCH --time=00:30:00
 
 set -e
