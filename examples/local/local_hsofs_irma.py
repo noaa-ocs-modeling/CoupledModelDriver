@@ -15,7 +15,7 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
 sys.path.append((Path(__file__).parent / '..').absolute())
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
-from coupledmodeldriver.job_script import Platform
+from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = 'NEMS.x'
@@ -35,6 +35,9 @@ FORCINGS_DIRECTORY = (
 OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'local_hsofs_irma'
 
 if __name__ == '__main__':
+    platform = Platform.LOCAL
+    adcirc_processors = 360
+
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
@@ -47,7 +50,7 @@ if __name__ == '__main__':
             FORCINGS_DIRECTORY / 'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'
         ),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2017_sxy.nc'),
-        ocn=ADCIRCEntry(382),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     # describe connections between coupled components
@@ -75,8 +78,10 @@ if __name__ == '__main__':
         OUTPUT_DIRECTORY,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
-        email_address='example@email.gov',
-        platform=Platform.LOCAL,
+        platform=platform,
+        email_address=None,
+        wall_clock_time=None,
+        model_timestep=None,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,

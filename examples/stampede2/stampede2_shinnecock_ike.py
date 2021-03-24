@@ -35,6 +35,9 @@ OUTPUT_DIRECTORY = (
 )
 
 if __name__ == '__main__':
+    platform = Platform.STAMPEDE2
+    adcirc_processors = 15 * platform.value['processors_per_node']
+
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
@@ -45,7 +48,7 @@ if __name__ == '__main__':
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(11),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     # describe connections between coupled components
@@ -73,8 +76,10 @@ if __name__ == '__main__':
         OUTPUT_DIRECTORY,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
+        platform=platform,
         email_address='example@email.gov',
-        platform=Platform.STAMPEDE2,
+        wall_clock_time=timedelta(hours=6),
+        model_timestep=timedelta(seconds=2),
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,

@@ -15,7 +15,7 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
 sys.path.append((Path(__file__).parent / '..').absolute())
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
-from coupledmodeldriver.job_script import Platform
+from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = 'NEMS.x'
@@ -37,6 +37,9 @@ OUTPUT_DIRECTORY = (
 )
 
 if __name__ == '__main__':
+    platform = Platform.LOCAL
+    adcirc_processors = 11
+
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
@@ -47,7 +50,7 @@ if __name__ == '__main__':
         interval=timedelta(hours=1),
         atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc'),
         wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(11),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     # describe connections between coupled components
@@ -75,11 +78,13 @@ if __name__ == '__main__':
         OUTPUT_DIRECTORY,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
-        email_address='example@email.gov',
-        platform=Platform.LOCAL,
+        platform=platform,
+        email_address=None,
+        wall_clock_time=None,
+        model_timestep=None,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
-        use_original_mesh=False,
+        use_original_mesh=True,
         verbose=True,
     )

@@ -15,7 +15,7 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
 sys.path.append((Path(__file__).parent / '..').absolute())
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
-from coupledmodeldriver.job_script import Platform
+from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'
@@ -39,6 +39,9 @@ OUTPUT_DIRECTORY = (
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 
 if __name__ == '__main__':
+    platform = Platform.HERA
+    adcirc_processors = 11
+
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
@@ -53,7 +56,7 @@ if __name__ == '__main__':
         wav=WaveMeshEntry(
             filename=FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc', processors=1
         ),
-        ocn=ADCIRCEntry(processors=11),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     # describe connections between coupled components
@@ -81,8 +84,10 @@ if __name__ == '__main__':
         OUTPUT_DIRECTORY,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
+        platform=platform,
         email_address='example@email.gov',
-        platform=Platform.HERA,
+        wall_clock_time=timedelta(hours=0.5),
+        model_timestep=None,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,

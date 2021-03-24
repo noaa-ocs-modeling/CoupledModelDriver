@@ -50,7 +50,7 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 sys.path.append((Path(__file__).parent / '..').absolute())
 
 from coupledmodeldriver.adcirc import write_adcirc_configurations
-from coupledmodeldriver.job_script import Platform
+from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'

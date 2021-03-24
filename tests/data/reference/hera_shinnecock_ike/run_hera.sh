@@ -1,9 +1,6 @@
 sh setup_hera.sh
 
-DIRECTORY="$(
-    cd "$(dirname "$0")" >/dev/null 2>&1
-    pwd -P
-)"
+DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # run single coldstart configuration
 pushd ${DIRECTORY}/coldstart >/dev/null 2>&1
