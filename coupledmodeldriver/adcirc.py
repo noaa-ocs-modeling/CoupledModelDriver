@@ -394,6 +394,8 @@ def write_adcirc_configurations(
 
     if use_original_mesh:
         LOGGER.info(f'using original mesh "{fort14_filename}"')
+    else:
+        LOGGER.info(f'rewriting original mesh "{fort14_filename}"')
 
     LOGGER.debug(f'writing coldstart configuration to '
                  f'"{coldstart_directory}"')
