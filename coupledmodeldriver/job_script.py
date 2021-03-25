@@ -344,10 +344,6 @@ class AdcircMeshPartitionJob(AdcircJob):
         commands: [str] = None,
         **kwargs,
     ):
-        if platform.value['nodes_are_virtual']:
-            if 'slurm_nodes' not in kwargs or kwargs['slurm_nodes'] is None:
-                kwargs['slurm_nodes'] = int(numpy.ceil(slurm_tasks / platform.value['processors_per_node']))
-
         super().__init__(
             platform,
             commands,
