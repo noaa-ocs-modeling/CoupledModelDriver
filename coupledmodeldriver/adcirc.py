@@ -1,5 +1,6 @@
 import copy
 from datetime import timedelta
+from enum import Enum
 import logging
 import os
 from os import PathLike
@@ -24,6 +25,12 @@ from .platforms import Platform
 from .utilities import LOGGER, create_symlink, get_logger
 
 
+class GWCE_SOLUTION_SCHEME(Enum):
+    EXPLICIT = 'explicit'
+    SEMI_IMPLICIT = 'semi-implicit'
+    SEMI_IMPLICIT_LEGACY = 'semi-implicit-legacy'
+
+
 def write_adcirc_configurations(
     nems: ModelingSystem,
     runs: {str: (float, str)},
@@ -36,6 +43,8 @@ def write_adcirc_configurations(
     email_address: str = None,
     wall_clock_time: timedelta = None,
     model_timestep: timedelta = None,
+    gwce_solution_scheme: GWCE_SOLUTION_SCHEME = None,
+    IM: int = None,
     spinup: timedelta = None,
     forcings: [Forcing] = None,
     overwrite: bool = False,
@@ -57,6 +66,8 @@ def write_adcirc_configurations(
     :param email_address: email address
     :param wall_clock_time: wall clock time of job
     :param model_timestep: model time step
+    :param gwce_solution_scheme: must be one of ['semi-implicit', 'explicit', 'semi-implicit-legacy']
+    :param IM: six-digit integer for IM parameter
     :param spinup: spinup time for ADCIRC coldstart
     :param overwrite: whether to overwrite existing files
     :param source_filename: path to modulefile to `source`
@@ -100,6 +111,13 @@ def write_adcirc_configurations(
     if model_timestep is not None:
         if not isinstance(model_timestep, timedelta):
             model_timestep = timedelta(seconds=model_timestep)
+
+    if gwce_solution_scheme is not None:
+        if isinstance(gwce_solution_scheme, str):
+            try:
+                gwce_solution_scheme = GWCE_SOLUTION_SCHEME(gwce_solution_scheme)
+            except KeyError:
+                gwce_solution_scheme = GWCE_SOLUTION_SCHEME[gwce_solution_scheme]
 
     if source_filename is None:
         source_filename = platform.value['source_filename']
@@ -361,6 +379,12 @@ def write_adcirc_configurations(
 
     if model_timestep is not None:
         driver.timestep = model_timestep / timedelta(seconds=1)
+
+    if gwce_solution_scheme is not None:
+        driver.gwce_solution_scheme = gwce_solution_scheme
+
+    if IM is not None:
+        driver.IM = IM
 
     # spinup_start = spinup.start_time if spinup is not None else None
     # spinup_end = spinup.end_time if spinup is not None else None
