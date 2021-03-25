@@ -44,7 +44,6 @@ def write_adcirc_configurations(
     wall_clock_time: timedelta = None,
     model_timestep: timedelta = None,
     gwce_solution_scheme: GWCE_SOLUTION_SCHEME = None,
-    IM: int = None,
     spinup: timedelta = None,
     forcings: [Forcing] = None,
     overwrite: bool = False,
@@ -67,7 +66,6 @@ def write_adcirc_configurations(
     :param wall_clock_time: wall clock time of job
     :param model_timestep: model time step
     :param gwce_solution_scheme: must be one of ['semi-implicit', 'explicit', 'semi-implicit-legacy']
-    :param IM: six-digit integer for IM parameter
     :param spinup: spinup time for ADCIRC coldstart
     :param overwrite: whether to overwrite existing files
     :param source_filename: path to modulefile to `source`
@@ -382,9 +380,6 @@ def write_adcirc_configurations(
 
     if gwce_solution_scheme is not None:
         driver.gwce_solution_scheme = gwce_solution_scheme
-
-    if IM is not None:
-        driver.IM = IM
 
     # spinup_start = spinup.start_time if spinup is not None else None
     # spinup_end = spinup.end_time if spinup is not None else None
