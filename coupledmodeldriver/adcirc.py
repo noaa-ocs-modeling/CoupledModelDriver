@@ -379,7 +379,7 @@ def write_adcirc_configurations(
         driver.timestep = model_timestep / timedelta(seconds=1)
 
     if gwce_solution_scheme is not None:
-        driver.gwce_solution_scheme = gwce_solution_scheme
+        driver.gwce_solution_scheme = gwce_solution_scheme.value
 
     # spinup_start = spinup.start_time if spinup is not None else None
     # spinup_end = spinup.end_time if spinup is not None else None
