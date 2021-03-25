@@ -37,6 +37,7 @@ OUTPUT_DIRECTORY = (
 )
 
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
+TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
 
 if __name__ == '__main__':
     platform = Platform.HERA
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     ]
 
     # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
+    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
