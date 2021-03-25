@@ -16,7 +16,7 @@ from .job_script import (
     AdcircMeshPartitionJob,
     AdcircRunJob,
     AdcircSetupScript,
-    EnsembleRunScript,
+    EnsembleCleanupScript, EnsembleRunScript,
     EnsembleSetupScript,
     SlurmEmailType,
 )
@@ -229,6 +229,7 @@ def write_adcirc_configurations(
                                    f'job_nems_adcirc_{platform.name.lower()}.job.hotstart'
     setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
+    cleanup_script_filename = output_directory / f'cleanup.sh'
 
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
     adcprep_script = AdcircMeshPartitionJob(
@@ -433,7 +434,10 @@ def write_adcirc_configurations(
     setup_script = EnsembleSetupScript(platform)
     setup_script.write(setup_script_filename, overwrite=overwrite)
 
-    LOGGER.info(f'writing ensemble run script '
-                f'"{run_script_filename.name}"')
+    LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
     run_script = EnsembleRunScript(platform, setup_script_filename.name)
     run_script.write(run_script_filename, overwrite=overwrite)
+
+    cleanup_script = EnsembleCleanupScript()
+    LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
+    cleanup_script.write(cleanup_script_filename, overwrite=overwrite)

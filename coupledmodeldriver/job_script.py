@@ -267,7 +267,7 @@ class AdcircJob(JobScript):
 
 
 class AdcircSetupScript(Script):
-    """ script for running ADCIRC via a NEMS configuration """
+    """ script for setting up ADCIRC NEMS configuration """
 
     def __init__(
         self,
@@ -518,6 +518,49 @@ class EnsembleRunScript(Script):
 
         if not filename.exists() or overwrite:
             make_executable(filename)
+
+
+class EnsembleCleanupScript(Script):
+    """ script for cleaning up ADCIRC NEMS configurations """
+
+    def __init__(self, commands: [str] = None):
+        super().__init__(commands)
+
+    def __str__(self):
+        lines = [
+            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
+            '',
+            '# prepare single coldstart directory',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
+            'rm -rf PE* ADC_*',
+            'rm max* partmesh.txt metis_graph.txt',
+            'rm fort.16 fort.6* fort.80',
+            'popd >/dev/null 2>&1',
+            '',
+            '# prepare every hotstart directory',
+            bash_for_loop(
+                'for hotstart in ${DIRECTORY}/runs/*/',
+                [
+                    'pushd ${hotstart} >/dev/null 2>&1',
+                    'rm -rf PE* ADC_*',
+                    'rm max* partmesh.txt metis_graph.txt',
+                    'rm fort.16 fort.6* fort.80',
+                    'popd >/dev/null 2>&1',
+                ],
+            ),
+            *(str(command) for command in self.commands),
+        ]
+
+        return '\n'.join(lines)
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'cleanup.sh'
+
+        super().write(filename, overwrite)
 
 
 def bash_if_statement(
