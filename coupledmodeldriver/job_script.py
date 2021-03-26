@@ -57,6 +57,8 @@ class Script(ABC):
         if overwrite or not filename.exists():
             with open(filename, 'w') as file:
                 file.write(output)
+        else:
+            raise FileExistsError(f'file exists at {filename}')
 
 
 class JobScript(Script):
