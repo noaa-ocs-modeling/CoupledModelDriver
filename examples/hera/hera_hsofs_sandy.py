@@ -85,6 +85,8 @@ if __name__ == '__main__':
         email_address='example@email.gov',
         wall_clock_time=timedelta(hours=6),
         model_timestep=timedelta(seconds=2),
+        gwce_solution_scheme='semi-implicit-legacy',
+        use_smagorinsky=False,
         spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
         overwrite=True,
