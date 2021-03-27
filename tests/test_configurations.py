@@ -5,24 +5,26 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 import pytest
 
-from coupledmodeldriver.configuration import ADCIRCConfiguration, \
-    ATMESHForcingConfiguration, CoupledModelDriverConfiguration, \
-    NEMSConfiguration, SlurmConfiguration, TidalForcingConfiguration, \
-    WW3DATAForcingConfiguration
+from coupledmodeldriver.configuration import (
+    ADCIRCConfiguration,
+    ATMESHForcingConfiguration,
+    CoupledModelDriverConfiguration,
+    NEMSConfiguration,
+    SlurmConfiguration,
+    TidalForcingConfiguration,
+    WW3DATAForcingConfiguration,
+)
 from coupledmodeldriver.platforms import Platform
 
 
 def test_update():
     configuration = SlurmConfiguration(
-        account='coastal',
-        tasks=602,
-        job_duration=timedelta(hours=6),
+        account='coastal', tasks=602, job_duration=timedelta(hours=6),
     )
 
-    configuration.update({
-        'email_address': 'test@email.gov',
-        'test_entry_1': 'test value 1',
-    })
+    configuration.update(
+        {'email_address': 'test@email.gov', 'test_entry_1': 'test value 1', }
+    )
 
     configuration['test_entry_2'] = 2
 
@@ -91,7 +93,7 @@ def test_nems():
         'WAV -> OCN   :remapMethod=redist',
         'ATM',
         'WAV',
-        'OCN'
+        'OCN',
     ]
 
 
@@ -115,16 +117,31 @@ def test_adcirc():
 
 
 def test_tidal():
-    configuration = TidalForcingConfiguration(
-        tidal_source='HAMTIDE',
-        constituents='all',
-    )
+    configuration = TidalForcingConfiguration(tidal_source='HAMTIDE', constituents='all', )
 
-    assert list(configuration.forcing.active_constituents) == ['Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2']
+    assert list(configuration.forcing.active_constituents) == [
+        'Q1',
+        'O1',
+        'P1',
+        'K1',
+        'N2',
+        'M2',
+        'S2',
+        'K2',
+    ]
 
     configuration['constituents'] = 'major'
 
-    assert list(configuration.forcing.active_constituents) == ['Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2']
+    assert list(configuration.forcing.active_constituents) == [
+        'Q1',
+        'O1',
+        'P1',
+        'K1',
+        'N2',
+        'M2',
+        'S2',
+        'K2',
+    ]
 
     configuration['tidal_source'] = 'TPXO'
     configuration['resource'] = 'nonesistant/path/to/h_tpxo9.nc'
@@ -156,9 +173,7 @@ def test_atmesh():
 
 def test_ww3data():
     configuration = WW3DATAForcingConfiguration(
-        resource='ww3.HWRF.NOV2018.2012_sxy.nc',
-        nrs=5,
-        modeled_timestep=timedelta(hours=1),
+        resource='ww3.HWRF.NOV2018.2012_sxy.nc', nrs=5, modeled_timestep=timedelta(hours=1),
     )
 
     assert configuration.configuration == {
@@ -184,5 +199,5 @@ def test_coupledmodeldriver():
         'output_directory': Path('.'),
         'models': [],
         'runs': {'test_case_1': (None, None)},
-        'verbose': False
+        'verbose': False,
     }

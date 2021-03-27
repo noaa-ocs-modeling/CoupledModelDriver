@@ -50,6 +50,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -155,15 +156,17 @@ def convert_value(value: Any, to_type: type) -> Any:
                     if len(to_type) == 1:
                         to_type = [to_type[0] for _ in value]
                     elif len(to_type) == len(value):
-                        to_type = to_type[:len(value)]
+                        to_type = to_type[: len(value)]
                     else:
                         raise ValueError(
                             f'unable to convert list of values of length {len(value)} '
                             f'to list of types of length {len(to_type)}: '
                             f'{value} -/> {to_type}'
                         )
-                    value = collection_type(convert_value(value[index], current_type)
-                                            for index, current_type in enumerate(to_type))
+                    value = collection_type(
+                        convert_value(value[index], current_type)
+                        for index, current_type in enumerate(to_type)
+                    )
                 else:
                     value = collection_type()
         elif value is not None:

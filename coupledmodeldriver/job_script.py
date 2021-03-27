@@ -37,10 +37,7 @@ class Script(ABC):
         self.commands = commands
 
     def __str__(self) -> str:
-        return '\n'.join([
-            self.shebang,
-            *(str(command) for command in self.commands)
-        ])
+        return '\n'.join([self.shebang, *(str(command) for command in self.commands)])
 
     def write(self, filename: PathLike, overwrite: bool = False):
         """
@@ -160,7 +157,9 @@ class JobScript(Script):
     @slurm_nodes.setter
     def slurm_nodes(self, slurm_nodes: int):
         if slurm_nodes is None:
-            slurm_nodes = numpy.ceil(self.slurm_tasks / self.platform.value['processors_per_node'])
+            slurm_nodes = numpy.ceil(
+                self.slurm_tasks / self.platform.value['processors_per_node']
+            )
         if slurm_nodes is not None:
             slurm_nodes = int(slurm_nodes)
         self.__slurm_nodes = slurm_nodes
@@ -281,8 +280,9 @@ class AdcircSetupScript(Script):
         self.nems_configure_filename = PurePosixPath(nems_configure_filename)
         self.model_configure_filename = PurePosixPath(model_configure_filename)
         self.config_rc_filename = PurePosixPath(config_rc_filename)
-        self.fort67_filename = PurePosixPath(fort67_filename) \
-            if fort67_filename is not None else None
+        self.fort67_filename = (
+            PurePosixPath(fort67_filename) if fort67_filename is not None else None
+        )
 
         commands = [
             f'ln -sf {self.nems_configure_filename} ./nems.configure',
@@ -292,10 +292,9 @@ class AdcircSetupScript(Script):
         ]
 
         if self.fort67_filename is not None:
-            commands.extend([
-                '',
-                f'ln -sf {self.fort67_filename} ./fort.67.nc',
-            ])
+            commands.extend(
+                ['', f'ln -sf {self.fort67_filename} ./fort.67.nc', ]
+            )
 
         super().__init__(commands)
 
@@ -428,10 +427,7 @@ class EnsembleSetupScript(Script):
 
 class EnsembleRunScript(Script):
     def __init__(
-        self,
-        platform: Platform,
-        setup_script_name: PathLike = None,
-        commands: [str] = None
+        self, platform: Platform, setup_script_name: PathLike = None, commands: [str] = None
     ):
         self.platform = platform
         if setup_script_name is None:

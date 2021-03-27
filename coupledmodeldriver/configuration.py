@@ -105,8 +105,9 @@ class Configuration(ABC):
         return json.dumps(self.configuration)
 
     def __repr__(self):
-        configuration_string = ', '.join([f'{key}={repr(value)}'
-                                          for key, value in self.configuration.items()])
+        configuration_string = ', '.join(
+            [f'{key}={repr(value)}' for key, value in self.configuration.items()]
+        )
         return f'{self.__class__.__name__}({configuration_string})'
 
     @classmethod
@@ -159,7 +160,8 @@ class SlurmConfiguration(Configuration):
                 'extra_commands': [str],
                 'launcher': str,
                 'nodes': int,
-            })
+            },
+        )
 
         self['account'] = account
         self['tasks'] = tasks
@@ -220,7 +222,8 @@ class NEMSConfiguration(Configuration):
                 'connections': [[str]],
                 'mediations': [str],
                 'sequence': [str],
-            })
+            },
+        )
 
         self['executable_path'] = executable_path
         self['modeled_start_time'] = modeled_start_time
@@ -237,8 +240,7 @@ class NEMSConfiguration(Configuration):
             start_time=self['modeled_start_time'],
             end_time=self['modeled_end_time'],
             interval=self['modeled_timestep'],
-            **{model.model_type.value.lower(): model
-               for model in self['models']},
+            **{model.model_type.value.lower(): model for model in self['models']},
         )
         for connection in self['connections']:
             modeling_system.connect(*connection)
@@ -255,10 +257,7 @@ class ModelConfiguration(Configuration):
         if not isinstance(model, Model):
             model = Model[str(model).lower()]
         self.model = model
-        super().__init__(
-            name=self.model.value,
-            fields=fields
-        )
+        super().__init__(name=self.model.value, fields=fields)
 
 
 class ADCIRCConfiguration(ModelConfiguration):
@@ -336,15 +335,15 @@ class ADCIRCConfiguration(ModelConfiguration):
         if self['fort_13_path'] is not None and self['fort_13_path'].exists():
             mesh.import_nodal_attributes(self['fort_13_path'])
         else:
-            LOGGER.warning(f'mesh values (nodal attributes) not found at '
-                           f'"{self["fort_13_path"]}"')
+            LOGGER.warning(
+                f'mesh values (nodal attributes) not found at ' f'"{self["fort_13_path"]}"'
+            )
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for forcing in self.forcings:
             mesh.add_forcing(forcing)
 
-        if not mesh.has_nodal_attribute('primitive_weighting_in_'
-                                        'continuity_equation'):
+        if not mesh.has_nodal_attribute('primitive_weighting_in_' 'continuity_equation'):
             LOGGER.debug(f'generating tau0 in mesh')
             mesh.generate_tau0()
 
@@ -378,19 +377,23 @@ class ADCIRCConfiguration(ModelConfiguration):
 
         if self['write_station_output'] and self['stations_file_path'].exists():
             driver.import_stations(self['stations_file_path'])
-            driver.set_elevation_stations_output(self['modeled_timestep'],
-                                                 spinup=self['tidal_spinup_timestep'])
+            driver.set_elevation_stations_output(
+                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+            )
             # spinup_start=spinup_start, spinup_end=spinup_end)
-            driver.set_velocity_stations_output(self['modeled_timestep'],
-                                                spinup=self['tidal_spinup_timestep'])
+            driver.set_velocity_stations_output(
+                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+            )
             # spinup_start=spinup_start, spinup_end=spinup_end)
 
         if self['write_surface_output']:
-            driver.set_elevation_surface_output(self['modeled_timestep'],
-                                                spinup=self['tidal_spinup_timestep'])
+            driver.set_elevation_surface_output(
+                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+            )
             # spinup_start=spinup_start, spinup_end=spinup_end)
-            driver.set_velocity_surface_output(self['modeled_timestep'],
-                                               spinup=self['tidal_spinup_timestep'])
+            driver.set_velocity_surface_output(
+                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+            )
             # spinup_start=spinup_start, spinup_end=spinup_end)
 
         return driver
@@ -398,10 +401,7 @@ class ADCIRCConfiguration(ModelConfiguration):
 
 class ForcingConfiguration(ModelConfiguration, ABC):
     def __init__(
-        self,
-        model: Model,
-        resource: PathLike,
-        fields: {str: type} = None,
+        self, model: Model, resource: PathLike, fields: {str: type} = None,
     ):
         if fields is None:
             fields = {}
@@ -434,10 +434,7 @@ class TidalForcingConfiguration(ForcingConfiguration):
         super().__init__(
             model=Model.TidalForcing,
             resource=resource,
-            fields={
-                'tidal_source': TidalSource,
-                'constituents': [str],
-            }
+            fields={'tidal_source': TidalSource, 'constituents': [str], },
         )
 
         self['tidal_source'] = tidal_source
@@ -445,13 +442,9 @@ class TidalForcingConfiguration(ForcingConfiguration):
 
     @property
     def forcing(self) -> Forcing:
-        tides = Tides(
-            tidal_source=self['tidal_source'],
-            resource=self['resource'],
-        )
+        tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'], )
 
-        constituents = [constituent.upper()
-                        for constituent in self['constituents']]
+        constituents = [constituent.upper() for constituent in self['constituents']]
         if 'ALL' in constituents:
             tides.use_all()
         elif 'MAJOR' in constituents:
@@ -473,10 +466,7 @@ class ATMESHForcingConfiguration(ForcingConfiguration):
         super().__init__(
             model=Model.ATMESH,
             resource=resource,
-            fields={
-                'NWS': int,
-                'modeled_timestep': timedelta,
-            }
+            fields={'NWS': int, 'modeled_timestep': timedelta, },
         )
 
         self['NWS'] = nws
@@ -485,8 +475,7 @@ class ATMESHForcingConfiguration(ForcingConfiguration):
     @property
     def forcing(self) -> Forcing:
         return AtmosphericMeshForcing(
-            nws=self['NWS'],
-            interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
+            nws=self['NWS'], interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
         )
 
 
@@ -500,10 +489,7 @@ class WW3DATAForcingConfiguration(ForcingConfiguration):
         super().__init__(
             model=Model.WW3DATA,
             resource=resource,
-            fields={
-                'NRS': int,
-                'modeled_timestep': timedelta,
-            }
+            fields={'NRS': int, 'modeled_timestep': timedelta, },
         )
 
         self['NRS'] = nrs
@@ -512,8 +498,7 @@ class WW3DATAForcingConfiguration(ForcingConfiguration):
     @property
     def forcing(self) -> Forcing:
         return WaveWatch3DataForcing(
-            nrs=self['nrs'],
-            interval_seconds=self['modeled_timestep'],
+            nrs=self['nrs'], interval_seconds=self['modeled_timestep'],
         )
 
 
@@ -534,7 +519,7 @@ class CoupledModelDriverConfiguration(Configuration):
                 'models': [Model],
                 'runs': {str: (str, Any)},
                 'verbose': bool,
-            }
+            },
         )
 
         self['platform'] = platform
