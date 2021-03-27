@@ -23,9 +23,9 @@ LOGGER = get_logger('configuration')
 
 class Model(Enum):
     ADCIRC = 'ADCIRC'
-    Tides = 'Tides'
-    ATMesh = 'ATMesh'
-    WW3Data = 'WW3Data'
+    TidalForcing = 'Tides'
+    ATMESH = 'ATMESH'
+    WW3DATA = 'WW3DATA'
 
 
 class GWCESolutionScheme(Enum):
@@ -35,13 +35,14 @@ class GWCESolutionScheme(Enum):
 
 
 class Configuration(ABC):
-    name: str
-
-    def __init__(self, fields: {str: type}):
+    def __init__(self, name: str, fields: {str: type}):
         if fields is None:
             fields = {}
+        fields['name'] = str
         self.__fields = fields
         self.__configuration = {field: None for field in fields}
+
+        self['name'] = name
 
     @property
     def fields(self) -> {str: type}:
@@ -65,13 +66,29 @@ class Configuration(ABC):
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'configure_{self.name.lower()}.json'
+            filename = filename / f'configure_{self["name"].lower()}.json'
 
         if overwrite or not filename.exists():
             with open(filename, 'w') as file:
                 json.dump(self.configuration, file)
         else:
             raise FileExistsError(f'file exists at {filename}')
+
+    def update(self, configuration: {str: Any}):
+        for key, value in configuration.items():
+            if key not in self:
+                LOGGER.info(f'adding "{key}" to configuration with value {value}')
+            else:
+                converted_value = convert_value(value, self.fields[key])
+                if self[key] != converted_value:
+                    LOGGER.info(f'updating "key" from {self[key]} to {converted_value}')
+                    value = converted_value
+                else:
+                    return
+            self[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.configuration
 
     def __getitem__(self, key: str) -> Any:
         return self.configuration[key]
@@ -81,7 +98,7 @@ class Configuration(ABC):
             field_type = self.fields[key]
         else:
             field_type = type(value)
-        self.__configuration[key] = convert_value(value, self.fields[key])
+        self.__configuration[key] = convert_value(value, field_type)
         self.__fields[key] = field_type
 
     def __str__(self) -> str:
@@ -108,8 +125,6 @@ class Configuration(ABC):
 
 
 class SlurmConfiguration(Configuration):
-    name = 'Slurm'
-
     def __init__(
         self,
         account: str,
@@ -127,22 +142,24 @@ class SlurmConfiguration(Configuration):
         launcher: str = None,
         nodes: int = None,
     ):
-        super().__init__(fields={
-            'account': str,
-            'tasks': int,
-            'partition': str,
-            'job_duration': timedelta,
-            'run_directory': Path,
-            'run_name': str,
-            'email_type': str,
-            'email_address': str,
-            'log_filename': Path,
-            'modules': [str],
-            'path_prefix': Path,
-            'extra_commands': [str],
-            'launcher': str,
-            'nodes': int,
-        })
+        super().__init__(
+            name='Slurm',
+            fields={
+                'account': str,
+                'tasks': int,
+                'partition': str,
+                'job_duration': timedelta,
+                'run_directory': Path,
+                'run_name': str,
+                'email_type': str,
+                'email_address': str,
+                'log_filename': Path,
+                'modules': [str],
+                'path_prefix': Path,
+                'extra_commands': [str],
+                'launcher': str,
+                'nodes': int,
+            })
 
         self['account'] = account
         self['tasks'] = tasks
@@ -181,8 +198,6 @@ class SlurmConfiguration(Configuration):
 
 
 class NEMSConfiguration(Configuration):
-    name = 'NEMS'
-
     def __init__(
         self,
         executable_path: PathLike,
@@ -194,16 +209,18 @@ class NEMSConfiguration(Configuration):
         mediations: [[str]] = None,
         sequence: [str] = None,
     ):
-        super().__init__(fields={
-            'executable_path': Path,
-            'modeled_start_time': datetime,
-            'modeled_end_time': datetime,
-            'modeled_timestep': timedelta,
-            'models': [ModelEntry],
-            'connections': [[str]],
-            'mediations': [str],
-            'sequence': [str],
-        })
+        super().__init__(
+            name='NEMS',
+            fields={
+                'executable_path': Path,
+                'modeled_start_time': datetime,
+                'modeled_end_time': datetime,
+                'modeled_timestep': timedelta,
+                'models': [ModelEntry],
+                'connections': [[str]],
+                'mediations': [str],
+                'sequence': [str],
+            })
 
         self['executable_path'] = executable_path
         self['modeled_start_time'] = modeled_start_time
@@ -235,19 +252,16 @@ class NEMSConfiguration(Configuration):
 
 class ModelConfiguration(Configuration):
     def __init__(self, model: Model, fields: {str: type}):
-        super().__init__(fields=fields)
         if not isinstance(model, Model):
             model = Model[str(model).lower()]
         self.model = model
-
-    @property
-    def name(self) -> str:
-        return self.model.value
+        super().__init__(
+            name=self.model.value,
+            fields=fields
+        )
 
 
 class ADCIRCConfiguration(ModelConfiguration):
-    name = 'ADCIRC'
-
     def __init__(
         self,
         adcprep_executable_path: PathLike,
@@ -408,8 +422,6 @@ class ForcingConfiguration(ModelConfiguration, ABC):
 
 
 class TidalForcingConfiguration(ForcingConfiguration):
-    name = 'TidalForcing'
-
     def __init__(
         self,
         resource: PathLike = None,
@@ -420,7 +432,7 @@ class TidalForcingConfiguration(ForcingConfiguration):
             constituents = 'ALL'
 
         super().__init__(
-            model=Model.Tides,
+            model=Model.TidalForcing,
             resource=resource,
             fields={
                 'tidal_source': TidalSource,
@@ -452,8 +464,6 @@ class TidalForcingConfiguration(ForcingConfiguration):
 
 
 class ATMESHForcingConfiguration(ForcingConfiguration):
-    name = 'ATMESH'
-
     def __init__(
         self,
         resource: PathLike,
@@ -461,7 +471,7 @@ class ATMESHForcingConfiguration(ForcingConfiguration):
         modeled_timestep: timedelta = timedelta(hours=1),
     ):
         super().__init__(
-            model=Model.ATMesh,
+            model=Model.ATMESH,
             resource=resource,
             fields={
                 'NWS': int,
@@ -481,8 +491,6 @@ class ATMESHForcingConfiguration(ForcingConfiguration):
 
 
 class WW3DATAForcingConfiguration(ForcingConfiguration):
-    name = 'WW3DATA'
-
     def __init__(
         self,
         resource: PathLike,
@@ -490,7 +498,7 @@ class WW3DATAForcingConfiguration(ForcingConfiguration):
         modeled_timestep: timedelta = timedelta(hours=1),
     ):
         super().__init__(
-            model=Model.WW3Data,
+            model=Model.WW3DATA,
             resource=resource,
             fields={
                 'NRS': int,
@@ -510,8 +518,6 @@ class WW3DATAForcingConfiguration(ForcingConfiguration):
 
 
 class CoupledModelDriverConfiguration(Configuration):
-    name = 'CoupledModelDriver'
-
     def __init__(
         self,
         platform: Platform,
@@ -520,13 +526,16 @@ class CoupledModelDriverConfiguration(Configuration):
         runs: {str: (str, Any)},
         verbose: bool = False,
     ):
-        super().__init__(fields={
-            'platform': Platform,
-            'output_directory': Path,
-            'models': [Model],
-            'runs': {str: (str, Any)},
-            'verbose': bool,
-        })
+        super().__init__(
+            name='CoupledModelDriver',
+            fields={
+                'platform': Platform,
+                'output_directory': Path,
+                'models': [Model],
+                'runs': {str: (str, Any)},
+                'verbose': bool,
+            }
+        )
 
         self['platform'] = platform
         self['output_directory'] = output_directory

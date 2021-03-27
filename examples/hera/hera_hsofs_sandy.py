@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 
-from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
-from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
+
+from coupledmodeldriver.configuration import ATMESHForcingConfiguration, \
+    NEMSConfiguration, TidalForcingConfiguration, \
+    WW3DATAForcingConfiguration
 
 sys.path.append((Path(__file__).parent / '..').absolute())
 
@@ -44,22 +44,24 @@ if __name__ == '__main__':
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
-    # initialize `nemspy` configuration object with forcing file locations, start and end times,  and processor assignment
-    nems = ModelingSystem(
-        start_time=datetime(2012, 10, 22, 6),
-        end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
-        interval=timedelta(hours=1),
-        atm=AtmosphericMeshEntry(
-            FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'
-        ),
-        wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
-        ocn=ADCIRCEntry(adcirc_processors),
+    nems_model_entries = [
+        AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+        WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
+        ADCIRCEntry(adcirc_processors)
+    ]
+
+    # initialize `nemspy` configuration object with forcing file locations, start and end times, and processor assignment
+    nems = NEMSConfiguration(
+        executable_path=NEMS_EXECUTABLE,
+        modeled_start_time=datetime(2012, 10, 22, 6),
+        modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
+        modeled_timestep=timedelta(hours=1),
+        models=nems_model_entries,
     )
 
     # describe connections between coupled components
-    nems.connect('ATM', 'OCN')
-    nems.connect('WAV', 'OCN')
-    nems.sequence = [
+    nems['connections'] = [('ATM', 'OCN'), ('WAV', 'OCN')]
+    nems['sequence'] = [
         'ATM -> OCN',
         'WAV -> OCN',
         'ATM',
@@ -67,11 +69,14 @@ if __name__ == '__main__':
         'OCN',
     ]
 
-    # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
-    tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
-    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
+    # initialize forcing conf
+    tidal_forcing = TidalForcingConfiguration(
+        tidal_source=TidalSource.TPXO,
+        resource=TPXO_FILENAME,
+        constituents='all',
+    )
+    wind_forcing = ATMESHForcingConfiguration(nws=17, modeled_timestep=timedelta(hours=1))
+    wave_forcing = WW3DATAForcingConfiguration(nrs=5, modeled_timestep=timedelta(hours=1))
 
     # send run information to `adcircpy` and write the resulting configuration to output directory
     write_adcirc_configurations(

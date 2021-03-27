@@ -12,6 +12,27 @@ from coupledmodeldriver.configuration import ADCIRCConfiguration, \
 from coupledmodeldriver.platforms import Platform
 
 
+def test_update():
+    configuration = SlurmConfiguration(
+        account='coastal',
+        tasks=602,
+        job_duration=timedelta(hours=6),
+    )
+
+    configuration.update({
+        'email_address': 'test@email.gov',
+        'test_entry_1': 'test value 1',
+    })
+
+    configuration['test_entry_2'] = 2
+
+    assert configuration['email_address'] == 'test@email.gov'
+    assert configuration['test_entry_1'] == 'test value 1'
+    assert configuration['test_entry_2'] == 2
+    assert configuration.fields['test_entry_1'] == str
+    assert configuration.fields['test_entry_2'] == int
+
+
 def test_slurm():
     configuration = SlurmConfiguration(
         account='coastal',
@@ -126,6 +147,7 @@ def test_atmesh():
     )
 
     assert configuration.configuration == {
+        'name': 'ATMESH',
         'NWS': 17,
         'modeled_timestep': timedelta(hours=1),
         'resource': Path('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
@@ -140,6 +162,7 @@ def test_ww3data():
     )
 
     assert configuration.configuration == {
+        'name': 'WW3DATA',
         'NRS': 5,
         'modeled_timestep': timedelta(hours=1),
         'resource': Path('ww3.HWRF.NOV2018.2012_sxy.nc'),
@@ -156,6 +179,7 @@ def test_coupledmodeldriver():
     )
 
     assert configuration.configuration == {
+        'name': 'CoupledModelDriver',
         'platform': Platform.HERA,
         'output_directory': Path('.'),
         'models': [],
