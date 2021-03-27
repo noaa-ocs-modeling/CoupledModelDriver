@@ -1,10 +1,14 @@
+from datetime import datetime, timedelta
+from enum import EnumMeta
 import logging
 import os
 from os import PathLike
 from pathlib import Path
 import shutil
 import sys
+from typing import Any, Collection, Iterable, Mapping
 
+from dateutil.parser import parse as parse_date
 import numpy
 from pyproj import CRS, Geod, Transformer
 from shapely.geometry import Point
@@ -135,3 +139,48 @@ def make_executable(path: PathLike):
     mode = os.stat(path).st_mode
     mode |= (mode & 0o444) >> 2  # copy R bits to X
     os.chmod(path, mode)
+
+
+def convert_value(value: Any, to_type: type) -> Any:
+    if isinstance(to_type, str):
+        to_type = eval(to_type)
+    if isinstance(to_type, Collection):
+        collection_type = type(to_type)
+        if collection_type is not EnumMeta:
+            if not issubclass(collection_type, Mapping):
+                if value is not None:
+                    to_type = list(to_type)
+                    if not isinstance(value, Iterable) or isinstance(value, str):
+                        value = [value]
+                    if len(to_type) == 1:
+                        to_type = [to_type[0] for _ in value]
+                    elif len(to_type) == len(value):
+                        to_type = to_type[:len(value)]
+                    else:
+                        raise ValueError(
+                            f'unable to convert list of values of length {len(value)} '
+                            f'to list of types of length {len(to_type)}: '
+                            f'{value} -/> {to_type}'
+                        )
+                    value = collection_type(convert_value(value[index], current_type)
+                                            for index, current_type in enumerate(to_type))
+                else:
+                    value = collection_type()
+        elif value is not None:
+            try:
+                value = to_type[value]
+            except (KeyError, ValueError):
+                value = to_type(value)
+    elif not isinstance(value, to_type) and value is not None:
+        if issubclass(to_type, bool):
+            if isinstance(value, str):
+                value = eval(f'{value}')
+            else:
+                value = True if value else False
+        elif issubclass(to_type, datetime):
+            value = parse_date(value)
+        elif issubclass(to_type, timedelta):
+            value = timedelta(seconds=float(value))
+        else:
+            value = to_type(value)
+    return value
