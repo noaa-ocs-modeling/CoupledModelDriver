@@ -8,9 +8,12 @@ from adcircpy.forcing.tides.tides import TidalSource
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 
-from coupledmodeldriver.configuration import ATMESHForcingConfiguration, \
-    NEMSConfiguration, TidalForcingConfiguration, \
-    WW3DATAForcingConfiguration
+from coupledmodeldriver.configuration import (
+    ATMESHForcingConfiguration,
+    NEMSConfiguration,
+    TidalForcingConfiguration,
+    WW3DATAForcingConfiguration,
+)
 
 sys.path.append((Path(__file__).parent / '..').absolute())
 
@@ -45,9 +48,11 @@ if __name__ == '__main__':
     runs = {f'test_case_1': (None, None)}
 
     nems_model_entries = [
-        AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+        AtmosphericMeshEntry(
+            FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'
+        ),
         WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
-        ADCIRCEntry(adcirc_processors)
+        ADCIRCEntry(adcirc_processors),
     ]
 
     # initialize `nemspy` configuration object with forcing file locations, start and end times, and processor assignment
@@ -71,9 +76,7 @@ if __name__ == '__main__':
 
     # initialize forcing conf
     tidal_forcing = TidalForcingConfiguration(
-        tidal_source=TidalSource.TPXO,
-        resource=TPXO_FILENAME,
-        constituents='all',
+        tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME, constituents='all',
     )
     wind_forcing = ATMESHForcingConfiguration(nws=17, modeled_timestep=timedelta(hours=1))
     wave_forcing = WW3DATAForcingConfiguration(nrs=5, modeled_timestep=timedelta(hours=1))
