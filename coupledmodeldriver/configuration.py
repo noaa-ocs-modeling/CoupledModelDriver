@@ -15,7 +15,6 @@ from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model import ModelEntry
 
-from coupledmodeldriver.adcirc import GWCE_SOLUTION_SCHEME
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.utilities import convert_value, get_logger
 
@@ -27,6 +26,12 @@ class Model(Enum):
     Tides = 'Tides'
     ATMesh = 'ATMesh'
     WW3Data = 'WW3Data'
+
+
+class GWCESolutionScheme(Enum):
+    explicit = 'explicit'
+    semi_implicit = 'semi-implicit'
+    semi_implicit_legacy = 'semi-implicit-legacy'
 
 
 class Configuration(ABC):
@@ -284,7 +289,7 @@ class ADCIRCConfiguration(ModelConfiguration):
                 'stations_file_path': Path,
                 'tidal_spinup_duration': timedelta,
                 'tidal_spinup_timestep': timedelta,
-                'gwce_solution_scheme': GWCE_SOLUTION_SCHEME,
+                'gwce_solution_scheme': GWCESolutionScheme,
                 'use_smagorinsky': bool,
                 'use_baroclinicity': bool,
             },

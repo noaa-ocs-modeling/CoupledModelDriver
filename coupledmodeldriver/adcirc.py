@@ -1,6 +1,5 @@
 import copy
 from datetime import timedelta
-from enum import Enum
 import logging
 import os
 from os import PathLike
@@ -13,6 +12,7 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
+from .configuration import GWCESolutionScheme
 from .job_script import (
     AdcircMeshPartitionJob,
     AdcircRunJob,
@@ -23,12 +23,6 @@ from .job_script import (
 )
 from .platforms import Platform
 from .utilities import LOGGER, create_symlink, get_logger
-
-
-class GWCE_SOLUTION_SCHEME(Enum):
-    EXPLICIT = 'explicit'
-    SEMI_IMPLICIT = 'semi-implicit'
-    SEMI_IMPLICIT_LEGACY = 'semi-implicit-legacy'
 
 
 def write_adcirc_configurations(
@@ -43,7 +37,7 @@ def write_adcirc_configurations(
     email_address: str = None,
     wall_clock_time: timedelta = None,
     model_timestep: timedelta = None,
-    gwce_solution_scheme: GWCE_SOLUTION_SCHEME = None,
+    gwce_solution_scheme: GWCESolutionScheme = None,
     spinup: timedelta = None,
     forcings: [Forcing] = None,
     overwrite: bool = False,
@@ -115,7 +109,7 @@ def write_adcirc_configurations(
             try:
                 gwce_solution_scheme = GWCE_SOLUTION_SCHEME(gwce_solution_scheme)
             except KeyError:
-                gwce_solution_scheme = GWCE_SOLUTION_SCHEME[gwce_solution_scheme]
+                gwce_solution_scheme = GWCESolutionScheme[gwce_solution_scheme]
 
     if source_filename is None:
         source_filename = platform.value['source_filename']
