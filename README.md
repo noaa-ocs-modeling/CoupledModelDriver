@@ -98,21 +98,10 @@ wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
 wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
 # send run information to `adcircpy` and write the resulting configuration to output directory
-write_adcirc_configurations(
-    nems,
-    runs,
-    MESH_DIRECTORY,
-    OUTPUT_DIRECTORY,
-    nems_executable=NEMS_EXECUTABLE,
-    adcprep_executable=ADCPREP_EXECUTABLE,
-    email_address='example@email.gov',
-    platform=Platform.HERA,
-    spinup=timedelta(days=12.5),
-    forcings=[tidal_forcing, wind_forcing, wave_forcing],
-    overwrite=True,
-    use_original_mesh=False,
-    verbose=True,
-)
+write_adcirc_configurations(output_directory=OUTPUT_DIRECTORY, fort13_filename=None, fort14_filename=MESH_DIRECTORY,
+                            nems=nems, platform=Platform.HERA, runs=runs, nems_executable=NEMS_EXECUTABLE,
+                            adcprep_executable=ADCPREP_EXECUTABLE, forcings=[tidal_forcing, wind_forcing, wave_forcing],
+                            spinup=timedelta(days=12.5), email_address='example@email.gov', overwrite=True, verbose=True)
 ```
 
 This code will generate a directory `hera_shinnecock_ike/` with the following structure:

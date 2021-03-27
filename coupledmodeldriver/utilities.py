@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from enum import EnumMeta
+from enum import Enum, EnumMeta
 import logging
 import os
 from os import PathLike
@@ -50,7 +50,6 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
-
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -145,6 +144,8 @@ def make_executable(path: PathLike):
 def convert_value(value: Any, to_type: type) -> Any:
     if isinstance(to_type, str):
         to_type = eval(to_type)
+    if isinstance(value, Enum):
+        value = value.name
     if isinstance(to_type, Collection):
         collection_type = type(to_type)
         if collection_type is not EnumMeta:

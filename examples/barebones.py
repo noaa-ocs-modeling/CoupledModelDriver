@@ -1,26 +1,14 @@
-#! /usr/bin/env python
-
 from datetime import datetime, timedelta
 from pathlib import Path
-import sys
 
-from adcircpy.forcing.tides.tides import TidalSource
+from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 
-from coupledmodeldriver.configuration import (
-    ATMESHForcingJSON,
-    NEMSJSON,
-    TidalForcingJSON,
-    WW3DATAForcingJSON,
-)
-
-sys.path.append((Path(__file__).parent / '..').absolute())
-
-from coupledmodeldriver.adcirc import write_adcirc_configurations
+from coupledmodeldriver.adcirc import generate_barebones_configuration
+# paths to compiled `NEMS.x` and `adcprep`
 from coupledmodeldriver.platforms import Platform
 
-# paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'
 ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/adcprep'
 
@@ -35,7 +23,7 @@ FORCINGS_DIRECTORY = (
 )
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_hsofs_sandy'
+OUTPUT_DIRECTORY = Path(__file__).parent / 'data' / 'configuration' / 'barebones'
 
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
@@ -43,30 +31,28 @@ TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_t
 if __name__ == '__main__':
     platform = Platform.HERA
     adcirc_processors = 15 * platform.value['processors_per_node']
+    tidal_spinup_duration = timedelta(days=12.5)
+    job_duration = timedelta(hours=6)
 
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
-    nems_model_entries = [
-        AtmosphericMeshEntry(
-            FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'
-        ),
-        WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
-        ADCIRCEntry(adcirc_processors),
-    ]
-
     # initialize `nemspy` configuration object with forcing file locations, start and end times, and processor assignment
-    nems = NEMSJSON(
+    nems = ModelingSystem(
         executable_path=NEMS_EXECUTABLE,
-        modeled_start_time=datetime(2012, 10, 22, 6),
-        modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
-        modeled_timestep=timedelta(hours=1),
-        models=nems_model_entries,
+        start_time=datetime(2012, 10, 22, 6),
+        end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
+        interval=timedelta(hours=1),
+        atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY /
+                                 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+        wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc'),
+        ocn=ADCIRCEntry(adcirc_processors),
     )
 
     # describe connections between coupled components
-    nems['connections'] = [('ATM', 'OCN'), ('WAV', 'OCN')]
-    nems['sequence'] = [
+    nems.connect('ATM', 'OCN')
+    nems.connect('WAV', 'OCN')
+    nems.sequence = [
         'ATM -> OCN',
         'WAV -> OCN',
         'ATM',
@@ -74,27 +60,15 @@ if __name__ == '__main__':
         'OCN',
     ]
 
-    # initialize forcing conf
-    tidal_forcing = TidalForcingJSON(
-        tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME, constituents='all',
-    )
-    wind_forcing = ATMESHForcingJSON(nws=17, modeled_timestep=timedelta(hours=1))
-    wave_forcing = WW3DATAForcingJSON(nrs=5, modeled_timestep=timedelta(hours=1))
-
-    # send run information to `adcircpy` and write the resulting configuration to output directory
-    write_adcirc_configurations(
+    generate_barebones_configuration(
         output_directory=OUTPUT_DIRECTORY,
-        fort13_filename=None,
-        fort14_filename=MESH_DIRECTORY,
+        fort13_filename=MESH_DIRECTORY / 'fort.13',
+        fort14_filename=MESH_DIRECTORY / 'fort.14',
         nems=nems,
         platform=platform,
-        runs=runs,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
-        forcings=[tidal_forcing, wind_forcing, wave_forcing],
-        spinup=timedelta(days=12.5),
-        wall_clock_time=timedelta(hours=6),
-        email_address='example@email.gov',
-        overwrite=True,
-        verbose=True,
+        tidal_spinup_duration=tidal_spinup_duration,
+        runs=runs,
+        job_duration=job_duration,
     )

@@ -6,19 +6,19 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
 import pytest
 
 from coupledmodeldriver.configuration import (
-    ADCIRCConfiguration,
-    ATMESHForcingConfiguration,
-    CoupledModelDriverConfiguration,
-    NEMSConfiguration,
-    SlurmConfiguration,
-    TidalForcingConfiguration,
-    WW3DATAForcingConfiguration,
+    ADCIRCJSON,
+    ATMESHForcingJSON,
+    CoupledModelDriverJSON,
+    Model, NEMSJSON,
+    SlurmJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
 )
 from coupledmodeldriver.platforms import Platform
 
 
 def test_update():
-    configuration = SlurmConfiguration(
+    configuration = SlurmJSON(
         account='coastal', tasks=602, job_duration=timedelta(hours=6),
     )
 
@@ -36,7 +36,7 @@ def test_update():
 
 
 def test_slurm():
-    configuration = SlurmConfiguration(
+    configuration = SlurmJSON(
         account='coastal',
         tasks=602,
         partition=None,
@@ -53,7 +53,7 @@ def test_slurm():
         nodes=None,
     )
 
-    slurm = configuration.slurm_configuration
+    slurm = configuration.to_adcircpy()
 
     assert slurm.nprocs == 602
 
@@ -75,7 +75,7 @@ def test_nems():
         'OCN',
     ]
 
-    configuration = NEMSConfiguration(
+    configuration = NEMSJSON(
         executable_path='NEMS.x',
         modeled_start_time=datetime(2012, 10, 22, 6),
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
@@ -86,7 +86,7 @@ def test_nems():
         sequence=sequence,
     )
 
-    modeling_system = configuration.modeling_system
+    modeling_system = configuration.to_nemspy()
 
     assert modeling_system.sequence == [
         'ATM -> OCN   :remapMethod=redist',
@@ -98,7 +98,7 @@ def test_nems():
 
 
 def test_adcirc():
-    configuration = ADCIRCConfiguration(
+    configuration = ADCIRCJSON(
         adcprep_executable_path='adcprep',
         modeled_start_time=datetime(2012, 10, 22, 6),
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
@@ -117,7 +117,7 @@ def test_adcirc():
 
 
 def test_tidal():
-    configuration = TidalForcingConfiguration(tidal_source='HAMTIDE', constituents='all', )
+    configuration = TidalForcingJSON(tidal_source='HAMTIDE', constituents='all', )
 
     assert list(configuration.forcing.active_constituents) == [
         'Q1',
@@ -157,14 +157,13 @@ def test_tidal():
 
 
 def test_atmesh():
-    configuration = ATMESHForcingConfiguration(
+    configuration = ATMESHForcingJSON(
         resource='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
         nws=17,
         modeled_timestep=timedelta(hours=1),
     )
 
     assert configuration.configuration == {
-        'name': 'ATMESH',
         'NWS': 17,
         'modeled_timestep': timedelta(hours=1),
         'resource': Path('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
@@ -172,12 +171,11 @@ def test_atmesh():
 
 
 def test_ww3data():
-    configuration = WW3DATAForcingConfiguration(
+    configuration = WW3DATAForcingJSON(
         resource='ww3.HWRF.NOV2018.2012_sxy.nc', nrs=5, modeled_timestep=timedelta(hours=1),
     )
 
     assert configuration.configuration == {
-        'name': 'WW3DATA',
         'NRS': 5,
         'modeled_timestep': timedelta(hours=1),
         'resource': Path('ww3.HWRF.NOV2018.2012_sxy.nc'),
@@ -185,19 +183,16 @@ def test_ww3data():
 
 
 def test_coupledmodeldriver():
-    configuration = CoupledModelDriverConfiguration(
+    configuration = CoupledModelDriverJSON(
         platform=Platform.HERA,
         output_directory='.',
-        models=[],
-        runs={'test_case_1': (None, None)},
-        verbose=False,
+        models=['ADCIRC'],
+        runs=None,
     )
 
     assert configuration.configuration == {
-        'name': 'CoupledModelDriver',
         'platform': Platform.HERA,
         'output_directory': Path('.'),
-        'models': [],
-        'runs': {'test_case_1': (None, None)},
-        'verbose': False,
+        'models': [Model.ADCIRC],
+        'runs': {'run_1': (None, None)},
     }

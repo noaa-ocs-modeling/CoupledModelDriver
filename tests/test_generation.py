@@ -72,18 +72,18 @@ def test_local_shinnecock_ike():
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     write_adcirc_configurations(
-        nems,
-        runs,
-        mesh_directory,
-        output_directory,
+        output_directory=output_directory,
+        fort13_filename=None,
+        fort14_filename=mesh_directory,
+        nems=nems,
+        platform=platform,
+        runs=runs,
         nems_executable=NEMS_PATH,
         adcprep_executable=ADCPREP_PATH,
-        email_address='example@email.gov',
-        platform=platform,
-        spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        spinup=timedelta(days=12.5),
+        email_address='example@email.gov',
         overwrite=True,
-        use_original_mesh=False,
         verbose=True,
     )
 
@@ -132,18 +132,18 @@ def test_hera_shinnecock_ike():
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     write_adcirc_configurations(
-        nems,
-        runs,
-        mesh_directory,
-        output_directory,
+        output_directory=output_directory,
+        fort13_filename=None,
+        fort14_filename=mesh_directory,
+        nems=nems,
+        platform=platform,
+        runs=runs,
         nems_executable=NEMS_PATH,
         adcprep_executable=ADCPREP_PATH,
-        email_address='example@email.gov',
-        platform=platform,
-        spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        spinup=timedelta(days=12.5),
+        email_address='example@email.gov',
         overwrite=True,
-        use_original_mesh=False,
         verbose=True,
     )
 
@@ -192,18 +192,18 @@ def test_stampede2_shinnecock_ike():
     wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
 
     write_adcirc_configurations(
-        nems,
-        runs,
-        mesh_directory,
-        output_directory,
+        output_directory=output_directory,
+        fort13_filename=None,
+        fort14_filename=mesh_directory,
+        nems=nems,
+        platform=platform,
+        runs=runs,
         nems_executable=NEMS_PATH,
         adcprep_executable=ADCPREP_PATH,
-        email_address='example@email.gov',
-        platform=platform,
-        spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        spinup=timedelta(days=12.5),
+        email_address='example@email.gov',
         overwrite=True,
-        use_original_mesh=False,
         verbose=True,
     )
 

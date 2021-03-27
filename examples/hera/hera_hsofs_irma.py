@@ -75,17 +75,17 @@ if __name__ == '__main__':
 
     # send run information to `adcircpy` and write the resulting configuration to output directory
     write_adcirc_configurations(
-        nems,
-        runs,
-        MESH_DIRECTORY,
-        OUTPUT_DIRECTORY,
+        output_directory=OUTPUT_DIRECTORY,
+        fort13_filename=None,
+        fort14_filename=MESH_DIRECTORY,
+        nems=nems,
+        platform=platform,
+        runs=runs,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
-        email_address='example@email.gov',
-        platform=platform,
-        spinup=timedelta(days=12.5),
         forcings=[tidal_forcing, wind_forcing, wave_forcing],
+        spinup=timedelta(days=12.5),
+        email_address='example@email.gov',
         overwrite=True,
-        use_original_mesh=True,
         verbose=True,
     )

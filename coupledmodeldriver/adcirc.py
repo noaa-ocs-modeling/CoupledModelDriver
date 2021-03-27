@@ -12,7 +12,15 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry
 import numpy
 
-from .configuration import GWCESolutionScheme
+from .configuration import (
+    ADCIRCJSON,
+    ATMESHForcingJSON,
+    CoupledModelDriverJSON,
+    Model, NEMSJSON,
+    SlurmJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
+)
 from .job_script import (
     AdcircMeshPartitionJob,
     AdcircRunJob,
@@ -25,56 +33,157 @@ from .job_script import (
 from .platforms import Platform
 from .utilities import LOGGER, create_symlink, get_logger
 
+REQUIRED_CONFIGURATIONS = [
+    CoupledModelDriverJSON,
+    SlurmJSON,
+    NEMSJSON,
+    ADCIRCJSON,
+]
 
-def write_adcirc_configurations(
-    nems: ModelingSystem,
-    runs: {str: (float, str)},
-    mesh_directory: PathLike,
+SUPPLEMENTARY_CONFIGURATIONS = [
+    TidalForcingJSON,
+    ATMESHForcingJSON,
+    WW3DATAForcingJSON,
+]
+
+
+def generate_barebones_configuration(
     output_directory: PathLike,
+    fort13_filename: PathLike,
+    fort14_filename: PathLike,
+    nems: ModelingSystem,
+    platform: Platform,
     nems_executable: PathLike,
     adcprep_executable: PathLike,
-    platform: Platform,
+    tidal_spinup_duration: timedelta = None,
+    runs: {str: (float, str)} = None,
+    job_duration: timedelta = None,
     partition: str = None,
     email_address: str = None,
-    wall_clock_time: timedelta = None,
-    model_timestep: timedelta = None,
-    gwce_solution_scheme: GWCESolutionScheme = None,
-    spinup: timedelta = None,
+):
+    """
+    Generate required configuration files for an coupled ADCIRC run.
+
+    :param output_directory: path to store configuration files
+    :param fort13_filename: path to input mesh values (`fort.13`)
+    :param fort14_filename: path to input mesh nodes (`fort.14`)
+    :param nems: NEMSpy ModelingSystem object, populated with models and connections
+    :param platform: HPC platform for which to configure
+    :param nems_executable: filename of compiled `NEMS.x`
+    :param adcprep_executable: filename of compiled `adcprep`
+    :param tidal_spinup_duration: spinup time for ADCIRC coldstart
+    :param runs: dictionary of run name to run value and mesh attribute name
+    :param job_duration: wall clock time of job
+    :param partition: Slurm partition
+    :param email_address: email address
+    """
+
+    if not isinstance(output_directory, Path):
+        output_directory = Path(output_directory)
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    modeled_start_time = nems.start_time
+    modeled_end_time = nems.end_time
+    modeled_timestep = nems.interval
+
+    nems_configuration = NEMSJSON.from_nemspy(nems, executable_path=nems_executable)
+
+    slurm_configuration = SlurmJSON(
+        account=platform.value['slurm_account'],
+        tasks=nems.processors,
+        partition=partition,
+        job_duration=job_duration,
+        email_address=email_address,
+    )
+
+    adcirc_configuration = ADCIRCJSON(
+        adcprep_executable_path=adcprep_executable,
+        modeled_start_time=modeled_start_time,
+        modeled_end_time=modeled_end_time,
+        modeled_timestep=modeled_timestep,
+        fort_13_path=fort13_filename,
+        fort_14_path=fort14_filename,
+        tidal_spinup_duration=tidal_spinup_duration,
+        slurm_configuration=slurm_configuration,
+    )
+
+    main_configuration = CoupledModelDriverJSON(
+        platform=platform,
+        output_directory=output_directory,
+        models=['ADCIRC'],
+        runs=runs,
+    )
+
+    configurations = [main_configuration, nems_configuration, slurm_configuration, adcirc_configuration]
+
+    for configuration in configurations:
+        configuration.to_file(output_directory, overwrite=True)
+
+    return configurations
+
+
+def write_adcirc_configurations(
+    output_directory: PathLike,
+    fort13_filename: PathLike,
+    fort14_filename: PathLike,
+    nems: ModelingSystem,
+    platform: Platform,
+    runs: {str: (float, str)},
+    nems_executable: PathLike,
+    adcprep_executable: PathLike,
     forcings: [Forcing] = None,
-    overwrite: bool = False,
+    spinup: timedelta = None,
     source_filename: PathLike = None,
-    use_original_mesh: bool = False,
+    wall_clock_time: timedelta = None,
+    partition: str = None,
+    email_address: str = None,
+    overwrite: bool = False,
     verbose: bool = False,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
 
-    :param runs: dictionary of run name to run value and mesh attribute name
-    :param nems: NEMSpy ModelingSystem object, populated with models and connections
-    :param mesh_directory: path to directory containing input mesh (fort.13 and fort.14) as well as stations file if applicable
     :param output_directory: path to store run configuration
+    :param fort13_filename: path to input mesh values (`fort.13`)
+    :param fort14_filename: path to input mesh nodes (`fort.14`)
+    :param nems: NEMSpy ModelingSystem object, populated with models and connections
+    :param platform: HPC platform for which to configure
+    :param runs: dictionary of run name to run value and mesh attribute name
     :param nems_executable: filename of compiled `NEMS.x`
     :param adcprep_executable: filename of compiled `adcprep`
-    :param platform: HPC platform for which to configure
+    :param forcings: list of Forcing objects to apply to the mesh
+    :param spinup: spinup time for ADCIRC coldstart
+    :param source_filename: path to modulefile to `source`
+    :param wall_clock_time: wall clock time of job
     :param partition: Slurm partition
     :param email_address: email address
-    :param wall_clock_time: wall clock time of job
-    :param model_timestep: model time step
-    :param gwce_solution_scheme: must be one of ['semi-implicit', 'explicit', 'semi-implicit-legacy']
-    :param spinup: spinup time for ADCIRC coldstart
     :param overwrite: whether to overwrite existing files
-    :param source_filename: path to modulefile to `source`
-    :param use_original_mesh: whether to use the original `fort.14` file instead of rewriting with `adcircpy`
     :param verbose: show log messages
     """
 
-    if not isinstance(mesh_directory, Path):
-        mesh_directory = Path(mesh_directory)
     if not isinstance(output_directory, Path):
         output_directory = Path(output_directory)
 
-    if not mesh_directory.exists():
-        os.makedirs(mesh_directory, exist_ok=True)
+    models = [Model.ADCIRC]
+
+    configurations = {}
+    for configuration in REQUIRED_CONFIGURATIONS:
+        filename = output_directory / configuration.name
+        if not filename.exists():
+            raise FileNotFoundError(f'missing required configuration file "{filename}"')
+        configurations[configuration.name] = configuration.from_file(filename)
+
+    for configuration in SUPPLEMENTARY_CONFIGURATIONS:
+        filename = output_directory / configuration.name
+        if filename.exists():
+            configurations[configuration.name] = configuration.from_file(filename)
+
+    if not isinstance(fort14_filename, Path):
+        fort14_filename = Path(fort14_filename)
+
+    if not fort14_filename.exists():
+        os.makedirs(fort14_filename, exist_ok=True)
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
 
@@ -100,17 +209,6 @@ def write_adcirc_configurations(
     if wall_clock_time is None:
         wall_clock_time = timedelta(minutes=30)
 
-    if model_timestep is not None:
-        if not isinstance(model_timestep, timedelta):
-            model_timestep = timedelta(seconds=model_timestep)
-
-    if gwce_solution_scheme is not None:
-        if isinstance(gwce_solution_scheme, str):
-            try:
-                gwce_solution_scheme = GWCE_SOLUTION_SCHEME(gwce_solution_scheme)
-            except KeyError:
-                gwce_solution_scheme = GWCESolutionScheme[gwce_solution_scheme]
-
     if source_filename is None:
         source_filename = platform.value['source_filename']
 
@@ -125,8 +223,8 @@ def write_adcirc_configurations(
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
-    fort13_filename = mesh_directory / 'fort.13'
-    fort14_filename = mesh_directory / 'fort.14'
+    fort13_filename = fort14_filename / 'fort.13'
+    fort14_filename = fort14_filename / 'fort.14'
     if not fort14_filename.exists():
         raise FileNotFoundError(f'mesh XY not found at ' f'"{fort14_filename}"')
 
@@ -366,17 +464,11 @@ def write_adcirc_configurations(
         server_config=slurm,
     )
 
-    if model_timestep is not None:
-        driver.timestep = model_timestep / timedelta(seconds=1)
-
-    if gwce_solution_scheme is not None:
-        driver.gwce_solution_scheme = gwce_solution_scheme.value
-
     # spinup_start = spinup.start_time if spinup is not None else None
     # spinup_end = spinup.end_time if spinup is not None else None
     spinup_interval = spinup.interval if spinup is not None else None
 
-    stations_filename = mesh_directory / 'stations.txt'
+    stations_filename = fort14_filename / 'stations.txt'
     if stations_filename.exists():
         driver.import_stations(stations_filename)
         driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval)

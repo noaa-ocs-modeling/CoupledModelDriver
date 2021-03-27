@@ -34,45 +34,18 @@ class GWCESolutionScheme(Enum):
     semi_implicit_legacy = 'semi-implicit-legacy'
 
 
-class Configuration(ABC):
-    def __init__(self, name: str, fields: {str: type}):
+class ConfigurationJSON(ABC):
+    name: str = 'configure.json'
+
+    def __init__(self, fields: {str: type}):
         if fields is None:
             fields = {}
-        fields['name'] = str
         self.__fields = fields
         self.__configuration = {field: None for field in fields}
-
-        self['name'] = name
 
     @property
     def fields(self) -> {str: type}:
         return self.__fields
-
-    @property
-    def configuration(self) -> {str: Any}:
-        return self.__configuration
-
-    def write(self, filename: PathLike = None, overwrite: bool = False):
-        """
-        Write script to file.
-
-        :param filename: path to output file
-        :param overwrite: whether to overwrite existing file
-        """
-
-        if filename is None:
-            filename = self['output_directory']
-        elif not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / f'configure_{self["name"].lower()}.json'
-
-        if overwrite or not filename.exists():
-            with open(filename, 'w') as file:
-                json.dump(self.configuration, file)
-        else:
-            raise FileExistsError(f'file exists at {filename}')
 
     def update(self, configuration: {str: Any}):
         for key, value in configuration.items():
@@ -86,6 +59,11 @@ class Configuration(ABC):
                 else:
                     return
             self[key] = value
+
+    def update_from_file(self, filename: PathLike):
+        with open(filename)as file:
+            configuration = json.load(file)
+        self.update(configuration)
 
     def __contains__(self, key: str) -> bool:
         return key in self.configuration
@@ -110,12 +88,43 @@ class Configuration(ABC):
         )
         return f'{self.__class__.__name__}({configuration_string})'
 
-    @classmethod
-    def from_dict(cls, configuration: {str: Any}) -> 'Configuration':
-        return cls(**configuration)
+    @property
+    def configuration(self) -> {str: Any}:
+        return self.__configuration
+
+    def to_dict(self) -> {str: Any}:
+        return self.configuration
 
     @classmethod
-    def from_file(cls, filename: PathLike) -> 'Configuration':
+    def from_dict(cls, configuration: {str: Any}) -> 'ConfigurationJSON':
+        return cls(**configuration)
+
+    def to_file(self, filename: PathLike = None, overwrite: bool = False):
+        """
+        Write script to file.
+
+        :param filename: path to output file
+        :param overwrite: whether to overwrite existing file
+        """
+
+        if filename is None:
+            filename = self['output_directory']
+        elif not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / self.name
+
+        configuration = {key: convert_value(value, str) for key, value in self.configuration.items()}
+
+        if overwrite or not filename.exists():
+            with open(filename, 'w') as file:
+                json.dump(configuration, file)
+        else:
+            raise FileExistsError(f'file exists at {filename}')
+
+    @classmethod
+    def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
         if not isinstance(filename, Path):
             filename = Path(filename)
 
@@ -125,7 +134,9 @@ class Configuration(ABC):
         return cls(**configuration)
 
 
-class SlurmConfiguration(Configuration):
+class SlurmJSON(ConfigurationJSON):
+    name = 'configure_slurm.json'
+
     def __init__(
         self,
         account: str,
@@ -144,7 +155,6 @@ class SlurmConfiguration(Configuration):
         nodes: int = None,
     ):
         super().__init__(
-            name='Slurm',
             fields={
                 'account': str,
                 'tasks': int,
@@ -178,14 +188,13 @@ class SlurmConfiguration(Configuration):
         self['launcher'] = launcher
         self['nodes'] = nodes
 
-    @property
-    def slurm_configuration(self) -> SlurmConfig:
+    def to_adcircpy(self) -> SlurmConfig:
         return SlurmConfig(
             account=self['account'],
             ntasks=self['tasks'],
             partition=self['partition'],
             walltime=self['job_duration'],
-            filename=None,
+            filename=self['filename'] if 'filename' in self else None,
             run_directory=self['run_directory'],
             run_name=self['run_name'],
             mail_type=self['email_type'],
@@ -198,8 +207,31 @@ class SlurmConfiguration(Configuration):
             nodes=self['nodes'],
         )
 
+    @classmethod
+    def from_adcircpy(cls, slurm_config: SlurmConfig):
+        instance = cls(
+            account=slurm_config._account,
+            tasks=slurm_config._slurm_ntasks,
+            partition=slurm_config._partition,
+            job_duration=slurm_config._walltime,
+            run_directory=slurm_config._run_directory,
+            run_name=slurm_config._run_name,
+            email_type=slurm_config._mail_type,
+            email_address=slurm_config._mail_user,
+            log_filename=slurm_config._log_filename,
+            modules=slurm_config._modules,
+            path_prefix=slurm_config._path_prefix,
+            extra_commands=slurm_config._extra_commands,
+            launcher=slurm_config._launcher,
+            nodes=slurm_config._nodes,
+        )
 
-class NEMSConfiguration(Configuration):
+        instance['filename'] = slurm_config._filename
+
+
+class NEMSJSON(ConfigurationJSON):
+    name = 'configure_nems.json'
+
     def __init__(
         self,
         executable_path: PathLike,
@@ -212,7 +244,6 @@ class NEMSConfiguration(Configuration):
         sequence: [str] = None,
     ):
         super().__init__(
-            name='NEMS',
             fields={
                 'executable_path': Path,
                 'modeled_start_time': datetime,
@@ -234,8 +265,7 @@ class NEMSConfiguration(Configuration):
         self['mediations'] = mediations
         self['sequence'] = sequence
 
-    @property
-    def modeling_system(self) -> ModelingSystem:
+    def to_nemspy(self) -> ModelingSystem:
         modeling_system = ModelingSystem(
             start_time=self['modeled_start_time'],
             end_time=self['modeled_end_time'],
@@ -251,16 +281,34 @@ class NEMSConfiguration(Configuration):
 
         return modeling_system
 
+    @classmethod
+    def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
+        if executable_path is None:
+            executable_path = 'NEMS.x'
+        return cls(
+            executable_path=executable_path,
+            modeled_start_time=modeling_system.start_time,
+            modeled_end_time=modeling_system.end_time,
+            modeled_timestep=modeling_system.interval,
+            models=modeling_system.models,
+            connections=modeling_system.connections,
+            sequence=modeling_system.sequence,
+        )
 
-class ModelConfiguration(Configuration):
+
+class ModelJSON(ConfigurationJSON):
+    name = 'configure_model.json'
+
     def __init__(self, model: Model, fields: {str: type}):
         if not isinstance(model, Model):
             model = Model[str(model).lower()]
         self.model = model
-        super().__init__(name=self.model.value, fields=fields)
+        super().__init__(fields=fields)
 
 
-class ADCIRCConfiguration(ModelConfiguration):
+class ADCIRCJSON(ModelJSON):
+    name = 'configure_adcirc.json'
+
     def __init__(
         self,
         adcprep_executable_path: PathLike,
@@ -279,7 +327,7 @@ class ADCIRCConfiguration(ModelConfiguration):
         use_smagorinsky: bool = None,
         use_baroclinicity: bool = None,
         forcings: [Forcing] = None,
-        slurm_configuration: SlurmConfiguration = None,
+        slurm_configuration: SlurmJSON = None,
     ):
         if tidal_spinup_timestep is None:
             tidal_spinup_timestep = modeled_timestep
@@ -357,7 +405,7 @@ class ADCIRCConfiguration(ModelConfiguration):
             start_date=self['modeled_start_time'],
             end_date=self['modeled_end_time'],
             spinup_time=self['tidal_spinup_duration'],
-            server_config=self.slurm_configuration,
+            server_config=self.slurm_configuration.to_adcircpy() if self.slurm_configuration is not None else None,
         )
 
         if self['modeled_timestep'] is not None:
@@ -399,7 +447,9 @@ class ADCIRCConfiguration(ModelConfiguration):
         return driver
 
 
-class ForcingConfiguration(ModelConfiguration, ABC):
+class ForcingJSON(ModelJSON, ABC):
+    name = 'configure_forcing.json'
+
     def __init__(
         self, model: Model, resource: PathLike, fields: {str: type} = None,
     ):
@@ -421,7 +471,9 @@ class ForcingConfiguration(ModelConfiguration, ABC):
         return self.model.value
 
 
-class TidalForcingConfiguration(ForcingConfiguration):
+class TidalForcingJSON(ForcingJSON):
+    name = 'configure_tidal_forcing.json'
+
     def __init__(
         self,
         resource: PathLike = None,
@@ -456,7 +508,9 @@ class TidalForcingConfiguration(ForcingConfiguration):
         return tides
 
 
-class ATMESHForcingConfiguration(ForcingConfiguration):
+class ATMESHForcingJSON(ForcingJSON):
+    name = 'configure_atmesh.json'
+
     def __init__(
         self,
         resource: PathLike,
@@ -479,7 +533,9 @@ class ATMESHForcingConfiguration(ForcingConfiguration):
         )
 
 
-class WW3DATAForcingConfiguration(ForcingConfiguration):
+class WW3DATAForcingJSON(ForcingJSON):
+    name = 'configure_ww3data.json'
+
     def __init__(
         self,
         resource: PathLike,
@@ -502,23 +558,25 @@ class WW3DATAForcingConfiguration(ForcingConfiguration):
         )
 
 
-class CoupledModelDriverConfiguration(Configuration):
+class CoupledModelDriverJSON(ConfigurationJSON):
+    name = 'configure_coupledmodeldriver.json'
+
     def __init__(
         self,
         platform: Platform,
         output_directory: PathLike,
         models: [Model],
-        runs: {str: (str, Any)},
-        verbose: bool = False,
+        runs: {str: (str, Any)} = None,
     ):
+        if runs is None:
+            runs = {'run_1': (None, None)}
+
         super().__init__(
-            name='CoupledModelDriver',
             fields={
                 'platform': Platform,
                 'output_directory': Path,
                 'models': [Model],
                 'runs': {str: (str, Any)},
-                'verbose': bool,
             },
         )
 
@@ -526,4 +584,3 @@ class CoupledModelDriverConfiguration(Configuration):
         self['output_directory'] = output_directory
         self['models'] = models
         self['runs'] = runs
-        self['verbose'] = verbose
