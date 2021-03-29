@@ -91,9 +91,11 @@ def create_symlink(
     if symlink_filename.is_symlink():
         LOGGER.debug(f'removing symlink {symlink_filename}')
         os.remove(symlink_filename)
-
     symlink_filename = symlink_filename.parent.absolute().resolve() / symlink_filename.name
-    source_filename = source_filename.absolute().resolve()
+
+    if not source_filename.is_symlink():
+        source_filename = source_filename.resolve()
+    source_filename = source_filename.absolute()
 
     starting_directory = None
     if relative:
