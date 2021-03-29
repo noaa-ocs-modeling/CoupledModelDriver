@@ -1,11 +1,15 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from adcircpy import Tides
+from adcircpy.forcing.tides.tides import TidalSource
+from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
+from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 
-from coupledmodeldriver.adcirc import generate_barebones_configuration
+from coupledmodeldriver.adcirc import write_forcings_json, write_required_json
 # paths to compiled `NEMS.x` and `adcprep`
 from coupledmodeldriver.platforms import Platform
 
@@ -60,6 +64,13 @@ if __name__ == '__main__':
         'OCN',
     ]
 
+    # create forcing objects
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=None)
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
+    forcings = [tidal_forcing, wind_forcing, wave_forcing]
+
     generate_barebones_configuration(
         output_directory=OUTPUT_DIRECTORY,
         fort13_filename=MESH_DIRECTORY / 'fort.13',
@@ -69,6 +80,18 @@ if __name__ == '__main__':
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
         tidal_spinup_duration=tidal_spinup_duration,
+        forcings=forcings,
         runs=runs,
         job_duration=job_duration,
+        verbose=True,
     )
+
+
+
+    # create forcing objects
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=None)
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
+    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
+
+    write_forcings_json([tidal_forcing, wind_forcing, wave_forcing])

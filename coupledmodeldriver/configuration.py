@@ -15,6 +15,7 @@ from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model import ModelEntry
 
+from coupledmodeldriver.job_script import SlurmEmailType
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.utilities import convert_value, get_logger
 
@@ -145,7 +146,7 @@ class SlurmJSON(ConfigurationJSON):
         job_duration: timedelta = None,
         run_directory: PathLike = None,
         run_name: str = None,
-        email_type: str = None,
+        email_type: SlurmEmailType = None,
         email_address: str = None,
         log_filename: PathLike = None,
         modules: [str] = None,
@@ -162,7 +163,7 @@ class SlurmJSON(ConfigurationJSON):
                 'job_duration': timedelta,
                 'run_directory': Path,
                 'run_name': str,
-                'email_type': str,
+                'email_type': SlurmEmailType,
                 'email_address': str,
                 'log_filename': Path,
                 'modules': [str],
@@ -187,6 +188,10 @@ class SlurmJSON(ConfigurationJSON):
         self['extra_commands'] = extra_commands
         self['launcher'] = launcher
         self['nodes'] = nodes
+
+        if self['email_type'] is None:
+            if self['email_address'] is not None:
+                self['email_type'] = SlurmEmailType.all
 
     def to_adcircpy(self) -> SlurmConfig:
         return SlurmConfig(
@@ -323,12 +328,35 @@ class ADCIRCJSON(ModelJSON):
         stations_file_path: PathLike = None,
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
+        forcings: [Forcing] = None,
         gwce_solution_scheme: str = None,
         use_smagorinsky: bool = None,
         use_baroclinicity: bool = None,
-        forcings: [Forcing] = None,
+        source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
     ):
+        """
+
+        :param adcprep_executable_path:
+        :param modeled_start_time:
+        :param modeled_end_time:
+        :param modeled_timestep:
+        :param fort_13_path:
+        :param fort_14_path:
+        :param write_surface_output:
+        :param write_station_output:
+        :param use_original_mesh:
+        :param stations_file_path:
+        :param tidal_spinup_duration:
+        :param tidal_spinup_timestep:
+        :param forcings:
+        :param gwce_solution_scheme:
+        :param use_smagorinsky:
+        :param use_baroclinicity:
+        :param source_filename:
+        :param slurm_configuration:
+        """
+
         if tidal_spinup_timestep is None:
             tidal_spinup_timestep = modeled_timestep
 
@@ -353,6 +381,7 @@ class ADCIRCJSON(ModelJSON):
                 'gwce_solution_scheme': GWCESolutionScheme,
                 'use_smagorinsky': bool,
                 'use_baroclinicity': bool,
+                'source_filename': Path,
             },
         )
 
@@ -371,6 +400,7 @@ class ADCIRCJSON(ModelJSON):
         self['gwce_solution_scheme'] = gwce_solution_scheme
         self['use_smagorinsky'] = use_smagorinsky
         self['use_baroclinicity'] = use_baroclinicity
+        self['source_filename'] = source_filename
 
         self.forcings = forcings
         self.slurm_configuration = slurm_configuration
@@ -494,7 +524,7 @@ class TidalForcingJSON(ForcingJSON):
 
     @property
     def forcing(self) -> Forcing:
-        tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'], )
+        tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'])
 
         constituents = [constituent.upper() for constituent in self['constituents']]
         if 'ALL' in constituents:
@@ -506,6 +536,14 @@ class TidalForcingJSON(ForcingJSON):
                 tides.use_constituent(constituent)
 
         return tides
+
+    @classmethod
+    def from_adcircpy(cls, forcing: Tides) -> 'TidalForcingJSON':
+        return cls(
+            resource=forcing.tidal_dataset.path,
+            tidal_source=forcing.tidal_source,
+            constituents=forcing.active_constituents,
+        )
 
 
 class ATMESHForcingJSON(ForcingJSON):
@@ -532,6 +570,14 @@ class ATMESHForcingJSON(ForcingJSON):
             nws=self['NWS'], interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
         )
 
+    @classmethod
+    def from_adcircpy(cls, forcing: AtmosphericMeshForcing, filename: PathLike) -> 'ATMESHForcingJSON':
+        return cls(
+            resource=filename,
+            nws=forcing.NWS,
+            modeled_timestep=forcing.interval,
+        )
+
 
 class WW3DATAForcingJSON(ForcingJSON):
     name = 'configure_ww3data.json'
@@ -555,6 +601,14 @@ class WW3DATAForcingJSON(ForcingJSON):
     def forcing(self) -> Forcing:
         return WaveWatch3DataForcing(
             nrs=self['nrs'], interval_seconds=self['modeled_timestep'],
+        )
+
+    @classmethod
+    def from_adcircpy(cls, forcing: WaveWatch3DataForcing, filename: PathLike) -> 'WW3DATAForcingJSON':
+        return cls(
+            resource=filename,
+            nrs=forcing.NRS,
+            modeled_timestep=forcing.interval,
         )
 
 
