@@ -129,10 +129,10 @@ def write_adcirc_configurations(
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
     original_fort13_filename = mesh_directory / 'fort.13'
-    fort14_filename = mesh_directory / 'fort.14'
-    if not fort14_filename.exists():
+    original_fort14_filename = mesh_directory / 'fort.14'
+    if not original_fort14_filename.exists():
         raise FileNotFoundError(f'mesh XY not found at '
-                                f'"{fort14_filename}"')
+                                f'"{original_fort14_filename}"')
 
     if spinup is not None and isinstance(spinup, timedelta):
         LOGGER.debug(f'setting spinup to {spinup}')
@@ -145,8 +145,8 @@ def write_adcirc_configurations(
         )
 
     # open mesh file
-    LOGGER.info(f'opening mesh "{fort14_filename}"')
-    mesh = AdcircMesh.open(fort14_filename, crs=4326)
+    LOGGER.info(f'opening mesh "{original_fort14_filename}"')
+    mesh = AdcircMesh.open(original_fort14_filename, crs=4326)
 
     LOGGER.debug(f'adding {len(forcings)} forcing(s) to mesh')
     for forcing in forcings:
@@ -385,11 +385,12 @@ def write_adcirc_configurations(
                                        spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
+    local_fort14_filename = output_directory / 'fort.14'
     if use_original_mesh:
-        LOGGER.info(f'using original mesh from "{fort14_filename}"')
+        LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
+        create_symlink(original_fort14_filename, local_fort14_filename)
     else:
-        fort14_filename = output_directory / 'fort.14'
-        LOGGER.info(f'rewriting original mesh to "{fort14_filename}"')
+        LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
         driver.write(
             output_directory,
             overwrite=overwrite,
@@ -416,7 +417,7 @@ def write_adcirc_configurations(
     if use_original_mesh:
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
-    create_symlink(fort14_filename, coldstart_directory / 'fort.14')
+    create_symlink(local_fort14_filename, coldstart_directory / 'fort.14')
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -441,7 +442,7 @@ def write_adcirc_configurations(
         if use_original_mesh:
             if original_fort13_filename.exists():
                 create_symlink(original_fort13_filename, run_directory / 'fort.13')
-        create_symlink(fort14_filename, run_directory / 'fort.14')
+        create_symlink(local_fort14_filename, run_directory / 'fort.14')
 
     LOGGER.debug(f'writing ensemble setup script '
                  f'"{setup_script_filename.name}"')
