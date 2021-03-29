@@ -240,7 +240,7 @@ def write_adcirc_configurations(
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
     if not original_fort14_filename.exists():
-        raise FileNotFoundError(f'mesh XY not found at ' f'"{original_fort14_filename}"')
+        raise FileNotFoundError(f'mesh XY not found at "{original_fort14_filename}"')
 
     if tidal_spinup_duration is not None:
         LOGGER.debug(f'setting spinup to {tidal_spinup_duration}')
@@ -268,7 +268,7 @@ def write_adcirc_configurations(
         for attribute_name in mesh.get_nodal_attribute_names():
             mesh.set_nodal_attribute_state(attribute_name, coldstart=True, hotstart=True)
     else:
-        LOGGER.warning(f'mesh values (nodal attributes) not found at ' f'"{original_fort13_filename}"')
+        LOGGER.warning(f'mesh values (nodal attributes) not found at "{original_fort13_filename}"')
 
     if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
         LOGGER.debug(f'generating tau0 in mesh')
@@ -345,7 +345,6 @@ def write_adcirc_configurations(
     adcprep_run_name = 'ADC_MESH_DECOMP'
     adcirc_coldstart_run_name = 'ADC_COLD_RUN'
     adcirc_hotstart_run_name = 'ADC_HOT_RUN'
-    adcircpy_run_name = 'ADCIRCPY'
 
     mesh_partitioning_job_script_filename = (
         output_directory / f'job_adcprep_{platform.name.lower()}.job'
@@ -460,27 +459,12 @@ def write_adcirc_configurations(
         LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
         hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
-    slurm = SlurmConfig(
-        account=slurm_account,
-        ntasks=nems.processors,
-        run_name=adcircpy_run_name,
-        partition=partition,
-        walltime=job_duration,
-        nodes=coldstart_run_script.slurm_nodes,
-        mail_type='all' if email_address is not None else None,
-        mail_user=email_address,
-        log_filename=f'{adcircpy_run_name}.out.log',
-        modules=[],
-        launcher=coldstart_run_script.launcher,
-    )
-
     # instantiate AdcircRun object.
     driver = AdcircRun(
         mesh=mesh,
         start_date=nems.start_time,
         end_date=nems.end_time,
         spinup_time=timedelta(days=5),
-        server_config=slurm,
     )
 
     # spinup_start = spinup.start_time if spinup is not None else None
@@ -500,17 +484,30 @@ def write_adcirc_configurations(
     driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
     # spinup_start=spinup_start, spinup_end=spinup_end)
 
+    local_fort14_filename = output_directory / 'fort.14'
     if use_original_mesh:
-        LOGGER.info(f'using original mesh "{original_fort14_filename}"')
+        LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
+        create_symlink(original_fort14_filename, local_fort14_filename)
     else:
-        LOGGER.info(f'rewriting original mesh "{original_fort14_filename}"')
+        LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
+        driver.write(
+            output_directory,
+            overwrite=overwrite,
+            fort13=None,
+            fort14='fort.14',
+            fort15=None,
+            fort22=None,
+            coldstart=None,
+            hotstart=None,
+            driver=None,
+        )
 
     LOGGER.debug(f'writing coldstart configuration to ' f'"{coldstart_directory}"')
     driver.write(
         coldstart_directory,
         overwrite=overwrite,
         fort13=None if use_original_mesh else 'fort.13',
-        fort14=None if use_original_mesh else 'fort.14',
+        fort14=None,
         coldstart='fort.15',
         hotstart=None,
         driver=None,
@@ -518,7 +515,7 @@ def write_adcirc_configurations(
     if use_original_mesh:
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
-        create_symlink(original_fort14_filename, coldstart_directory / 'fort.14')
+    create_symlink(local_fort14_filename, coldstart_directory / 'fort.14')
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -532,16 +529,16 @@ def write_adcirc_configurations(
         driver.write(
             run_directory,
             overwrite=overwrite,
-            coldstart=None,
             fort13=None if use_original_mesh else 'fort.13',
-            fort14=None if use_original_mesh else 'fort.14',
+            fort14=None,
+            coldstart=None,
             hotstart='fort.15',
             driver=None,
         )
         if use_original_mesh:
             if original_fort13_filename.exists():
                 create_symlink(original_fort13_filename, run_directory / 'fort.13')
-            create_symlink(original_fort14_filename, run_directory / 'fort.14')
+        create_symlink(local_fort14_filename, run_directory / 'fort.14')
 
     LOGGER.debug(f'writing ensemble setup script ' f'"{setup_script_filename.name}"')
     setup_script = EnsembleSetupScript(platform)

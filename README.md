@@ -110,12 +110,12 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 📦 hera_shinnecock_ike/
 ┣ 📂 coldstart/
 ┃  ┣ 📜 fort.13
-┃  ┣ 📜 fort.14
+┃  ┣ 🔗 fort.14 -> ../fort.14
 ┃  ┗ 📜 fort.15
 ┣ 📂 runs/
 ┃  ┗ 📂 test_case_1/
 ┃    ┣ 📜 fort.13
-┃    ┣ 📜 fort.14
+┃    ┣ 🔗 fort.14 -> ../../fort.14
 ┃    ┗ 📜 fort.15
 ┣ 📜 nems.configure.coldstart
 ┣ 📜 nems.configure.hotstart
@@ -123,6 +123,7 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┣ 📜 config.rc.hotstart
 ┣ 📜 model_configure.coldstart
 ┣ 📜 model_configure.hotstart
+┣ 📜 fort.14
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
