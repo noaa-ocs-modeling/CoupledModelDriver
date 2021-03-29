@@ -154,8 +154,11 @@ def write_adcirc_configurations(
     for forcing in forcings:
         mesh.add_forcing(forcing)
 
+    LOGGER.info(f'reading attributes from "{original_fort13_filename}"')
     if original_fort13_filename.exists():
         mesh.import_nodal_attributes(original_fort13_filename)
+        for attribute_name in mesh.get_nodal_attribute_names():
+            mesh.set_nodal_attribute_state(attribute_name, coldstart=True, hotstart=True)
     else:
         LOGGER.warning(f'mesh values (nodal attributes) not found at '
                        f'"{original_fort13_filename}"')
