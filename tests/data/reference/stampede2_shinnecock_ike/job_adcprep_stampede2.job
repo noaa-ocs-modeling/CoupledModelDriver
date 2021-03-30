@@ -7,11 +7,10 @@
 #SBATCH --output=ADC_MESH_DECOMP.out.log
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH --time=00:30:00
+#SBATCH --time=06:00:00
 #SBATCH --partition=development
 
 set -e
 
-source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede
-ibrun adcprep --np 1020 --partmesh
-ibrun adcprep --np 1020 --prepall
+ibrun adcprep --np 1022 --partmesh
+ibrun adcprep --np 1022 --prepall
