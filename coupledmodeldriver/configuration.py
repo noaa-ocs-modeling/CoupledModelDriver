@@ -18,9 +18,7 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, ModelEntry, \
 
 from .job_script import SlurmEmailType
 from .platforms import Platform
-from .utilities import convert_to_json, convert_value, get_logger
-
-LOGGER = get_logger('configuration')
+from .utilities import LOGGER, convert_to_json, convert_value
 
 
 class Model(Enum):
