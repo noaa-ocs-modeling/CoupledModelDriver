@@ -9,7 +9,8 @@ from coupledmodeldriver.configuration import (
     ADCIRCJSON,
     ATMESHForcingJSON,
     CoupledModelDriverJSON,
-    Model, NEMSJSON,
+    Model,
+    NEMSJSON,
     SlurmJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
@@ -18,12 +19,10 @@ from coupledmodeldriver.platforms import Platform
 
 
 def test_update():
-    configuration = SlurmJSON(
-        account='coastal', tasks=602, job_duration=timedelta(hours=6),
-    )
+    configuration = SlurmJSON(account='coastal', tasks=602, job_duration=timedelta(hours=6), )
 
     configuration.update(
-        {'email_address': 'test@email.gov', 'test_entry_1': 'test value 1', }
+        {'email_address': 'test@email.gov', 'test_entry_1': 'test value 1'}
     )
 
     configuration['test_entry_2'] = 2
@@ -119,7 +118,7 @@ def test_adcirc():
 def test_tidal():
     configuration = TidalForcingJSON(tidal_source='HAMTIDE', constituents='all', )
 
-    assert list(configuration.forcing.active_constituents) == [
+    assert list(configuration.adcircpy_forcing.active_constituents) == [
         'Q1',
         'O1',
         'P1',
@@ -132,7 +131,7 @@ def test_tidal():
 
     configuration['constituents'] = 'major'
 
-    assert list(configuration.forcing.active_constituents) == [
+    assert list(configuration.adcircpy_forcing.active_constituents) == [
         'Q1',
         'O1',
         'P1',
@@ -147,13 +146,13 @@ def test_tidal():
     configuration['resource'] = 'nonesistant/path/to/h_tpxo9.nc'
 
     with pytest.raises(FileNotFoundError):
-        configuration.forcing
+        configuration.adcircpy_forcing
 
     configuration['tidal_source'] = 'HAMTIDE'
     configuration['resource'] = None
     configuration['constituents'] = ['q1', 'p1', 'm2']
 
-    assert list(configuration.forcing.active_constituents) == ['Q1', 'P1', 'M2']
+    assert list(configuration.adcircpy_forcing.active_constituents) == ['Q1', 'P1', 'M2']
 
 
 def test_atmesh():
@@ -184,10 +183,7 @@ def test_ww3data():
 
 def test_coupledmodeldriver():
     configuration = CoupledModelDriverJSON(
-        platform=Platform.HERA,
-        output_directory='.',
-        models=['ADCIRC'],
-        runs=None,
+        platform=Platform.HERA, output_directory='.', models=['ADCIRC'], runs=None,
     )
 
     assert configuration.configuration == {

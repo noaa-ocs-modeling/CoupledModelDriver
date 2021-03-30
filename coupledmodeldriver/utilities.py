@@ -6,7 +6,7 @@ from os import PathLike
 from pathlib import Path
 import shutil
 import sys
-from typing import Any, Collection, Iterable, Mapping
+from typing import Any, Collection, Iterable, Mapping, Union
 
 from dateutil.parser import parse as parse_date
 import numpy
@@ -178,15 +178,49 @@ def convert_value(value: Any, to_type: type) -> Any:
             except (KeyError, ValueError):
                 value = to_type(value)
     elif not isinstance(value, to_type) and value is not None:
+        if isinstance(value, timedelta):
+            value /= timedelta(seconds=1)
         if issubclass(to_type, bool):
-            if isinstance(value, str):
-                value = eval(f'{value}')
-            else:
-                value = True if value else False
+            value = eval(f'{value}')
         elif issubclass(to_type, datetime):
             value = parse_date(value)
         elif issubclass(to_type, timedelta):
-            value = timedelta(seconds=float(value))
+            try:
+                time = datetime.strptime(value, '%H:%M:%S')
+                value = timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
+            except:
+                value = timedelta(seconds=float(value))
+        elif isinstance(value, str):
+            try:
+                value = to_type.from_string(value)
+            except:
+                value = to_type(value)
         else:
             value = to_type(value)
+    return value
+
+
+def convert_to_json(value: Any) -> Union[str, float, int, dict, list, bool]:
+    if type(value) not in (float, int, bool, str):
+        if isinstance(value, Enum):
+            value = value.name
+        if isinstance(value, Collection) and not isinstance(value, str):
+            if isinstance(value, Mapping):
+                value = {
+                    convert_to_json(key): convert_to_json(entry)
+                    for key, entry in value.items()
+                }
+            else:
+                value = [convert_to_json(entry) for entry in value]
+        else:
+            try:
+                value = convert_value(value, float)
+            except:
+                try:
+                    value = convert_value(value, int)
+                except:
+                    try:
+                        value = convert_value(value, bool)
+                    except:
+                        value = convert_value(value, str)
     return value

@@ -14,18 +14,18 @@ from coupledmodeldriver.utilities import make_executable
 
 
 class SlurmEmailType(Enum):
-    none = 'NONE'
-    begin = 'BEGIN'
-    end = 'END'
-    fail = 'FAIL'
-    requeue = 'REQUEUE'
-    stage_out = 'STAGE_OUT'  # burst buffer stage out and teardown completed
-    all = 'ALL'  # equivalent to BEGIN, END, FAIL, REQUEUE, and STAGE_OUT)
-    time_limit = 'TIME_LIMIT'
-    time_limit_90 = 'TIME_LIMIT_90'  # reached 90 percent of time limit
-    time_limit_80 = 'TIME_LIMIT_80'  # reached 80 percent of time limit
-    time_limit_50 = 'TIME_LIMIT_50'  # reached 50 percent of time limit
-    array_tasks = 'ARRAY_TASKS'  # send emails for each array task
+    NONE = 'NONE'
+    BEGIN = 'BEGIN'
+    END = 'END'
+    FAIL = 'FAIL'
+    REQUEUE = 'REQUEUE'
+    STAGE_OUT = 'STAGE_OUT'  # burst buffer stage out and teardown completed
+    ALL = 'ALL'  # equivalent to BEGIN, END, FAIL, REQUEUE, and STAGE_OUT)
+    TIME_LIMIT = 'TIME_LIMIT'
+    TIME_LIMIT_90 = 'TIME_LIMIT_90'  # reached 90 percent of time limit
+    TIME_LIMIT_80 = 'TIME_LIMIT_80'  # reached 80 percent of time limit
+    TIME_LIMIT_50 = 'TIME_LIMIT_50'  # reached 50 percent of time limit
+    ARRAY_TASKS = 'ARRAY_TASKS'  # send emails for each array task
 
 
 class Script(ABC):
@@ -176,7 +176,7 @@ class JobScript(Script):
 
         if self.slurm_account is not None:
             lines.append(f'#SBATCH -A {self.slurm_account}')
-        if self.slurm_email_type not in (None, SlurmEmailType.none):
+        if self.slurm_email_type not in (None, SlurmEmailType.NONE):
             lines.append(f'#SBATCH --mail-type={self.slurm_email_type.value}')
             if self.slurm_email_address is not None and len(self.slurm_email_address) > 0:
                 lines.append(f'#SBATCH --mail-user={self.slurm_email_address}')
@@ -293,7 +293,7 @@ class AdcircSetupScript(Script):
 
         if self.fort67_filename is not None:
             commands.extend(
-                ['', f'ln -sf {self.fort67_filename} ./fort.67.nc', ]
+                ['', f'ln -sf {self.fort67_filename} ./fort.67.nc',]
             )
 
         super().__init__(commands)

@@ -17,7 +17,8 @@ from nemspy.model import ModelEntry
 
 from coupledmodeldriver.job_script import SlurmEmailType
 from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.utilities import convert_value, get_logger
+from coupledmodeldriver.utilities import convert_to_json, convert_value, \
+    get_logger
 
 LOGGER = get_logger('configuration')
 
@@ -37,10 +38,11 @@ class GWCESolutionScheme(Enum):
 
 class ConfigurationJSON(ABC):
     name: str = 'configure.json'
+    field_types: {str: type} = {}
 
-    def __init__(self, fields: {str: type}):
+    def __init__(self, fields: {str: type} = None):
         if fields is None:
-            fields = {}
+            fields = self.field_types
         self.__fields = fields
         self.__configuration = {field: None for field in fields}
 
@@ -62,7 +64,7 @@ class ConfigurationJSON(ABC):
             self[key] = value
 
     def update_from_file(self, filename: PathLike):
-        with open(filename)as file:
+        with open(filename) as file:
             configuration = json.load(file)
         self.update(configuration)
 
@@ -116,7 +118,10 @@ class ConfigurationJSON(ABC):
         if filename.is_dir():
             filename = filename / self.name
 
-        configuration = {key: convert_value(value, str) for key, value in self.configuration.items()}
+        configuration = convert_to_json(self.configuration)
+
+        if any(key != key.lower() for key in configuration):
+            configuration = {key.lower(): value for key, value in configuration.items()}
 
         if overwrite or not filename.exists():
             with open(filename, 'w') as file:
@@ -132,11 +137,33 @@ class ConfigurationJSON(ABC):
         with open(filename) as file:
             configuration = json.load(file)
 
+        configuration = {
+            key.lower(): convert_value(value, cls.field_types[key])
+            if key in cls.field_types else convert_to_json(value)
+            for key, value in configuration.items()
+        }
+
         return cls(**configuration)
 
 
 class SlurmJSON(ConfigurationJSON):
     name = 'configure_slurm.json'
+    field_types = {
+        'account': str,
+        'tasks': int,
+        'partition': str,
+        'job_duration': timedelta,
+        'run_directory': Path,
+        'run_name': str,
+        'email_type': SlurmEmailType,
+        'email_address': str,
+        'log_filename': Path,
+        'modules': [str],
+        'path_prefix': Path,
+        'extra_commands': [str],
+        'launcher': str,
+        'nodes': int,
+    }
 
     def __init__(
         self,
@@ -155,24 +182,7 @@ class SlurmJSON(ConfigurationJSON):
         launcher: str = None,
         nodes: int = None,
     ):
-        super().__init__(
-            fields={
-                'account': str,
-                'tasks': int,
-                'partition': str,
-                'job_duration': timedelta,
-                'run_directory': Path,
-                'run_name': str,
-                'email_type': SlurmEmailType,
-                'email_address': str,
-                'log_filename': Path,
-                'modules': [str],
-                'path_prefix': Path,
-                'extra_commands': [str],
-                'launcher': str,
-                'nodes': int,
-            },
-        )
+        super().__init__()
 
         self['account'] = account
         self['tasks'] = tasks
@@ -191,7 +201,7 @@ class SlurmJSON(ConfigurationJSON):
 
         if self['email_type'] is None:
             if self['email_address'] is not None:
-                self['email_type'] = SlurmEmailType.all
+                self['email_type'] = SlurmEmailType.ALL
 
     def to_adcircpy(self) -> SlurmConfig:
         return SlurmConfig(
@@ -236,6 +246,16 @@ class SlurmJSON(ConfigurationJSON):
 
 class NEMSJSON(ConfigurationJSON):
     name = 'configure_nems.json'
+    field_types = {
+        'executable_path': Path,
+        'modeled_start_time': datetime,
+        'modeled_end_time': datetime,
+        'modeled_timestep': timedelta,
+        'models': [ModelEntry],
+        'connections': [[str]],
+        'mediations': [str],
+        'sequence': [str],
+    }
 
     def __init__(
         self,
@@ -248,18 +268,7 @@ class NEMSJSON(ConfigurationJSON):
         mediations: [[str]] = None,
         sequence: [str] = None,
     ):
-        super().__init__(
-            fields={
-                'executable_path': Path,
-                'modeled_start_time': datetime,
-                'modeled_end_time': datetime,
-                'modeled_timestep': timedelta,
-                'models': [ModelEntry],
-                'connections': [[str]],
-                'mediations': [str],
-                'sequence': [str],
-            },
-        )
+        super().__init__()
 
         self['executable_path'] = executable_path
         self['modeled_start_time'] = modeled_start_time
@@ -304,7 +313,7 @@ class NEMSJSON(ConfigurationJSON):
 class ModelJSON(ConfigurationJSON):
     name = 'configure_model.json'
 
-    def __init__(self, model: Model, fields: {str: type}):
+    def __init__(self, model: Model, fields: {str: type} = None):
         if not isinstance(model, Model):
             model = Model[str(model).lower()]
         self.model = model
@@ -313,6 +322,23 @@ class ModelJSON(ConfigurationJSON):
 
 class ADCIRCJSON(ModelJSON):
     name = 'configure_adcirc.json'
+    field_types = {
+        'adcprep_executable_path': Path,
+        'modeled_start_time': datetime,
+        'modeled_end_time': datetime,
+        'modeled_timestep': timedelta,
+        'fort_13_path': Path,
+        'fort_14_path': Path,
+        'write_surface_output': bool,
+        'write_station_output': bool,
+        'use_original_mesh': bool,
+        'stations_file_path': Path,
+        'tidal_spinup_duration': timedelta,
+        'tidal_spinup_timestep': timedelta,
+        'gwce_solution_scheme': GWCESolutionScheme,
+        'use_smagorinsky': bool,
+        'source_filename': Path,
+    }
 
     def __init__(
         self,
@@ -322,39 +348,37 @@ class ADCIRCJSON(ModelJSON):
         modeled_timestep: timedelta,
         fort_13_path: PathLike,
         fort_14_path: PathLike,
-        write_surface_output: bool = True,
-        write_station_output: bool = False,
-        use_original_mesh: bool = False,
-        stations_file_path: PathLike = None,
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
         forcings: [Forcing] = None,
         gwce_solution_scheme: str = None,
         use_smagorinsky: bool = None,
-        use_baroclinicity: bool = None,
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
+        use_original_mesh: bool = False,
+        stations_file_path: PathLike = None,
+        write_surface_output: bool = True,
+        write_station_output: bool = False,
     ):
         """
 
-        :param adcprep_executable_path:
-        :param modeled_start_time:
-        :param modeled_end_time:
-        :param modeled_timestep:
-        :param fort_13_path:
-        :param fort_14_path:
-        :param write_surface_output:
-        :param write_station_output:
-        :param use_original_mesh:
-        :param stations_file_path:
-        :param tidal_spinup_duration:
-        :param tidal_spinup_timestep:
-        :param forcings:
-        :param gwce_solution_scheme:
-        :param use_smagorinsky:
-        :param use_baroclinicity:
-        :param source_filename:
-        :param slurm_configuration:
+        :param adcprep_executable_path: file path to `adcprep`
+        :param modeled_start_time: start time in model run
+        :param modeled_end_time: edn time in model run
+        :param modeled_timestep: time interval between model steps
+        :param fort_13_path: file path to `fort.13`
+        :param fort_14_path: file path to `fort.14`
+        :param tidal_spinup_duration: tidal spinup duration for ADCIRC coldstart
+        :param tidal_spinup_timestep: tidal spinup modeled time interval for ADCIRC coldstart
+        :param forcings: list of Forcing objects to apply to the mesh
+        :param gwce_solution_scheme: solution scheme (can be `explicit`, `semi-implicit`, or `semi-implicit-legacy`)
+        :param use_smagorinsky: whether to use Smagorinsky coefficient
+        :param source_filename: path to modulefile to `source`
+        :param slurm_configuration: Slurm configuration object
+        :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with `adcircpy`
+        :param stations_file_path: file path to stations file
+        :param write_surface_output: whether to write surface output to NetCDF
+        :param write_station_output: whether to write station output to NetCDF (only applicable if stations file exists)
         """
 
         if tidal_spinup_timestep is None:
@@ -363,27 +387,7 @@ class ADCIRCJSON(ModelJSON):
         if forcings is None:
             forcings = []
 
-        super().__init__(
-            model=Model.ADCIRC,
-            fields={
-                'adcprep_executable_path': Path,
-                'modeled_start_time': datetime,
-                'modeled_end_time': datetime,
-                'modeled_timestep': timedelta,
-                'fort_13_path': Path,
-                'fort_14_path': Path,
-                'write_surface_output': bool,
-                'write_station_output': bool,
-                'use_original_mesh': bool,
-                'stations_file_path': Path,
-                'tidal_spinup_duration': timedelta,
-                'tidal_spinup_timestep': timedelta,
-                'gwce_solution_scheme': GWCESolutionScheme,
-                'use_smagorinsky': bool,
-                'use_baroclinicity': bool,
-                'source_filename': Path,
-            },
-        )
+        super().__init__(model=Model.ADCIRC)
 
         self['adcprep_executable_path'] = adcprep_executable_path
         self['modeled_start_time'] = modeled_start_time
@@ -399,29 +403,52 @@ class ADCIRCJSON(ModelJSON):
         self['tidal_spinup_timestep'] = tidal_spinup_timestep
         self['gwce_solution_scheme'] = gwce_solution_scheme
         self['use_smagorinsky'] = use_smagorinsky
-        self['use_baroclinicity'] = use_baroclinicity
         self['source_filename'] = source_filename
 
         self.forcings = forcings
         self.slurm_configuration = slurm_configuration
 
     @property
+    def forcings(self) -> ['ForcingJSON']:
+        return self.__forcings
+
+    @forcings.setter
+    def forcings(self, forcings: ['ForcingJSON']):
+        for index, forcing in enumerate(forcings):
+            if isinstance(forcing, Forcing):
+                forcings[index] = ForcingJSON.from_adcircpy(forcing)
+        self.__forcings = forcings
+
+    @property
+    def slurm_configuration(self) -> [SlurmJSON]:
+        return self.__slurm_configuration
+
+    @slurm_configuration.setter
+    def slurm_configuration(self, slurm_configuration: SlurmJSON):
+        if isinstance(slurm_configuration, SlurmConfig):
+            SlurmJSON.from_adcircpy(slurm_configuration)
+        self.__slurm_configuration = slurm_configuration
+
+    @property
     def mesh(self) -> AdcircMesh:
         LOGGER.info(f'opening mesh "{self["fort_14_path"]}"')
-        mesh = AdcircMesh.open(self['fort_14_path'].absolute(), crs=4326)
-
-        if self['fort_13_path'] is not None and self['fort_13_path'].exists():
-            mesh.import_nodal_attributes(self['fort_13_path'])
-        else:
-            LOGGER.warning(
-                f'mesh values (nodal attributes) not found at ' f'"{self["fort_13_path"]}"'
-            )
+        mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for forcing in self.forcings:
             mesh.add_forcing(forcing)
 
-        if not mesh.has_nodal_attribute('primitive_weighting_in_' 'continuity_equation'):
+        if self['fort_13_path'] is not None:
+            LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
+            if self['fort_13_path'].exists():
+                mesh.import_nodal_attributes(self['fort_13_path'])
+                for attribute_name in mesh.get_nodal_attribute_names():
+                    mesh.set_nodal_attribute_state(attribute_name, coldstart=True, hotstart=True)
+            else:
+                LOGGER.warning('mesh values (nodal attributes) not found '
+                               f'at "{self["fort_13_path"]}"')
+
+        if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
             LOGGER.debug(f'generating tau0 in mesh')
             mesh.generate_tau0()
 
@@ -435,7 +462,9 @@ class ADCIRCJSON(ModelJSON):
             start_date=self['modeled_start_time'],
             end_date=self['modeled_end_time'],
             spinup_time=self['tidal_spinup_duration'],
-            server_config=self.slurm_configuration.to_adcircpy() if self.slurm_configuration is not None else None,
+            server_config=self.slurm_configuration.to_adcircpy()
+            if self.slurm_configuration is not None
+            else None,
         )
 
         if self['modeled_timestep'] is not None:
@@ -446,9 +475,6 @@ class ADCIRCJSON(ModelJSON):
 
         if self['use_smagorinsky'] is not None:
             driver.smagorinsky = self['use_smagorinsky']
-
-        if self['use_baroclinicity'] is not None:
-            driver.baroclinicity = self['use_baroclinicity']
 
         # spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
         # spinup_end = self['modeled_start_time']
@@ -479,6 +505,7 @@ class ADCIRCJSON(ModelJSON):
 
 class ForcingJSON(ModelJSON, ABC):
     name = 'configure_forcing.json'
+    field_types = {'resource': Path}
 
     def __init__(
         self, model: Model, resource: PathLike, fields: {str: type} = None,
@@ -486,7 +513,7 @@ class ForcingJSON(ModelJSON, ABC):
         if fields is None:
             fields = {}
 
-        fields.update({'resource': Path})
+        fields.update(self.field_types)
 
         super().__init__(model, fields)
 
@@ -494,15 +521,21 @@ class ForcingJSON(ModelJSON, ABC):
 
     @property
     @abstractmethod
-    def forcing(self) -> Forcing:
+    def adcircpy_forcing(self) -> Forcing:
         raise NotImplementedError
 
-    def name(self) -> str:
-        return self.model.value
+    def to_adcircpy(self) -> Forcing:
+        return self.adcircpy_forcing
+
+    @classmethod
+    @abstractmethod
+    def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
+        raise NotImplementedError
 
 
 class TidalForcingJSON(ForcingJSON):
     name = 'configure_tidal_forcing.json'
+    field_types = {'tidal_source': TidalSource, 'constituents': [str]}
 
     def __init__(
         self,
@@ -512,18 +545,16 @@ class TidalForcingJSON(ForcingJSON):
     ):
         if constituents is None:
             constituents = 'ALL'
+        elif not isinstance(constituents, str):
+            constituents = list(constituents)
 
-        super().__init__(
-            model=Model.TidalForcing,
-            resource=resource,
-            fields={'tidal_source': TidalSource, 'constituents': [str], },
-        )
+        super().__init__(model=Model.TidalForcing, resource=resource)
 
         self['tidal_source'] = tidal_source
         self['constituents'] = constituents
 
     @property
-    def forcing(self) -> Forcing:
+    def adcircpy_forcing(self) -> Forcing:
         tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'])
 
         constituents = [constituent.upper() for constituent in self['constituents']]
@@ -548,6 +579,7 @@ class TidalForcingJSON(ForcingJSON):
 
 class ATMESHForcingJSON(ForcingJSON):
     name = 'configure_atmesh.json'
+    field_types = {'nws': int, 'modeled_timestep': timedelta, }
 
     def __init__(
         self,
@@ -555,32 +587,29 @@ class ATMESHForcingJSON(ForcingJSON):
         nws: int = 17,
         modeled_timestep: timedelta = timedelta(hours=1),
     ):
-        super().__init__(
-            model=Model.ATMESH,
-            resource=resource,
-            fields={'NWS': int, 'modeled_timestep': timedelta, },
-        )
+        super().__init__(model=Model.ATMESH, resource=resource)
 
-        self['NWS'] = nws
+        self['nws'] = nws
         self['modeled_timestep'] = modeled_timestep
 
     @property
-    def forcing(self) -> Forcing:
+    def adcircpy_forcing(self) -> Forcing:
         return AtmosphericMeshForcing(
-            nws=self['NWS'], interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
+            filename=self['resource'],
+            nws=self['nws'],
+            interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
         )
 
     @classmethod
-    def from_adcircpy(cls, forcing: AtmosphericMeshForcing, filename: PathLike) -> 'ATMESHForcingJSON':
+    def from_adcircpy(cls, forcing: AtmosphericMeshForcing) -> 'ATMESHForcingJSON':
         return cls(
-            resource=filename,
-            nws=forcing.NWS,
-            modeled_timestep=forcing.interval,
+            resource=forcing.filename, nws=forcing.NWS, modeled_timestep=forcing.interval,
         )
 
 
 class WW3DATAForcingJSON(ForcingJSON):
     name = 'configure_ww3data.json'
+    field_types = {'nrs': int, 'modeled_timestep': timedelta}
 
     def __init__(
         self,
@@ -588,32 +617,34 @@ class WW3DATAForcingJSON(ForcingJSON):
         nrs: int = 5,
         modeled_timestep: timedelta = timedelta(hours=1),
     ):
-        super().__init__(
-            model=Model.WW3DATA,
-            resource=resource,
-            fields={'NRS': int, 'modeled_timestep': timedelta, },
-        )
+        super().__init__(model=Model.WW3DATA, resource=resource)
 
-        self['NRS'] = nrs
+        self['nrs'] = nrs
         self['modeled_timestep'] = modeled_timestep
 
     @property
-    def forcing(self) -> Forcing:
+    def adcircpy_forcing(self) -> Forcing:
         return WaveWatch3DataForcing(
-            nrs=self['nrs'], interval_seconds=self['modeled_timestep'],
+            filename=self['resource'],
+            nrs=self['nrs'],
+            interval_seconds=self['modeled_timestep'],
         )
 
     @classmethod
-    def from_adcircpy(cls, forcing: WaveWatch3DataForcing, filename: PathLike) -> 'WW3DATAForcingJSON':
+    def from_adcircpy(cls, forcing: WaveWatch3DataForcing) -> 'WW3DATAForcingJSON':
         return cls(
-            resource=filename,
-            nrs=forcing.NRS,
-            modeled_timestep=forcing.interval,
+            resource=forcing.filename, nrs=forcing.NRS, modeled_timestep=forcing.interval,
         )
 
 
 class CoupledModelDriverJSON(ConfigurationJSON):
     name = 'configure_coupledmodeldriver.json'
+    field_types = {
+        'platform': Platform,
+        'output_directory': Path,
+        'models': [Model],
+        'runs': {str: (str, Any)},
+    }
 
     def __init__(
         self,
@@ -625,14 +656,7 @@ class CoupledModelDriverJSON(ConfigurationJSON):
         if runs is None:
             runs = {'run_1': (None, None)}
 
-        super().__init__(
-            fields={
-                'platform': Platform,
-                'output_directory': Path,
-                'models': [Model],
-                'runs': {str: (str, Any)},
-            },
-        )
+        super().__init__()
 
         self['platform'] = platform
         self['output_directory'] = output_directory

@@ -3,15 +3,37 @@ from enum import Enum
 
 import pytest
 
-from coupledmodeldriver.utilities import convert_value
+from coupledmodeldriver.utilities import convert_to_json, convert_value
 
 
-class TestClass:
+class TestClass1:
     def __init__(self, value: int):
         self.value = value
 
-    def __eq__(self, other: 'TestClass') -> bool:
+    def __eq__(self, other: 'TestClass1') -> bool:
         return self.value == other.value
+
+
+class TestClass2:
+    def __init__(self, value: int):
+        self.value = value
+
+    def __str__(self) -> str:
+        return f'{self.value}'
+
+    def __int__(self) -> int:
+        return int(self.value)
+
+    def __float__(self) -> float:
+        return float(self.value)
+
+
+class TestClass3:
+    def __init__(self, value: int):
+        self.value = value
+
+    def __int__(self) -> int:
+        return int(self.value)
 
 
 class TestEnum(Enum):
@@ -49,7 +71,7 @@ def test_convert_value():
     result_12 = convert_value(datetime(2021, 3, 26), str)
     result_13 = convert_value('20210326', datetime)
 
-    result_14 = convert_value(5, TestClass)
+    result_14 = convert_value(5, TestClass1)
     result_15 = convert_value('test_1', TestEnum)
 
     result_16 = convert_value(None, str)
@@ -74,7 +96,29 @@ def test_convert_value():
     assert result_12 == '2021-03-26 00:00:00'
     assert result_13 == datetime(2021, 3, 26)
 
-    assert result_14 == TestClass(5)
+    assert result_14 == TestClass1(5)
     assert result_15 == TestEnum.test_1
 
     assert result_16 is None
+
+
+def test_convert_values_to_json():
+    result_1 = convert_to_json(5)
+    result_2 = convert_to_json('5')
+
+    result_3 = convert_to_json(TestClass2(5))
+    result_4 = convert_to_json(TestClass3(5.0))
+    result_5 = convert_to_json(TestClass2(5.5))
+
+    result_6 = convert_to_json('test')
+    result_7 = convert_to_json(datetime(2021, 3, 26))
+
+    assert result_1 == 5
+    assert result_2 == '5'
+
+    assert result_3 == 5.0
+    assert result_4 == 5
+    assert result_5 == 5.5
+
+    assert result_6 == 'test'
+    assert result_7 == '2021-03-26 00:00:00'

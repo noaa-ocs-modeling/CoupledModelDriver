@@ -9,15 +9,16 @@ from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.forcing.base import Forcing
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 import numpy
 
 from .configuration import (
     ADCIRCJSON,
     ATMESHForcingJSON,
-    ConfigurationJSON, CoupledModelDriverJSON,
-    ForcingJSON, NEMSJSON,
+    ConfigurationJSON,
+    CoupledModelDriverJSON,
+    ForcingJSON,
+    NEMSJSON,
     SlurmJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
@@ -29,7 +30,6 @@ from .job_script import (
     EnsembleCleanupScript,
     EnsembleRunScript,
     EnsembleSetupScript,
-    SlurmEmailType,
 )
 from .platforms import Platform
 from .utilities import LOGGER, create_symlink, get_logger
@@ -57,7 +57,6 @@ def write_required_json(
     nems_executable: PathLike,
     adcprep_executable: PathLike,
     tidal_spinup_duration: timedelta = None,
-    forcings: [Forcing] = None,
     runs: {str: (float, str)} = None,
     job_duration: timedelta = None,
     partition: str = None,
@@ -76,7 +75,6 @@ def write_required_json(
     :param nems_executable: filename of compiled `NEMS.x`
     :param adcprep_executable: filename of compiled `adcprep`
     :param tidal_spinup_duration: spinup time for ADCIRC coldstart
-    :param forcings: list of Forcing objects to apply to the mesh
     :param runs: dictionary of run name to run value and mesh attribute name
     :param job_duration: wall clock time of job
     :param partition: Slurm partition
@@ -118,20 +116,21 @@ def write_required_json(
         modeled_timestep=modeled_timestep,
         fort_13_path=fort13_filename,
         fort_14_path=fort14_filename,
-        forcings=forcings,
         tidal_spinup_duration=tidal_spinup_duration,
         source_filename=source_filename,
         slurm_configuration=slurm_configuration,
     )
 
     main_configuration = CoupledModelDriverJSON(
-        platform=platform,
-        output_directory=output_directory,
-        models=['ADCIRC'],
-        runs=runs,
+        platform=platform, output_directory=output_directory, models=['ADCIRC'], runs=runs,
     )
 
-    configurations = [main_configuration, nems_configuration, slurm_configuration, adcirc_configuration]
+    configurations = [
+        main_configuration,
+        nems_configuration,
+        slurm_configuration,
+        adcirc_configuration,
+    ]
 
     for configuration in configurations:
         LOGGER.debug(f'writing "{configuration.name}"')
@@ -143,12 +142,15 @@ def write_required_json(
 def write_forcings_json(
     output_directory: PathLike,
     forcings: [Forcing],
-    filenames: [PathLike],
+    verbose: bool = False,
 ):
     """
     :param output_directory: path to store generated JSON configuration files
     :param forcings: list of Forcing objects to apply to the mesh
+    :param verbose: whether to show more verbose log messages
     """
+
+    get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
 
     configurations = []
 
@@ -156,9 +158,9 @@ def write_forcings_json(
         if isinstance(forcing, Tides):
             configurations.append(TidalForcingJSON.from_adcircpy(forcing))
         elif isinstance(forcing, AtmosphericMeshForcing):
-            configurations.append(ATMESHForcingJSON.from_adcircpy(forcing, filename=filenames[index]))
+            configurations.append(ATMESHForcingJSON.from_adcircpy(forcing))
         elif isinstance(forcing, WaveWatch3DataForcing):
-            configurations.append(WW3DATAForcingJSON.from_adcircpy(forcing, filename=filenames[index]))
+            configurations.append(WW3DATAForcingJSON.from_adcircpy(forcing))
 
     for configuration in configurations:
         LOGGER.debug(f'writing "{configuration.name}"')
@@ -186,11 +188,11 @@ def write_adcirc_configurations(
 
     if not isinstance(output_directory, Path):
         output_directory = Path(output_directory)
-    if not isinstance(configuration_directory, Path):
-        configuration_directory = Path(configuration_directory)
 
     if configuration_directory is None:
         configuration_directory = output_directory
+    elif not isinstance(configuration_directory, Path):
+        configuration_directory = Path(configuration_directory)
 
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
@@ -204,6 +206,7 @@ def write_adcirc_configurations(
     for name, configuration in REQUIRED_CONFIGURATIONS.items():
         filename = configuration_directory / configuration.name
         if filename.exists():
+            print(filename)
             configurations[name] = configuration.from_file(filename)
         else:
             raise FileNotFoundError(f'missing required configuration file "{filename}"')
@@ -223,13 +226,13 @@ def write_adcirc_configurations(
     original_fort14_filename = configurations['adcirc']['fort_14_path']
     adcprep_executable_path = configurations['adcirc']['adcprep_executable_path']
 
-    nems_executable = configurations['nems']['nems_executable_path']
-    nems = configurations['nems'].modeling_system
+    nems_executable = configurations['nems']['executable_path']
+    nems = configurations['nems'].to_nemspy()
 
-    job_duration = configurations['slurm']['job_duration']
-    partition = configurations['slurm']['partition']
-    email_type = configurations['slurm']['email_type']
-    email_address = configurations['slurm']['email_address']
+    job_duration = configurations['job']['job_duration']
+    partition = configurations['job']['partition']
+    email_type = configurations['job']['email_type']
+    email_address = configurations['job']['email_address']
 
     LOGGER.info(
         f'generating {len(runs)} '
@@ -239,7 +242,7 @@ def write_adcirc_configurations(
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
 
-    if not original_fort14_filename.exists():
+    if original_fort14_filename is None or not original_fort14_filename.exists():
         raise FileNotFoundError(f'mesh XY not found at "{original_fort14_filename}"')
 
     if tidal_spinup_duration is not None:
@@ -263,12 +266,14 @@ def write_adcirc_configurations(
         mesh.add_forcing(forcing_configuration.forcing)
 
     LOGGER.info(f'reading attributes from "{original_fort13_filename}"')
-    if original_fort13_filename.exists():
+    if original_fort13_filename is not None and original_fort13_filename.exists():
         mesh.import_nodal_attributes(original_fort13_filename)
         for attribute_name in mesh.get_nodal_attribute_names():
             mesh.set_nodal_attribute_state(attribute_name, coldstart=True, hotstart=True)
     else:
-        LOGGER.warning(f'mesh values (nodal attributes) not found at "{original_fort13_filename}"')
+        LOGGER.warning(
+            f'mesh values (nodal attributes) not found at "{original_fort13_filename}"'
+        )
 
     if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
         LOGGER.debug(f'generating tau0 in mesh')
