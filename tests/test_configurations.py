@@ -181,7 +181,7 @@ def test_ww3data():
     }
 
 
-def test_coupledmodeldriver():
+def test_modeldriver():
     configuration = ModelDriverJSON(platform=Platform.HERA, runs=None)
 
     assert configuration.configuration == {
