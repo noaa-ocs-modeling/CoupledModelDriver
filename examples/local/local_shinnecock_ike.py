@@ -2,19 +2,16 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-import sys
 
 from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-from nemspy import ModelingSystem
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
-    WaveMeshEntry
 
-sys.path.append((Path(__file__).parent / '..').absolute())
-
-from coupledmodeldriver.adcirc import write_adcirc_configurations
+from coupledmodeldriver.adcirc.nems_adcirc import (
+    ADCIRCCoupledRunConfiguration,
+    generate_nems_adcirc_configuration,
+)
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -36,27 +33,26 @@ OUTPUT_DIRECTORY = (
     Path(__file__).parent.parent / 'data' / 'configuration' / 'local_shinnecock_ike'
 )
 
+HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
+TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
+
 if __name__ == '__main__':
     platform = Platform.LOCAL
     adcirc_processors = 11
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = timedelta(days=12.5)
+    nems_interval = timedelta(hours=1)
+    job_duration = timedelta(hours=6)
 
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
-    # initialize `nemspy` configuration object with forcing file locations, start and end times,  and processor assignment
-    nems = ModelingSystem(
-        start_time=datetime(2008, 8, 23),
-        end_time=datetime(2008, 8, 23) + timedelta(days=14.5),
-        interval=timedelta(hours=1),
-        atm=AtmosphericMeshEntry(FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc'),
-        wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc'),
-        ocn=ADCIRCEntry(adcirc_processors),
-    )
-
     # describe connections between coupled components
-    nems.connect('ATM', 'OCN')
-    nems.connect('WAV', 'OCN')
-    nems.sequence = [
+    nems_connections = ['ATM -> OCN', 'WAV -> OCN']
+    nems_mediations = None
+    nems_sequence = [
         'ATM -> OCN',
         'WAV -> OCN',
         'ATM',
@@ -64,27 +60,45 @@ if __name__ == '__main__':
         'OCN',
     ]
 
-    # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=None)
-    tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
-    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
+    slurm_email_address = 'example@email.gov'
 
-    # send run information to `adcircpy` and write the resulting configuration to output directory
-    write_adcirc_configurations(
-        nems,
-        runs,
-        MESH_DIRECTORY,
-        OUTPUT_DIRECTORY,
-        nems_executable=NEMS_EXECUTABLE,
-        adcprep_executable=ADCPREP_EXECUTABLE,
-        platform=platform,
-        email_address=None,
-        wall_clock_time=None,
-        model_timestep=None,
-        spinup=timedelta(days=12.5),
-        forcings=[tidal_forcing, wind_forcing, wave_forcing],
-        overwrite=True,
-        use_original_mesh=True,
-        verbose=True,
+    # initialize `adcircpy` forcing objects
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
+    tidal_forcing.use_all()
+    wind_forcing = AtmosphericMeshForcing(
+        filename=FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc',
+        nws=17,
+        interval_seconds=3600,
     )
+    wave_forcing = WaveWatch3DataForcing(
+        filename=FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc',
+        nrs=5,
+        interval_seconds=3600,
+    )
+    forcings = [tidal_forcing, wind_forcing, wave_forcing]
+
+    configuration = ADCIRCCoupledRunConfiguration(
+        fort13=MESH_DIRECTORY / 'fort.13',
+        fort14=MESH_DIRECTORY / 'fort.14',
+        modeled_start_time=modeled_start_time,
+        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_timestep=modeled_timestep,
+        nems_interval=nems_interval,
+        nems_connections=nems_connections,
+        nems_mediations=nems_mediations,
+        nems_sequence=nems_sequence,
+        tidal_spinup_duration=tidal_spinup_duration,
+        platform=platform,
+        runs=runs,
+        forcings=forcings,
+        adcirc_processors=adcirc_processors,
+        slurm_partition=None,
+        slurm_job_duration=job_duration,
+        slurm_email_address=slurm_email_address,
+        nems_executable=None,
+        adcprep_executable=None,
+        source_filename=None,
+    )
+
+    configuration.write_directory(OUTPUT_DIRECTORY, overwrite=True)
+    generate_nems_adcirc_configuration(OUTPUT_DIRECTORY, overwrite=True)

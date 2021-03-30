@@ -5,12 +5,11 @@
 #SBATCH --mail-user=example@email.gov
 #SBATCH --error=ADC_COLD_RUN.err.log
 #SBATCH --output=ADC_COLD_RUN.out.log
-#SBATCH -n 1020
-#SBATCH -N 15
-#SBATCH --time=00:30:00
+#SBATCH -n 1022
+#SBATCH -N 16
+#SBATCH --time=06:00:00
 #SBATCH --partition=development
 
 set -e
 
-source /work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede
 ibrun NEMS.x

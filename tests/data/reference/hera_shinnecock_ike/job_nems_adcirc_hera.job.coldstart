@@ -5,11 +5,10 @@
 #SBATCH --mail-user=example@email.gov
 #SBATCH --error=ADC_COLD_RUN.err.log
 #SBATCH --output=ADC_COLD_RUN.out.log
-#SBATCH -n 600
-#SBATCH -N 15
-#SBATCH --time=00:30:00
+#SBATCH -n 602
+#SBATCH -N 16
+#SBATCH --time=06:00:00
 
 set -e
 
-source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera
 srun NEMS.x

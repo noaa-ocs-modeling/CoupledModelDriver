@@ -7,10 +7,9 @@
 #SBATCH --output=ADC_MESH_DECOMP.out.log
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH --time=00:30:00
+#SBATCH --time=06:00:00
 
 set -e
 
-source /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera
-srun adcprep --np 600 --partmesh
-srun adcprep --np 600 --prepall
+srun adcprep --np 602 --partmesh
+srun adcprep --np 602 --prepall
