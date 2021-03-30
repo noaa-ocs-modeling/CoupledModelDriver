@@ -139,7 +139,8 @@ class ConfigurationJSON(ABC):
 
         configuration = {
             key.lower(): convert_value(value, cls.field_types[key])
-            if key in cls.field_types else convert_to_json(value)
+            if key in cls.field_types
+            else convert_to_json(value)
             for key, value in configuration.items()
         }
 
@@ -443,10 +444,13 @@ class ADCIRCJSON(ModelJSON):
             if self['fort_13_path'].exists():
                 mesh.import_nodal_attributes(self['fort_13_path'])
                 for attribute_name in mesh.get_nodal_attribute_names():
-                    mesh.set_nodal_attribute_state(attribute_name, coldstart=True, hotstart=True)
+                    mesh.set_nodal_attribute_state(
+                        attribute_name, coldstart=True, hotstart=True
+                    )
             else:
-                LOGGER.warning('mesh values (nodal attributes) not found '
-                               f'at "{self["fort_13_path"]}"')
+                LOGGER.warning(
+                    'mesh values (nodal attributes) not found ' f'at "{self["fort_13_path"]}"'
+                )
 
         if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
             LOGGER.debug(f'generating tau0 in mesh')
@@ -579,7 +583,10 @@ class TidalForcingJSON(ForcingJSON):
 
 class ATMESHForcingJSON(ForcingJSON):
     name = 'configure_atmesh.json'
-    field_types = {'nws': int, 'modeled_timestep': timedelta, }
+    field_types = {
+        'nws': int,
+        'modeled_timestep': timedelta,
+    }
 
     def __init__(
         self,

@@ -628,7 +628,7 @@ def bash_for_loop(iteration: str, do: [str], indentation='    ') -> str:
     if not isinstance(do, str) and isinstance(do, Sequence):
         do = '\n'.join(do)
 
-    return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done',))
+    return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done'))
 
 
 def bash_function(name: str, body: [str], indentation: str = '    ') -> str:

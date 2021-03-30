@@ -140,9 +140,7 @@ def write_required_json(
 
 
 def write_forcings_json(
-    output_directory: PathLike,
-    forcings: [Forcing],
-    verbose: bool = False,
+    output_directory: PathLike, forcings: [Forcing], verbose: bool = False,
 ):
     """
     :param output_directory: path to store generated JSON configuration files

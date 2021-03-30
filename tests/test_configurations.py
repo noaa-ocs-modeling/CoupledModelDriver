@@ -19,11 +19,9 @@ from coupledmodeldriver.platforms import Platform
 
 
 def test_update():
-    configuration = SlurmJSON(account='coastal', tasks=602, job_duration=timedelta(hours=6), )
+    configuration = SlurmJSON(account='coastal', tasks=602, job_duration=timedelta(hours=6))
 
-    configuration.update(
-        {'email_address': 'test@email.gov', 'test_entry_1': 'test value 1'}
-    )
+    configuration.update({'email_address': 'test@email.gov', 'test_entry_1': 'test value 1'})
 
     configuration['test_entry_2'] = 2
 
@@ -116,7 +114,7 @@ def test_adcirc():
 
 
 def test_tidal():
-    configuration = TidalForcingJSON(tidal_source='HAMTIDE', constituents='all', )
+    configuration = TidalForcingJSON(tidal_source='HAMTIDE', constituents='all')
 
     assert list(configuration.adcircpy_forcing.active_constituents) == [
         'Q1',

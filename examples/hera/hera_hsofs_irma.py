@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-import sys
 
 from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
@@ -12,7 +11,11 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 
-from coupledmodeldriver.adcirc import write_adcirc_configurations, write_forcings_json, write_required_json
+from coupledmodeldriver.adcirc import (
+    write_adcirc_configurations,
+    write_forcings_json,
+    write_required_json,
+)
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -52,10 +55,10 @@ if __name__ == '__main__':
         start_time=modeled_start_time,
         end_time=modeled_start_time + modeled_duration,
         interval=nems_interval,
-        atm=AtmosphericMeshEntry(filename=FORCINGS_DIRECTORY /
-                                          'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'),
-        wav=WaveMeshEntry(filename=FORCINGS_DIRECTORY /
-                                   'ww3.HWRF.NOV2018.2017_sxy.nc'),
+        atm=AtmosphericMeshEntry(
+            filename=FORCINGS_DIRECTORY / 'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'
+        ),
+        wav=WaveMeshEntry(filename=FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2017_sxy.nc'),
         ocn=ADCIRCEntry(processors=adcirc_processors),
     )
 
@@ -98,9 +101,7 @@ if __name__ == '__main__':
 
     # generate JSON configuration files for the forcings
     write_forcings_json(
-        output_directory=OUTPUT_DIRECTORY,
-        forcings=forcings,
-        verbose=True,
+        output_directory=OUTPUT_DIRECTORY, forcings=forcings, verbose=True,
     )
 
     # read JSON configuration files and write the resulting configuration to the output directory

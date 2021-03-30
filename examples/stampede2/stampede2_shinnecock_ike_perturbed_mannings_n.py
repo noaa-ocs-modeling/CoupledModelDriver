@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-import sys
 
 from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
@@ -13,8 +12,11 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 import numpy
 
-from coupledmodeldriver.adcirc import write_adcirc_configurations, \
-    write_forcings_json, write_required_json
+from coupledmodeldriver.adcirc import (
+    write_adcirc_configurations,
+    write_forcings_json,
+    write_required_json,
+)
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -22,15 +24,20 @@ NEMS_EXECUTABLE = '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/ALLBIN_INST
 ADCPREP_EXECUTABLE = '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/adcprep'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = Path('/work/07531/zrb/stampede2') \
-                 / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+MESH_DIRECTORY = (
+    Path('/work/07531/zrb/stampede2') / 'meshes' / 'shinnecock' / 'ike' / 'grid_v1'
+)
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
-FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') \
-                     / 'forcings' / 'shinnecock' / 'ike'
+FORCINGS_DIRECTORY = Path('/work/07531/zrb/stampede2') / 'forcings' / 'shinnecock' / 'ike'
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'stampede2_shinnecock_ike_perturbed_mannings_n'
+OUTPUT_DIRECTORY = (
+    Path(__file__).parent.parent
+    / 'data'
+    / 'configuration'
+    / 'stampede2_shinnecock_ike_perturbed_mannings_n'
+)
 
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
@@ -99,9 +106,7 @@ if __name__ == '__main__':
 
     # generate JSON configuration files for the forcings
     write_forcings_json(
-        output_directory=OUTPUT_DIRECTORY,
-        forcings=forcings,
-        verbose=True,
+        output_directory=OUTPUT_DIRECTORY, forcings=forcings, verbose=True,
     )
 
     # read JSON configuration files and write the resulting configuration to the output directory

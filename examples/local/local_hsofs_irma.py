@@ -11,8 +11,11 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 
-from coupledmodeldriver.adcirc import write_adcirc_configurations, \
-    write_forcings_json, write_required_json
+from coupledmodeldriver.adcirc import (
+    write_adcirc_configurations,
+    write_forcings_json,
+    write_required_json,
+)
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -20,12 +23,14 @@ NEMS_EXECUTABLE = 'NEMS.x'
 ADCPREP_EXECUTABLE = 'adcprep'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = Path(__file__).parent.parent / 'data' / 'input' \
-                 / 'meshes' / 'hsofs' / 'grid_v1'
+MESH_DIRECTORY = (
+    Path(__file__).parent.parent / 'data' / 'input' / 'meshes' / 'hsofs' / 'grid_v1'
+)
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
-FORCINGS_DIRECTORY = Path(__file__).parent.parent / 'data' / 'input' \
-                     / 'forcings' / 'hsofs' / 'irma'
+FORCINGS_DIRECTORY = (
+    Path(__file__).parent.parent / 'data' / 'input' / 'forcings' / 'hsofs' / 'irma'
+)
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'local_hsofs_irma'
@@ -50,10 +55,10 @@ if __name__ == '__main__':
         start_time=modeled_start_time,
         end_time=modeled_start_time + modeled_duration,
         interval=nems_interval,
-        atm=AtmosphericMeshEntry(filename=FORCINGS_DIRECTORY /
-                                          'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'),
-        wav=WaveMeshEntry(filename=FORCINGS_DIRECTORY /
-                                   'ww3.HWRF.NOV2018.2017_sxy.nc'),
+        atm=AtmosphericMeshEntry(
+            filename=FORCINGS_DIRECTORY / 'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'
+        ),
+        wav=WaveMeshEntry(filename=FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2017_sxy.nc'),
         ocn=ADCIRCEntry(processors=adcirc_processors),
     )
 
@@ -96,9 +101,7 @@ if __name__ == '__main__':
 
     # generate JSON configuration files for the forcings
     write_forcings_json(
-        output_directory=OUTPUT_DIRECTORY,
-        forcings=forcings,
-        verbose=True,
+        output_directory=OUTPUT_DIRECTORY, forcings=forcings, verbose=True,
     )
 
     # read JSON configuration files and write the resulting configuration to the output directory
