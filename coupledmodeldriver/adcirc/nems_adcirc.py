@@ -113,8 +113,6 @@ def generate_nems_adcirc_configuration(
     else:
         tidal_spinup_nems = None
 
-    mesh = coupled_configuration['adcirc'].adcircpy_mesh
-
     if tidal_spinup_nems is not None:
         coldstart_filenames = tidal_spinup_nems.write(
             output_directory,
@@ -297,7 +295,7 @@ def generate_nems_adcirc_configuration(
         hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     # instantiate AdcircRun object.
-    driver = coupled_configuration['adcirc'].adcircpy_driver
+    driver = coupled_configuration.adcircpy_driver
 
     local_fort14_filename = output_directory / 'fort.14'
     if use_original_mesh:
