@@ -67,7 +67,7 @@ def test_local_shinnecock_ike():
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -145,7 +145,7 @@ def test_hera_shinnecock_ike():
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -223,7 +223,7 @@ def test_stampede2_shinnecock_ike():
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
