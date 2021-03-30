@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
@@ -8,8 +7,7 @@ import pytest
 from coupledmodeldriver.configuration import (
     ADCIRCJSON,
     ATMESHForcingJSON,
-    CoupledModelDriverJSON,
-    Model,
+    ModelDriverJSON,
     NEMSJSON,
     SlurmJSON,
     TidalForcingJSON,
@@ -76,14 +74,14 @@ def test_nems():
         executable_path='NEMS.x',
         modeled_start_time=datetime(2012, 10, 22, 6),
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
-        modeled_timestep=timedelta(hours=1),
+        interval=timedelta(hours=1),
         models=model_entries,
         connections=connections,
         mediations=mediations,
         sequence=sequence,
     )
 
-    modeling_system = configuration.to_nemspy()
+    modeling_system = configuration.nemspy_modeling_system
 
     assert modeling_system.sequence == [
         'ATM -> OCN   :remapMethod=redist',
@@ -105,12 +103,12 @@ def test_adcirc():
         tidal_spinup_duration=timedelta(days=12.5),
     )
 
-    assert configuration.driver.IM == 511113
+    assert configuration.adcircpy_driver.IM == 511113
 
     configuration['gwce_solution_scheme'] = 'semi-implicit-legacy'
     configuration['use_smagorinsky'] = False
 
-    assert configuration.driver.IM == 111111
+    assert configuration.adcircpy_driver.IM == 111111
 
 
 def test_tidal():
@@ -143,7 +141,7 @@ def test_tidal():
     configuration['tidal_source'] = 'TPXO'
     configuration['resource'] = 'nonesistant/path/to/h_tpxo9.nc'
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises((FileNotFoundError, OSError)):
         configuration.adcircpy_forcing
 
     configuration['tidal_source'] = 'HAMTIDE'
@@ -161,9 +159,11 @@ def test_atmesh():
     )
 
     assert configuration.configuration == {
-        'NWS': 17,
-        'modeled_timestep': timedelta(hours=1),
-        'resource': Path('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+        'nws': 17,
+        'modeled_timestep': timedelta(seconds=3600),
+        'resource': 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
+        'processors': 1,
+        'nems_parameters': {},
     }
 
 
@@ -173,20 +173,18 @@ def test_ww3data():
     )
 
     assert configuration.configuration == {
-        'NRS': 5,
+        'nrs': 5,
         'modeled_timestep': timedelta(hours=1),
-        'resource': Path('ww3.HWRF.NOV2018.2012_sxy.nc'),
+        'resource': 'ww3.HWRF.NOV2018.2012_sxy.nc',
+        'processors': 1,
+        'nems_parameters': {},
     }
 
 
 def test_coupledmodeldriver():
-    configuration = CoupledModelDriverJSON(
-        platform=Platform.HERA, output_directory='.', models=['ADCIRC'], runs=None,
-    )
+    configuration = ModelDriverJSON(platform=Platform.HERA, runs=None)
 
     assert configuration.configuration == {
         'platform': Platform.HERA,
-        'output_directory': Path('.'),
-        'models': [Model.ADCIRC],
         'runs': {'run_1': (None, None)},
     }
