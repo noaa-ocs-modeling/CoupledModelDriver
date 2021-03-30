@@ -12,9 +12,7 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 
-sys.path.append((Path(__file__).parent / '..' / '..').absolute())
-
-from coupledmodeldriver.adcirc import write_adcirc_configurations
+from coupledmodeldriver.adcirc import write_adcirc_configurations, write_forcings_json, write_required_json
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -40,20 +38,25 @@ TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_t
 if __name__ == '__main__':
     platform = Platform.HERA
     adcirc_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2017, 9, 5)
+    modeled_duration = timedelta(days=14.5)
+    tidal_spinup_duration = timedelta(days=12.5)
+    nems_interval = timedelta(hours=1)
+    job_duration = timedelta(hours=6)
 
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
     runs = {f'test_case_1': (None, None)}
 
     # initialize `nemspy` configuration object with forcing file locations, start and end times,  and processor assignment
     nems = ModelingSystem(
-        start_time=datetime(2017, 9, 5),
-        end_time=datetime(2017, 9, 5) + timedelta(days=14.5),
-        interval=timedelta(hours=1),
-        atm=AtmosphericMeshEntry(
-            FORCINGS_DIRECTORY / 'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'
-        ),
-        wav=WaveMeshEntry(FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2017_sxy.nc'),
-        ocn=ADCIRCEntry(adcirc_processors),
+        start_time=modeled_start_time,
+        end_time=modeled_start_time + modeled_duration,
+        interval=nems_interval,
+        atm=AtmosphericMeshEntry(filename=FORCINGS_DIRECTORY /
+                                          'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc'),
+        wav=WaveMeshEntry(filename=FORCINGS_DIRECTORY /
+                                   'ww3.HWRF.NOV2018.2017_sxy.nc'),
+        ocn=ADCIRCEntry(processors=adcirc_processors),
     )
 
     # describe connections between coupled components
@@ -70,22 +73,39 @@ if __name__ == '__main__':
     # initialize `adcircpy` forcing objects
     tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
     tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(nws=17, interval_seconds=3600)
-    wave_forcing = WaveWatch3DataForcing(nrs=5, interval_seconds=3600)
+    wind_forcing = AtmosphericMeshForcing(
+        filename=nems['atm'].filename, nws=17, interval_seconds=3600,
+    )
+    wave_forcing = WaveWatch3DataForcing(
+        filename=nems['wav'].filename, nrs=5, interval_seconds=3600,
+    )
+    forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    # send run information to `adcircpy` and write the resulting configuration to output directory
-    write_adcirc_configurations(
+    # generate JSON configuration files for the current run
+    write_required_json(
         output_directory=OUTPUT_DIRECTORY,
-        fort13_filename=None,
-        fort14_filename=MESH_DIRECTORY,
+        fort13_filename=MESH_DIRECTORY / 'fort.13',
+        fort14_filename=MESH_DIRECTORY / 'fort.14',
         nems=nems,
         platform=platform,
-        runs=runs,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
-        forcings=[tidal_forcing, wind_forcing, wave_forcing],
-        spinup=timedelta(days=12.5),
-        email_address='example@email.gov',
-        overwrite=True,
+        tidal_spinup_duration=tidal_spinup_duration,
+        runs=runs,
+        job_duration=job_duration,
+        verbose=True,
+    )
+
+    # generate JSON configuration files for the forcings
+    write_forcings_json(
+        output_directory=OUTPUT_DIRECTORY,
+        forcings=forcings,
+        verbose=True,
+    )
+
+    # read JSON configuration files and write the resulting configuration to the output directory
+    write_adcirc_configurations(
+        output_directory=OUTPUT_DIRECTORY,
+        configuration_directory=OUTPUT_DIRECTORY,
         verbose=True,
     )
