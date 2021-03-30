@@ -1,5 +1,5 @@
 #!/bin/bash --login
-ln -sf ../nems.configure.coldstart ./nems.configure
-ln -sf ../model_configure.coldstart ./model_configure
-ln -sf ../config.rc.coldstart ./config.rc
+ln -sf ../../nems.configure.coldstart ./nems.configure
+ln -sf ../../model_configure.coldstart ./model_configure
+ln -sf ../../config.rc.coldstart ./config.rc
 ln -sf ./model_configure ./atm_namelist.rc

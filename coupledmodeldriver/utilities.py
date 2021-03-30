@@ -1,10 +1,14 @@
+from datetime import datetime, timedelta
+from enum import Enum, EnumMeta
 import logging
 import os
 from os import PathLike
 from pathlib import Path
 import shutil
 import sys
+from typing import Any, Collection, Iterable, Mapping, Union
 
+from dateutil.parser import parse as parse_date
 import numpy
 from pyproj import CRS, Geod, Transformer
 from shapely.geometry import Point
@@ -46,6 +50,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -91,9 +96,11 @@ def create_symlink(
     if symlink_filename.is_symlink():
         LOGGER.debug(f'removing symlink {symlink_filename}')
         os.remove(symlink_filename)
-
     symlink_filename = symlink_filename.parent.absolute().resolve() / symlink_filename.name
-    source_filename = source_filename.absolute().resolve()
+
+    if not source_filename.is_symlink():
+        source_filename = source_filename.resolve()
+    source_filename = source_filename.absolute()
 
     starting_directory = None
     if relative:
@@ -135,3 +142,92 @@ def make_executable(path: PathLike):
     mode = os.stat(path).st_mode
     mode |= (mode & 0o444) >> 2  # copy R bits to X
     os.chmod(path, mode)
+
+
+def convert_value(value: Any, to_type: type) -> Any:
+    if isinstance(to_type, str):
+        to_type = eval(to_type)
+    if isinstance(value, Enum):
+        value = value.name
+    if isinstance(to_type, Collection):
+        collection_type = type(to_type)
+        if collection_type is not EnumMeta:
+            if not issubclass(collection_type, Mapping):
+                if value is not None:
+                    to_type = list(to_type)
+                    if not isinstance(value, Iterable) or isinstance(value, str):
+                        value = [value]
+                    if len(to_type) == 1:
+                        to_type = [to_type[0] for _ in value]
+                    elif len(to_type) == len(value):
+                        to_type = to_type[: len(value)]
+                    else:
+                        raise ValueError(
+                            f'unable to convert list of values of length {len(value)} '
+                            f'to list of types of length {len(to_type)}: '
+                            f'{value} -/> {to_type}'
+                        )
+                    value = collection_type(
+                        convert_value(value[index], current_type)
+                        for index, current_type in enumerate(to_type)
+                    )
+                else:
+                    value = collection_type()
+        elif value is not None:
+            try:
+                value = to_type[value]
+            except (KeyError, ValueError):
+                value = to_type(value)
+    elif not isinstance(value, to_type) and value is not None:
+        if isinstance(value, timedelta):
+            if issubclass(to_type, str):
+                hours, remainder = divmod(value, timedelta(hours=1))
+                minutes, remainder = divmod(remainder, timedelta(minutes=1))
+                seconds = remainder / timedelta(seconds=1)
+                value = f'{hours}:{minutes}:{seconds}'
+            else:
+                value /= timedelta(seconds=1)
+        if issubclass(to_type, bool):
+            value = eval(f'{value}')
+        elif issubclass(to_type, datetime):
+            value = parse_date(value)
+        elif issubclass(to_type, timedelta):
+            try:
+                time = datetime.strptime(value, '%H:%M:%S')
+                value = timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
+            except:
+                value = timedelta(seconds=float(value))
+        elif isinstance(value, str):
+            try:
+                value = to_type.from_string(value)
+            except:
+                value = to_type(value)
+        else:
+            value = to_type(value)
+    return value
+
+
+def convert_to_json(value: Any) -> Union[str, float, int, dict, list, bool]:
+    if type(value) not in (float, int, bool, str):
+        if isinstance(value, Enum):
+            value = value.name
+        if isinstance(value, Collection) and not isinstance(value, str):
+            if isinstance(value, Mapping):
+                value = {
+                    convert_to_json(key): convert_to_json(entry)
+                    for key, entry in value.items()
+                }
+            else:
+                value = [convert_to_json(entry) for entry in value]
+        else:
+            try:
+                value = convert_value(value, float)
+            except:
+                try:
+                    value = convert_value(value, int)
+                except:
+                    try:
+                        value = convert_value(value, bool)
+                    except:
+                        value = convert_value(value, str)
+    return value

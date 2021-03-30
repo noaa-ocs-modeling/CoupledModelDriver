@@ -9,8 +9,8 @@ import uuid
 
 import numpy
 
-from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.utilities import make_executable
+from .platforms import Platform
+from .utilities import make_executable
 
 
 class SlurmEmailType(Enum):
@@ -37,10 +37,7 @@ class Script(ABC):
         self.commands = commands
 
     def __str__(self) -> str:
-        return '\n'.join([
-            self.shebang,
-            *(str(command) for command in self.commands)
-        ])
+        return '\n'.join([self.shebang, *(str(command) for command in self.commands)])
 
     def write(self, filename: PathLike, overwrite: bool = False):
         """
@@ -57,6 +54,8 @@ class Script(ABC):
         if overwrite or not filename.exists():
             with open(filename, 'w') as file:
                 file.write(output)
+        else:
+            raise FileExistsError(f'file exists at {filename}')
 
 
 class JobScript(Script):
@@ -158,7 +157,9 @@ class JobScript(Script):
     @slurm_nodes.setter
     def slurm_nodes(self, slurm_nodes: int):
         if slurm_nodes is None:
-            slurm_nodes = numpy.ceil(self.slurm_tasks / self.platform.value['processors_per_node'])
+            slurm_nodes = numpy.ceil(
+                self.slurm_tasks / self.platform.value['processors_per_node']
+            )
         if slurm_nodes is not None:
             slurm_nodes = int(slurm_nodes)
         self.__slurm_nodes = slurm_nodes
@@ -267,7 +268,7 @@ class AdcircJob(JobScript):
 
 
 class AdcircSetupScript(Script):
-    """ script for running ADCIRC via a NEMS configuration """
+    """ script for setting up ADCIRC NEMS configuration """
 
     def __init__(
         self,
@@ -279,8 +280,9 @@ class AdcircSetupScript(Script):
         self.nems_configure_filename = PurePosixPath(nems_configure_filename)
         self.model_configure_filename = PurePosixPath(model_configure_filename)
         self.config_rc_filename = PurePosixPath(config_rc_filename)
-        self.fort67_filename = PurePosixPath(fort67_filename) \
-            if fort67_filename is not None else None
+        self.fort67_filename = (
+            PurePosixPath(fort67_filename) if fort67_filename is not None else None
+        )
 
         commands = [
             f'ln -sf {self.nems_configure_filename} ./nems.configure',
@@ -290,10 +292,9 @@ class AdcircSetupScript(Script):
         ]
 
         if self.fort67_filename is not None:
-            commands.extend([
-                '',
-                f'ln -sf {self.fort67_filename} ./fort.67.nc',
-            ])
+            commands.extend(
+                ['', f'ln -sf {self.fort67_filename} ./fort.67.nc',]
+            )
 
         super().__init__(commands)
 
@@ -344,10 +345,6 @@ class AdcircMeshPartitionJob(AdcircJob):
         commands: [str] = None,
         **kwargs,
     ):
-        if platform.value['nodes_are_virtual']:
-            if 'slurm_nodes' not in kwargs or kwargs['slurm_nodes'] is None:
-                kwargs['slurm_nodes'] = int(numpy.ceil(slurm_tasks / platform.value['processors_per_node']))
-
         super().__init__(
             platform,
             commands,
@@ -430,10 +427,7 @@ class EnsembleSetupScript(Script):
 
 class EnsembleRunScript(Script):
     def __init__(
-        self,
-        platform: Platform,
-        setup_script_name: PathLike = None,
-        commands: [str] = None
+        self, platform: Platform, setup_script_name: PathLike = None, commands: [str] = None
     ):
         self.platform = platform
         if setup_script_name is None:
@@ -524,6 +518,49 @@ class EnsembleRunScript(Script):
             make_executable(filename)
 
 
+class EnsembleCleanupScript(Script):
+    """ script for cleaning up ADCIRC NEMS configurations """
+
+    def __init__(self, commands: [str] = None):
+        super().__init__(commands)
+
+    def __str__(self):
+        lines = [
+            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
+            '',
+            '# prepare single coldstart directory',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
+            'rm -rf PE* ADC_*',
+            'rm max* partmesh.txt metis_graph.txt',
+            'rm fort.16 fort.6* fort.80',
+            'popd >/dev/null 2>&1',
+            '',
+            '# prepare every hotstart directory',
+            bash_for_loop(
+                'for hotstart in ${DIRECTORY}/runs/*/',
+                [
+                    'pushd ${hotstart} >/dev/null 2>&1',
+                    'rm -rf PE* ADC_*',
+                    'rm max* partmesh.txt metis_graph.txt',
+                    'rm fort.16 fort.6* fort.80',
+                    'popd >/dev/null 2>&1',
+                ],
+            ),
+            *(str(command) for command in self.commands),
+        ]
+
+        return '\n'.join(lines)
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'cleanup.sh'
+
+        super().write(filename, overwrite)
+
+
 def bash_if_statement(
     condition: str, then: [str], *else_then: [[str]], indentation: str = '    '
 ) -> str:
@@ -591,7 +628,7 @@ def bash_for_loop(iteration: str, do: [str], indentation='    ') -> str:
     if not isinstance(do, str) and isinstance(do, Sequence):
         do = '\n'.join(do)
 
-    return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done',))
+    return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done'))
 
 
 def bash_function(name: str, body: [str], indentation: str = '    ') -> str:
