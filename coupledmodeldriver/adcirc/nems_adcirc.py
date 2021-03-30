@@ -1,29 +1,29 @@
 import copy
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import os
 from os import PathLike
 from pathlib import Path
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy import Tides
 from adcircpy.forcing.base import Forcing
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 import numpy
 
-from .configuration import (
+from .adcirc import ADCIRCRunConfiguration
+from ..configuration import (
     ADCIRCJSON,
     ATMESHForcingJSON,
-    ConfigurationJSON,
-    CoupledModelDriverJSON,
     ForcingJSON,
+    ModelDriverJSON,
     NEMSJSON,
     SlurmJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from .job_script import (
+from ..job_script import (
     AdcircMeshPartitionJob,
     AdcircRunJob,
     AdcircSetupScript,
@@ -31,144 +31,13 @@ from .job_script import (
     EnsembleRunScript,
     EnsembleSetupScript,
 )
-from .platforms import Platform
-from .utilities import LOGGER, create_symlink, get_logger
-
-REQUIRED_CONFIGURATIONS = {
-    'main': CoupledModelDriverJSON,
-    'job': SlurmJSON,
-    'nems': NEMSJSON,
-    'adcirc': ADCIRCJSON,
-}
-
-ADCIRC_FORCING_CONFIGURATIONS = {
-    'tides': TidalForcingJSON,
-    'atmesh': ATMESHForcingJSON,
-    'ww3data': WW3DATAForcingJSON,
-}
+from ..platforms import Platform
+from ..utilities import LOGGER, create_symlink, get_logger
 
 
-def write_required_json(
-    output_directory: PathLike,
-    fort13_filename: PathLike,
-    fort14_filename: PathLike,
-    nems: ModelingSystem,
-    platform: Platform,
-    nems_executable: PathLike,
-    adcprep_executable: PathLike,
-    tidal_spinup_duration: timedelta = None,
-    runs: {str: (float, str)} = None,
-    job_duration: timedelta = None,
-    partition: str = None,
-    email_address: str = None,
-    source_filename: PathLike = None,
-    verbose: bool = False,
-):
-    """
-    Generate required configuration files for an coupled ADCIRC run.
-
-    :param output_directory: path to store generated JSON configuration files
-    :param fort13_filename: path to input mesh values (`fort.13`)
-    :param fort14_filename: path to input mesh nodes (`fort.14`)
-    :param nems: NEMSpy ModelingSystem object, populated with models and connections
-    :param platform: HPC platform for which to configure
-    :param nems_executable: filename of compiled `NEMS.x`
-    :param adcprep_executable: filename of compiled `adcprep`
-    :param tidal_spinup_duration: spinup time for ADCIRC coldstart
-    :param runs: dictionary of run name to run value and mesh attribute name
-    :param job_duration: wall clock time of job
-    :param partition: Slurm partition
-    :param email_address: email address
-    :param source_filename: path to module file to `source`
-    :param verbose: whether to show more verbose log messages
-    """
-
-    get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
-
-    if not isinstance(output_directory, Path):
-        output_directory = Path(output_directory)
-    if not output_directory.exists():
-        output_directory.mkdir(parents=True, exist_ok=True)
-
-    LOGGER.info(
-        f'generating barebones configuration files '
-        f'for "{platform.name.lower()}" in "{output_directory}"'
-    )
-
-    modeled_start_time = nems.start_time
-    modeled_end_time = nems.end_time
-    modeled_timestep = nems.interval
-
-    nems_configuration = NEMSJSON.from_nemspy(nems, executable_path=nems_executable)
-
-    slurm_configuration = SlurmJSON(
-        account=platform.value['slurm_account'],
-        tasks=nems.processors,
-        partition=partition,
-        job_duration=job_duration,
-        email_address=email_address,
-    )
-
-    adcirc_configuration = ADCIRCJSON(
-        adcprep_executable_path=adcprep_executable,
-        modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_end_time,
-        modeled_timestep=modeled_timestep,
-        fort_13_path=fort13_filename,
-        fort_14_path=fort14_filename,
-        tidal_spinup_duration=tidal_spinup_duration,
-        source_filename=source_filename,
-        slurm_configuration=slurm_configuration,
-    )
-
-    main_configuration = CoupledModelDriverJSON(
-        platform=platform, output_directory=output_directory, models=['ADCIRC'], runs=runs,
-    )
-
-    configurations = [
-        main_configuration,
-        nems_configuration,
-        slurm_configuration,
-        adcirc_configuration,
-    ]
-
-    for configuration in configurations:
-        LOGGER.debug(f'writing "{configuration.name}"')
-        configuration.to_file(output_directory, overwrite=True)
-
-    return configurations
-
-
-def write_forcings_json(
-    output_directory: PathLike, forcings: [Forcing], verbose: bool = False,
-):
-    """
-    :param output_directory: path to store generated JSON configuration files
-    :param forcings: list of Forcing objects to apply to the mesh
-    :param verbose: whether to show more verbose log messages
-    """
-
-    get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
-
-    configurations = []
-
-    for index, forcing in enumerate(forcings):
-        if isinstance(forcing, Tides):
-            configurations.append(TidalForcingJSON.from_adcircpy(forcing))
-        elif isinstance(forcing, AtmosphericMeshForcing):
-            configurations.append(ATMESHForcingJSON.from_adcircpy(forcing))
-        elif isinstance(forcing, WaveWatch3DataForcing):
-            configurations.append(WW3DATAForcingJSON.from_adcircpy(forcing))
-
-    for configuration in configurations:
-        LOGGER.debug(f'writing "{configuration.name}"')
-        configuration.to_file(output_directory, overwrite=True)
-
-
-def write_adcirc_configurations(
+def generate_nems_adcirc_configuration(
     output_directory: PathLike,
     configuration_directory: PathLike = None,
-    use_original_mesh: bool = False,
     overwrite: bool = False,
     verbose: bool = False,
 ):
@@ -177,7 +46,6 @@ def write_adcirc_configurations(
 
     :param output_directory: path to store generated configuration files
     :param configuration_directory: path containing JSON configuration files
-    :param use_original_mesh: whether to use the original mesh (`fort.13`, `fort.14`) instead of rewriting with `adcircpy`
     :param overwrite: whether to overwrite existing files
     :param verbose: whether to show more verbose log messages
     """
@@ -200,37 +68,27 @@ def write_adcirc_configurations(
     else:
         output_directory = output_directory.resolve().relative_to(Path().cwd())
 
-    configurations: {str: ConfigurationJSON} = {}
-    for name, configuration in REQUIRED_CONFIGURATIONS.items():
-        filename = configuration_directory / configuration.name
-        if filename.exists():
-            print(filename)
-            configurations[name] = configuration.from_file(filename)
-        else:
-            raise FileNotFoundError(f'missing required configuration file "{filename}"')
+    coupled_configuration = ADCIRCCoupledRunConfiguration.read_directory(
+        configuration_directory
+    )
 
-    forcing_configurations: {str: ForcingJSON} = {}
-    for name, configuration in ADCIRC_FORCING_CONFIGURATIONS.items():
-        filename = configuration_directory / configuration.name
-        if filename.exists():
-            forcing_configurations[name] = configuration.from_file(filename)
+    runs = coupled_configuration['modeldriver']['runs']
+    platform = coupled_configuration['modeldriver']['platform']
 
-    runs = configurations['main']['runs']
-    platform = configurations['main']['platform']
+    source_filename = coupled_configuration['adcirc']['source_filename']
+    tidal_spinup_duration = coupled_configuration['adcirc']['tidal_spinup_duration']
+    original_fort13_filename = coupled_configuration['adcirc']['fort_13_path']
+    original_fort14_filename = coupled_configuration['adcirc']['fort_14_path']
+    adcprep_executable_path = coupled_configuration['adcirc']['adcprep_executable_path']
+    use_original_mesh = coupled_configuration['adcirc']['use_original_mesh']
 
-    source_filename = configurations['adcirc']['source_filename']
-    tidal_spinup_duration = configurations['adcirc']['tidal_spinup_duration']
-    original_fort13_filename = configurations['adcirc']['fort_13_path']
-    original_fort14_filename = configurations['adcirc']['fort_14_path']
-    adcprep_executable_path = configurations['adcirc']['adcprep_executable_path']
+    nems_executable = coupled_configuration['nems']['executable_path']
+    nems = coupled_configuration['nems'].nemspy_modeling_system
 
-    nems_executable = configurations['nems']['executable_path']
-    nems = configurations['nems'].to_nemspy()
-
-    job_duration = configurations['job']['job_duration']
-    partition = configurations['job']['partition']
-    email_type = configurations['job']['email_type']
-    email_address = configurations['job']['email_address']
+    job_duration = coupled_configuration['slurm']['job_duration']
+    partition = coupled_configuration['slurm']['partition']
+    email_type = coupled_configuration['slurm']['email_type']
+    email_address = coupled_configuration['slurm']['email_address']
 
     LOGGER.info(
         f'generating {len(runs)} '
@@ -255,27 +113,7 @@ def write_adcirc_configurations(
     else:
         tidal_spinup_nems = None
 
-    # open mesh file
-    LOGGER.info(f'opening mesh "{original_fort14_filename}"')
-    mesh = AdcircMesh.open(original_fort14_filename, crs=4326)
-
-    LOGGER.debug(f'adding {len(forcing_configurations)} forcing(s) to mesh')
-    for forcing_configuration in forcing_configurations:
-        mesh.add_forcing(forcing_configuration.forcing)
-
-    LOGGER.info(f'reading attributes from "{original_fort13_filename}"')
-    if original_fort13_filename is not None and original_fort13_filename.exists():
-        mesh.import_nodal_attributes(original_fort13_filename)
-        for attribute_name in mesh.get_nodal_attribute_names():
-            mesh.set_nodal_attribute_state(attribute_name, coldstart=True, hotstart=True)
-    else:
-        LOGGER.warning(
-            f'mesh values (nodal attributes) not found at "{original_fort13_filename}"'
-        )
-
-    if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
-        LOGGER.debug(f'generating tau0 in mesh')
-        mesh.generate_tau0()
+    mesh = coupled_configuration['adcirc'].adcircpy_mesh
 
     if tidal_spinup_nems is not None:
         coldstart_filenames = tidal_spinup_nems.write(
@@ -285,16 +123,14 @@ def write_adcirc_configurations(
             create_atm_namelist_rc=False,
         )
     else:
-        coldstart_filenames = nems.write(
+        coldstart_filenames = nems.write_directory(
             output_directory,
             overwrite=overwrite,
             include_version=True,
             create_atm_namelist_rc=False,
         )
-    LOGGER.info(
-        f'wrote NEMS coldstart configuration: '
-        f'{", ".join((filename.name for filename in coldstart_filenames))}'
-    )
+    filenames = (f'"{filename.name}"' for filename in coldstart_filenames)
+    LOGGER.info(f'writing NEMS coldstart configuration: ' f'{", ".join(filenames)}')
 
     for filename in coldstart_filenames:
         coldstart_filename = Path(f'{filename}.coldstart')
@@ -316,10 +152,8 @@ def write_adcirc_configurations(
             include_version=True,
             create_atm_namelist_rc=False,
         )
-        LOGGER.info(
-            f'writing NEMS hotstart configuration: '
-            f'{", ".join((filename.name for filename in hotstart_filenames))}'
-        )
+        filenames = (f'"{filename.name}"' for filename in hotstart_filenames)
+        LOGGER.info(f'writing NEMS hotstart configuration: ' f'{", ".join(filenames)}')
     else:
         hotstart_filenames = []
 
@@ -387,9 +221,9 @@ def write_adcirc_configurations(
     adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
 
     coldstart_setup_script = AdcircSetupScript(
-        nems_configure_filename=Path('..') / 'nems.configure.coldstart',
-        model_configure_filename=Path('..') / 'model_configure.coldstart',
-        config_rc_filename=Path('..') / 'config.rc.coldstart',
+        nems_configure_filename=Path('../..') / 'nems.configure.coldstart',
+        model_configure_filename=Path('../..') / 'model_configure.coldstart',
+        config_rc_filename=Path('../..') / 'config.rc.coldstart',
     )
 
     LOGGER.debug(
@@ -434,10 +268,10 @@ def write_adcirc_configurations(
 
     if tidal_spinup_nems is not None:
         hotstart_setup_script = AdcircSetupScript(
-            nems_configure_filename=Path('../..') / 'nems.configure.hotstart',
-            model_configure_filename=Path('../..') / 'model_configure.hotstart',
-            config_rc_filename=Path('../..') / 'config.rc.hotstart',
-            fort67_filename=Path('../..') / 'coldstart/fort.67.nc',
+            nems_configure_filename=Path('../../..') / 'nems.configure.hotstart',
+            model_configure_filename=Path('../../..') / 'model_configure.hotstart',
+            config_rc_filename=Path('../../..') / 'config.rc.hotstart',
+            fort67_filename=Path('../../..') / 'coldstart/fort.67.nc',
         )
         hotstart_run_script = AdcircRunJob(
             platform=platform,
@@ -463,29 +297,7 @@ def write_adcirc_configurations(
         hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     # instantiate AdcircRun object.
-    driver = AdcircRun(
-        mesh=mesh,
-        start_date=nems.start_time,
-        end_date=nems.end_time,
-        spinup_time=timedelta(days=5),
-    )
-
-    # spinup_start = spinup.start_time if spinup is not None else None
-    # spinup_end = spinup.end_time if spinup is not None else None
-    spinup_interval = tidal_spinup_nems.interval if tidal_spinup_nems is not None else None
-
-    stations_filename = original_fort14_filename / 'stations.txt'
-    if stations_filename.exists():
-        driver.import_stations(stations_filename)
-        driver.set_elevation_stations_output(nems.interval, spinup=spinup_interval)
-        # spinup_start=spinup_start, spinup_end=spinup_end)
-        driver.set_velocity_stations_output(nems.interval, spinup=spinup_interval)
-        # spinup_start=spinup_start, spinup_end=spinup_end)
-
-    driver.set_elevation_surface_output(nems.interval, spinup=spinup_interval)
-    # spinup_start=spinup_start, spinup_end=spinup_end)
-    driver.set_velocity_surface_output(nems.interval, spinup=spinup_interval)
-    # spinup_start=spinup_start, spinup_end=spinup_end)
+    driver = coupled_configuration['adcirc'].adcircpy_driver
 
     local_fort14_filename = output_directory / 'fort.14'
     if use_original_mesh:
@@ -554,3 +366,152 @@ def write_adcirc_configurations(
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
+
+
+class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
+    required = [
+        ModelDriverJSON,
+        NEMSJSON,
+        SlurmJSON,
+        ADCIRCJSON,
+    ]
+    forcings = [
+        TidalForcingJSON,
+        ATMESHForcingJSON,
+        WW3DATAForcingJSON,
+    ]
+
+    def __init__(
+        self,
+        fort13: PathLike,
+        fort14: PathLike,
+        modeled_start_time: datetime,
+        modeled_end_time: datetime,
+        modeled_timestep: timedelta,
+        nems_interval: timedelta,
+        nems_connections: [str],
+        nems_mediations: [str],
+        nems_sequence: [str],
+        tidal_spinup_duration: timedelta = None,
+        platform: Platform = None,
+        runs: {str: (float, str)} = None,
+        forcings: [ForcingJSON] = None,
+        adcirc_processors: int = None,
+        slurm_job_duration: timedelta = None,
+        slurm_partition: str = None,
+        slurm_email_address: str = None,
+        nems_executable: PathLike = None,
+        adcprep_executable: PathLike = None,
+        source_filename: PathLike = None,
+    ):
+        self.__nems = None
+
+        super().__init__(
+            fort13=fort13,
+            fort14=fort14,
+            modeled_start_time=modeled_start_time,
+            modeled_end_time=modeled_end_time,
+            modeled_timestep=modeled_timestep,
+            tidal_spinup_duration=tidal_spinup_duration,
+            platform=platform,
+            runs=runs,
+            forcings=forcings,
+            adcirc_processors=adcirc_processors,
+            slurm_job_duration=slurm_job_duration,
+            slurm_partition=slurm_partition,
+            slurm_email_address=slurm_email_address,
+            adcprep_executable=adcprep_executable,
+            source_filename=source_filename,
+        )
+
+        self.__nems = NEMSJSON(
+            executable_path=nems_executable,
+            modeled_start_time=modeled_start_time,
+            modeled_end_time=modeled_end_time,
+            interval=nems_interval,
+            models=self.nemspy_entries,
+            connections=nems_connections,
+            mediations=nems_mediations,
+            sequence=nems_sequence,
+        )
+
+        self.configurations[self.nems.name] = self.nems
+        self.slurm['tasks'] = self.nems.nemspy_modeling_system.processors
+
+    @property
+    def nems(self) -> NEMSJSON:
+        return self.__nems
+
+    @property
+    def nemspy_modeling_system(self) -> ModelingSystem:
+        return self.nems.nemspy_modeling_system
+
+    def add_forcing(self, forcing: Forcing):
+        if not isinstance(forcing, ForcingJSON):
+            if isinstance(forcing, AtmosphericMeshForcing):
+                forcing = ATMESHForcingJSON.from_adcircpy(forcing)
+                if self.nems is not None:
+                    self.nems['atm'] = forcing.nemspy_entry
+            elif isinstance(forcing, WaveWatch3DataForcing):
+                forcing = WW3DATAForcingJSON.from_adcircpy(forcing)
+                if self.nems is not None:
+                    self.nems['wav'] = forcing.nemspy_entry
+            elif isinstance(forcing, Tides):
+                forcing = TidalForcingJSON.from_adcircpy(forcing)
+            else:
+                raise NotImplementedError(f'unable to parse object of type {type(forcing)}')
+
+        if forcing not in self:
+            self[forcing.name] = forcing
+            self.adcirc.forcings.append(forcing)
+
+    @classmethod
+    def read_directory(cls, directory: PathLike) -> 'RunConfiguration':
+        if not isinstance(directory, Path):
+            directory = Path(directory)
+        if directory.is_file():
+            directory = directory.parent
+
+        configurations = []
+        for configuration_class in cls.required:
+            filename = directory / configuration_class.default_filename
+            if filename.exists():
+                configurations.append(configuration_class.from_file(filename))
+            else:
+                raise FileNotFoundError(f'missing required configuration file "{filename}"')
+
+        driver = configurations[0]
+        nems = configurations[1]
+        slurm = configurations[2]
+        adcirc = configurations[3]
+
+        forcings = []
+        for configuration_class in cls.forcings:
+            filename = directory / configuration_class.default_filename
+            if filename.exists():
+                forcings.append(configuration_class.from_file(filename))
+
+        instance = cls(
+            fort13=adcirc['fort_13_path'],
+            fort14=adcirc['fort_14_path'],
+            modeled_start_time=adcirc['modeled_start_time'],
+            modeled_end_time=adcirc['modeled_end_time'],
+            modeled_timestep=adcirc['modeled_timestep'],
+            nems_interval=nems['interval'],
+            nems_connections=nems['connections'],
+            nems_mediations=nems['mediations'],
+            nems_sequence=nems['sequence'],
+            tidal_spinup_duration=adcirc['tidal_spinup_duration'],
+            platform=driver['platform'],
+            runs=driver['runs'],
+            forcings=forcings,
+            adcirc_processors=slurm['tasks'],
+            slurm_job_duration=slurm['job_duration'],
+            slurm_partition=slurm['partition'],
+            slurm_email_address=slurm['email_address'],
+            nems_executable=nems['executable_path'],
+            adcprep_executable=adcirc['adcprep_executable_path'],
+            source_filename=adcirc['source_filename'],
+        )
+
+        return instance

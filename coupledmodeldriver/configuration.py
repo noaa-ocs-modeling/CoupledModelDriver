@@ -4,7 +4,7 @@ from enum import Enum
 import json
 from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import Any, Collection, Mapping, Union
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.base import Forcing
@@ -13,12 +13,12 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
-from nemspy.model import ModelEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, ModelEntry, \
+    WaveMeshEntry
 
-from coupledmodeldriver.job_script import SlurmEmailType
-from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.utilities import convert_to_json, convert_value, \
-    get_logger
+from .job_script import SlurmEmailType
+from .platforms import Platform
+from .utilities import convert_to_json, convert_value, get_logger
 
 LOGGER = get_logger('configuration')
 
@@ -37,18 +37,29 @@ class GWCESolutionScheme(Enum):
 
 
 class ConfigurationJSON(ABC):
-    name: str = 'configure.json'
+    name: PathLike = None
+    default_filename = f'configure.json'
     field_types: {str: type} = {}
 
-    def __init__(self, fields: {str: type} = None):
+    def __init__(self, fields: {str: type} = None, configuration: {str: Any} = None):
         if fields is None:
-            fields = self.field_types
+            fields = {}
+
+        fields.update(self.field_types)
+
+        if configuration is None:
+            configuration = {field: None for field in fields}
+
         self.__fields = fields
-        self.__configuration = {field: None for field in fields}
+        self.__configuration = configuration
 
     @property
     def fields(self) -> {str: type}:
         return self.__fields
+
+    @property
+    def configuration(self) -> {str: Any}:
+        return self.__configuration
 
     def update(self, configuration: {str: Any}):
         for key, value in configuration.items():
@@ -80,10 +91,11 @@ class ConfigurationJSON(ABC):
         else:
             field_type = type(value)
         self.__configuration[key] = convert_value(value, field_type)
-        self.__fields[key] = field_type
+        if key not in self.fields:
+            self.__fields[key] = field_type
 
-    def __str__(self) -> str:
-        return json.dumps(self.configuration)
+    def __eq__(self, other: 'ConfigurationJSON') -> bool:
+        return other.configuration == self.configuration
 
     def __repr__(self):
         configuration_string = ', '.join(
@@ -91,43 +103,33 @@ class ConfigurationJSON(ABC):
         )
         return f'{self.__class__.__name__}({configuration_string})'
 
-    @property
-    def configuration(self) -> {str: Any}:
-        return self.__configuration
+    @classmethod
+    def from_dict(cls, configuration: {str: Any}) -> 'ConfigurationJSON':
+        return cls(**configuration)
 
     def to_dict(self) -> {str: Any}:
         return self.configuration
 
     @classmethod
-    def from_dict(cls, configuration: {str: Any}) -> 'ConfigurationJSON':
+    def from_string(cls, string: str) -> 'ConfigurationJSON':
+        configuration = json.loads(string)
+
+        configuration = {
+            key.lower(): convert_value(value, cls.field_types[key])
+            if key in cls.field_types
+            else convert_to_json(value)
+            for key, value in configuration.items()
+        }
+
         return cls(**configuration)
 
-    def to_file(self, filename: PathLike = None, overwrite: bool = False):
-        """
-        Write script to file.
-
-        :param filename: path to output file
-        :param overwrite: whether to overwrite existing file
-        """
-
-        if filename is None:
-            filename = self['output_directory']
-        elif not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / self.name
-
+    def __str__(self) -> str:
         configuration = convert_to_json(self.configuration)
 
         if any(key != key.lower() for key in configuration):
             configuration = {key.lower(): value for key, value in configuration.items()}
 
-        if overwrite or not filename.exists():
-            with open(filename, 'w') as file:
-                json.dump(configuration, file)
-        else:
-            raise FileExistsError(f'file exists at {filename}')
+        return json.dumps(configuration)
 
     @classmethod
     def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
@@ -146,9 +148,40 @@ class ConfigurationJSON(ABC):
 
         return cls(**configuration)
 
+    def to_file(self, filename: PathLike = None, overwrite: bool = False):
+        """
+        Write script to file.
+
+        :param filename: path to output file
+        :param overwrite: whether to overwrite existing file
+        """
+
+        if filename is None:
+            filename = self['output_directory']
+        elif not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / self.default_filename
+
+        if not filename.parent.exists():
+            filename.mkdir(parents=True, exist_ok=True)
+
+        configuration = convert_to_json(self.configuration)
+
+        if any(key != key.lower() for key in configuration):
+            configuration = {key.lower(): value for key, value in configuration.items()}
+
+        if overwrite or not filename.exists():
+            with open(filename.absolute(), 'w') as file:
+                json.dump(configuration, file)
+        else:
+            raise FileExistsError(f'file exists at {filename}')
+
 
 class SlurmJSON(ConfigurationJSON):
-    name = 'configure_slurm.json'
+    name = 'slurm'
+    default_filename = f'configure_slurm.json'
     field_types = {
         'account': str,
         'tasks': int,
@@ -246,12 +279,13 @@ class SlurmJSON(ConfigurationJSON):
 
 
 class NEMSJSON(ConfigurationJSON):
-    name = 'configure_nems.json'
+    name = 'nems'
+    default_filename = f'configure_nems.json'
     field_types = {
         'executable_path': Path,
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
-        'modeled_timestep': timedelta,
+        'interval': timedelta,
         'models': [ModelEntry],
         'connections': [[str]],
         'mediations': [str],
@@ -263,7 +297,7 @@ class NEMSJSON(ConfigurationJSON):
         executable_path: PathLike,
         modeled_start_time: datetime,
         modeled_end_time: datetime,
-        modeled_timestep: timedelta = None,
+        interval: timedelta = None,
         models: [ModelEntry] = None,
         connections: [[str]] = None,
         mediations: [[str]] = None,
@@ -274,17 +308,18 @@ class NEMSJSON(ConfigurationJSON):
         self['executable_path'] = executable_path
         self['modeled_start_time'] = modeled_start_time
         self['modeled_end_time'] = modeled_end_time
-        self['modeled_timestep'] = modeled_timestep
+        self['interval'] = interval
         self['models'] = models
         self['connections'] = connections
         self['mediations'] = mediations
         self['sequence'] = sequence
 
-    def to_nemspy(self) -> ModelingSystem:
+    @property
+    def nemspy_modeling_system(self) -> ModelingSystem:
         modeling_system = ModelingSystem(
             start_time=self['modeled_start_time'],
             end_time=self['modeled_end_time'],
-            interval=self['modeled_timestep'],
+            interval=self['interval'],
             **{model.model_type.value.lower(): model for model in self['models']},
         )
         for connection in self['connections']:
@@ -295,6 +330,9 @@ class NEMSJSON(ConfigurationJSON):
         modeling_system.sequence = self['sequence']
 
         return modeling_system
+
+    def to_nemspy(self) -> ModelingSystem:
+        return self.nemspy_modeling_system
 
     @classmethod
     def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
@@ -311,18 +349,43 @@ class NEMSJSON(ConfigurationJSON):
         )
 
 
-class ModelJSON(ConfigurationJSON):
-    name = 'configure_model.json'
-
+class ModelJSON(ConfigurationJSON, ABC):
     def __init__(self, model: Model, fields: {str: type} = None):
         if not isinstance(model, Model):
             model = Model[str(model).lower()]
+        if fields is None:
+            fields = {}
+
+        fields.update(self.field_types)
+
         self.model = model
-        super().__init__(fields=fields)
+        ConfigurationJSON.__init__(self, fields=fields)
 
 
-class ADCIRCJSON(ModelJSON):
-    name = 'configure_adcirc.json'
+class NEMSCapJSON(ConfigurationJSON, ABC):
+    field_types = {
+        'processors': int,
+        'nems_parameters': {str: str},
+    }
+
+    def __init__(self, processors: int, nems_parameters: {str: str} = None):
+        super().__init__(fields=self.fields, configuration=self.configuration)
+        self.fields.update(NEMSCapJSON.field_types)
+
+        if nems_parameters is None:
+            nems_parameters = {}
+
+        self['processors'] = processors
+        self['nems_parameters'] = nems_parameters
+
+    @abstractmethod
+    def nemspy_entry(self) -> ModelEntry:
+        raise NotImplementedError()
+
+
+class ADCIRCJSON(ModelJSON, NEMSCapJSON):
+    name = 'adcirc'
+    default_filename = f'configure_adcirc.json'
     field_types = {
         'adcprep_executable_path': Path,
         'modeled_start_time': datetime,
@@ -330,15 +393,15 @@ class ADCIRCJSON(ModelJSON):
         'modeled_timestep': timedelta,
         'fort_13_path': Path,
         'fort_14_path': Path,
-        'write_surface_output': bool,
-        'write_station_output': bool,
-        'use_original_mesh': bool,
-        'stations_file_path': Path,
         'tidal_spinup_duration': timedelta,
         'tidal_spinup_timestep': timedelta,
         'gwce_solution_scheme': GWCESolutionScheme,
         'use_smagorinsky': bool,
         'source_filename': Path,
+        'use_original_mesh': bool,
+        'stations_file_path': Path,
+        'write_surface_output': bool,
+        'write_station_output': bool,
     }
 
     def __init__(
@@ -360,6 +423,8 @@ class ADCIRCJSON(ModelJSON):
         stations_file_path: PathLike = None,
         write_surface_output: bool = True,
         write_station_output: bool = False,
+        processors: int = 11,
+        nems_parameters: {str: str} = None,
     ):
         """
 
@@ -368,6 +433,7 @@ class ADCIRCJSON(ModelJSON):
         :param modeled_end_time: edn time in model run
         :param modeled_timestep: time interval between model steps
         :param fort_13_path: file path to `fort.13`
+        :param fort_14_path: file path to `fort.14`
         :param fort_14_path: file path to `fort.14`
         :param tidal_spinup_duration: tidal spinup duration for ADCIRC coldstart
         :param tidal_spinup_timestep: tidal spinup modeled time interval for ADCIRC coldstart
@@ -380,6 +446,8 @@ class ADCIRCJSON(ModelJSON):
         :param stations_file_path: file path to stations file
         :param write_surface_output: whether to write surface output to NetCDF
         :param write_station_output: whether to write station output to NetCDF (only applicable if stations file exists)
+        :param processors: number of processors to use
+        :param nems_parameters: parameters to give to NEMS cap
         """
 
         if tidal_spinup_timestep is None:
@@ -388,7 +456,8 @@ class ADCIRCJSON(ModelJSON):
         if forcings is None:
             forcings = []
 
-        super().__init__(model=Model.ADCIRC)
+        ModelJSON.__init__(self, model=Model.ADCIRC)
+        NEMSCapJSON.__init__(self, processors=processors, nems_parameters=nems_parameters)
 
         self['adcprep_executable_path'] = adcprep_executable_path
         self['modeled_start_time'] = modeled_start_time
@@ -396,15 +465,15 @@ class ADCIRCJSON(ModelJSON):
         self['modeled_timestep'] = modeled_timestep
         self['fort_13_path'] = fort_13_path
         self['fort_14_path'] = fort_14_path
-        self['write_surface_output'] = write_surface_output
-        self['write_station_output'] = write_station_output
-        self['use_original_mesh'] = use_original_mesh
-        self['stations_file_path'] = stations_file_path
         self['tidal_spinup_duration'] = tidal_spinup_duration
         self['tidal_spinup_timestep'] = tidal_spinup_timestep
         self['gwce_solution_scheme'] = gwce_solution_scheme
         self['use_smagorinsky'] = use_smagorinsky
         self['source_filename'] = source_filename
+        self['use_original_mesh'] = use_original_mesh
+        self['stations_file_path'] = stations_file_path
+        self['write_surface_output'] = write_surface_output
+        self['write_station_output'] = write_station_output
 
         self.forcings = forcings
         self.slurm_configuration = slurm_configuration
@@ -431,13 +500,13 @@ class ADCIRCJSON(ModelJSON):
         self.__slurm_configuration = slurm_configuration
 
     @property
-    def mesh(self) -> AdcircMesh:
+    def adcircpy_mesh(self) -> AdcircMesh:
         LOGGER.info(f'opening mesh "{self["fort_14_path"]}"')
         mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for forcing in self.forcings:
-            mesh.add_forcing(forcing)
+            mesh.add_forcing(forcing.adcircpy_forcing)
 
         if self['fort_13_path'] is not None:
             LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
@@ -459,10 +528,10 @@ class ADCIRCJSON(ModelJSON):
         return mesh
 
     @property
-    def driver(self) -> AdcircRun:
+    def adcircpy_driver(self) -> AdcircRun:
         # instantiate AdcircRun object.
         driver = AdcircRun(
-            mesh=self.mesh,
+            mesh=self.adcircpy_mesh,
             start_date=self['modeled_start_time'],
             end_date=self['modeled_end_time'],
             spinup_time=self['tidal_spinup_duration'],
@@ -506,21 +575,22 @@ class ADCIRCJSON(ModelJSON):
 
         return driver
 
+    @property
+    def nemspy_entry(self) -> ADCIRCEntry:
+        return ADCIRCEntry(processors=self['processors'], **self['nems_parameters'])
 
-class ForcingJSON(ModelJSON, ABC):
-    name = 'configure_forcing.json'
-    field_types = {'resource': Path}
 
-    def __init__(
-        self, model: Model, resource: PathLike, fields: {str: type} = None,
-    ):
+class ForcingJSON(ConfigurationJSON, ABC):
+    field_types = {'resource': str}
+
+    def __init__(self, resource: PathLike, fields: {str: type} = None):
         if fields is None:
             fields = {}
 
         fields.update(self.field_types)
+        fields.update(ForcingJSON.field_types)
 
-        super().__init__(model, fields)
-
+        ConfigurationJSON.__init__(self, fields=fields)
         self['resource'] = resource
 
     @property
@@ -534,11 +604,12 @@ class ForcingJSON(ModelJSON, ABC):
     @classmethod
     @abstractmethod
     def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class TidalForcingJSON(ForcingJSON):
-    name = 'configure_tidal_forcing.json'
+    name = 'tidal_forcing'
+    default_filename = f'configure_tidal_forcing.json'
     field_types = {'tidal_source': TidalSource, 'constituents': [str]}
 
     def __init__(
@@ -552,7 +623,7 @@ class TidalForcingJSON(ForcingJSON):
         elif not isinstance(constituents, str):
             constituents = list(constituents)
 
-        super().__init__(model=Model.TidalForcing, resource=resource)
+        super().__init__(resource=resource)
 
         self['tidal_source'] = tidal_source
         self['constituents'] = constituents
@@ -561,15 +632,26 @@ class TidalForcingJSON(ForcingJSON):
     def adcircpy_forcing(self) -> Forcing:
         tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'])
 
-        constituents = [constituent.upper() for constituent in self['constituents']]
-        if 'ALL' in constituents:
+        constituents = [constituent.capitalize() for constituent in self['constituents']]
+
+        if sorted(constituents) == sorted(
+            constituent.capitalize() for constituent in tides.constituents
+        ):
+            constituents = ['All']
+        elif sorted(constituents) == sorted(
+            constituent.capitalize() for constituent in tides.major_constituents
+        ):
+            constituents = ['Major']
+
+        if 'All' in constituents:
             tides.use_all()
-        elif 'MAJOR' in constituents:
+        elif 'Major' in constituents:
             tides.use_major()
         else:
             for constituent in constituents:
                 tides.use_constituent(constituent)
 
+        self['constituents'] = list(tides.active_constituents)
         return tides
 
     @classmethod
@@ -581,8 +663,9 @@ class TidalForcingJSON(ForcingJSON):
         )
 
 
-class ATMESHForcingJSON(ForcingJSON):
-    name = 'configure_atmesh.json'
+class ATMESHForcingJSON(ForcingJSON, NEMSCapJSON):
+    name = 'atmesh'
+    default_filename = f'configure_atmesh.json'
     field_types = {
         'nws': int,
         'modeled_timestep': timedelta,
@@ -593,8 +676,11 @@ class ATMESHForcingJSON(ForcingJSON):
         resource: PathLike,
         nws: int = 17,
         modeled_timestep: timedelta = timedelta(hours=1),
+        processors: int = 1,
+        nems_parameters: {str: str} = None,
     ):
-        super().__init__(model=Model.ATMESH, resource=resource)
+        ForcingJSON.__init__(self, resource=resource)
+        NEMSCapJSON.__init__(self, processors=processors, nems_parameters=nems_parameters)
 
         self['nws'] = nws
         self['modeled_timestep'] = modeled_timestep
@@ -613,9 +699,16 @@ class ATMESHForcingJSON(ForcingJSON):
             resource=forcing.filename, nws=forcing.NWS, modeled_timestep=forcing.interval,
         )
 
+    @property
+    def nemspy_entry(self) -> AtmosphericMeshEntry:
+        return AtmosphericMeshEntry(
+            filename=self['resource'], processors=self['processors'], **self['nems_parameters']
+        )
 
-class WW3DATAForcingJSON(ForcingJSON):
-    name = 'configure_ww3data.json'
+
+class WW3DATAForcingJSON(ForcingJSON, NEMSCapJSON):
+    name = 'ww3data'
+    default_filename = f'configure_ww3data.json'
     field_types = {'nrs': int, 'modeled_timestep': timedelta}
 
     def __init__(
@@ -623,8 +716,11 @@ class WW3DATAForcingJSON(ForcingJSON):
         resource: PathLike,
         nrs: int = 5,
         modeled_timestep: timedelta = timedelta(hours=1),
+        processors: int = 1,
+        nems_parameters: {str: str} = None,
     ):
-        super().__init__(model=Model.WW3DATA, resource=resource)
+        ForcingJSON.__init__(self, resource=resource)
+        NEMSCapJSON.__init__(self, processors=processors, nems_parameters=nems_parameters)
 
         self['nrs'] = nrs
         self['modeled_timestep'] = modeled_timestep
@@ -643,22 +739,23 @@ class WW3DATAForcingJSON(ForcingJSON):
             resource=forcing.filename, nrs=forcing.NRS, modeled_timestep=forcing.interval,
         )
 
+    @property
+    def nemspy_entry(self) -> WaveMeshEntry:
+        return WaveMeshEntry(
+            filename=self['resource'], processors=self['processors'], **self['nems_parameters']
+        )
 
-class CoupledModelDriverJSON(ConfigurationJSON):
-    name = 'configure_coupledmodeldriver.json'
+
+class ModelDriverJSON(ConfigurationJSON):
+    name = 'modeldriver'
+    default_filename = f'configure_modeldriver.json'
     field_types = {
         'platform': Platform,
-        'output_directory': Path,
-        'models': [Model],
         'runs': {str: (str, Any)},
     }
 
     def __init__(
-        self,
-        platform: Platform,
-        output_directory: PathLike,
-        models: [Model],
-        runs: {str: (str, Any)} = None,
+        self, platform: Platform, runs: {str: (str, Any)} = None,
     ):
         if runs is None:
             runs = {'run_1': (None, None)}
@@ -666,6 +763,87 @@ class CoupledModelDriverJSON(ConfigurationJSON):
         super().__init__()
 
         self['platform'] = platform
-        self['output_directory'] = output_directory
-        self['models'] = models
         self['runs'] = runs
+
+
+class RunConfiguration(ABC):
+    required: [ConfigurationJSON] = []
+    forcings: [ForcingJSON] = []
+
+    def __init__(self, configurations: [ConfigurationJSON]):
+        self.__configurations = {}
+        self.configurations = configurations
+
+    @property
+    def configurations(self) -> {str: ConfigurationJSON}:
+        return self.__configurations
+
+    @configurations.setter
+    def configurations(self, configurations: {str: ConfigurationJSON}):
+        if isinstance(configurations, Collection) and not isinstance(configurations, Mapping):
+            configurations = {entry.name: entry for entry in configurations}
+        for name, configuration in configurations.items():
+            self[name] = configuration
+
+    @property
+    def nemspy_entries(self) -> [ModelEntry]:
+        return [
+            configuration.nemspy_entry
+            for configuration in self.configurations.values()
+            if isinstance(configuration, NEMSCapJSON)
+        ]
+
+    def __contains__(self, configuration: Union[str, ConfigurationJSON]) -> bool:
+        if isinstance(configuration, ConfigurationJSON):
+            configuration = configuration.name
+        return configuration in self.configurations
+
+    def __getitem__(self, name: str) -> ConfigurationJSON:
+        return self.configurations[name]
+
+    def __setitem__(self, name: str, value: ConfigurationJSON):
+        if isinstance(value, str):
+            if Path(value).exists():
+                value = ConfigurationJSON.from_file(value)
+            else:
+                value = ConfigurationJSON.from_string(value)
+        elif isinstance(value, Forcing):
+            value = ForcingJSON.from_adcircpy(value)
+        self.configurations[name] = value
+
+    @classmethod
+    def read_directory(cls, directory: PathLike) -> 'RunConfiguration':
+        if not isinstance(directory, Path):
+            directory = Path(directory)
+        if directory.is_file():
+            directory = directory.parent
+
+        configurations = []
+        for name, configuration_class in cls.required:
+            filename = directory / configuration_class.default_filename
+            if filename.exists():
+                configurations.append(configuration_class.from_file(filename))
+            else:
+                raise FileNotFoundError(f'missing required configuration file "{filename}"')
+
+        for name, configuration_class in cls.forcings:
+            filename = directory / configuration_class.default_filename
+            if filename.exists():
+                configurations.append(configuration_class.from_file(filename))
+
+        return cls(configurations)
+
+    def write_directory(self, directory: PathLike, overwrite: bool = False):
+        """
+        :param directory: directory in which to write generated JSON configuration files
+        :param overwrite: whether to overwrite existing files
+        """
+
+        if not isinstance(directory, Path):
+            directory = Path(directory)
+
+        if not directory.exists():
+            directory.mkdir(parents=True, exist_ok=True)
+
+        for configuration in self.__configurations.values():
+            configuration.to_file(directory, overwrite=overwrite)

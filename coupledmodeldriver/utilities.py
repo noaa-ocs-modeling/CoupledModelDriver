@@ -50,6 +50,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -179,7 +180,13 @@ def convert_value(value: Any, to_type: type) -> Any:
                 value = to_type(value)
     elif not isinstance(value, to_type) and value is not None:
         if isinstance(value, timedelta):
-            value /= timedelta(seconds=1)
+            if issubclass(to_type, str):
+                hours, remainder = divmod(value, timedelta(hours=1))
+                minutes, remainder = divmod(remainder, timedelta(minutes=1))
+                seconds = remainder / timedelta(seconds=1)
+                value = f'{hours}:{minutes}:{seconds}'
+            else:
+                value /= timedelta(seconds=1)
         if issubclass(to_type, bool):
             value = eval(f'{value}')
         elif issubclass(to_type, datetime):
