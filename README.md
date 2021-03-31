@@ -154,27 +154,28 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┃    ┣ 📜 fort.13
 ┃    ┣ 🔗 fort.14 -> ../../fort.14
 ┃    ┗ 📜 fort.15
-┣ 📜 configure_modeldriver.json
-┣ 📜 configure_nems.json
-┣ 📜 configure_slurm.json
-┣ 📜 configure_adcirc.json
-┣ 📜 configure_tidal_forcing.json
-┣ 📜 configure_atmesh.json
-┣ 📜 configure_ww3data.json
+┣ 📜 fort.14
 ┣ 📜 nems.configure.coldstart
 ┣ 📜 nems.configure.hotstart
 ┣ 📜 config.rc.coldstart
 ┣ 📜 config.rc.hotstart
 ┣ 📜 model_configure.coldstart
 ┣ 📜 model_configure.hotstart
-┣ 📜 fort.14
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ ✎ configure_modeldriver.json
+┣ ✎ configure_adcirc.json
+┣ ✎ configure_nems.json
+┣ ✎ configure_slurm.json
+┣ ✎ configure_tidal_forcing.json
+┣ ✎ configure_atmesh.json
+┣ ✎ configure_ww3data.json
 ┣ 📜 setup.sh.coldstart
 ┣ 📜 setup.sh.hotstart
+┣ 📜 cleanup.sh
 ┣ 📜 setup_hera.sh
-┗ 📜 run_hera.sh
+┗  ▶ run_hera.sh
 ```
 
 _**Note:** the required NEMS configuration files (`nems.configure`, `model_configure`) do not yet exist in the run
@@ -194,33 +195,28 @@ This will first create symbolic links to populate configuration directories (by 
 📦 hera_shinnecock_ike/
 ┣ 📂 coldstart/
 ┃  ┣ 📜 fort.13
-┃  ┣ 📜 fort.14
+┃  ┣ 🔗 fort.14 -> ../fort.14
 ┃  ┣ 📜 fort.15
 ┃  ┣ 🔗 nems.configure -> ../nems.configure.coldstart
 ┃  ┣ 🔗 config.rc -> ../config.rc.coldstart
 ┃  ┣ 🔗 model_configure -> ../model_configure.coldstart
-┃  ┣ 🔗 setup.sh -> ../setup.sh.coldstart
-┃  ┣ 🔗 hera_adcprep.job -> ../job_adcprep_hera.job
-┃  ┗ 🔗 hera_nems_adcirc.job -> ../job_nems_adcirc_hera.job.coldstart
+┃  ┣ 🔗 adcprep.job -> ../job_adcprep_hera.job
+┃  ┣ 🔗 nems_adcirc.job -> ../job_nems_adcirc_hera.job.coldstart
+┃  ┗ 🔗 setup.sh -> ../setup.sh.coldstart
 ┣ 📂 runs/
 ┃  ┗ 📂 test_case_1/
 ┃    ┣ 📜 fort.13
-┃    ┣ 📜 fort.14
+┃    ┣ 🔗 fort.14 -> ../../fort.14
 ┃    ┣ 📜 fort.15
 ┃    ┣ 🔗 fort.67.nc -> ../../coldstart/fort.67.nc
 ┃    ┣ 🔗 nems.configure -> ../../nems.configure.hotstart
 ┃    ┣ 🔗 config.rc -> ../../config.rc.hotstart
 ┃    ┣ 🔗 model_configure -> ../../model_configure.hotstart
-┃    ┣ 🔗 setup.sh -> ../../setup.sh.hotstart
-┃    ┣ 🔗 hera_adcprep.job -> ../../job_adcprep_hera.job
-┃    ┗ 🔗 hera_nems_adcirc.job -> ../../job_nems_adcirc_hera.job.hotstart
-┣ 📜 configure_modeldriver.json
-┣ 📜 configure_nems.json
-┣ 📜 configure_slurm.json
-┣ 📜 configure_adcirc.json
-┣ 📜 configure_tidal_forcing.json
-┣ 📜 configure_atmesh.json
-┣ 📜 configure_ww3data.json
+┃    ┣ 🔗 adcprep.job -> ../../job_adcprep_hera.job
+┃    ┣ 🔗 nems_adcirc.job -> ../../job_nems_adcirc_hera.job.hotstart
+┃    ┗ 🔗 setup.sh -> ../../setup.sh.hotstart
+┣ 📜 fort.14
+┣ 📜 nems.configure.coldstart
 ┣ 📜 nems.configure.hotstart
 ┣ 📜 config.rc.coldstart
 ┣ 📜 config.rc.hotstart
@@ -229,10 +225,18 @@ This will first create symbolic links to populate configuration directories (by 
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ ✎ configure_modeldriver.json
+┣ ✎ configure_adcirc.json
+┣ ✎ configure_nems.json
+┣ ✎ configure_slurm.json
+┣ ✎ configure_tidal_forcing.json
+┣ ✎ configure_atmesh.json
+┣ ✎ configure_ww3data.json
 ┣ 📜 setup.sh.coldstart
 ┣ 📜 setup.sh.hotstart
+┣ 📜 cleanup.sh
 ┣ 📜 setup_hera.sh
-┗ 📜 run_hera.sh
+┗  ▶ run_hera.sh
 ```
 
 and then submit the requested jobs to the queue:
