@@ -193,7 +193,6 @@ def generate_nems_adcirc_configuration(
     setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     cleanup_script_filename = output_directory / f'cleanup.sh'
-    generation_script_filename = output_directory / f'generate.py'
 
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable_path}"')
     adcprep_script = AdcircMeshPartitionJob(
