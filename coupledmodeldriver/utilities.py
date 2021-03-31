@@ -50,7 +50,6 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
-
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -100,7 +99,6 @@ def create_symlink(
 
     if not source_filename.is_symlink():
         source_filename = source_filename.resolve()
-    source_filename = source_filename.absolute()
 
     starting_directory = None
     if relative:
@@ -112,6 +110,8 @@ def create_symlink(
             except ValueError as error:
                 LOGGER.warning(error)
                 os.chdir(starting_directory)
+    else:
+        source_filename = source_filename.absolute()
 
     try:
         symlink_filename.symlink_to(source_filename)
