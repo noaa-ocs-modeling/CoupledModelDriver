@@ -127,7 +127,7 @@ class ConfigurationJSON(ABC):
         if any(key != key.lower() for key in configuration):
             configuration = {key.lower(): value for key, value in configuration.items()}
 
-        return json.dumps(configuration)
+        return json.dumps(configuration, indent=2)
 
     @classmethod
     def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
@@ -184,7 +184,7 @@ class ConfigurationJSON(ABC):
         if overwrite or not filename.exists():
             with open(filename.absolute(), 'w') as file:
                 LOGGER.debug(f'writing to file "{filename}"')
-                json.dump(configuration, file)
+                json.dump(configuration, file, indent=2)
         else:
             LOGGER.debug(f'skipping existing file "{filename}"')
 
