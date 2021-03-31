@@ -186,7 +186,7 @@ class ConfigurationJSON(ABC):
                 LOGGER.debug(f'writing to file "{filename}"')
                 json.dump(configuration, file)
         else:
-            LOGGER.warning(f'skipping existing file "{filename}"')
+            LOGGER.debug(f'skipping existing file "{filename}"')
 
 
 class SlurmJSON(ConfigurationJSON):
