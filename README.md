@@ -164,6 +164,10 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ 📜 setup.sh.coldstart
+┣ 📜 setup.sh.hotstart
+┣ 📜 cleanup.sh
+┣ 📜 setup_hera.sh
 ┣ ✎ configure_modeldriver.json
 ┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
@@ -171,10 +175,6 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┣ ✎ configure_tidal_forcing.json
 ┣ ✎ configure_atmesh.json
 ┣ ✎ configure_ww3data.json
-┣ 📜 setup.sh.coldstart
-┣ 📜 setup.sh.hotstart
-┣ 📜 cleanup.sh
-┣ 📜 setup_hera.sh
 ┗  ▶ run_hera.sh
 ```
 
@@ -225,6 +225,10 @@ This will first create symbolic links to populate configuration directories (by 
 ┣ 📜 job_adcprep_hera.job
 ┣ 📜 job_nems_adcirc_hera.job.coldstart
 ┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ 📜 setup.sh.coldstart
+┣ 📜 setup.sh.hotstart
+┣ 📜 cleanup.sh
+┣ 📜 setup_hera.sh
 ┣ ✎ configure_modeldriver.json
 ┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
@@ -232,10 +236,6 @@ This will first create symbolic links to populate configuration directories (by 
 ┣ ✎ configure_tidal_forcing.json
 ┣ ✎ configure_atmesh.json
 ┣ ✎ configure_ww3data.json
-┣ 📜 setup.sh.coldstart
-┣ 📜 setup.sh.hotstart
-┣ 📜 cleanup.sh
-┣ 📜 setup_hera.sh
 ┗  ▶ run_hera.sh
 ```
 

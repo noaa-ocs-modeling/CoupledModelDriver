@@ -61,12 +61,9 @@ class ConfigurationJSON(ABC):
 
     def update(self, configuration: {str: Any}):
         for key, value in configuration.items():
-            if key not in self:
-                LOGGER.info(f'adding "{key}" to configuration with value {value}')
-            else:
+            if key in self:
                 converted_value = convert_value(value, self.fields[key])
                 if self[key] != converted_value:
-                    LOGGER.info(f'updating "key" from {self[key]} to {converted_value}')
                     value = converted_value
                 else:
                     return
@@ -88,6 +85,9 @@ class ConfigurationJSON(ABC):
             field_type = self.fields[key]
         else:
             field_type = type(value)
+            LOGGER.info(
+                f'adding new configuration entry "{key}: {field_type}" with value "{value}"'
+            )
         self.__configuration[key] = convert_value(value, field_type)
         if key not in self.fields:
             self.__fields[key] = field_type
@@ -145,7 +145,7 @@ class ConfigurationJSON(ABC):
             filename = filename / cls.default_filename
 
         with open(filename) as file:
-            LOGGER.info(f'reading file "{filename}"')
+            LOGGER.debug(f'reading file "{filename}"')
             configuration = json.load(file)
 
         configuration = {
@@ -183,10 +183,10 @@ class ConfigurationJSON(ABC):
 
         if overwrite or not filename.exists():
             with open(filename.absolute(), 'w') as file:
-                LOGGER.info(f'writing to file "{filename}"')
+                LOGGER.debug(f'writing to file "{filename}"')
                 json.dump(configuration, file)
         else:
-            LOGGER.warning(f'skipping existing file "{filename}"')
+            LOGGER.debug(f'skipping existing file "{filename}"')
 
 
 class SlurmJSON(ConfigurationJSON):

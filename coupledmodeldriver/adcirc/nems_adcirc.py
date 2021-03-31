@@ -23,14 +23,11 @@ from ..configuration import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ..job_script import (
-    AdcircMeshPartitionJob,
-    AdcircRunJob,
-    AdcircSetupScript,
-    EnsembleCleanupScript,
-    EnsembleRunScript,
-    EnsembleSetupScript,
-)
+from ..job_script import (AdcircMeshPartitionJob, AdcircRunJob,
+                          AdcircSetupScript,
+                          ConfigurationGenerationScript,
+                          EnsembleCleanupScript, EnsembleRunScript,
+                          EnsembleSetupScript)
 from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, get_logger
 
@@ -195,6 +192,7 @@ def generate_nems_adcirc_configuration(
     setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     cleanup_script_filename = output_directory / f'cleanup.sh'
+    generation_script_filename = output_directory / f'generate.py'
 
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable_path}"')
     adcprep_script = AdcircMeshPartitionJob(
@@ -219,9 +217,9 @@ def generate_nems_adcirc_configuration(
     adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
 
     coldstart_setup_script = AdcircSetupScript(
-        nems_configure_filename=Path('../..') / 'nems.configure.coldstart',
-        model_configure_filename=Path('../..') / 'model_configure.coldstart',
-        config_rc_filename=Path('../..') / 'config.rc.coldstart',
+        nems_configure_filename=Path('..') / 'nems.configure.coldstart',
+        model_configure_filename=Path('..') / 'model_configure.coldstart',
+        config_rc_filename=Path('..') / 'config.rc.coldstart',
     )
 
     LOGGER.debug(
@@ -266,10 +264,10 @@ def generate_nems_adcirc_configuration(
 
     if tidal_spinup_nems is not None:
         hotstart_setup_script = AdcircSetupScript(
-            nems_configure_filename=Path('../../..') / 'nems.configure.hotstart',
-            model_configure_filename=Path('../../..') / 'model_configure.hotstart',
-            config_rc_filename=Path('../../..') / 'config.rc.hotstart',
-            fort67_filename=Path('../../..') / 'coldstart/fort.67.nc',
+            nems_configure_filename=Path('../..') / 'nems.configure.hotstart',
+            model_configure_filename=Path('../..') / 'model_configure.hotstart',
+            config_rc_filename=Path('../..') / 'config.rc.hotstart',
+            fort67_filename=Path('../..') / 'coldstart/fort.67.nc',
         )
         hotstart_run_script = AdcircRunJob(
             platform=platform,
@@ -328,7 +326,7 @@ def generate_nems_adcirc_configuration(
     if use_original_mesh:
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
-    create_symlink(local_fort14_filename, coldstart_directory / 'fort.14')
+    create_symlink('../fort.14', coldstart_directory / 'fort.14', relative=True)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
@@ -351,7 +349,7 @@ def generate_nems_adcirc_configuration(
         if use_original_mesh:
             if original_fort13_filename.exists():
                 create_symlink(original_fort13_filename, run_directory / 'fort.13')
-        create_symlink(local_fort14_filename, run_directory / 'fort.14')
+        create_symlink('../../fort.14', run_directory / 'fort.14', relative=True)
 
     LOGGER.debug(f'writing ensemble setup script ' f'"{setup_script_filename.name}"')
     setup_script = EnsembleSetupScript(platform)
@@ -364,6 +362,10 @@ def generate_nems_adcirc_configuration(
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
+
+    generation_script = ConfigurationGenerationScript()
+    LOGGER.debug(f'writing configuration generation script "{generation_script_filename.name}"')
+    generation_script.write(generation_script_filename, overwrite=overwrite)
 
 
 class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):

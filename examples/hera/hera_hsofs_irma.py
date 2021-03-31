@@ -7,7 +7,6 @@ from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-
 from coupledmodeldriver.adcirc.nems_adcirc import (
     ADCIRCCoupledRunConfiguration,
     generate_nems_adcirc_configuration,
@@ -61,7 +60,7 @@ if __name__ == '__main__':
     slurm_email_address = 'example@email.gov'
 
     # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
+    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=FORCINGS_DIRECTORY / 'Wind_HWRF_IRMA_Nov2018_ExtendedSmoothT.nc',

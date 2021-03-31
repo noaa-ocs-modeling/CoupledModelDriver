@@ -7,6 +7,7 @@ from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+import appdirs
 
 from coupledmodeldriver.adcirc.nems_adcirc import (
     ADCIRCCoupledRunConfiguration,
@@ -33,8 +34,8 @@ OUTPUT_DIRECTORY = (
     Path(__file__).parent.parent / 'data' / 'configuration' / 'local_shinnecock_ike'
 )
 
-HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
-TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
+HAMTIDE_DIRECTORY = None
+TPXO_FILENAME = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
 
 if __name__ == '__main__':
     platform = Platform.LOCAL
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     slurm_email_address = 'example@email.gov'
 
     # initialize `adcircpy` forcing objects
-    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
+    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc',
