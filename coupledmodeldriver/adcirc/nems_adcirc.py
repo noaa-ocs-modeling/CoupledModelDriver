@@ -23,14 +23,11 @@ from ..configuration import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ..job_script import (
-    AdcircMeshPartitionJob,
-    AdcircRunJob,
-    AdcircSetupScript,
-    EnsembleCleanupScript,
-    EnsembleRunScript,
-    EnsembleSetupScript,
-)
+from ..job_script import (AdcircMeshPartitionJob, AdcircRunJob,
+                          AdcircSetupScript,
+                          ConfigurationGenerationScript,
+                          EnsembleCleanupScript, EnsembleRunScript,
+                          EnsembleSetupScript)
 from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, get_logger
 
@@ -195,6 +192,7 @@ def generate_nems_adcirc_configuration(
     setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     cleanup_script_filename = output_directory / f'cleanup.sh'
+    generation_script_filename = output_directory / f'generate.py'
 
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable_path}"')
     adcprep_script = AdcircMeshPartitionJob(
@@ -364,6 +362,10 @@ def generate_nems_adcirc_configuration(
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
+
+    generation_script = ConfigurationGenerationScript()
+    LOGGER.debug(f'writing configuration generation script "{generation_script_filename.name}"')
+    generation_script.write(generation_script_filename, overwrite=overwrite)
 
 
 class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
