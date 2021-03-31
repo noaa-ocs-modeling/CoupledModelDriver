@@ -328,7 +328,7 @@ def generate_nems_adcirc_configuration(
     if use_original_mesh:
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
-    create_symlink('../../fort.14', coldstart_directory / 'fort.14', relative=True)
+    create_symlink('../fort.14', coldstart_directory / 'fort.14', relative=True)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name

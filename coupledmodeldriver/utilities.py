@@ -97,13 +97,10 @@ def create_symlink(
         os.remove(symlink_filename)
     symlink_filename = symlink_filename.parent.absolute().resolve() / symlink_filename.name
 
-    if not source_filename.is_symlink():
-        source_filename = source_filename.resolve()
-
     starting_directory = None
     if relative:
         starting_directory = Path().cwd().resolve()
-        os.chdir(source_filename.parent)
+        os.chdir(symlink_filename.parent)
         if source_filename.is_absolute():
             try:
                 source_filename = source_filename.relative_to(symlink_filename.parent)
