@@ -263,7 +263,7 @@ class AdcircJob(JobScript):
             **kwargs,
         )
 
-        if source_filename is not None and len(source_filename) > 0:
+        if source_filename is not None and len(str(source_filename)) > 0:
             self.commands.insert(0, f'source {source_filename}')
 
 
