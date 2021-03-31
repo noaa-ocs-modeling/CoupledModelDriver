@@ -109,5 +109,5 @@ if __name__ == '__main__':
         source_filename=None,
     )
 
-    configuration.write_directory(OUTPUT_DIRECTORY, overwrite=True)
+    configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
     generate_nems_adcirc_configuration(OUTPUT_DIRECTORY, overwrite=True)
