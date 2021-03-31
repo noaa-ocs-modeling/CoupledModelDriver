@@ -202,7 +202,7 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 _**Note:** the required NEMS configuration files (`nems.configure`, `model_configure`) do not yet exist in the run
 directories (`coldstart/`, `runs/test_case_1/`). These will be populated in the next step._
 
-### 2. run job submission script
+### 3. run job submission script
 
 Running `run_hera.sh` will start the actual model run.
 
