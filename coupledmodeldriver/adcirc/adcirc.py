@@ -313,7 +313,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         if adcprep_executable is None:
             adcprep_executable = 'adcprep'
 
-        self.__slurm = SlurmJSON(
+        slurm = SlurmJSON(
             account=platform.value['slurm_account'],
             tasks=adcirc_processors,
             partition=slurm_partition,
@@ -321,7 +321,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
             email_address=slurm_email_address,
         )
 
-        self.__adcirc = ADCIRCJSON(
+        adcirc = ADCIRCJSON(
             adcirc_executable_path=adcirc_executable,
             adcprep_executable_path=adcprep_executable,
             modeled_start_time=modeled_start_time,
@@ -331,12 +331,12 @@ class ADCIRCRunConfiguration(RunConfiguration):
             fort_14_path=fort14,
             tidal_spinup_duration=tidal_spinup_duration,
             source_filename=source_filename,
-            slurm_configuration=self.__slurm,
+            slurm_configuration=slurm,
             processors=adcirc_processors,
         )
 
-        self.__driver = ModelDriverJSON(platform=platform, runs=runs)
-        super().__init__([self.__driver, self.__slurm, self.__adcirc])
+        driver = ModelDriverJSON(platform=platform, runs=runs)
+        super().__init__([driver, slurm, adcirc])
 
         for forcing in forcings:
             self.add_forcing(forcing)

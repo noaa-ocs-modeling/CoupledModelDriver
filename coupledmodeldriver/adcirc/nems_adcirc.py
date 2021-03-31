@@ -412,7 +412,7 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
             runs=runs,
-            forcings=forcings,
+            forcings=None,
             adcirc_processors=adcirc_processors,
             slurm_job_duration=slurm_job_duration,
             slurm_partition=slurm_partition,
@@ -421,7 +421,7 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
             source_filename=source_filename,
         )
 
-        self.__nems = NEMSJSON(
+        nems = NEMSJSON(
             executable_path=nems_executable,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
@@ -432,8 +432,12 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
             sequence=nems_sequence,
         )
 
-        self.configurations[self.nems.name] = self.nems
-        self['slurm']['tasks'] = self.nems.nemspy_modeling_system.processors
+        self.configurations[nems.name] = nems
+
+        for forcing in forcings:
+            self.add_forcing(forcing)
+
+        self['slurm']['tasks'] = self['nems'].nemspy_modeling_system.processors
 
     @property
     def nemspy_modeling_system(self) -> ModelingSystem:
@@ -443,12 +447,10 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
         if not isinstance(forcing, ForcingJSON):
             if isinstance(forcing, AtmosphericMeshForcing):
                 forcing = ATMESHForcingJSON.from_adcircpy(forcing)
-                if self['nems'] is not None:
-                    self['nems']['atm'] = forcing.nemspy_entry
+                self['nems']['models'].append(forcing.nemspy_entry)
             elif isinstance(forcing, WaveWatch3DataForcing):
                 forcing = WW3DATAForcingJSON.from_adcircpy(forcing)
-                if self['nems'] is not None:
-                    self['nems']['wav'] = forcing.nemspy_entry
+                self['nems']['models'].append(forcing.nemspy_entry)
             elif isinstance(forcing, Tides):
                 forcing = TidalForcingJSON.from_adcircpy(forcing)
             else:
