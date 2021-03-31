@@ -8,13 +8,12 @@ from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import appdirs
-import numpy
-
 from coupledmodeldriver.adcirc.nems_adcirc import (
     ADCIRCCoupledRunConfiguration,
     generate_nems_adcirc_configuration,
 )
 from coupledmodeldriver.platforms import Platform
+import numpy
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = 'NEMS.x'
@@ -31,7 +30,12 @@ FORCINGS_DIRECTORY = (
 )
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'local_shinnecock_ike_perturbed_mannings_n'
+OUTPUT_DIRECTORY = (
+    Path(__file__).parent.parent
+    / 'data'
+    / 'configuration'
+    / 'local_shinnecock_ike_perturbed_mannings_n'
+)
 
 HAMTIDE_DIRECTORY = None
 TPXO_FILENAME = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
