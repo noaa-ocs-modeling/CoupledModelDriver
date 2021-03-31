@@ -15,7 +15,7 @@ from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS//NEMS/exe/NEMS.x'
+NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
 ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
