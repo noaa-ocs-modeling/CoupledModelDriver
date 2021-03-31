@@ -107,18 +107,6 @@ class ADCIRCRunConfiguration(RunConfiguration):
         for forcing in forcings:
             self.add_forcing(forcing)
 
-    @property
-    def driver(self) -> ModelDriverJSON:
-        return self.__driver
-
-    @property
-    def slurm(self) -> SlurmJSON:
-        return self.__slurm
-
-    @property
-    def adcirc(self) -> ADCIRCJSON:
-        return self.__adcirc
-
     def add_forcing(self, forcing: ForcingJSON):
         if not isinstance(forcing, ForcingJSON):
             if isinstance(forcing, AtmosphericMeshForcing):
@@ -132,15 +120,36 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
         if forcing not in self.configurations:
             self.configurations[forcing.name] = forcing
-            self.adcirc.forcings.append(forcing)
+            self['adcirc'].forcings.append(forcing)
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
-        return self.adcirc.adcircpy_mesh
+        return self['adcirc'].adcircpy_mesh
 
     @property
     def adcircpy_driver(self) -> AdcircRun:
-        return self.adcirc.adcircpy_driver
+        return self['adcirc'].adcircpy_driver
+
+    @classmethod
+    def from_configurations(
+        cls,
+        driver: ModelDriverJSON,
+        slurm: SlurmJSON,
+        adcirc: ADCIRCJSON,
+        forcings: [ForcingJSON] = None,
+    ) -> 'ADCIRCRunConfiguration':
+        instance = RunConfiguration([driver, slurm, adcirc])
+        instance.__class__ = cls
+
+        instance['modeldriver'] = driver
+        instance['slurm'] = slurm
+        instance['adcirc'] = adcirc
+
+        if forcings is not None:
+            for forcing in forcings:
+                instance.add_forcing(forcing)
+
+        return instance
 
     @classmethod
     def read_directory(cls, directory: PathLike) -> 'RunConfiguration':
@@ -150,37 +159,22 @@ class ADCIRCRunConfiguration(RunConfiguration):
             directory = directory.parent
 
         configurations = []
-        for name, configuration_class in cls.required:
+        for configuration_class in cls.required:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 configurations.append(configuration_class.from_file(filename))
             else:
                 raise FileNotFoundError(f'missing required configuration file "{filename}"')
 
-        driver = configurations[0]
-        slurm = configurations[1]
-        adcirc = configurations[2]
-
-        instance = cls(
-            fort13=adcirc['fort_13_path'],
-            fort14=adcirc['fort_14_path'],
-            modeled_start_time=adcirc['modeled_start_time'],
-            modeled_end_time=adcirc['modeled_end_time'],
-            modeled_timestep=adcirc['modeled_timestep'],
-            tidal_spinup_duration=adcirc['tidal_spinup_duration'],
-            platform=driver['platform'],
-            runs=driver['runs'],
-            slurm_processors=slurm['tasks'],
-            slurm_job_duration=slurm['job_duration'],
-            slurm_partition=slurm['partition'],
-            slurm_email_address=slurm['email_address'],
-            adcprep_executable=adcirc['adcprep_executable_path'],
-            source_filename=adcirc['source_filename'],
-        )
-
-        for name, configuration_class in cls.forcings:
+        forcings = []
+        for configuration_class in cls.forcings:
             filename = directory / configuration_class.default_filename
             if filename.exists():
-                instance.add_forcing(configuration_class.from_file(filename))
+                forcings.append(configuration_class.from_file(filename))
 
-        return instance
+        return cls.from_configurations(
+            driver=configurations[0],
+            slurm=configurations[1],
+            adcirc=configurations[2],
+            forcings=forcings,
+        )

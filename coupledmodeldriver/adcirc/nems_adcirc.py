@@ -19,15 +19,20 @@ from ..configuration import (
     ForcingJSON,
     ModelDriverJSON,
     NEMSJSON,
+    RunConfiguration,
     SlurmJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ..job_script import (AdcircMeshPartitionJob, AdcircRunJob,
-                          AdcircSetupScript,
-                          ConfigurationGenerationScript,
-                          EnsembleCleanupScript, EnsembleRunScript,
-                          EnsembleSetupScript)
+from ..job_script import (
+    AdcircMeshPartitionJob,
+    AdcircRunJob,
+    AdcircSetupScript,
+    ConfigurationGenerationScript,
+    EnsembleCleanupScript,
+    EnsembleRunScript,
+    EnsembleSetupScript,
+)
 from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, get_logger
 
@@ -364,7 +369,9 @@ def generate_nems_adcirc_configuration(
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
 
     generation_script = ConfigurationGenerationScript()
-    LOGGER.debug(f'writing configuration generation script "{generation_script_filename.name}"')
+    LOGGER.debug(
+        f'writing configuration generation script "{generation_script_filename.name}"'
+    )
     generation_script.write(generation_script_filename, overwrite=overwrite)
 
 
@@ -374,11 +381,6 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
         NEMSJSON,
         SlurmJSON,
         ADCIRCJSON,
-    ]
-    forcings = [
-        TidalForcingJSON,
-        ATMESHForcingJSON,
-        WW3DATAForcingJSON,
     ]
 
     def __init__(
@@ -436,26 +438,22 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
         )
 
         self.configurations[self.nems.name] = self.nems
-        self.slurm['tasks'] = self.nems.nemspy_modeling_system.processors
-
-    @property
-    def nems(self) -> NEMSJSON:
-        return self.__nems
+        self['slurm']['tasks'] = self.nems.nemspy_modeling_system.processors
 
     @property
     def nemspy_modeling_system(self) -> ModelingSystem:
-        return self.nems.nemspy_modeling_system
+        return self['nems'].nemspy_modeling_system
 
     def add_forcing(self, forcing: Forcing):
         if not isinstance(forcing, ForcingJSON):
             if isinstance(forcing, AtmosphericMeshForcing):
                 forcing = ATMESHForcingJSON.from_adcircpy(forcing)
-                if self.nems is not None:
-                    self.nems['atm'] = forcing.nemspy_entry
+                if self['nems'] is not None:
+                    self['nems']['atm'] = forcing.nemspy_entry
             elif isinstance(forcing, WaveWatch3DataForcing):
                 forcing = WW3DATAForcingJSON.from_adcircpy(forcing)
-                if self.nems is not None:
-                    self.nems['wav'] = forcing.nemspy_entry
+                if self['nems'] is not None:
+                    self['nems']['wav'] = forcing.nemspy_entry
             elif isinstance(forcing, Tides):
                 forcing = TidalForcingJSON.from_adcircpy(forcing)
             else:
@@ -463,7 +461,28 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
 
         if forcing not in self:
             self[forcing.name] = forcing
-            self.adcirc.forcings.append(forcing)
+            self['adcirc'].forcings.append(forcing)
+
+    @classmethod
+    def from_configurations(
+        cls,
+        driver: ModelDriverJSON,
+        nems: NEMSJSON,
+        slurm: SlurmJSON,
+        adcirc: ADCIRCJSON,
+        forcings: [ForcingJSON] = None,
+    ) -> 'ADCIRCCoupledRunConfiguration':
+        instance = super().from_configurations(
+            driver=driver, slurm=slurm, adcirc=adcirc, forcings=None,
+        )
+        instance.__class__ = cls
+        instance.configurations['nems'] = nems
+
+        if forcings is not None:
+            for forcing in forcings:
+                instance.add_forcing(forcing)
+
+        return instance
 
     @classmethod
     def read_directory(cls, directory: PathLike) -> 'RunConfiguration':
@@ -480,38 +499,16 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
             else:
                 raise FileNotFoundError(f'missing required configuration file "{filename}"')
 
-        driver = configurations[0]
-        nems = configurations[1]
-        slurm = configurations[2]
-        adcirc = configurations[3]
-
         forcings = []
         for configuration_class in cls.forcings:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 forcings.append(configuration_class.from_file(filename))
 
-        instance = cls(
-            fort13=adcirc['fort_13_path'],
-            fort14=adcirc['fort_14_path'],
-            modeled_start_time=adcirc['modeled_start_time'],
-            modeled_end_time=adcirc['modeled_end_time'],
-            modeled_timestep=adcirc['modeled_timestep'],
-            nems_interval=nems['interval'],
-            nems_connections=nems['connections'],
-            nems_mediations=nems['mediations'],
-            nems_sequence=nems['sequence'],
-            tidal_spinup_duration=adcirc['tidal_spinup_duration'],
-            platform=driver['platform'],
-            runs=driver['runs'],
+        return cls.from_configurations(
+            driver=configurations[0],
+            nems=configurations[1],
+            slurm=configurations[2],
+            adcirc=configurations[3],
             forcings=forcings,
-            adcirc_processors=slurm['tasks'],
-            slurm_job_duration=slurm['job_duration'],
-            slurm_partition=slurm['partition'],
-            slurm_email_address=slurm['email_address'],
-            nems_executable=nems['executable_path'],
-            adcprep_executable=adcirc['adcprep_executable_path'],
-            source_filename=adcirc['source_filename'],
         )
-
-        return instance

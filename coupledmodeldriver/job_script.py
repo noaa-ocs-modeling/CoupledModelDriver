@@ -293,7 +293,7 @@ class AdcircSetupScript(Script):
 
         if self.fort67_filename is not None:
             commands.extend(
-                ['', f'ln -sf {self.fort67_filename} ./fort.67.nc', ]
+                ['', f'ln -sf {self.fort67_filename} ./fort.67.nc']
             )
 
         super().__init__(commands)

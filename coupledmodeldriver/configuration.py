@@ -829,14 +829,14 @@ class RunConfiguration(ABC):
             directory = directory.parent
 
         configurations = []
-        for name, configuration_class in cls.required:
+        for configuration_class in cls.required:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 configurations.append(configuration_class.from_file(filename))
             else:
                 raise FileNotFoundError(f'missing required configuration file "{filename}"')
 
-        for name, configuration_class in cls.forcings:
+        for configuration_class in cls.forcings:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 configurations.append(configuration_class.from_file(filename))
