@@ -107,9 +107,20 @@ def test_adcirc():
     assert configuration.adcircpy_driver.IM == 511113
 
     configuration['gwce_solution_scheme'] = 'semi-implicit-legacy'
+
+    assert configuration.adcircpy_driver.IM == 511111
+
     configuration['use_smagorinsky'] = False
 
     assert configuration.adcircpy_driver.IM == 111111
+
+    configuration['gwce_solution_scheme'] = 'explicit'
+
+    assert configuration.adcircpy_driver.IM == 111112
+
+    configuration['use_smagorinsky'] = True
+
+    assert configuration.adcircpy_driver.IM == 511112
 
 
 def test_tidal():
