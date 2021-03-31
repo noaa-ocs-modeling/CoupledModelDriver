@@ -219,9 +219,9 @@ def generate_nems_adcirc_configuration(
     adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
 
     coldstart_setup_script = AdcircSetupScript(
-        nems_configure_filename=Path('../..') / 'nems.configure.coldstart',
-        model_configure_filename=Path('../..') / 'model_configure.coldstart',
-        config_rc_filename=Path('../..') / 'config.rc.coldstart',
+        nems_configure_filename=Path('..') / 'nems.configure.coldstart',
+        model_configure_filename=Path('..') / 'model_configure.coldstart',
+        config_rc_filename=Path('..') / 'config.rc.coldstart',
     )
 
     LOGGER.debug(
@@ -328,7 +328,7 @@ def generate_nems_adcirc_configuration(
     if use_original_mesh:
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
-    create_symlink(local_fort14_filename, coldstart_directory / 'fort.14')
+    create_symlink(local_fort14_filename, coldstart_directory / 'fort.14', relative=True)
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
