@@ -7,6 +7,7 @@ from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+import appdirs
 import numpy
 
 from coupledmodeldriver.adcirc.nems_adcirc import (
@@ -30,21 +31,17 @@ FORCINGS_DIRECTORY = (
 )
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = (
-    Path(__file__).parent.parent
-    / 'data'
-    / 'configuration'
-    / 'local_shinnecock_ike_perturbed_mannings_n'
-)
+OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'local_shinnecock_ike_perturbed_mannings_n'
 
-HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
-TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
+HAMTIDE_DIRECTORY = None
+TPXO_FILENAME = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
 
 if __name__ == '__main__':
     platform = Platform.LOCAL
     adcirc_processors = 11
     modeled_start_time = datetime(2008, 8, 23)
     modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
     tidal_spinup_duration = timedelta(days=12.5)
     nems_interval = timedelta(hours=1)
     job_duration = timedelta(hours=6)

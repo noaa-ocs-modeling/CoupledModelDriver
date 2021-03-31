@@ -7,6 +7,7 @@ from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+import appdirs
 
 from coupledmodeldriver.adcirc.nems_adcirc import (
     ADCIRCCoupledRunConfiguration,
@@ -31,8 +32,8 @@ FORCINGS_DIRECTORY = (
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'local_hsofs_irma'
 
-HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
-TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
+HAMTIDE_DIRECTORY = None
+TPXO_FILENAME = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
 
 if __name__ == '__main__':
     platform = Platform.LOCAL
