@@ -18,6 +18,8 @@ from coupledmodeldriver.platforms import Platform
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
 ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
 
+MODULES_FILENAME = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
+
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
 MESH_DIRECTORY = (
     Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'grid_v1'
@@ -107,7 +109,7 @@ if __name__ == '__main__':
         slurm_email_address=slurm_email_address,
         nems_executable=NEMS_EXECUTABLE,
         adcprep_executable=ADCPREP_EXECUTABLE,
-        source_filename=None,
+        source_filename=MODULES_FILENAME,
     )
 
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
