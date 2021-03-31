@@ -397,6 +397,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
     name = 'adcirc'
     default_filename = f'configure_adcirc.json'
     field_types = {
+        'adcirc_executable_path': Path,
         'adcprep_executable_path': Path,
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
@@ -416,6 +417,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
     def __init__(
         self,
+        adcirc_executable_path: PathLike,
         adcprep_executable_path: PathLike,
         modeled_start_time: datetime,
         modeled_end_time: datetime,
@@ -438,6 +440,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
     ):
         """
 
+        :param adcirc_executable_path: file path to `adcirc` or `NEMS.x`
         :param adcprep_executable_path: file path to `adcprep`
         :param modeled_start_time: start time in model run
         :param modeled_end_time: edn time in model run
@@ -469,6 +472,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         ModelJSON.__init__(self, model=Model.ADCIRC)
         NEMSCapJSON.__init__(self, processors=processors, nems_parameters=nems_parameters)
 
+        self['adcirc_executable_path'] = adcirc_executable_path
         self['adcprep_executable_path'] = adcprep_executable_path
         self['modeled_start_time'] = modeled_start_time
         self['modeled_end_time'] = modeled_end_time

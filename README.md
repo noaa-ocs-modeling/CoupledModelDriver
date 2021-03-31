@@ -162,8 +162,8 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┣ 📜 model_configure.coldstart
 ┣ 📜 model_configure.hotstart
 ┣ 📜 job_adcprep_hera.job
-┣ 📜 job_nems_adcirc_hera.job.coldstart
-┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ 📜 job_adcirc_hera.job.coldstart
+┣ 📜 job_adcirc_hera.job.hotstart
 ┣ 📜 setup.sh.coldstart
 ┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh
@@ -201,7 +201,7 @@ This will first create symbolic links to populate configuration directories (by 
 ┃  ┣ 🔗 config.rc -> ../config.rc.coldstart
 ┃  ┣ 🔗 model_configure -> ../model_configure.coldstart
 ┃  ┣ 🔗 adcprep.job -> ../job_adcprep_hera.job
-┃  ┣ 🔗 nems_adcirc.job -> ../job_nems_adcirc_hera.job.coldstart
+┃  ┣ 🔗 adcirc.job -> ../job_adcirc_hera.job.coldstart
 ┃  ┗ 🔗 setup.sh -> ../setup.sh.coldstart
 ┣ 📂 runs/
 ┃  ┗ 📂 test_case_1/
@@ -213,7 +213,7 @@ This will first create symbolic links to populate configuration directories (by 
 ┃    ┣ 🔗 config.rc -> ../../config.rc.hotstart
 ┃    ┣ 🔗 model_configure -> ../../model_configure.hotstart
 ┃    ┣ 🔗 adcprep.job -> ../../job_adcprep_hera.job
-┃    ┣ 🔗 nems_adcirc.job -> ../../job_nems_adcirc_hera.job.hotstart
+┃    ┣ 🔗 adcirc.job -> ../../job_adcirc_hera.job.hotstart
 ┃    ┗ 🔗 setup.sh -> ../../setup.sh.hotstart
 ┣ 📜 fort.14
 ┣ 📜 nems.configure.coldstart
@@ -223,8 +223,8 @@ This will first create symbolic links to populate configuration directories (by 
 ┣ 📜 model_configure.coldstart
 ┣ 📜 model_configure.hotstart
 ┣ 📜 job_adcprep_hera.job
-┣ 📜 job_nems_adcirc_hera.job.coldstart
-┣ 📜 job_nems_adcirc_hera.job.hotstart
+┣ 📜 job_adcirc_hera.job.coldstart
+┣ 📜 job_adcirc_hera.job.hotstart
 ┣ 📜 setup.sh.coldstart
 ┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh

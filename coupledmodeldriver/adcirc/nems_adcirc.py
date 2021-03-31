@@ -19,20 +19,14 @@ from ..configuration import (
     ForcingJSON,
     ModelDriverJSON,
     NEMSJSON,
-    RunConfiguration,
     SlurmJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ..job_script import (
-    AdcircMeshPartitionJob,
-    AdcircRunJob,
-    AdcircSetupScript,
-    ConfigurationGenerationScript,
-    EnsembleCleanupScript,
-    EnsembleRunScript,
-    EnsembleSetupScript,
-)
+from ..job_script import (AdcircMeshPartitionJob, AdcircNEMSSetupScript,
+                          AdcircRunJob, EnsembleCleanupScript,
+                          EnsembleRunScript,
+                          EnsembleSetupScript)
 from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, get_logger
 
@@ -77,13 +71,6 @@ def generate_nems_adcirc_configuration(
     runs = coupled_configuration['modeldriver']['runs']
     platform = coupled_configuration['modeldriver']['platform']
 
-    source_filename = coupled_configuration['adcirc']['source_filename']
-    tidal_spinup_duration = coupled_configuration['adcirc']['tidal_spinup_duration']
-    original_fort13_filename = coupled_configuration['adcirc']['fort_13_path']
-    original_fort14_filename = coupled_configuration['adcirc']['fort_14_path']
-    adcprep_executable_path = coupled_configuration['adcirc']['adcprep_executable_path']
-    use_original_mesh = coupled_configuration['adcirc']['use_original_mesh']
-
     nems_executable = coupled_configuration['nems']['executable_path']
     nems = coupled_configuration['nems'].nemspy_modeling_system
 
@@ -91,6 +78,13 @@ def generate_nems_adcirc_configuration(
     partition = coupled_configuration['slurm']['partition']
     email_type = coupled_configuration['slurm']['email_type']
     email_address = coupled_configuration['slurm']['email_address']
+
+    original_fort13_filename = coupled_configuration['adcirc']['fort_13_path']
+    original_fort14_filename = coupled_configuration['adcirc']['fort_14_path']
+    adcprep_executable_path = coupled_configuration['adcirc']['adcprep_executable_path']
+    tidal_spinup_duration = coupled_configuration['adcirc']['tidal_spinup_duration']
+    source_filename = coupled_configuration['adcirc']['source_filename']
+    use_original_mesh = coupled_configuration['adcirc']['use_original_mesh']
 
     LOGGER.info(
         f'generating {len(runs)} '
@@ -183,16 +177,16 @@ def generate_nems_adcirc_configuration(
     adcirc_coldstart_run_name = 'ADC_COLD_RUN'
     adcirc_hotstart_run_name = 'ADC_HOT_RUN'
 
-    mesh_partitioning_job_script_filename = (
+    adcprep_job_script_filename = (
         output_directory / f'job_adcprep_{platform.name.lower()}.job'
     )
     coldstart_setup_script_filename = output_directory / f'setup.sh.coldstart'
     coldstart_run_script_filename = (
-        output_directory / f'job_nems_adcirc_{platform.name.lower()}.job.coldstart'
+        output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
     )
     hotstart_setup_script_filename = output_directory / f'setup.sh.hotstart'
     hotstart_run_script_filename = (
-        output_directory / f'job_nems_adcirc_{platform.name.lower()}.job.hotstart'
+        output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
     )
     setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
@@ -217,11 +211,11 @@ def generate_nems_adcirc_configuration(
 
     LOGGER.debug(
         f'writing mesh partitioning job script '
-        f'"{mesh_partitioning_job_script_filename.name}"'
+        f'"{adcprep_job_script_filename.name}"'
     )
-    adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
+    adcprep_script.write(adcprep_job_script_filename, overwrite=overwrite)
 
-    coldstart_setup_script = AdcircSetupScript(
+    coldstart_setup_script = AdcircNEMSSetupScript(
         nems_configure_filename=Path('..') / 'nems.configure.coldstart',
         model_configure_filename=Path('..') / 'model_configure.coldstart',
         config_rc_filename=Path('..') / 'config.rc.coldstart',
@@ -240,7 +234,7 @@ def generate_nems_adcirc_configuration(
             slurm_account=slurm_account,
             slurm_duration=job_duration,
             slurm_run_name=adcirc_coldstart_run_name,
-            nems_path=nems_executable,
+            executable=nems_executable,
             slurm_partition=partition,
             slurm_email_type=email_type,
             slurm_email_address=email_address,
@@ -255,7 +249,7 @@ def generate_nems_adcirc_configuration(
             slurm_account=slurm_account,
             slurm_duration=job_duration,
             slurm_run_name=adcirc_coldstart_run_name,
-            nems_path=nems_executable,
+            executable=nems_executable,
             slurm_partition=partition,
             slurm_email_type=email_type,
             slurm_email_address=email_address,
@@ -268,7 +262,7 @@ def generate_nems_adcirc_configuration(
     coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
     if tidal_spinup_nems is not None:
-        hotstart_setup_script = AdcircSetupScript(
+        hotstart_setup_script = AdcircNEMSSetupScript(
             nems_configure_filename=Path('../..') / 'nems.configure.hotstart',
             model_configure_filename=Path('../..') / 'model_configure.hotstart',
             config_rc_filename=Path('../..') / 'config.rc.hotstart',
@@ -280,7 +274,7 @@ def generate_nems_adcirc_configuration(
             slurm_account=slurm_account,
             slurm_duration=job_duration,
             slurm_run_name=adcirc_hotstart_run_name,
-            nems_path=nems_executable,
+            executable=nems_executable,
             slurm_partition=partition,
             slurm_email_type=email_type,
             slurm_email_address=email_address,
@@ -357,7 +351,14 @@ def generate_nems_adcirc_configuration(
         create_symlink('../../fort.14', run_directory / 'fort.14', relative=True)
 
     LOGGER.debug(f'writing ensemble setup script ' f'"{setup_script_filename.name}"')
-    setup_script = EnsembleSetupScript(platform)
+    setup_script = EnsembleSetupScript(
+        platform=platform,
+        adcprep_job_script=adcprep_job_script_filename.name,
+        coldstart_job_script=coldstart_run_script_filename.name,
+        hotstart_job_script=hotstart_run_script_filename.name,
+        coldstart_setup_script=coldstart_setup_script_filename.name,
+        hotstart_setup_script=hotstart_setup_script_filename.name,
+    )
     setup_script.write(setup_script_filename, overwrite=overwrite)
 
     LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
@@ -367,12 +368,6 @@ def generate_nems_adcirc_configuration(
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
-
-    generation_script = ConfigurationGenerationScript()
-    LOGGER.debug(
-        f'writing configuration generation script "{generation_script_filename.name}"'
-    )
-    generation_script.write(generation_script_filename, overwrite=overwrite)
 
 
 class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
@@ -485,7 +480,7 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
         return instance
 
     @classmethod
-    def read_directory(cls, directory: PathLike) -> 'RunConfiguration':
+    def read_directory(cls, directory: PathLike) -> 'ADCIRCCoupledRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
         if directory.is_file():

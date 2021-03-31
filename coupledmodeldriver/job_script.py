@@ -267,7 +267,7 @@ class AdcircJob(JobScript):
             self.commands.insert(0, f'source {source_filename}')
 
 
-class AdcircSetupScript(Script):
+class AdcircNEMSSetupScript(Script):
     """ script for setting up ADCIRC NEMS configuration """
 
     def __init__(
@@ -309,7 +309,7 @@ class AdcircRunJob(AdcircJob):
         slurm_account: str,
         slurm_duration: timedelta,
         slurm_run_name: str,
-        nems_path: PathLike = None,
+        executable: PathLike = None,
         commands: [str] = None,
         **kwargs,
     ):
@@ -323,11 +323,11 @@ class AdcircRunJob(AdcircJob):
             **kwargs,
         )
 
-        if nems_path is None:
-            nems_path = 'NEMS.x'
-        self.nems_path = nems_path
+        if executable is None:
+            executable = 'adcirc'
+        self.executable = executable
 
-        self.commands.append(f'{self.launcher} {self.nems_path}')
+        self.commands.append(f'{self.launcher} {self.executable}')
 
 
 class AdcircMeshPartitionJob(AdcircJob):
@@ -373,45 +373,70 @@ class EnsembleSetupScript(Script):
     def __init__(
         self,
         platform: Platform,
+        adcprep_job_script: PathLike = None,
+        coldstart_job_script: PathLike = None,
+        hotstart_job_script: PathLike = None,
         coldstart_setup_script: PathLike = None,
         hotstart_setup_script: PathLike = None,
         commands: [str] = None,
     ):
-        if coldstart_setup_script is None:
-            coldstart_setup_script = 'setup.sh.coldstart'
-        if hotstart_setup_script is None:
-            hotstart_setup_script = 'setup.sh.hotstart'
-
         super().__init__(commands)
 
+        if adcprep_job_script is None:
+            adcprep_job_script = f'job_adcprep_{self.platform.name.lower()}.job'
+        if coldstart_job_script is None:
+            coldstart_job_script = f'job_adcirc_{self.platform.name.lower()}.job.coldstart'
+        if hotstart_job_script is None:
+            hotstart_job_script = f'job_adcirc_{self.platform.name.lower()}.job.hotstart'
+
         self.platform = platform
+        self.adcprep_job_script = adcprep_job_script
+        self.coldstart_job_script = coldstart_job_script
+        self.hotstart_job_script = hotstart_job_script
         self.coldstart_setup_script = coldstart_setup_script
         self.hotstart_setup_script = hotstart_setup_script
 
     def __str__(self) -> str:
-        lines = [
+        lines = []
+        lines.extend([
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
             '# prepare single coldstart directory',
             'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
-            f'ln -sf ../{self.coldstart_setup_script} setup.sh',
-            f'ln -sf ../job_adcprep_{self.platform.name.lower()}.job adcprep.job',
-            f'ln -sf ../job_nems_adcirc_{self.platform.name.lower()}.job.coldstart nems_adcirc.job',
+        ])
+
+        if self.coldstart_setup_script is not None:
+            lines.append(f'ln -sf ../{self.coldstart_setup_script} setup.sh')
+
+        lines.extend([
+            f'ln -sf ../{self.adcprep_job_script} adcprep.job',
+            f'ln -sf ../{self.coldstart_job_script} adcirc.job',
             'popd >/dev/null 2>&1',
             '',
+        ])
+
+        hotstart_lines = []
+        hotstart_lines.extend([
+            'pushd ${hotstart} >/dev/null 2>&1',
+        ])
+
+        if self.hotstart_setup_script is not None:
+            hotstart_lines.append(f'ln -sf ../../{self.hotstart_setup_script} setup.sh')
+
+        hotstart_lines.extend([
+            f'ln -sf ../../{self.adcprep_job_script} adcprep.job',
+            f'ln -sf ../../{self.hotstart_job_script} adcirc.job',
+            'popd >/dev/null 2>&1',
+        ])
+
+        lines.extend([
             '# prepare every hotstart directory',
             bash_for_loop(
                 'for hotstart in ${DIRECTORY}/runs/*/',
-                [
-                    'pushd ${hotstart} >/dev/null 2>&1',
-                    f'ln -sf ../../{self.hotstart_setup_script} setup.sh',
-                    f'ln -sf ../../job_adcprep_{self.platform.name.lower()}.job adcprep.job',
-                    f'ln -sf ../../job_nems_adcirc_{self.platform.name.lower()}.job.hotstart nems_adcirc.job',
-                    'popd >/dev/null 2>&1',
-                ],
+                hotstart_lines,
             ),
             *(str(command) for command in self.commands),
-        ]
+        ])
 
         return '\n'.join(lines)
 
@@ -430,35 +455,50 @@ class EnsembleRunScript(Script):
         self, platform: Platform, setup_script_name: PathLike = None, commands: [str] = None
     ):
         self.platform = platform
-        if setup_script_name is None:
-            setup_script_name = f'setup_{self.platform.name.lower()}.sh'
         self.setup_script_name = setup_script_name
         super().__init__(commands)
 
     def __str__(self) -> str:
-        lines = [
-            f'sh {self.setup_script_name}',
-            '',
+        lines = []
+
+        if self.setup_script_name is not None:
+            lines.extend([
+                f'sh {self.setup_script_name}',
+                '',
+            ])
+
+        lines.extend([
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
             '# run single coldstart configuration',
             'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
-            'sh setup.sh',
+        ])
+
+        if self.setup_script_name is not None:
+            lines.append('sh setup.sh')
+        lines.extend([
             self.coldstart,
             'popd >/dev/null 2>&1',
             '',
+        ])
+
+        hotstart_lines = []
+        hotstart_lines.append('pushd ${hotstart} >/dev/null 2>&1')
+        if self.setup_script_name is not None:
+            hotstart_lines.append('sh setup.sh')
+        hotstart_lines.extend([
+            self.hotstart,
+            'popd >/dev/null 2>&1',
+        ])
+
+        lines.extend([
             '# run every hotstart configuration',
             bash_for_loop(
                 'for hotstart in ${DIRECTORY}/runs/*/',
-                [
-                    'pushd ${hotstart} >/dev/null 2>&1',
-                    'sh setup.sh',
-                    self.hotstart,
-                    'popd >/dev/null 2>&1',
-                ],
+                hotstart_lines,
             ),
             *(str(command) for command in self.commands),
-        ]
+        ])
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html
@@ -484,11 +524,11 @@ class EnsembleRunScript(Script):
             lines.extend(
                 [
                     "coldstart_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
-                    "coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid nems_adcirc.job | awk '{print $NF}')",
+                    "coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid adcirc.job | awk '{print $NF}')",
                 ]
             )
         else:
-            lines.extend(['sh adcprep.job', 'sh nems_adcirc.job'])
+            lines.extend(['sh adcprep.job', 'sh adcirc.job'])
         return '\n'.join(lines)
 
     @property
@@ -498,11 +538,11 @@ class EnsembleRunScript(Script):
             lines.extend(
                 [
                     "hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job | awk '{print $NF}')",
-                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid nems_adcirc.job',
+                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
                 ]
             )
         else:
-            lines.extend(['sh adcprep.job', 'sh nems_adcirc.job'])
+            lines.extend(['sh adcprep.job', 'sh adcirc.job'])
         return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):
@@ -571,6 +611,30 @@ class ConfigurationGenerationScript(Script):
         lines = [
             'from pathlib import Path',
             '',
+            'from coupledmodeldriver.adcirc.adcirc import generate_adcirc_configuration',
+            '',
+            '',
+            "if __name__ == '__main__':",
+            '    generate_adcirc_configuration(output_directory=Path(__file__).parent, overwrite=True)',
+        ]
+
+        return '\n'.join(lines)
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'generate_adcirc.py'
+
+        super().write(filename, overwrite)
+
+
+class NEMSConfigurationGenerationScript(ConfigurationGenerationScript):
+    def __str__(self):
+        lines = [
+            'from pathlib import Path',
+            '',
             'from coupledmodeldriver.adcirc.nems_adcirc import generate_nems_adcirc_configuration',
             '',
             '',
@@ -585,7 +649,7 @@ class ConfigurationGenerationScript(Script):
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'generate.py'
+            filename = filename / f'generate_nems_adcirc.py'
 
         super().write(filename, overwrite)
 
