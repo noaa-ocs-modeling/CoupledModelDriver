@@ -266,10 +266,10 @@ def generate_nems_adcirc_configuration(
 
     if tidal_spinup_nems is not None:
         hotstart_setup_script = AdcircSetupScript(
-            nems_configure_filename=Path('../../..') / 'nems.configure.hotstart',
-            model_configure_filename=Path('../../..') / 'model_configure.hotstart',
-            config_rc_filename=Path('../../..') / 'config.rc.hotstart',
-            fort67_filename=Path('../../..') / 'coldstart/fort.67.nc',
+            nems_configure_filename=Path('../..') / 'nems.configure.hotstart',
+            model_configure_filename=Path('../..') / 'model_configure.hotstart',
+            config_rc_filename=Path('../..') / 'config.rc.hotstart',
+            fort67_filename=Path('../..') / 'coldstart/fort.67.nc',
         )
         hotstart_run_script = AdcircRunJob(
             platform=platform,
@@ -328,7 +328,7 @@ def generate_nems_adcirc_configuration(
     if use_original_mesh:
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
-    create_symlink(local_fort14_filename, coldstart_directory / 'fort.14', relative=True)
+    create_symlink(Path('../../fort.14'), coldstart_directory / 'fort.14')
 
     for run_name, (value, attribute_name) in runs.items():
         run_directory = runs_directory / run_name
