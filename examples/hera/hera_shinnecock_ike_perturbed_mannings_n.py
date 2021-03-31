@@ -15,8 +15,10 @@ from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'
-ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/adcprep'
+NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
+ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+
+MODULES_FILENAME = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
 MESH_DIRECTORY = (
@@ -105,9 +107,9 @@ if __name__ == '__main__':
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        nems_executable=None,
-        adcprep_executable=None,
-        source_filename=None,
+        nems_executable=NEMS_EXECUTABLE,
+        adcprep_executable=ADCPREP_EXECUTABLE,
+        source_filename=MODULES_FILENAME,
     )
 
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)

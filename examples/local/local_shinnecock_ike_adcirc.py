@@ -13,8 +13,8 @@ from coupledmodeldriver.adcirc.adcirc import ADCIRCRunConfiguration
 from coupledmodeldriver.job_script import ADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
-# paths to compiled `NEMS.x` and `adcprep`
-NEMS_EXECUTABLE = 'NEMS.x'
+# paths to compiled `adcirc` and `adcprep`
+ADCIRC_EXECUTABLE = 'adcirc'
 ADCPREP_EXECUTABLE = 'adcprep'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
@@ -79,11 +79,12 @@ if __name__ == '__main__':
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        adcprep_executable=None,
+        adcirc_executable=ADCIRC_EXECUTABLE,
+        adcprep_executable=ADCPREP_EXECUTABLE,
         source_filename=None,
     )
 
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
 
     generation_script = ADCIRCGenerationScript()
-    generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)
+    generation_script.write(OUTPUT_DIRECTORY / 'generate_adcirc.py', overwrite=True)

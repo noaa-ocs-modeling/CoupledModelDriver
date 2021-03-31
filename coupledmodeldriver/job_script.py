@@ -263,7 +263,7 @@ class AdcircJob(JobScript):
             **kwargs,
         )
 
-        if source_filename is not None and len(source_filename) > 0:
+        if source_filename is not None and len(str(source_filename)) > 0:
             self.commands.insert(0, f'source {source_filename}')
 
 
@@ -406,7 +406,7 @@ class EnsembleSetupScript(Script):
         )
 
         if self.coldstart_setup_script is not None:
-            lines.append(f'ln -sf ../{self.coldstart_setup_script} setup.sh')
+            lines.append(f'sh ../{self.coldstart_setup_script}')
 
         lines.extend(
             [
@@ -423,7 +423,7 @@ class EnsembleSetupScript(Script):
         )
 
         if self.hotstart_setup_script is not None:
-            hotstart_lines.append(f'ln -sf ../../{self.hotstart_setup_script} setup.sh')
+            hotstart_lines.append(f'sh ../../{self.hotstart_setup_script}')
 
         hotstart_lines.extend(
             [
@@ -478,24 +478,20 @@ class EnsembleRunScript(Script):
             ]
         )
 
-        if self.setup_script_name is not None:
-            lines.append('sh setup.sh')
         lines.extend(
             [self.coldstart, 'popd >/dev/null 2>&1', '', ]
-        )
-
-        hotstart_lines = []
-        hotstart_lines.append('pushd ${hotstart} >/dev/null 2>&1')
-        if self.setup_script_name is not None:
-            hotstart_lines.append('sh setup.sh')
-        hotstart_lines.extend(
-            [self.hotstart, 'popd >/dev/null 2>&1', ]
         )
 
         lines.extend(
             [
                 '# run every hotstart configuration',
-                bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', hotstart_lines, ),
+                bash_for_loop(
+                    'for hotstart in ${DIRECTORY}/runs/*/',
+                    [
+                        'pushd ${hotstart} >/dev/null 2>&1',
+                        self.hotstart, 'popd >/dev/null 2>&1',
+                    ],
+                ),
                 *(str(command) for command in self.commands),
             ]
         )

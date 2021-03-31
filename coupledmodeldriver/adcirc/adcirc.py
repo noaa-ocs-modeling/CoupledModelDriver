@@ -24,6 +24,7 @@ from ..job_script import (
     AdcircRunJob,
     EnsembleCleanupScript,
     EnsembleRunScript,
+    EnsembleSetupScript,
 )
 from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, get_logger
@@ -105,18 +106,17 @@ def generate_adcirc_configuration(
     adcirc_coldstart_run_name = 'ADC_COLD_RUN'
     adcirc_hotstart_run_name = 'ADC_HOT_RUN'
 
-    mesh_partitioning_job_script_filename = (
-        output_directory / f'job_adcprep_{platform.name.lower()}.job'
-    )
+    adcprep_job_filename = output_directory / f'job_adcprep_{platform.name.lower()}.job'
     coldstart_run_script_filename = (
         output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
     )
     hotstart_run_script_filename = (
         output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
     )
+
+    setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     cleanup_script_filename = output_directory / f'cleanup.sh'
-    generation_script_filename = output_directory / f'generate.py'
 
     LOGGER.debug(f'setting mesh partitioner "{adcprep_executable_path}"')
     adcprep_script = AdcircMeshPartitionJob(
@@ -134,11 +134,8 @@ def generate_adcirc_configuration(
         source_filename=source_filename,
     )
 
-    LOGGER.debug(
-        f'writing mesh partitioning job script '
-        f'"{mesh_partitioning_job_script_filename.name}"'
-    )
-    adcprep_script.write(mesh_partitioning_job_script_filename, overwrite=overwrite)
+    LOGGER.debug(f'writing mesh partitioning job script ' f'"{adcprep_job_filename.name}"')
+    adcprep_script.write(adcprep_job_filename, overwrite=overwrite)
 
     LOGGER.debug(f'setting ADCIRC executable "{adcirc_executable_path}"')
     if tidal_spinup_duration is not None:
@@ -238,8 +235,17 @@ def generate_adcirc_configuration(
                 create_symlink(original_fort13_filename, run_directory / 'fort.13')
         create_symlink('../../fort.14', run_directory / 'fort.14', relative=True)
 
+    LOGGER.debug(f'writing ensemble setup script ' f'"{setup_script_filename.name}"')
+    setup_script = EnsembleSetupScript(
+        platform=platform,
+        adcprep_job_script=adcprep_job_filename.name,
+        coldstart_job_script=coldstart_run_script_filename.name,
+        hotstart_job_script=hotstart_run_script_filename.name,
+    )
+    setup_script.write(setup_script_filename, overwrite=overwrite)
+
     LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
-    run_script = EnsembleRunScript(platform)
+    run_script = EnsembleRunScript(platform, setup_script_filename.name)
     run_script.write(run_script_filename, overwrite=overwrite)
 
     cleanup_script = EnsembleCleanupScript()
