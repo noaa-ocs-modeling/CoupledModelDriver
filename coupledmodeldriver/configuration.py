@@ -131,10 +131,21 @@ class ConfigurationJSON(ABC):
 
     @classmethod
     def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
+        """
+        create new object from an existing JSON file
+
+        :param filename: path to JSON file
+        :return: configuration object
+        """
+
         if not isinstance(filename, Path):
             filename = Path(filename)
 
+        if filename.is_dir():
+            filename = filename / cls.default_filename
+
         with open(filename) as file:
+            LOGGER.info(f'reading file "{filename}"')
             configuration = json.load(file)
 
         configuration = {
@@ -172,9 +183,10 @@ class ConfigurationJSON(ABC):
 
         if overwrite or not filename.exists():
             with open(filename.absolute(), 'w') as file:
+                LOGGER.info(f'writing to file "{filename}"')
                 json.dump(configuration, file)
         else:
-            raise FileExistsError(f'file exists at {filename}')
+            LOGGER.warning(f'skipping existing file "{filename}"')
 
 
 class SlurmJSON(ConfigurationJSON):
