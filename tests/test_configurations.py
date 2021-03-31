@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta
 
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
+    WaveMeshEntry
+import pytest
+
 from coupledmodeldriver.configuration import (
     ADCIRCJSON,
     ATMESHForcingJSON,
@@ -10,9 +14,6 @@ from coupledmodeldriver.configuration import (
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.platforms import Platform
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
-    WaveMeshEntry
-import pytest
 
 
 def test_update():
@@ -93,6 +94,7 @@ def test_nems():
 
 def test_adcirc():
     configuration = ADCIRCJSON(
+        adcirc_executable_path='adcirc',
         adcprep_executable_path='adcprep',
         modeled_start_time=datetime(2012, 10, 22, 6),
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),

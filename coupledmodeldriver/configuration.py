@@ -127,7 +127,7 @@ class ConfigurationJSON(ABC):
         if any(key != key.lower() for key in configuration):
             configuration = {key.lower(): value for key, value in configuration.items()}
 
-        return json.dumps(configuration)
+        return json.dumps(configuration, indent=2)
 
     @classmethod
     def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
@@ -184,7 +184,7 @@ class ConfigurationJSON(ABC):
         if overwrite or not filename.exists():
             with open(filename.absolute(), 'w') as file:
                 LOGGER.debug(f'writing to file "{filename}"')
-                json.dump(configuration, file)
+                json.dump(configuration, file, indent=2)
         else:
             LOGGER.debug(f'skipping existing file "{filename}"')
 
@@ -397,6 +397,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
     name = 'adcirc'
     default_filename = f'configure_adcirc.json'
     field_types = {
+        'adcirc_executable_path': Path,
         'adcprep_executable_path': Path,
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
@@ -416,6 +417,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
     def __init__(
         self,
+        adcirc_executable_path: PathLike,
         adcprep_executable_path: PathLike,
         modeled_start_time: datetime,
         modeled_end_time: datetime,
@@ -438,6 +440,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
     ):
         """
 
+        :param adcirc_executable_path: file path to `adcirc` or `NEMS.x`
         :param adcprep_executable_path: file path to `adcprep`
         :param modeled_start_time: start time in model run
         :param modeled_end_time: edn time in model run
@@ -469,6 +472,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         ModelJSON.__init__(self, model=Model.ADCIRC)
         NEMSCapJSON.__init__(self, processors=processors, nems_parameters=nems_parameters)
 
+        self['adcirc_executable_path'] = adcirc_executable_path
         self['adcprep_executable_path'] = adcprep_executable_path
         self['modeled_start_time'] = modeled_start_time
         self['modeled_end_time'] = modeled_end_time
@@ -829,14 +833,14 @@ class RunConfiguration(ABC):
             directory = directory.parent
 
         configurations = []
-        for name, configuration_class in cls.required:
+        for configuration_class in cls.required:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 configurations.append(configuration_class.from_file(filename))
             else:
                 raise FileNotFoundError(f'missing required configuration file "{filename}"')
 
-        for name, configuration_class in cls.forcings:
+        for configuration_class in cls.forcings:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 configurations.append(configuration_class.from_file(filename))
