@@ -86,4 +86,4 @@ if __name__ == '__main__':
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
 
     generation_script = ADCIRCGenerationScript()
-    generation_script.write(OUTPUT_DIRECTORY, overwrite=True)
+    generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)
