@@ -11,8 +11,8 @@ import appdirs
 
 from coupledmodeldriver.adcirc.nems_adcirc import (
     ADCIRCCoupledRunConfiguration,
-    generate_nems_adcirc_configuration,
 )
+from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -102,4 +102,6 @@ if __name__ == '__main__':
     )
 
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
-    generate_nems_adcirc_configuration(OUTPUT_DIRECTORY, overwrite=True)
+
+    generation_script = NEMSADCIRCGenerationScript()
+    generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)

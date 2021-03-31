@@ -8,11 +8,12 @@ from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
-from coupledmodeldriver.adcirc.adcirc import ADCIRCRunConfiguration, \
-    generate_adcirc_configuration
+from coupledmodeldriver.adcirc.adcirc import ADCIRCRunConfiguration
+from coupledmodeldriver.job_script import ADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
+
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'
 ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/adcprep'
 
@@ -83,4 +84,6 @@ if __name__ == '__main__':
     )
 
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
-    generate_adcirc_configuration(OUTPUT_DIRECTORY, overwrite=True)
+
+    generation_script = ADCIRCGenerationScript()
+    generation_script.write(OUTPUT_DIRECTORY / 'generate_adcirc.py', overwrite=True)

@@ -86,7 +86,7 @@ class ConfigurationJSON(ABC):
         else:
             field_type = type(value)
             LOGGER.info(
-                f'adding new configuration entry "{key}: {field_type}" with value "{value}"'
+                f'adding new configuration entry "{key}: {field_type}"' f' to {self.name}"'
             )
         self.__configuration[key] = convert_value(value, field_type)
         if key not in self.fields:

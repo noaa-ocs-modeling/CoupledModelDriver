@@ -30,7 +30,7 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
 
 Example scripts can be found at `examples/<platform>`
 
-### 1. generate configuration directory
+### 1. write a configuration to a directory
 
 The following code (`examples/hera/hera_shinnecock_ike.py`) creates a configuration for coupling `(ATMESH + WW3DATA) -> ADCIRC`
 on Hera, over a small Shinnecock Inlet mesh:
@@ -46,10 +46,9 @@ from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
-from coupledmodeldriver.adcirc.nems_adcirc import (
-    ADCIRCCoupledRunConfiguration,
-    generate_nems_adcirc_configuration,
-)
+from coupledmodeldriver.adcirc.nems_adcirc import
+    ADCIRCCoupledRunConfiguration
+from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
@@ -100,7 +99,7 @@ nems_sequence = [
 slurm_email_address = 'example@email.gov'
 
 # initialize `adcircpy` forcing objects
-tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE, resource=HAMTIDE_DIRECTORY)
+tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
 tidal_forcing.use_all()
 wind_forcing = AtmosphericMeshForcing(
     filename=FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc',
@@ -137,11 +136,32 @@ configuration = ADCIRCCoupledRunConfiguration(
     source_filename=None,
 )
 
-configuration.write_directory(OUTPUT_DIRECTORY, overwrite=True)
-generate_nems_adcirc_configuration(OUTPUT_DIRECTORY, overwrite=True)
+configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
+
+generation_script = NEMSADCIRCGenerationScript()
+generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)
 ```
 
-This code will generate a directory `hera_shinnecock_ike/` with the following structure:
+This code will generate JSON configuration files in the directory `hera_shinnecock_ike/`, with the following structure:
+
+```
+📦 hera_shinnecock_ike/
+┣ ✎ configure_modeldriver.json
+┣ ✎ configure_adcirc.json
+┣ ✎ configure_nems.json
+┣ ✎ configure_slurm.json
+┣ ✎ configure_tidal_forcing.json
+┣ ✎ configure_atmesh.json
+┣ ✎ configure_ww3data.json
+┗  ▶ generate_nems_adcirc.py
+```
+
+These JSON configuration files contain the configuration values for an ADCIRC run. You may change these values to alter the
+resulting run configuration.
+
+### 2. run generation script
+
+Running `generate_nems_adcirc.py` will read the JSON configuration and generate an ADCIRC run configuration, as so:
 
 ```
 📦 hera_shinnecock_ike/
@@ -175,15 +195,16 @@ This code will generate a directory `hera_shinnecock_ike/` with the following st
 ┣ ✎ configure_tidal_forcing.json
 ┣ ✎ configure_atmesh.json
 ┣ ✎ configure_ww3data.json
+┣  ▶ generate_nems_adcirc.py
 ┗  ▶ run_hera.sh
 ```
 
 _**Note:** the required NEMS configuration files (`nems.configure`, `model_configure`) do not yet exist in the run
 directories (`coldstart/`, `runs/test_case_1/`). These will be populated in the next step._
 
-### 2. run job submission script `run_<platform>.sh`
+### 2. run job submission script
 
-Run `run_hera.sh`:
+Running `run_hera.sh` will start the actual model run.
 
 ```bash
 sh run_hera.sh
@@ -239,7 +260,7 @@ This will first create symbolic links to populate configuration directories (by 
 ┗  ▶ run_hera.sh
 ```
 
-and then submit the requested jobs to the queue:
+and then submit the requested jobs to the queue (or run the commands directly if the platform is set to `LOCAL`):
 
 ```bash
 squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"
