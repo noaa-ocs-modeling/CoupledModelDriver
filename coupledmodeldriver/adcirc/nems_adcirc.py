@@ -351,7 +351,7 @@ def generate_nems_adcirc_configuration(
         if use_original_mesh:
             if original_fort13_filename.exists():
                 create_symlink(original_fort13_filename, run_directory / 'fort.13')
-        create_symlink(local_fort14_filename, run_directory / 'fort.14')
+        create_symlink('../../fort.14', run_directory / 'fort.14', relative=True)
 
     LOGGER.debug(f'writing ensemble setup script ' f'"{setup_script_filename.name}"')
     setup_script = EnsembleSetupScript(platform)
