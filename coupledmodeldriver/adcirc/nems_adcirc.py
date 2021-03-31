@@ -23,10 +23,14 @@ from ..configuration import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ..job_script import (AdcircMeshPartitionJob, AdcircNEMSSetupScript,
-                          AdcircRunJob, EnsembleCleanupScript,
-                          EnsembleRunScript,
-                          EnsembleSetupScript)
+from ..job_script import (
+    AdcircMeshPartitionJob,
+    AdcircNEMSSetupScript,
+    AdcircRunJob,
+    EnsembleCleanupScript,
+    EnsembleRunScript,
+    EnsembleSetupScript,
+)
 from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, get_logger
 
@@ -177,9 +181,7 @@ def generate_nems_adcirc_configuration(
     adcirc_coldstart_run_name = 'ADC_COLD_RUN'
     adcirc_hotstart_run_name = 'ADC_HOT_RUN'
 
-    adcprep_job_script_filename = (
-        output_directory / f'job_adcprep_{platform.name.lower()}.job'
-    )
+    adcprep_job_script_filename = output_directory / f'job_adcprep_{platform.name.lower()}.job'
     coldstart_setup_script_filename = output_directory / f'setup.sh.coldstart'
     coldstart_run_script_filename = (
         output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
@@ -210,8 +212,7 @@ def generate_nems_adcirc_configuration(
     )
 
     LOGGER.debug(
-        f'writing mesh partitioning job script '
-        f'"{adcprep_job_script_filename.name}"'
+        f'writing mesh partitioning job script ' f'"{adcprep_job_script_filename.name}"'
     )
     adcprep_script.write(adcprep_job_script_filename, overwrite=overwrite)
 
