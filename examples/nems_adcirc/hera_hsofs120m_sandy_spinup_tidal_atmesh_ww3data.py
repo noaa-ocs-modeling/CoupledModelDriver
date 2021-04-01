@@ -14,23 +14,35 @@ from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
-ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+NEMS_EXECUTABLE = (
+    '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
+)
+ADCPREP_EXECUTABLE = (
+    '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+)
 
 MODULES_FILENAME = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
 MESH_DIRECTORY = (
-    Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'hsofs' / 'grid_v1'
+    Path('/scratch2/COASTAL/coastal/save/shared/models')
+    / 'meshes'
+    / 'hsofs'
+    / '120m'
+    / 'v2.2_20210915'
 )
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
 FORCINGS_DIRECTORY = (
-    Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'hsofs' / 'sandy'
+    Path('/scratch2/COASTAL/coastal/save/shared/models')
+    / 'forcings'
+    / 'hsofs'
+    / '120m'
+    / 'sandy'
 )
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_hsofs_sandy'
+OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
 
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'

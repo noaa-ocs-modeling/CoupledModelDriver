@@ -32,7 +32,8 @@ Example scripts can be found at `examples/<platform>`
 
 ### 1. write a configuration to a directory
 
-The following code (`examples/hera/hera_shinnecock_ike.py`) creates a configuration for coupling `(ATMESH + WW3DATA) -> ADCIRC`
+The following code (`examples/nems_adcirc/hera_shinnecock_ike_spinup_tidal_atmesh_ww3data.py`) creates a configuration for
+coupling `(ATMESH + WW3DATA) -> ADCIRC`
 on Hera, over a small Shinnecock Inlet mesh:
 
 ```python
@@ -45,30 +46,26 @@ from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+import numpy
 
-from coupledmodeldriver.adcirc.nems_adcirc import
-    ADCIRCCoupledRunConfiguration
+from coupledmodeldriver.adcirc.nems_adcirc import ADCIRCCoupledRunConfiguration
 from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
 from coupledmodeldriver.platforms import Platform
 
 # paths to compiled `NEMS.x` and `adcprep`
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/NEMS-adcirc_atmesh_ww3data.x'
-ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ALLBIN_INSTALL/adcprep'
+NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
+ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+
+MODULES_FILENAME = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 
 # directory containing input ADCIRC mesh nodes (`fort.14`) and (optionally) mesh values (`fort.13`)
-MESH_DIRECTORY = (
-        Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'grid_v1'
-)
+MESH_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'meshes' / 'shinnecock' / 'grid_v1'
 
 # directory containing input atmospheric mesh forcings (`wind_atm_fin_ch_time_vec.nc`) and WaveWatch III forcings (`ww3.Constant.20151214_sxy_ike_date.nc`)
-FORCINGS_DIRECTORY = (
-        Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'shinnecock' / 'ike'
-)
+FORCINGS_DIRECTORY = Path('/scratch2/COASTAL/coastal/save/shared/models') / 'forcings' / 'shinnecock' / 'ike'
 
 # directory to which to write configuration
-OUTPUT_DIRECTORY = (
-        Path(__file__).parent.parent / 'data' / 'configuration' / 'hera_shinnecock_ike'
-)
+OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
 
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
@@ -82,8 +79,15 @@ tidal_spinup_duration = timedelta(days=12.5)
 nems_interval = timedelta(hours=1)
 job_duration = timedelta(hours=6)
 
-# dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
-runs = {f'test_case_1': (None, None)}
+# dictionary defining runs with ADCIRC value perturbations - in this case, a range of Manning's N values
+range = [0.016, 0.08]
+mean = numpy.mean(range)
+std = mean / 3
+values = numpy.random.normal(mean, std, 5)
+runs = {
+    f'mannings_n_{mannings_n:.3}': (mannings_n, 'mannings_n_at_sea_floor')
+    for mannings_n in values
+}
 
 # describe connections between coupled components
 nems_connections = ['ATM -> OCN', 'WAV -> OCN']
@@ -131,9 +135,9 @@ configuration = ADCIRCCoupledRunConfiguration(
     slurm_partition=None,
     slurm_job_duration=job_duration,
     slurm_email_address=slurm_email_address,
-    nems_executable=None,
-    adcprep_executable=None,
-    source_filename=None,
+    nems_executable=NEMS_EXECUTABLE,
+    adcprep_executable=ADCPREP_EXECUTABLE,
+    source_filename=MODULES_FILENAME,
 )
 
 configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)

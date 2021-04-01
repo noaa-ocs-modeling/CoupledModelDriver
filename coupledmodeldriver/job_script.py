@@ -489,7 +489,8 @@ class EnsembleRunScript(Script):
                     'for hotstart in ${DIRECTORY}/runs/*/',
                     [
                         'pushd ${hotstart} >/dev/null 2>&1',
-                        self.hotstart, 'popd >/dev/null 2>&1',
+                        self.hotstart,
+                        'popd >/dev/null 2>&1',
                     ],
                 ),
                 *(str(command) for command in self.commands),
