@@ -56,8 +56,8 @@ if __name__ == '__main__':
     std = mean / 3
     values = numpy.random.normal(mean, std, 5)
     runs = {
-        f'mannings_n_{mannings_n:.3}': (mannings_n, 'mannings_n_at_sea_floor')
-        for mannings_n in values
+        f'mannings_n_{value:.3}': {'mannings_n_at_sea_floor': value}
+        for value in values
     }
 
     # describe connections between coupled components

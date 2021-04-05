@@ -44,7 +44,7 @@ if __name__ == '__main__':
     job_duration = timedelta(hours=6)
 
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
-    runs = {f'test_case_1': (None, None)}
+    runs = {f'test_case_1': None}
 
     slurm_email_address = 'example@email.gov'
 
