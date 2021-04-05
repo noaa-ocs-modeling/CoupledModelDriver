@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from adcircpy import Tides
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver.adcirc.adcirc import ADCIRCRunConfiguration

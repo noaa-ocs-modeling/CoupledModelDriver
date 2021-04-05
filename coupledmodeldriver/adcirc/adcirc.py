@@ -4,9 +4,11 @@ import os
 from os import PathLike
 from pathlib import Path
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy.driver.driver import AdcircRun
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+from adcircpy.mesh.mesh import AdcircMesh
 import numpy
 
 from ..configuration import (

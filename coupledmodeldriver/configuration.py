@@ -6,11 +6,12 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Collection, Mapping, Union
 
-from adcircpy import AdcircMesh, AdcircRun
+from adcircpy.driver.driver import AdcircRun
 from adcircpy.forcing.base import Forcing
 from adcircpy.forcing.tides.tides import TidalSource, Tides
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+from adcircpy.mesh.mesh import AdcircMesh
 from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, ModelEntry, \
