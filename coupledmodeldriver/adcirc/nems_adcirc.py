@@ -10,7 +10,6 @@ from adcircpy.forcing.base import Forcing
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
-import numpy
 
 from .adcirc import ADCIRCRunConfiguration
 from ..configuration import (
@@ -327,14 +326,17 @@ def generate_nems_adcirc_configuration(
             create_symlink(original_fort13_filename, coldstart_directory / 'fort.13')
     create_symlink('../fort.14', coldstart_directory / 'fort.14', relative=True)
 
-    for run_name, (value, attribute_name) in runs.items():
+    for run_name, attributes in runs.items():
         run_directory = runs_directory / run_name
         LOGGER.debug(f'writing hotstart configuration to ' f'"{run_directory}"')
-        if not isinstance(value, numpy.ndarray):
-            value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-        if not driver.mesh.has_attribute(attribute_name):
-            driver.mesh.add_attribute(attribute_name)
-        driver.mesh.set_attribute(attribute_name, value)
+        if attributes is not None:
+            for name, value in attributes.items():
+                if name is not None:
+                    # if not isinstance(value, numpy.ndarray):
+                    #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
+                    if not driver.mesh.has_attribute(name):
+                        driver.mesh.add_attribute(name)
+                    driver.mesh.set_attribute(name, value)
 
         driver.write(
             run_directory,
