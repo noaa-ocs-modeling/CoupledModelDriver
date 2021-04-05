@@ -198,5 +198,5 @@ def test_modeldriver():
 
     assert configuration.configuration == {
         'platform': Platform.HERA,
-        'runs': {'run_1': (None, None)},
+        'runs': {'run_1': None},
     }

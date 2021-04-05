@@ -53,7 +53,7 @@ def test_local_shinnecock_ike():
     output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
     reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
 
-    runs = {f'test_case_1': (None, None)}
+    runs = {f'test_case_1': None}
 
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']
     nems_mediations = None
@@ -108,7 +108,8 @@ def test_local_shinnecock_ike():
     generate_nems_adcirc_configuration(output_directory, overwrite=True)
 
     check_reference_directory(
-        DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
     )
 
 
@@ -131,7 +132,7 @@ def test_hera_shinnecock_ike():
     output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
     reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
 
-    runs = {f'test_case_1': (None, None)}
+    runs = {f'test_case_1': None}
 
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']
     nems_mediations = None
@@ -186,7 +187,8 @@ def test_hera_shinnecock_ike():
     generate_nems_adcirc_configuration(output_directory, overwrite=True)
 
     check_reference_directory(
-        DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
     )
 
 
@@ -209,7 +211,7 @@ def test_stampede2_shinnecock_ike():
     output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
     reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
 
-    runs = {f'test_case_1': (None, None)}
+    runs = {f'test_case_1': None}
 
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']
     nems_mediations = None
@@ -264,7 +266,8 @@ def test_stampede2_shinnecock_ike():
     generate_nems_adcirc_configuration(output_directory, overwrite=True)
 
     check_reference_directory(
-        DATA_DIRECTORY / output_directory, DATA_DIRECTORY / reference_directory
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
     )
 
 
