@@ -520,7 +520,14 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for forcing in self.forcings:
-            mesh.add_forcing(forcing.adcircpy_forcing)
+            adcircpy_forcing = forcing.adcircpy_forcing
+            if isinstance(adcircpy_forcing, Tides) and self['tidal_spinup_duration'] is not None:
+                adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
+                adcircpy_forcing.start_date = self['modeled_start_time']
+                adcircpy_forcing.end_date = self['modeled_end_time']
+                if self['tidal_spinup_duration'] is not None:
+                    adcircpy_forcing.start_date -= self['tidal_spinup_duration']
+            mesh.add_forcing(adcircpy_forcing)
 
         if self['fort_13_path'] is not None:
             LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
@@ -563,29 +570,35 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         if self['use_smagorinsky'] is not None:
             driver.smagorinsky = self['use_smagorinsky']
 
-        # spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
-        # spinup_end = self['modeled_start_time']
+        if self['tidal_spinup_duration'] is not None:
+            spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
+        else:
+            spinup_start = None
 
         if self['write_station_output'] and self['stations_file_path'].exists():
             driver.import_stations(self['stations_file_path'])
             driver.set_elevation_stations_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
             driver.set_velocity_stations_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
 
         if self['write_surface_output']:
             driver.set_elevation_surface_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
             driver.set_velocity_surface_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
 
         return driver
 
@@ -659,11 +672,13 @@ class TidalForcingJSON(ForcingJSON):
 
         if 'All' in constituents:
             tides.use_all()
-        elif 'Major' in constituents:
-            tides.use_major()
         else:
+            if 'Major' in constituents:
+                tides.use_major()
+                constituents.remove('Major')
             for constituent in constituents:
-                tides.use_constituent(constituent)
+                if constituent not in tides.active_constituents:
+                    tides.use_constituent(constituent)
 
         self['constituents'] = list(tides.active_constituents)
         return tides
@@ -765,14 +780,14 @@ class ModelDriverJSON(ConfigurationJSON):
     default_filename = f'configure_modeldriver.json'
     field_types = {
         'platform': Platform,
-        'runs': {str: (str, Any)},
+        'runs': {str: {str: Any}},
     }
 
     def __init__(
-        self, platform: Platform, runs: {str: (str, Any)} = None,
+        self, platform: Platform, runs: {str: {str: Any}} = None,
     ):
         if runs is None:
-            runs = {'run_1': (None, None)}
+            runs = {'run_1': None}
 
         super().__init__()
 
