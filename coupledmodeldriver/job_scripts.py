@@ -2,7 +2,7 @@ from abc import ABC
 from datetime import timedelta
 from enum import Enum
 from os import PathLike
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import textwrap
 from typing import Sequence
 import uuid
@@ -238,135 +238,6 @@ class JobScript(Script):
             self.__slurm_run_directory = None
 
 
-class AdcircJob(JobScript):
-    def __init__(
-        self,
-        platform: Platform,
-        commands: [str],
-        slurm_tasks: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
-        slurm_run_name: str,
-        source_filename: PathLike = None,
-        **kwargs,
-    ):
-        if slurm_run_name is None:
-            slurm_run_name = 'ADCIRC_JOB'
-
-        super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
-            **kwargs,
-        )
-
-        if source_filename is not None and len(str(source_filename)) > 0:
-            self.commands.insert(0, f'source {source_filename}')
-
-
-class AdcircNEMSSetupScript(Script):
-    """ script for setting up ADCIRC NEMS configuration """
-
-    def __init__(
-        self,
-        nems_configure_filename: PathLike,
-        model_configure_filename: PathLike,
-        config_rc_filename: PathLike,
-        fort67_filename: PathLike = None,
-    ):
-        self.nems_configure_filename = PurePosixPath(nems_configure_filename)
-        self.model_configure_filename = PurePosixPath(model_configure_filename)
-        self.config_rc_filename = PurePosixPath(config_rc_filename)
-        self.fort67_filename = (
-            PurePosixPath(fort67_filename) if fort67_filename is not None else None
-        )
-
-        commands = [
-            f'ln -sf {self.nems_configure_filename} ./nems.configure',
-            f'ln -sf {self.model_configure_filename} ./model_configure',
-            f'ln -sf {self.config_rc_filename} ./config.rc',
-            f'ln -sf ./model_configure ./atm_namelist.rc',
-        ]
-
-        if self.fort67_filename is not None:
-            commands.extend(['', f'ln -sf {self.fort67_filename} ./fort.67.nc'])
-
-        super().__init__(commands)
-
-
-class AdcircRunJob(AdcircJob):
-    """ script for running ADCIRC via a NEMS configuration """
-
-    def __init__(
-        self,
-        platform: Platform,
-        slurm_tasks: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
-        slurm_run_name: str,
-        executable: PathLike = None,
-        commands: [str] = None,
-        **kwargs,
-    ):
-        super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
-            **kwargs,
-        )
-
-        if executable is None:
-            executable = 'adcirc'
-        self.executable = executable
-
-        self.commands.append(f'{self.launcher} {self.executable}')
-
-
-class AdcircMeshPartitionJob(AdcircJob):
-    """ script for performing domain decomposition with `adcprep` """
-
-    def __init__(
-        self,
-        platform: Platform,
-        adcirc_mesh_partitions: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
-        slurm_run_name: str,
-        adcprep_path: PathLike = None,
-        slurm_tasks: int = 1,
-        commands: [str] = None,
-        **kwargs,
-    ):
-        super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
-            **kwargs,
-        )
-
-        self.adcirc_partitions = adcirc_mesh_partitions
-
-        if adcprep_path is None:
-            adcprep_path = 'adcprep'
-        self.adcprep_path = adcprep_path
-
-        self.commands.extend(
-            [
-                f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
-                f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
-            ]
-        )
-
-
 class EnsembleSetupScript(Script):
     def __init__(
         self,
@@ -594,59 +465,6 @@ class EnsembleCleanupScript(Script):
 
         if filename.is_dir():
             filename = filename / f'cleanup.sh'
-
-        super().write(filename, overwrite)
-
-
-class ADCIRCGenerationScript(Script):
-    """ Python script for generating ADCIRC NEMS configurations """
-
-    def __init__(self, commands: [str] = None):
-        super().__init__(commands)
-
-    def __str__(self):
-        lines = [
-            'from pathlib import Path',
-            '',
-            'from coupledmodeldriver.adcirc.adcirc import generate_adcirc_configuration',
-            '',
-            '',
-            "if __name__ == '__main__':",
-            '    generate_adcirc_configuration(output_directory=Path(__file__).parent, overwrite=True)',
-        ]
-
-        return '\n'.join(lines)
-
-    def write(self, filename: PathLike, overwrite: bool = False):
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / f'generate_adcirc.py'
-
-        super().write(filename, overwrite)
-
-
-class NEMSADCIRCGenerationScript(ADCIRCGenerationScript):
-    def __str__(self):
-        lines = [
-            'from pathlib import Path',
-            '',
-            'from coupledmodeldriver.adcirc.nems_adcirc import generate_nems_adcirc_configuration',
-            '',
-            '',
-            "if __name__ == '__main__':",
-            '    generate_nems_adcirc_configuration(output_directory=Path(__file__).parent, overwrite=True)',
-        ]
-
-        return '\n'.join(lines)
-
-    def write(self, filename: PathLike, overwrite: bool = False):
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / f'generate_nems_adcirc.py'
 
         super().write(filename, overwrite)
 

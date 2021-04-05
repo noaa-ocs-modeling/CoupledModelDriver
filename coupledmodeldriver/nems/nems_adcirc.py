@@ -5,33 +5,29 @@ import os
 from os import PathLike
 from pathlib import Path
 
-from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.base import Forcing
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 
-from .adcirc import ADCIRCRunConfiguration
-from ..configuration import (
-    ADCIRCJSON,
-    ATMESHForcingJSON,
-    ForcingJSON,
+from .job_scripts import AdcircNEMSSetupScript
+from ..platforms import Platform
+from ..adcirc import ADCIRCRunConfiguration
+from ..adcirc.job_scripts import AdcircMeshPartitionJob, AdcircRunJob
+from ..configurations import (
     ModelDriverJSON,
-    NEMSJSON,
     SlurmJSON,
-    TidalForcingJSON,
-    WW3DATAForcingJSON,
 )
-from ..job_script import (
-    AdcircMeshPartitionJob,
-    AdcircNEMSSetupScript,
-    AdcircRunJob,
+from ..adcirc.configurations import ADCIRCJSON, ATMESHForcingJSON, ForcingJSON, TidalForcingJSON, WW3DATAForcingJSON
+from .configurations import NEMSJSON
+from ..job_scripts import (
     EnsembleCleanupScript,
     EnsembleRunScript,
     EnsembleSetupScript,
 )
-from ..platforms import Platform
-from ..utilities import LOGGER, create_symlink, get_logger
+from ..utilities import LOGGER, create_symlink, \
+    get_logger
 
 
 def generate_nems_adcirc_configuration(

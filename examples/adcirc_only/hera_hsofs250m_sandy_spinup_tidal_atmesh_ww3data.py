@@ -8,9 +8,9 @@ from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
-from coupledmodeldriver.adcirc.adcirc import ADCIRCRunConfiguration
-from coupledmodeldriver.job_script import ADCIRCGenerationScript
-from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver import Platform
+from coupledmodeldriver.adcirc import ADCIRCGenerationScript, \
+    ADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`
 ADCIRC_EXECUTABLE = (
