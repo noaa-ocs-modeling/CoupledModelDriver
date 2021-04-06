@@ -66,7 +66,7 @@ def generate_nems_adcirc_configuration(
     else:
         output_directory = output_directory.resolve().relative_to(Path().cwd())
 
-    coupled_configuration = ADCIRCCoupledRunConfiguration.read_directory(
+    coupled_configuration = NEMSADCIRCRunConfiguration.read_directory(
         configuration_directory
     )
 
@@ -371,7 +371,7 @@ def generate_nems_adcirc_configuration(
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
 
 
-class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
+class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
     required = [
         ModelDriverJSON,
         NEMSJSON,
@@ -469,7 +469,7 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
         slurm: SlurmJSON,
         adcirc: ADCIRCJSON,
         forcings: [ForcingJSON] = None,
-    ) -> 'ADCIRCCoupledRunConfiguration':
+    ) -> 'NEMSADCIRCRunConfiguration':
         instance = super().from_configurations(
             driver=driver, slurm=slurm, adcirc=adcirc, forcings=None,
         )
@@ -483,7 +483,7 @@ class ADCIRCCoupledRunConfiguration(ADCIRCRunConfiguration):
         return instance
 
     @classmethod
-    def read_directory(cls, directory: PathLike) -> 'ADCIRCCoupledRunConfiguration':
+    def read_directory(cls, directory: PathLike) -> 'NEMSADCIRCRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
         if directory.is_file():

@@ -10,8 +10,8 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.nems import ADCIRCCoupledRunConfiguration, \
-    NEMSADCIRCGenerationScript
+from coupledmodeldriver.nems import NEMSADCIRCGenerationScript, \
+    NEMSADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = (
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = ADCIRCCoupledRunConfiguration(
+    configuration = NEMSADCIRCRunConfiguration(
         fort13=MESH_DIRECTORY / 'fort.13',
         fort14=MESH_DIRECTORY / 'fort.14',
         modeled_start_time=modeled_start_time,

@@ -14,7 +14,7 @@ import wget
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.nems import (
-    ADCIRCCoupledRunConfiguration,
+    NEMSADCIRCRunConfiguration,
     generate_nems_adcirc_configuration,
 )
 
@@ -81,7 +81,7 @@ def test_local_shinnecock_ike():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = ADCIRCCoupledRunConfiguration(
+    configuration = NEMSADCIRCRunConfiguration(
         fort13=mesh_directory / 'fort.13',
         fort14=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
@@ -160,7 +160,7 @@ def test_hera_shinnecock_ike():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = ADCIRCCoupledRunConfiguration(
+    configuration = NEMSADCIRCRunConfiguration(
         fort13=mesh_directory / 'fort.13',
         fort14=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
@@ -239,7 +239,7 @@ def test_stampede2_shinnecock_ike():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = ADCIRCCoupledRunConfiguration(
+    configuration = NEMSADCIRCRunConfiguration(
         fort13=mesh_directory / 'fort.13',
         fort14=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,

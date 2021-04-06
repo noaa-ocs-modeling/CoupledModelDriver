@@ -50,7 +50,7 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.nems import ADCIRCCoupledRunConfiguration, NEMSADCIRCGenerationScript
+from coupledmodeldriver.nems import NEMSADCIRCRunConfiguration, NEMSADCIRCGenerationScript
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
