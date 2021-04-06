@@ -9,8 +9,8 @@ from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
 from .base import ConfigurationJSON, GWCESolutionScheme, Model, \
-    NEMSCapJSON, SlurmJSON
-from .forcings import ForcingJSON
+    SlurmJSON
+from .forcings import ForcingJSON, NEMSCapJSON
 from ..utilities import LOGGER
 
 

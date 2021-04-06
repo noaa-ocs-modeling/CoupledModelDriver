@@ -8,10 +8,11 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 
-from .. import ATMESHForcingJSON, ForcingJSON, NEMSJSON, SlurmJSON, \
-    TidalForcingJSON, WW3DATAForcingJSON
+from .base import NEMSJSON
 from ..adcirc import ADCIRCRunConfiguration
-from ..base import ModelDriverJSON
+from ..base import ModelDriverJSON, SlurmJSON
+from ..forcings import ATMESHForcingJSON, ForcingJSON, TidalForcingJSON, \
+    WW3DATAForcingJSON
 from ..models import ADCIRCJSON
 from ...platforms import Platform
 

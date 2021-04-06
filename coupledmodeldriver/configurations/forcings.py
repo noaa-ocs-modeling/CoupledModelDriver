@@ -9,9 +9,9 @@ from adcircpy.forcing.tides import HAMTIDE
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-from nemspy.model import AtmosphericMeshEntry, WaveMeshEntry
+from nemspy.model import AtmosphericMeshEntry, ModelEntry, WaveMeshEntry
 
-from .base import ConfigurationJSON, NEMSCapJSON
+from .base import ConfigurationJSON
 
 
 class ForcingJSON(ConfigurationJSON, ABC):
@@ -44,6 +44,27 @@ class ForcingJSON(ConfigurationJSON, ABC):
     @classmethod
     @abstractmethod
     def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
+        raise NotImplementedError()
+
+
+class NEMSCapJSON(ConfigurationJSON, ABC):
+    field_types = {
+        'processors': int,
+        'nems_parameters': {str: str},
+    }
+
+    def __init__(self, processors: int, nems_parameters: {str: str} = None):
+        super().__init__(fields=self.fields, configuration=self.configuration)
+        self.fields.update(NEMSCapJSON.field_types)
+
+        if nems_parameters is None:
+            nems_parameters = {}
+
+        self['processors'] = processors
+        self['nems_parameters'] = nems_parameters
+
+    @abstractmethod
+    def nemspy_entry(self) -> ModelEntry:
         raise NotImplementedError()
 
 
