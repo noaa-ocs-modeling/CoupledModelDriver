@@ -210,6 +210,8 @@ def convert_to_json(value: Any) -> Union[str, float, int, dict, list, bool]:
     if type(value) not in (float, int, bool, str):
         if isinstance(value, Enum):
             value = value.name
+        if isinstance(value, Path):
+            value = value.as_posix()
         if isinstance(value, Collection) and not isinstance(value, str):
             if isinstance(value, Mapping):
                 value = {
