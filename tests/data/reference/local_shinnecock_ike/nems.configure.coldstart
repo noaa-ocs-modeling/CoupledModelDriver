@@ -1,4 +1,4 @@
-# `nems.configure` generated with NEMSpy 1.0.3.post47.dev0+373f122
+# `nems.configure` generated with NEMSpy 1.1.3.post33.dev0+ff69a55
 # EARTH #
 EARTH_component_list: OCN
 EARTH_attributes::
@@ -7,7 +7,7 @@ EARTH_attributes::
 
 # OCN #
 OCN_model:                      adcirc
-OCN_petlist_bounds:             0 12
+OCN_petlist_bounds:             0 10
 OCN_attributes::
   Verbosity = off
 ::

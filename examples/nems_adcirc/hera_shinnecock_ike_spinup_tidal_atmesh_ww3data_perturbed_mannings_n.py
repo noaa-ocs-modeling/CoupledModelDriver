@@ -3,16 +3,15 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from adcircpy import Tides
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
-from coupledmodeldriver.adcirc.nems_adcirc import \
-    ADCIRCCoupledRunConfiguration
-from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
-from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver import Platform
+from coupledmodeldriver.nems import ADCIRCCoupledRunConfiguration, \
+    NEMSADCIRCGenerationScript
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = (
@@ -55,10 +54,7 @@ if __name__ == '__main__':
     mean = numpy.mean(range)
     std = mean / 3
     values = numpy.random.normal(mean, std, 5)
-    runs = {
-        f'mannings_n_{mannings_n:.3}': (mannings_n, 'mannings_n_at_sea_floor')
-        for mannings_n in values
-    }
+    runs = {f'mannings_n_{value:.3}': {'mannings_n_at_sea_floor': value} for value in values}
 
     # describe connections between coupled components
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']

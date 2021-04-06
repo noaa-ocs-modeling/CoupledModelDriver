@@ -1,6 +1,7 @@
 # CoupledModelDriver
 
 [![tests](https://github.com/noaa-ocs-modeling/CoupledModelDriver/workflows/tests/badge.svg)](https://github.com/noaa-ocs-modeling/CoupledModelDriver/actions?query=workflow%3Atests)
+[![codecov](https://codecov.io/gh/noaa-ocs-modeling/coupledmodeldriver/branch/main/graph/badge.svg?token=4DwZePHp18)](https://codecov.io/gh/noaa-ocs-modeling/coupledmodeldriver)
 [![build](https://github.com/noaa-ocs-modeling/CoupledModelDriver/workflows/build/badge.svg)](https://github.com/noaa-ocs-modeling/CoupledModelDriver/actions?query=workflow%3Abuild)
 [![version](https://img.shields.io/pypi/v/CoupledModelDriver)](https://pypi.org/project/CoupledModelDriver)
 [![license](https://img.shields.io/github/license/noaa-ocs-modeling/CoupledModelDriver)](https://creativecommons.org/share-your-work/public-domain/cc0)
@@ -42,15 +43,14 @@ on Hera, over a small Shinnecock Inlet mesh:
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from adcircpy import Tides
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
-from coupledmodeldriver.adcirc.nems_adcirc import ADCIRCCoupledRunConfiguration
-from coupledmodeldriver.job_script import NEMSADCIRCGenerationScript
-from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver import Platform
+from coupledmodeldriver.nems import ADCIRCCoupledRunConfiguration, NEMSADCIRCGenerationScript
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'

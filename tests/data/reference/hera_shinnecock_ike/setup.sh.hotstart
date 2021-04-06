@@ -1,7 +1,7 @@
 #!/bin/bash --login
-ln -sf ../../../nems.configure.hotstart ./nems.configure
-ln -sf ../../../model_configure.hotstart ./model_configure
-ln -sf ../../../config.rc.hotstart ./config.rc
+ln -sf ../../nems.configure.hotstart ./nems.configure
+ln -sf ../../model_configure.hotstart ./model_configure
+ln -sf ../../config.rc.hotstart ./config.rc
 ln -sf ./model_configure ./atm_namelist.rc
 
-ln -sf ../../../coldstart/fort.67.nc ./fort.67.nc
+ln -sf ../../coldstart/fort.67.nc ./fort.67.nc

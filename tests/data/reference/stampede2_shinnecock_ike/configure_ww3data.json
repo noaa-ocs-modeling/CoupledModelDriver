@@ -1,7 +1,7 @@
 {
   "nrs": 5,
   "modeled_timestep": 3600.0,
-  "resource": "input\\shinnecock_ike\\forcings\\ww3.Constant.20151214_sxy_ike_date.nc",
+  "resource": "input/shinnecock_ike/forcings/ww3.Constant.20151214_sxy_ike_date.nc",
   "processors": 1,
   "nems_parameters": {}
 }

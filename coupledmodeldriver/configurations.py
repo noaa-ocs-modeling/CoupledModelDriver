@@ -8,7 +8,8 @@ from typing import Any, Collection, Mapping, Union
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.base import Forcing
-from adcircpy.forcing.tides.tides import TidalSource, Tides
+from adcircpy.forcing.tides import HAMTIDE, Tides
+from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.server import SlurmConfig
@@ -16,7 +17,7 @@ from nemspy import ModelingSystem
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, ModelEntry, \
     WaveMeshEntry
 
-from .job_script import SlurmEmailType
+from .job_scripts import SlurmEmailType
 from .platforms import Platform
 from .utilities import LOGGER, convert_to_json, convert_value
 
@@ -189,6 +190,77 @@ class ConfigurationJSON(ABC):
             LOGGER.debug(f'skipping existing file "{filename}"')
 
 
+class NEMSJSON(ConfigurationJSON):
+    name = 'nems'
+    default_filename = f'configure_nems.json'
+    field_types = {
+        'executable_path': Path,
+        'modeled_start_time': datetime,
+        'modeled_end_time': datetime,
+        'interval': timedelta,
+        'models': [ModelEntry],
+        'connections': [[str]],
+        'mediations': [str],
+        'sequence': [str],
+    }
+
+    def __init__(
+        self,
+        executable_path: PathLike,
+        modeled_start_time: datetime,
+        modeled_end_time: datetime,
+        interval: timedelta = None,
+        models: [ModelEntry] = None,
+        connections: [[str]] = None,
+        mediations: [[str]] = None,
+        sequence: [str] = None,
+    ):
+        super().__init__()
+
+        self['executable_path'] = executable_path
+        self['modeled_start_time'] = modeled_start_time
+        self['modeled_end_time'] = modeled_end_time
+        self['interval'] = interval
+        self['models'] = models
+        self['connections'] = connections
+        self['mediations'] = mediations
+        self['sequence'] = sequence
+
+    @property
+    def nemspy_modeling_system(self) -> ModelingSystem:
+        modeling_system = ModelingSystem(
+            start_time=self['modeled_start_time'],
+            end_time=self['modeled_end_time'],
+            interval=self['interval'],
+            **{model.model_type.value.lower(): model for model in self['models']},
+        )
+        for connection in self['connections']:
+            modeling_system.connect(*connection)
+        for mediation in self['mediations']:
+            modeling_system.mediate(*mediation)
+
+        modeling_system.sequence = self['sequence']
+
+        return modeling_system
+
+    def to_nemspy(self) -> ModelingSystem:
+        return self.nemspy_modeling_system
+
+    @classmethod
+    def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
+        if executable_path is None:
+            executable_path = 'NEMS.x'
+        return cls(
+            executable_path=executable_path,
+            modeled_start_time=modeling_system.start_time,
+            modeled_end_time=modeling_system.end_time,
+            interval=modeling_system.interval,
+            models=modeling_system.models,
+            connections=modeling_system.connections,
+            sequence=modeling_system.sequence,
+        )
+
+
 class SlurmJSON(ConfigurationJSON):
     name = 'slurm'
     default_filename = f'configure_slurm.json'
@@ -286,77 +358,6 @@ class SlurmJSON(ConfigurationJSON):
         )
 
         instance['filename'] = slurm_config._filename
-
-
-class NEMSJSON(ConfigurationJSON):
-    name = 'nems'
-    default_filename = f'configure_nems.json'
-    field_types = {
-        'executable_path': Path,
-        'modeled_start_time': datetime,
-        'modeled_end_time': datetime,
-        'interval': timedelta,
-        'models': [ModelEntry],
-        'connections': [[str]],
-        'mediations': [str],
-        'sequence': [str],
-    }
-
-    def __init__(
-        self,
-        executable_path: PathLike,
-        modeled_start_time: datetime,
-        modeled_end_time: datetime,
-        interval: timedelta = None,
-        models: [ModelEntry] = None,
-        connections: [[str]] = None,
-        mediations: [[str]] = None,
-        sequence: [str] = None,
-    ):
-        super().__init__()
-
-        self['executable_path'] = executable_path
-        self['modeled_start_time'] = modeled_start_time
-        self['modeled_end_time'] = modeled_end_time
-        self['interval'] = interval
-        self['models'] = models
-        self['connections'] = connections
-        self['mediations'] = mediations
-        self['sequence'] = sequence
-
-    @property
-    def nemspy_modeling_system(self) -> ModelingSystem:
-        modeling_system = ModelingSystem(
-            start_time=self['modeled_start_time'],
-            end_time=self['modeled_end_time'],
-            interval=self['interval'],
-            **{model.model_type.value.lower(): model for model in self['models']},
-        )
-        for connection in self['connections']:
-            modeling_system.connect(*connection)
-        for mediation in self['mediations']:
-            modeling_system.mediate(*mediation)
-
-        modeling_system.sequence = self['sequence']
-
-        return modeling_system
-
-    def to_nemspy(self) -> ModelingSystem:
-        return self.nemspy_modeling_system
-
-    @classmethod
-    def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
-        if executable_path is None:
-            executable_path = 'NEMS.x'
-        return cls(
-            executable_path=executable_path,
-            modeled_start_time=modeling_system.start_time,
-            modeled_end_time=modeling_system.end_time,
-            modeled_timestep=modeling_system.interval,
-            models=modeling_system.models,
-            connections=modeling_system.connections,
-            sequence=modeling_system.sequence,
-        )
 
 
 class ModelJSON(ConfigurationJSON, ABC):
@@ -520,7 +521,17 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for forcing in self.forcings:
-            mesh.add_forcing(forcing.adcircpy_forcing)
+            adcircpy_forcing = forcing.adcircpy_forcing
+            if (
+                isinstance(adcircpy_forcing, Tides)
+                and self['tidal_spinup_duration'] is not None
+            ):
+                adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
+                adcircpy_forcing.start_date = self['modeled_start_time']
+                adcircpy_forcing.end_date = self['modeled_end_time']
+                if self['tidal_spinup_duration'] is not None:
+                    adcircpy_forcing.start_date -= self['tidal_spinup_duration']
+            mesh.add_forcing(adcircpy_forcing)
 
         if self['fort_13_path'] is not None:
             LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
@@ -563,29 +574,35 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         if self['use_smagorinsky'] is not None:
             driver.smagorinsky = self['use_smagorinsky']
 
-        # spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
-        # spinup_end = self['modeled_start_time']
+        if self['tidal_spinup_duration'] is not None:
+            spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
+        else:
+            spinup_start = None
 
         if self['write_station_output'] and self['stations_file_path'].exists():
             driver.import_stations(self['stations_file_path'])
             driver.set_elevation_stations_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
             driver.set_velocity_stations_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
 
         if self['write_surface_output']:
             driver.set_elevation_surface_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
             driver.set_velocity_surface_output(
-                self['modeled_timestep'], spinup=self['tidal_spinup_timestep']
+                self['modeled_timestep'],
+                spinup=self['tidal_spinup_timestep'],
+                spinup_start=spinup_start,
             )
-            # spinup_start=spinup_start, spinup_end=spinup_end)
 
         return driver
 
@@ -659,19 +676,26 @@ class TidalForcingJSON(ForcingJSON):
 
         if 'All' in constituents:
             tides.use_all()
-        elif 'Major' in constituents:
-            tides.use_major()
         else:
+            if 'Major' in constituents:
+                tides.use_major()
+                constituents.remove('Major')
             for constituent in constituents:
-                tides.use_constituent(constituent)
+                if constituent not in tides.active_constituents:
+                    tides.use_constituent(constituent)
 
         self['constituents'] = list(tides.active_constituents)
         return tides
 
     @classmethod
     def from_adcircpy(cls, forcing: Tides) -> 'TidalForcingJSON':
+        # TODO: workaround for this issue: https://github.com/JaimeCalzadaNOAA/adcircpy/pull/70#discussion_r607245713
+        resource = forcing.tidal_dataset.path
+        if resource == HAMTIDE.OPENDAP_URL:
+            resource = None
+
         return cls(
-            resource=forcing.tidal_dataset.path,
+            resource=resource,
             tidal_source=forcing.tidal_source,
             constituents=forcing.active_constituents,
         )
@@ -765,14 +789,14 @@ class ModelDriverJSON(ConfigurationJSON):
     default_filename = f'configure_modeldriver.json'
     field_types = {
         'platform': Platform,
-        'runs': {str: (str, Any)},
+        'runs': {str: {str: Any}},
     }
 
     def __init__(
-        self, platform: Platform, runs: {str: (str, Any)} = None,
+        self, platform: Platform, runs: {str: {str: Any}} = None,
     ):
         if runs is None:
-            runs = {'run_1': (None, None)}
+            runs = {'run_1': None}
 
         super().__init__()
 

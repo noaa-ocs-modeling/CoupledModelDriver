@@ -4,12 +4,14 @@ import os
 from os import PathLike
 from pathlib import Path
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy import AdcircMesh, AdcircRun
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
-from ..configuration import (
+from .job_scripts import AdcircMeshPartitionJob, AdcircRunJob
+from ..configurations import (
     ADCIRCJSON,
     ATMESHForcingJSON,
     ForcingJSON,
@@ -19,9 +21,7 @@ from ..configuration import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ..job_script import (
-    AdcircMeshPartitionJob,
-    AdcircRunJob,
+from ..job_scripts import (
     EnsembleCleanupScript,
     EnsembleRunScript,
     EnsembleSetupScript,

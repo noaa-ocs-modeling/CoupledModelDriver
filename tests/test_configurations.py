@@ -4,7 +4,8 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
 import pytest
 
-from coupledmodeldriver.configuration import (
+from coupledmodeldriver import Platform
+from coupledmodeldriver.configurations import (
     ADCIRCJSON,
     ATMESHForcingJSON,
     ModelDriverJSON,
@@ -13,7 +14,6 @@ from coupledmodeldriver.configuration import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from coupledmodeldriver.platforms import Platform
 
 
 def test_update():
@@ -198,5 +198,5 @@ def test_modeldriver():
 
     assert configuration.configuration == {
         'platform': Platform.HERA,
-        'runs': {'run_1': (None, None)},
+        'runs': {'run_1': None},
     }

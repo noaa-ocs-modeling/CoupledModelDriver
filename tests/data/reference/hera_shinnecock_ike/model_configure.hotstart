@@ -1,8 +1,8 @@
-# `model_configure` generated with NEMSpy 1.0.3.post47.dev0+373f122
+# `model_configure` generated with NEMSpy 1.1.3.post33.dev0+ff69a55
 total_member:            1
 print_esmf:              .true.
 namelist:                atm_namelist
-PE_MEMBER01:             604
+PE_MEMBER01:             602
 start_year:              2008
 start_month:             8
 start_day:               23

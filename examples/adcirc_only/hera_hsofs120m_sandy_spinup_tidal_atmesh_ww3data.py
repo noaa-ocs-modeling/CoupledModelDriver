@@ -3,14 +3,14 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from adcircpy import Tides
+from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
-from coupledmodeldriver.adcirc.adcirc import ADCIRCRunConfiguration
-from coupledmodeldriver.job_script import ADCIRCGenerationScript
-from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver import Platform
+from coupledmodeldriver.adcirc import ADCIRCGenerationScript, \
+    ADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`
 ADCIRC_EXECUTABLE = (
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     job_duration = timedelta(hours=6)
 
     # dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
-    runs = {f'test_case_1': (None, None)}
+    runs = {f'test_case_1': None}
 
     slurm_email_address = 'example@email.gov'
 
