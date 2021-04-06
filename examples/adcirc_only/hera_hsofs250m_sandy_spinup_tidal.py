@@ -7,7 +7,8 @@ from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.adcirc import ADCIRCGenerationScript, \
+from coupledmodeldriver.configurations.adcirc import \
+    ADCIRCGenerationScript, \
     ADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`

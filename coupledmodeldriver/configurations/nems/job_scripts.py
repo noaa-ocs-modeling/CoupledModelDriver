@@ -2,7 +2,7 @@ from os import PathLike
 from pathlib import Path, PurePosixPath
 
 from ..adcirc import ADCIRCGenerationScript
-from ..job_scripts import Script
+from ...job_scripts import Script
 
 
 class AdcircNEMSSetupScript(Script):
