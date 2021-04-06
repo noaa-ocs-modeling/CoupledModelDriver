@@ -111,6 +111,11 @@ class TidalForcingJSON(ForcingJSON):
 
 
 class WindForcingJSON(ForcingJSON, ABC):
+    field_types = {
+        'nws': int,
+        'modeled_timestep': timedelta,
+    }
+
     def __init__(
         self,
         resource: PathLike,
@@ -119,6 +124,7 @@ class WindForcingJSON(ForcingJSON, ABC):
         fields: {str: type} = None
     ):
         super().__init__(resource, fields)
+        self.fields.update(WindForcingJSON.field_types)
 
         self['nws'] = nws
         self['modeled_timestep'] = modeled_timestep
@@ -127,10 +133,6 @@ class WindForcingJSON(ForcingJSON, ABC):
 class ATMESHForcingJSON(WindForcingJSON, NEMSCapJSON):
     name = 'atmesh'
     default_filename = f'configure_atmesh.json'
-    field_types = {
-        'nws': int,
-        'modeled_timestep': timedelta,
-    }
 
     def __init__(
         self,
@@ -164,10 +166,26 @@ class ATMESHForcingJSON(WindForcingJSON, NEMSCapJSON):
         )
 
 
-class WW3DATAForcingJSON(ForcingJSON, NEMSCapJSON):
+class WaveForcingJSON(ForcingJSON, ABC):
+    field_types = {'nrs': int, 'modeled_timestep': timedelta}
+
+    def __init__(
+        self,
+        resource: PathLike,
+        nrs: int,
+        modeled_timestep: timedelta,
+        fields: {str: type} = None
+    ):
+        super().__init__(resource, fields)
+        self.fields.update(WaveForcingJSON.field_types)
+
+        self['nrs'] = nrs
+        self['modeled_timestep'] = modeled_timestep
+
+
+class WW3DATAForcingJSON(WaveForcingJSON, NEMSCapJSON):
     name = 'ww3data'
     default_filename = f'configure_ww3data.json'
-    field_types = {'nrs': int, 'modeled_timestep': timedelta}
 
     def __init__(
         self,
@@ -177,11 +195,8 @@ class WW3DATAForcingJSON(ForcingJSON, NEMSCapJSON):
         processors: int = 1,
         nems_parameters: {str: str} = None,
     ):
-        ForcingJSON.__init__(self, resource=resource)
+        WaveForcingJSON.__init__(self, resource=resource, nrs=nrs, modeled_timestep=modeled_timestep)
         NEMSCapJSON.__init__(self, processors=processors, nems_parameters=nems_parameters)
-
-        self['nrs'] = nrs
-        self['modeled_timestep'] = modeled_timestep
 
     @property
     def adcircpy_forcing(self) -> Forcing:
