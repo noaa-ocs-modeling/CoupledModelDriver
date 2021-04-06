@@ -33,6 +33,7 @@ jobs:
       - name: Save wheel
         uses: actions/upload-artifact@v2
         with:
+          name: build
           path: ./dist/*.whl
   build_sdist:
     name: package source
@@ -47,6 +48,7 @@ jobs:
       - name: Save source package
         uses: actions/upload-artifact@v2
         with:
+          name: build
           path: ./dist/*.tar.gz
   upload_pypi:
     name: publish to PyPI
@@ -56,7 +58,7 @@ jobs:
       - name: Retrieve wheel(s) and source
         uses: actions/download-artifact@v2
         with:
-          name: artifact
+          name: build
           path: dist
       - name: Upload wheel(s) and source
         uses: pypa/gh-action-pypi-publish@v1.4.2

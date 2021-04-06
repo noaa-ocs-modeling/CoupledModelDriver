@@ -37,41 +37,28 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Run tests
-        run: pytest
+      - name: Run tests with coverage
+        run: pytest --cov=coupledmodeldriver
+      - name: Save coverage
+        if: matrix.python-version == 3.9
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: .coverage
   coverage:
-    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    name: Upload coverage to Codecov
     needs: [ tests ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ 3.9 ]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Retrieve coverage
+        uses: actions/download-artifact@v2
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Restore cached dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-          restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - name: Install wheel
-        run: pip install wheel
-      - name: Run setup.py on Windows
-        if: contains(matrix.os, 'windows')
-        run: python setup.py install
-      - name: Install dependencies
-        run: pip install -e .[testing]
-      - name: Run tests with coverage
-        run: pytest --cov=coupledmodeldriver
+          name: coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
+          files: .coverage
           flags: python${{ matrix.python-version }}-${{ runner.os }}
           fail_ci_if_error: true
