@@ -522,7 +522,10 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for forcing in self.forcings:
             adcircpy_forcing = forcing.adcircpy_forcing
-            if isinstance(adcircpy_forcing, Tides) and self['tidal_spinup_duration'] is not None:
+            if (
+                isinstance(adcircpy_forcing, Tides)
+                and self['tidal_spinup_duration'] is not None
+            ):
                 adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
                 adcircpy_forcing.start_date = self['modeled_start_time']
                 adcircpy_forcing.end_date = self['modeled_end_time']

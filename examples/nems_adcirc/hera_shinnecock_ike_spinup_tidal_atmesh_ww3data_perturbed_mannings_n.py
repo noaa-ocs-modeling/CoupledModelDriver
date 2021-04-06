@@ -54,10 +54,7 @@ if __name__ == '__main__':
     mean = numpy.mean(range)
     std = mean / 3
     values = numpy.random.normal(mean, std, 5)
-    runs = {
-        f'mannings_n_{value:.3}': {'mannings_n_at_sea_floor': value}
-        for value in values
-    }
+    runs = {f'mannings_n_{value:.3}': {'mannings_n_at_sea_floor': value} for value in values}
 
     # describe connections between coupled components
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']

@@ -12,8 +12,14 @@ import numpy
 
 from .job_scripts import AdcircMeshPartitionJob, AdcircRunJob
 from ..configurations import (
-    ADCIRCJSON, ATMESHForcingJSON, ForcingJSON, ModelDriverJSON,
-    RunConfiguration, SlurmJSON, TidalForcingJSON, WW3DATAForcingJSON,
+    ADCIRCJSON,
+    ATMESHForcingJSON,
+    ForcingJSON,
+    ModelDriverJSON,
+    RunConfiguration,
+    SlurmJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
 )
 from ..job_scripts import (
     EnsembleCleanupScript,

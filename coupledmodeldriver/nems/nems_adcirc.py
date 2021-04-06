@@ -15,8 +15,14 @@ from .job_scripts import AdcircNEMSSetupScript
 from ..adcirc import ADCIRCRunConfiguration
 from ..adcirc.job_scripts import AdcircMeshPartitionJob, AdcircRunJob
 from ..configurations import (
-    ADCIRCJSON, ATMESHForcingJSON, ForcingJSON, ModelDriverJSON,
-    NEMSJSON, SlurmJSON, TidalForcingJSON, WW3DATAForcingJSON,
+    ADCIRCJSON,
+    ATMESHForcingJSON,
+    ForcingJSON,
+    ModelDriverJSON,
+    NEMSJSON,
+    SlurmJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
 )
 from ..job_scripts import (
     EnsembleCleanupScript,
@@ -24,8 +30,7 @@ from ..job_scripts import (
     EnsembleSetupScript,
 )
 from ..platforms import Platform
-from ..utilities import LOGGER, create_symlink, \
-    get_logger
+from ..utilities import LOGGER, create_symlink, get_logger
 
 
 def generate_nems_adcirc_configuration(

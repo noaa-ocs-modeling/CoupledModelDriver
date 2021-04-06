@@ -132,5 +132,3 @@ class ADCIRCGenerationScript(Script):
             filename = filename / f'generate_adcirc.py'
 
         super().write(filename, overwrite)
-
-

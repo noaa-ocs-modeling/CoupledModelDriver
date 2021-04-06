@@ -6,8 +6,13 @@ import pytest
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configurations import (
-    ADCIRCJSON, ATMESHForcingJSON, ModelDriverJSON,
-    NEMSJSON, SlurmJSON, TidalForcingJSON, WW3DATAForcingJSON,
+    ADCIRCJSON,
+    ATMESHForcingJSON,
+    ModelDriverJSON,
+    NEMSJSON,
+    SlurmJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
 )
 
 
