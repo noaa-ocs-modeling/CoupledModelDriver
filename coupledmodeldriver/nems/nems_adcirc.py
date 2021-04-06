@@ -12,20 +12,18 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 
 from .job_scripts import AdcircNEMSSetupScript
-from ..platforms import Platform
 from ..adcirc import ADCIRCRunConfiguration
 from ..adcirc.job_scripts import AdcircMeshPartitionJob, AdcircRunJob
 from ..configurations import (
-    ModelDriverJSON,
-    SlurmJSON,
+    ADCIRCJSON, ATMESHForcingJSON, ForcingJSON, ModelDriverJSON,
+    NEMSJSON, SlurmJSON, TidalForcingJSON, WW3DATAForcingJSON,
 )
-from ..adcirc.configurations import ADCIRCJSON, ATMESHForcingJSON, ForcingJSON, TidalForcingJSON, WW3DATAForcingJSON
-from .configurations import NEMSJSON
 from ..job_scripts import (
     EnsembleCleanupScript,
     EnsembleRunScript,
     EnsembleSetupScript,
 )
+from ..platforms import Platform
 from ..utilities import LOGGER, create_symlink, \
     get_logger
 

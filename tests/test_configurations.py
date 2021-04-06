@@ -6,11 +6,9 @@ import pytest
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configurations import (
-    ModelDriverJSON,
-    SlurmJSON,
+    ADCIRCJSON, ATMESHForcingJSON, ModelDriverJSON,
+    NEMSJSON, SlurmJSON, TidalForcingJSON, WW3DATAForcingJSON,
 )
-from coupledmodeldriver.adcirc.configurations import ADCIRCJSON, ATMESHForcingJSON, TidalForcingJSON, WW3DATAForcingJSON
-from coupledmodeldriver.nems.configurations import NEMSJSON
 
 
 def test_update():

@@ -12,7 +12,8 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import pytest
 import wget
 
-from coupledmodeldriver import ADCIRCCoupledRunConfiguration, Platform, \
+from coupledmodeldriver import Platform
+from coupledmodeldriver.nems import ADCIRCCoupledRunConfiguration, \
     generate_nems_adcirc_configuration
 
 NEMS_PATH = 'NEMS.x'
