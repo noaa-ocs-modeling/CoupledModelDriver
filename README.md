@@ -117,7 +117,7 @@ wave_forcing = WaveWatch3DataForcing(
 )
 forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-configuration = ADCIRCCoupledRunConfiguration(
+configuration = NEMSADCIRCRunConfiguration(
     fort13=MESH_DIRECTORY / 'fort.13',
     fort14=MESH_DIRECTORY / 'fort.14',
     modeled_start_time=modeled_start_time,
