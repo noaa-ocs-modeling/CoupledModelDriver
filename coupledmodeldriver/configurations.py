@@ -622,6 +622,12 @@ class ForcingJSON(ConfigurationJSON, ABC):
         fields.update(ForcingJSON.field_types)
 
         ConfigurationJSON.__init__(self, fields=fields)
+
+        try:
+            resource = Path(resource).as_posix()
+        except:
+            pass
+
         self['resource'] = resource
 
     @property
