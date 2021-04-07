@@ -471,7 +471,7 @@ def test_nems_cli():
                          f' --modeled-timestep 00:00:02' \
                          f' --nems-interval 01:00:00' \
                          f' --tidal-spinup-duration 12:06:00:00' \
-                         f' --tidal-spinup-source HAMTIDE' \
+                         f' --tidal-forcing-source HAMTIDE' \
                          f' --additional-forcings AtmosphericMeshForcing,WaveWatch3DataForcing' \
                          f' --directory {output_directory.as_posix()}'
     generate_command = 'generate_adcirc' \
@@ -503,7 +503,7 @@ def test_adcirc_cli():
                          f' --modeled-duration 14:06:00:00' \
                          f' --modeled-timestep 00:00:02' \
                          f' --tidal-spinup-duration 12:06:00:00' \
-                         f' --tidal-spinup-source HAMTIDE' \
+                         f' --tidal-forcing-source HAMTIDE' \
                          f' --directory {output_directory.as_posix()}'
     generate_command = 'generate_adcirc' \
                        f' --configuration-directory {output_directory.as_posix()}'

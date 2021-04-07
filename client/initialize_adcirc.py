@@ -71,13 +71,14 @@ def main():
     # initialize `adcircpy` forcing objects
     forcings = []
 
-    tidal_forcing = Tides(tidal_source=tidal_source, resource=tidal_forcing_path)
-    tidal_forcing.use_all()
-    forcings.append(tidal_forcing)
+    if tidal_spinup_duration is not None:
+        tidal_forcing = Tides(tidal_source=tidal_source, resource=tidal_forcing_path)
+        tidal_forcing.use_all()
+        forcings.append(tidal_forcing)
 
     for forcing in additional_forcings:
         if forcing.upper() in FORCING_SOURCES:
-            forcing = FORCING_SOURCES[forcing.upper()](filename=None)
+            forcing = FORCING_SOURCES[forcing.upper()](None)
             forcings.append(forcing)
         else:
             raise NotImplementedError(
