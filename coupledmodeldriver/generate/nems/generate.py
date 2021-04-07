@@ -311,7 +311,7 @@ def generate_nems_adcirc_configuration(
                     # if not isinstance(value, numpy.ndarray):
                     #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
                     if not driver.mesh.has_nodal_attribute(name):
-                        driver.mesh.add_nodal_attribute(name)
+                        driver.mesh.add_nodal_attribute(name, '1')
                     driver.mesh.set_nodal_attribute(name, value)
 
         driver.write(

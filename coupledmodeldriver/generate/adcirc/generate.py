@@ -3,8 +3,6 @@ import os
 from os import PathLike
 from pathlib import Path
 
-import numpy
-
 from coupledmodeldriver.script import (
     EnsembleCleanupScript,
     EnsembleRunScript,
@@ -208,14 +206,17 @@ def generate_adcirc_configuration(
         coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True
     )
 
-    for run_name, (value, attribute_name) in runs.items():
+    for run_name, attributes in runs.items():
         hotstart_directory = runs_directory / run_name
         LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
-        if not isinstance(value, numpy.ndarray):
-            value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-        if not driver.mesh.has_nodal_attribute(attribute_name):
-            driver.mesh.add_nodal_attribute(attribute_name)
-        driver.mesh.set_nodal_attribute(attribute_name, value)
+        if attributes is not None:
+            for name, value in attributes.items():
+                if name is not None:
+                    # if not isinstance(value, numpy.ndarray):
+                    #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
+                    if not driver.mesh.has_nodal_attribute(name):
+                        driver.mesh.add_nodal_attribute(name, '1')
+                    driver.mesh.set_nodal_attribute(name, value)
 
         driver.write(
             hotstart_directory,
