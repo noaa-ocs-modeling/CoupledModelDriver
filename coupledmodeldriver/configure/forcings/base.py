@@ -295,9 +295,9 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
 
 
 FORCING_SOURCES = {
-    'Tides': TidalForcingJSON,
-    'AtmosphericMeshForcing': ATMESHForcingJSON,
-    'BestTrackForcing': BestTrackForcingJSON,
-    'OwiForcing': OWIForcingJSON,
-    'WaveWatch3DataForcing': WW3DATAForcingJSON,
+    'TIDES': TidalForcingJSON,
+    'ATMOSPHERICMESHFORCING': ATMESHForcingJSON,
+    'BESTTRACKFORCING': BestTrackForcingJSON,
+    'OWIFORCING': OWIForcingJSON,
+    'WAVEWATCH3DATAFORCING': WW3DATAForcingJSON,
 }

@@ -453,6 +453,70 @@ def test_adcirc_stampede2_shinnecock_ike():
     )
 
 
+def test_nems_cli():
+    mesh = 'shinnecock'
+    storm = 'ike'
+
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
+    mesh_directory = download_mesh(mesh, storm, input_directory)
+
+    output_directory = Path('.') / 'output' / 'nems' / 'cli'
+    reference_directory = Path('.') / 'reference' / 'nems' / 'cli'
+
+    initialize_command = 'initialize_adcirc' \
+                         f' --platform HERA' \
+                         f' --mesh-directory {mesh_directory.as_posix()}' \
+                         f' --modeled-start-time 20080823' \
+                         f' --modeled-duration 14:06:00:00' \
+                         f' --modeled-timestep 00:00:02' \
+                         f' --nems-interval 01:00:00' \
+                         f' --tidal-spinup-duration 12:06:00:00' \
+                         f' --tidal-spinup-source HAMTIDE' \
+                         f' --additional-forcings AtmosphericMeshForcing,WaveWatch3DataForcing' \
+                         f' --directory {output_directory.as_posix()}'
+    generate_command = 'generate_adcirc' \
+                       f' --configuration-directory {output_directory.as_posix()}'
+
+    os.system(initialize_command)
+    os.system(generate_command)
+
+    check_reference_directory(
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
+    )
+
+
+def test_adcirc_cli():
+    mesh = 'shinnecock'
+    storm = 'ike'
+
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
+    mesh_directory = download_mesh(mesh, storm, input_directory)
+
+    output_directory = Path('.') / 'output' / 'adcirc' / 'cli'
+    reference_directory = Path('.') / 'reference' / 'adcirc' / 'cli'
+
+    initialize_command = 'initialize_adcirc' \
+                         f' --platform HERA' \
+                         f' --mesh-directory {mesh_directory.as_posix()}' \
+                         f' --modeled-start-time 20080823' \
+                         f' --modeled-duration 14:06:00:00' \
+                         f' --modeled-timestep 00:00:02' \
+                         f' --tidal-spinup-duration 12:06:00:00' \
+                         f' --tidal-spinup-source HAMTIDE' \
+                         f' --directory {output_directory.as_posix()}'
+    generate_command = 'generate_adcirc' \
+                       f' --configuration-directory {output_directory.as_posix()}'
+
+    os.system(initialize_command)
+    os.system(generate_command)
+
+    check_reference_directory(
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
+    )
+
+
 @pytest.fixture(scope='session', autouse=False)
 def download_tpxo():
     if not TPXO_FILENAME.exists():

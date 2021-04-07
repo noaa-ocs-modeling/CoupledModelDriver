@@ -37,3 +37,7 @@ def main():
         overwrite=True,
         verbose=arguments.verbose,
     )
+
+
+if __name__ == '__main__':
+    main()

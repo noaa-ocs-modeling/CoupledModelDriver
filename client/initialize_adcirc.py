@@ -36,8 +36,7 @@ def main():
     argument_parser.add_argument('--adcprep-executable', default='adcprep', help='filename of compiled `adcprep`')
     argument_parser.add_argument('--adcirc-processors', default=11, help='numbers of processors to assign for ADCIRC')
     argument_parser.add_argument('--job-duration', default='06:00:00', help='wall clock time for job')
-    argument_parser.add_argument('--configuration-directory', default=Path().cwd(),
-                                 help='directory to which to write configuration files')
+    argument_parser.add_argument('--directory', default=Path().cwd(), help='directory to which to write configuration files')
     argument_parser.add_argument('--generate-script', action='store_true', help='write a Python script to load configuration')
 
     arguments = argument_parser.parse_args()
@@ -67,7 +66,7 @@ def main():
     adcprep_executable = convert_value(arguments.adcprep_executable, Path)
 
     job_duration = convert_value(arguments.job_duration, timedelta)
-    configuration_directory = convert_value(arguments.configuration_directory, timedelta)
+    directory = convert_value(arguments.directory, Path)
 
     # initialize `adcircpy` forcing objects
     forcings = []
@@ -130,9 +129,11 @@ def main():
         )
         generation_script = ADCIRCGenerationScript()
 
-    configuration.write_directory(directory=configuration_directory, overwrite=True)
+    configuration.write_directory(directory=directory, overwrite=True)
 
-    if arguments.create_script:
-        generation_script.write(
-            filename=configuration_directory / 'generate_adcirc.py', overwrite=True,
-        )
+    if arguments.generate_script:
+        generation_script.write(filename=directory / 'generate_adcirc.py', overwrite=True)
+
+
+if __name__ == '__main__':
+    main()
