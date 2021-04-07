@@ -9,7 +9,7 @@ class NEMSADCIRCGenerationScript(ADCIRCGenerationScript):
         lines = [
             'from pathlib import Path',
             '',
-            'from coupledmodeldriver.adcirc.nems_adcirc import generate_nems_adcirc_configuration',
+            'from coupledmodeldriver.generate import generate_nems_adcirc_configuration',
             '',
             '',
             "if __name__ == '__main__':",

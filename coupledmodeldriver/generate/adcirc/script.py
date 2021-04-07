@@ -115,7 +115,7 @@ class ADCIRCGenerationScript(Script):
         lines = [
             'from pathlib import Path',
             '',
-            'from coupledmodeldriver.adcirc.adcirc import generate_adcirc_configuration',
+            'from coupledmodeldriver.generate import generate_adcirc_configuration',
             '',
             '',
             "if __name__ == '__main__':",
