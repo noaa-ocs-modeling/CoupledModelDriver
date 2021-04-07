@@ -202,7 +202,7 @@ def convert_value(value: Any, to_type: type) -> Any:
         elif issubclass(to_type, datetime):
             value = parse_date(value)
         elif issubclass(to_type, timedelta):
-            if ':' in value:
+            try:
                 try:
                     time = datetime.strptime(value, '%H:%M:%S')
                     value = timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
@@ -213,7 +213,7 @@ def convert_value(value: Any, to_type: type) -> Any:
                     else:
                         days = 0
                     value = timedelta(days=days, hours=parts[0], minutes=parts[1], seconds=parts[2])
-            else:
+            except:
                 value = timedelta(seconds=float(value))
         elif isinstance(value, str):
             try:
