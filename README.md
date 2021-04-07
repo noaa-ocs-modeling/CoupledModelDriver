@@ -47,10 +47,9 @@ from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-import numpy
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate.nems import NEMSADCIRCRunConfiguration, NEMSADCIRCGenerationScript
+from coupledmodeldriver.generate import NEMSADCIRCGenerationScript, NEMSADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
@@ -79,15 +78,8 @@ tidal_spinup_duration = timedelta(days=12.5)
 nems_interval = timedelta(hours=1)
 job_duration = timedelta(hours=6)
 
-# dictionary defining runs with ADCIRC value perturbations - in this case, a range of Manning's N values
-range = [0.016, 0.08]
-mean = numpy.mean(range)
-std = mean / 3
-values = numpy.random.normal(mean, std, 5)
-runs = {
-    f'mannings_n_{mannings_n:.3}': (mannings_n, 'mannings_n_at_sea_floor')
-    for mannings_n in values
-}
+# dictionary defining runs with ADCIRC value perturbations - in this case, a single run with no perturbation
+runs = {f'test_case_1': None}
 
 # describe connections between coupled components
 nems_connections = ['ATM -> OCN', 'WAV -> OCN']
