@@ -292,3 +292,12 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         return WaveMeshEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
         )
+
+
+FORCING_SOURCES = {
+    'Tides': TidalForcingJSON,
+    'AtmosphericMeshForcing': ATMESHForcingJSON,
+    'BestTrackForcing': BestTrackForcingJSON,
+    'OwiForcing': OWIForcingJSON,
+    'WaveWatch3DataForcing': WW3DATAForcingJSON,
+}

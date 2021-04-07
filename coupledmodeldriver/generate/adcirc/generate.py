@@ -14,29 +14,29 @@ from ...utilities import LOGGER, create_symlink, get_logger
 
 
 def generate_adcirc_configuration(
-    output_directory: PathLike,
-    configuration_directory: PathLike = None,
+    configuration_directory: PathLike,
+    output_directory: PathLike = None,
     overwrite: bool = False,
     verbose: bool = False,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
 
-    :param output_directory: path to store generated configuration files
     :param configuration_directory: path containing JSON configuration files
+    :param output_directory: path to store generated configuration files
     :param overwrite: whether to overwrite existing files
     :param verbose: whether to show more verbose log messages
     """
 
     get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
 
-    if not isinstance(output_directory, Path):
-        output_directory = Path(output_directory)
-
-    if configuration_directory is None:
-        configuration_directory = output_directory
-    elif not isinstance(configuration_directory, Path):
+    if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
+
+    if output_directory is None:
+        output_directory = configuration_directory
+    elif not isinstance(output_directory, Path):
+        output_directory = Path(output_directory)
 
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
@@ -263,29 +263,29 @@ def generate_adcirc_configuration(
 
 
 def generate_nems_adcirc_configuration(
-    output_directory: PathLike,
-    configuration_directory: PathLike = None,
+    configuration_directory: PathLike,
+    output_directory: PathLike = None,
     overwrite: bool = False,
     verbose: bool = False,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
 
-    :param output_directory: path to store generated configuration files
     :param configuration_directory: path containing JSON configuration files
+    :param output_directory: path to store generated configuration files
     :param overwrite: whether to overwrite existing files
     :param verbose: whether to show more verbose log messages
     """
 
     get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
 
-    if not isinstance(output_directory, Path):
-        output_directory = Path(output_directory)
-
-    if configuration_directory is None:
-        configuration_directory = output_directory
-    elif not isinstance(configuration_directory, Path):
+    if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
+
+    if output_directory is None:
+        output_directory = configuration_directory
+    elif not isinstance(output_directory, Path):
+        output_directory = Path(output_directory)
 
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)

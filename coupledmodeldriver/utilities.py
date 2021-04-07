@@ -50,6 +50,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -180,7 +181,12 @@ def convert_value(value: Any, to_type: type) -> Any:
             try:
                 value = to_type[value]
             except (KeyError, ValueError):
-                value = to_type(value)
+                try:
+                    value = to_type(value)
+                except (KeyError, ValueError):
+                    raise ValueError(
+                        f'unrecognized entry "{value}"; must be one of {list(to_type)}'
+                    )
     elif not isinstance(value, to_type) and value is not None:
         if isinstance(value, timedelta):
             if issubclass(to_type, str):
