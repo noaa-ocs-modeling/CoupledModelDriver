@@ -19,25 +19,67 @@ from coupledmodeldriver.utilities import convert_value
 def main():
     argument_parser = ArgumentParser()
 
-    argument_parser.add_argument('--platform', required=True, help='HPC platform for which to configure')
-    argument_parser.add_argument('--mesh-directory', required=True, help='path to input mesh (`fort.13`, `fort.14`)')
-    argument_parser.add_argument('--modeled-start-time', required=True, help='start time within the modeled system')
-    argument_parser.add_argument('--modeled-duration', required=True, help=' end time within the modeled system')
-    argument_parser.add_argument('--modeled-timestep', required=True, help='time interval within the modeled system')
-    argument_parser.add_argument('--nems-interval', default=None, help='main loop interval of NEMS run')
-    argument_parser.add_argument('--modulefile', default=None, help='path to module file to `source`')
-    argument_parser.add_argument('--tidal-spinup-duration', default=None, help='spinup time for ADCIRC tidal coldstart')
-    argument_parser.add_argument('--tidal-forcing-source', default='TPXO',
-                                 help=f'source of tidal forcing (can be one of `{[entry.name for entry in TidalSource]}`)')
-    argument_parser.add_argument('--tidal-forcing-path', default=None, help='file path to tidal forcing resource')
-    argument_parser.add_argument('--additional-forcings', default=None,
-                                 help='comma-separated list of additional forcings to configure')
-    argument_parser.add_argument('--adcirc-executable', default='adcirc', help='filename of compiled `adcirc` or `NEMS.x`')
-    argument_parser.add_argument('--adcprep-executable', default='adcprep', help='filename of compiled `adcprep`')
-    argument_parser.add_argument('--adcirc-processors', default=11, help='numbers of processors to assign for ADCIRC')
-    argument_parser.add_argument('--job-duration', default='06:00:00', help='wall clock time for job')
-    argument_parser.add_argument('--directory', default=Path().cwd(), help='directory to which to write configuration files')
-    argument_parser.add_argument('--generate-script', action='store_true', help='write a Python script to load configuration')
+    argument_parser.add_argument(
+        '--platform', required=True, help='HPC platform for which to configure'
+    )
+    argument_parser.add_argument(
+        '--mesh-directory', required=True, help='path to input mesh (`fort.13`, `fort.14`)'
+    )
+    argument_parser.add_argument(
+        '--modeled-start-time', required=True, help='start time within the modeled system'
+    )
+    argument_parser.add_argument(
+        '--modeled-duration', required=True, help=' end time within the modeled system'
+    )
+    argument_parser.add_argument(
+        '--modeled-timestep', required=True, help='time interval within the modeled system'
+    )
+    argument_parser.add_argument(
+        '--nems-interval', default=None, help='main loop interval of NEMS run'
+    )
+    argument_parser.add_argument(
+        '--modulefile', default=None, help='path to module file to `source`'
+    )
+    argument_parser.add_argument(
+        '--tidal-spinup-duration', default=None, help='spinup time for ADCIRC tidal coldstart'
+    )
+    argument_parser.add_argument(
+        '--tidal-forcing-source',
+        default='TPXO',
+        help=f'source of tidal forcing (can be one of `{[entry.name for entry in TidalSource]}`)',
+    )
+    argument_parser.add_argument(
+        '--tidal-forcing-path', default=None, help='file path to tidal forcing resource'
+    )
+    argument_parser.add_argument(
+        '--additional-forcings',
+        default=None,
+        help='comma-separated list of additional forcings to configure',
+    )
+    argument_parser.add_argument(
+        '--adcirc-executable',
+        default='adcirc',
+        help='filename of compiled `adcirc` or `NEMS.x`',
+    )
+    argument_parser.add_argument(
+        '--adcprep-executable', default='adcprep', help='filename of compiled `adcprep`'
+    )
+    argument_parser.add_argument(
+        '--adcirc-processors', default=11, help='numbers of processors to assign for ADCIRC'
+    )
+    argument_parser.add_argument(
+        '--job-duration', default='06:00:00', help='wall clock time for job'
+    )
+    argument_parser.add_argument(
+        '--directory',
+        default=Path().cwd(),
+        help='directory to which to write configuration files',
+    )
+    argument_parser.add_argument(
+        '--generate-script',
+        action='store_true',
+        help='write a Python script to load configuration',
+    )
 
     arguments = argument_parser.parse_args()
 
@@ -85,10 +127,16 @@ def main():
                 f'unrecognized forcing "{forcing}"; must be one of {list(FORCING_SOURCES)}'
             )
 
+    fort13_filename = mesh_directory / 'fort.13'
+    fort14_filename = mesh_directory / 'fort.14'
+
+    if not fort13_filename.exists():
+        fort13_filename = None
+
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
-            fort13=mesh_directory / 'fort.13',
-            fort14=mesh_directory / 'fort.14',
+            fort13=fort13_filename,
+            fort14=fort14_filename,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
@@ -111,8 +159,8 @@ def main():
         generation_script = NEMSADCIRCGenerationScript()
     else:
         configuration = ADCIRCRunConfiguration(
-            fort13=mesh_directory / 'fort.13',
-            fort14=mesh_directory / 'fort.14',
+            fort13=fort13_filename,
+            fort14=fort14_filename,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,

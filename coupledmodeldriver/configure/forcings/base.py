@@ -14,6 +14,7 @@ from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveMeshEntry
 
 from ..base import ConfigurationJSON, NEMSCapJSON
+from ...utilities import LOGGER
 
 
 class ForcingJSON(ConfigurationJSON, ABC):
@@ -48,10 +49,15 @@ class FileForcingJSON(ForcingJSON, ABC):
     field_types = {'resource': str}
 
     def __init__(self, resource: PathLike, **kwargs):
-        try:
-            resource = Path(resource).as_posix()
-        except:
-            pass
+        if resource is None:
+            LOGGER.warning(
+                f'resource path is blank; update entry in "{self.default_filename}" before generating configuration'
+            )
+        else:
+            try:
+                resource = Path(resource).as_posix()
+            except:
+                pass
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(FileForcingJSON.field_types)

@@ -11,10 +11,17 @@ from coupledmodeldriver.utilities import convert_value
 def main():
     argument_parser = ArgumentParser()
 
-    argument_parser.add_argument('--configuration-directory', default=Path().cwd(),
-                                 help='path containing JSON configuration files')
-    argument_parser.add_argument('--output-directory', default=None, help='path to store generated configuration files')
-    argument_parser.add_argument('--verbose', action='store_true', help='show more verbose log messages')
+    argument_parser.add_argument(
+        '--configuration-directory',
+        default=Path().cwd(),
+        help='path containing JSON configuration files',
+    )
+    argument_parser.add_argument(
+        '--output-directory', default=None, help='path to store generated configuration files'
+    )
+    argument_parser.add_argument(
+        '--verbose', action='store_true', help='show more verbose log messages'
+    )
 
     arguments = argument_parser.parse_args()
 

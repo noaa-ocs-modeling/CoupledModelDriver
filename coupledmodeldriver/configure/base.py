@@ -216,7 +216,8 @@ class NEMSJSON(ConfigurationJSON):
         for mediation in self['mediations']:
             modeling_system.mediate(*mediation)
 
-        modeling_system.sequence = self['sequence']
+        if len(self['sequence']) > 0:
+            modeling_system.sequence = self['sequence']
 
         return modeling_system
 

@@ -80,6 +80,9 @@ class ADCIRCRunConfiguration(RunConfiguration):
         if adcirc_processors is None:
             adcirc_processors = 11
 
+        if adcirc_executable is None:
+            adcirc_executable = 'adcirc'
+
         if adcprep_executable is None:
             adcprep_executable = 'adcprep'
 
