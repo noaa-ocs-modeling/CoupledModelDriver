@@ -164,7 +164,13 @@ resulting run, before generating the actual model configuration.
 
 ### 2. generate model configuration files
 
-Run `generate_nems_adcirc.py` to read the JSON configuration and generate the ADCIRC run configuration:
+Run the following command to read the JSON configuration and generate the ADCIRC run configuration:
+
+```bash
+generate_adcirc
+```
+
+The resulting configuration will have the following structure:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
@@ -222,9 +228,7 @@ Run the following to submit the model run to the Slurm job queue:
 sh run_hera.sh
 ``` 
 
-```bash
-squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"
-```
+The queue will have the following jobs added:
 
 ```
    JOBID                  NAME CPUS NODE                      DEPENDENCY          SUBMIT_TIME           START_TIME             END_TIME
