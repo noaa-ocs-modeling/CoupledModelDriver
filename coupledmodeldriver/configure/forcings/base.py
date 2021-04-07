@@ -51,7 +51,7 @@ class FileForcingJSON(ForcingJSON, ABC):
     def __init__(self, resource: PathLike, **kwargs):
         if resource is None:
             LOGGER.warning(
-                f'resource path is blank; update entry in "{self.default_filename}" before generating configuration'
+                f'resource path not specified for "{self.default_filename}"; update entry before generating configuration'
             )
         else:
             try:

@@ -6,7 +6,8 @@ from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure.forcings.base import FORCING_SOURCES
+from coupledmodeldriver.configure.forcings.base import FORCING_SOURCES, \
+    FileForcingJSON
 from coupledmodeldriver.generate import (
     ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
@@ -49,12 +50,12 @@ def main():
         help=f'source of tidal forcing (can be one of `{[entry.name for entry in TidalSource]}`)',
     )
     argument_parser.add_argument(
-        '--tidal-forcing-path', default=None, help='file path to tidal forcing resource'
+        '--tidal-forcing-path', default=None, help='resource path for tidal forcing'
     )
     argument_parser.add_argument(
-        '--additional-forcings',
+        '--forcings',
         default=None,
-        help='comma-separated list of additional forcings to configure',
+        help=f'comma-separated list of forcings to configure, from {list(FORCING_SOURCES)}',
     )
     argument_parser.add_argument(
         '--adcirc-executable',
@@ -98,11 +99,11 @@ def main():
     tidal_spinup_duration = convert_value(arguments.tidal_spinup_duration, timedelta)
     tidal_source = convert_value(arguments.tidal_forcing_source, TidalSource)
     tidal_forcing_path = convert_value(arguments.tidal_forcing_path, Path)
-    additional_forcings = arguments.additional_forcings
-    if additional_forcings is not None:
-        additional_forcings = [forcing.strip() for forcing in additional_forcings.split(',')]
+    forcings = arguments.forcings
+    if forcings is not None:
+        forcings = [forcing.strip() for forcing in forcings.split(',')]
     else:
-        additional_forcings = []
+        forcings = []
 
     adcirc_executable = convert_value(arguments.adcirc_executable, Path)
     adcprep_executable = convert_value(arguments.adcprep_executable, Path)
@@ -111,17 +112,21 @@ def main():
     directory = convert_value(arguments.directory, Path)
 
     # initialize `adcircpy` forcing objects
-    forcings = []
+    adcircpy_forcings = []
 
     if tidal_spinup_duration is not None:
         tidal_forcing = Tides(tidal_source=tidal_source, resource=tidal_forcing_path)
         tidal_forcing.use_all()
-        forcings.append(tidal_forcing)
+        adcircpy_forcings.append(tidal_forcing)
 
-    for forcing in additional_forcings:
+    for forcing in forcings:
         if forcing.upper() in FORCING_SOURCES:
-            forcing = FORCING_SOURCES[forcing.upper()](None)
-            forcings.append(forcing)
+            forcing_class = FORCING_SOURCES[forcing.upper()]
+            kwargs = {}
+            if issubclass(forcing_class, FileForcingJSON):
+                kwargs['resource'] = input(f'enter "{forcing_class.name}" resource path: ')
+            forcing = forcing_class(**kwargs)
+            adcircpy_forcings.append(forcing)
         else:
             raise NotImplementedError(
                 f'unrecognized forcing "{forcing}"; must be one of {list(FORCING_SOURCES)}'
@@ -147,7 +152,7 @@ def main():
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
             runs=None,
-            forcings=forcings,
+            forcings=adcircpy_forcings,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -167,7 +172,7 @@ def main():
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
             runs=None,
-            forcings=forcings,
+            forcings=adcircpy_forcings,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,

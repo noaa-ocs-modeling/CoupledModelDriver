@@ -155,6 +155,14 @@ This code will generate JSON configuration files in the directory `hera_shinneco
 These JSON configuration files contain the configuration values for an ADCIRC run. You may change these values to alter the
 resulting run configuration.
 
+#### command-line interface
+
+Alternatively, you may use the command-line interface, as so:
+
+```bash
+initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 --modeled-start-time 20080823 --modeled-duration 14:06:00:00 --modeled-timestep 00:00:02 --nems-interval 01:00:00 --tidal-spinup-duration 12:06:00:00 --tidal-forcing-source TPXO --additional-forcings AtmosphericMeshForcing,WaveWatch3DataForcing --directory .
+```
+
 ### 2. run generation script
 
 Running `generate_nems_adcirc.py` will read the JSON configuration and generate an ADCIRC run configuration, as so:
