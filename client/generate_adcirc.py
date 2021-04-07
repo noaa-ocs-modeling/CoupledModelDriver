@@ -25,7 +25,7 @@ def main():
         output_directory = configuration_directory
 
     if 'configure_nems.json' in [
-        filename.lower() for filename in configuration_directory.listdir()
+        filename.lower() for filename in configuration_directory.iterdir()
     ]:
         generate = generate_nems_adcirc_configuration
     else:
