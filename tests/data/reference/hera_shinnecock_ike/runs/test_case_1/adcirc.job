@@ -1,0 +1,14 @@
+#!/bin/bash --login
+#SBATCH -J ADC_HOT_RUN
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADC_HOT_RUN.err.log
+#SBATCH --output=ADC_HOT_RUN.out.log
+#SBATCH -n 602
+#SBATCH -N 16
+#SBATCH --time=06:00:00
+
+set -e
+
+srun adcirc

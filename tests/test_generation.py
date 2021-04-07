@@ -13,7 +13,7 @@ import pytest
 import wget
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.nems import (
+from coupledmodeldriver.generate.nems import (
     NEMSADCIRCRunConfiguration,
     generate_nems_adcirc_configuration,
 )

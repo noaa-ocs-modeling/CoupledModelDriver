@@ -238,135 +238,27 @@ class JobScript(Script):
             self.__slurm_run_directory = None
 
 
-class EnsembleSetupScript(Script):
-    def __init__(
-        self,
-        platform: Platform,
-        adcprep_job_script: PathLike = None,
-        coldstart_job_script: PathLike = None,
-        hotstart_job_script: PathLike = None,
-        coldstart_setup_script: PathLike = None,
-        hotstart_setup_script: PathLike = None,
-        commands: [str] = None,
-    ):
-        super().__init__(commands)
-
-        if adcprep_job_script is None:
-            adcprep_job_script = f'job_adcprep_{self.platform.name.lower()}.job'
-        if coldstart_job_script is None:
-            coldstart_job_script = f'job_adcirc_{self.platform.name.lower()}.job.coldstart'
-        if hotstart_job_script is None:
-            hotstart_job_script = f'job_adcirc_{self.platform.name.lower()}.job.hotstart'
-
-        self.platform = platform
-        self.adcprep_job_script = adcprep_job_script
-        self.coldstart_job_script = coldstart_job_script
-        self.hotstart_job_script = hotstart_job_script
-        self.coldstart_setup_script = coldstart_setup_script
-        self.hotstart_setup_script = hotstart_setup_script
-
-    def __str__(self) -> str:
-        lines = []
-        lines.extend(
-            [
-                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
-                '',
-                '# prepare single coldstart directory',
-                'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
-            ]
-        )
-
-        if self.coldstart_setup_script is not None:
-            lines.append(f'sh ../{self.coldstart_setup_script}')
-
-        lines.extend(
-            [
-                f'ln -sf ../{self.adcprep_job_script} adcprep.job',
-                f'ln -sf ../{self.coldstart_job_script} adcirc.job',
-                'popd >/dev/null 2>&1',
-                '',
-            ]
-        )
-
-        hotstart_lines = []
-        hotstart_lines.extend(
-            ['pushd ${hotstart} >/dev/null 2>&1', ]
-        )
-
-        if self.hotstart_setup_script is not None:
-            hotstart_lines.append(f'sh ../../{self.hotstart_setup_script}')
-
-        hotstart_lines.extend(
-            [
-                f'ln -sf ../../{self.adcprep_job_script} adcprep.job',
-                f'ln -sf ../../{self.hotstart_job_script} adcirc.job',
-                'popd >/dev/null 2>&1',
-            ]
-        )
-
-        lines.extend(
-            [
-                '# prepare every hotstart directory',
-                bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', hotstart_lines, ),
-                *(str(command) for command in self.commands),
-            ]
-        )
-
-        return '\n'.join(lines)
-
-    def write(self, filename: PathLike, overwrite: bool = False):
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / f'setup_{self.platform.name.lower()}.sh'
-
-        super().write(filename, overwrite)
-
-
 class EnsembleRunScript(Script):
-    def __init__(
-        self, platform: Platform, setup_script_name: PathLike = None, commands: [str] = None
-    ):
+    def __init__(self, platform: Platform, commands: [str] = None):
         self.platform = platform
-        self.setup_script_name = setup_script_name
         super().__init__(commands)
 
     def __str__(self) -> str:
-        lines = []
-
-        if self.setup_script_name is not None:
-            lines.extend(
-                [f'sh {self.setup_script_name}', '', ]
-            )
-
-        lines.extend(
-            [
-                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
-                '',
-                '# run single coldstart configuration',
-                'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
-            ]
-        )
-
-        lines.extend(
-            [self.coldstart, 'popd >/dev/null 2>&1', '', ]
-        )
-
-        lines.extend(
-            [
-                '# run every hotstart configuration',
-                bash_for_loop(
-                    'for hotstart in ${DIRECTORY}/runs/*/',
-                    [
-                        'pushd ${hotstart} >/dev/null 2>&1',
-                        self.hotstart,
-                        'popd >/dev/null 2>&1',
-                    ],
-                ),
-                *(str(command) for command in self.commands),
-            ]
-        )
+        lines = [
+            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
+            '',
+            '# run single coldstart configuration',
+            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
+            self.coldstart,
+            'popd >/dev/null 2>&1',
+            '',
+            '# run every hotstart configuration',
+            bash_for_loop(
+                'for hotstart in ${DIRECTORY}/runs/*/',
+                ['pushd ${hotstart} >/dev/null 2>&1', self.hotstart, 'popd >/dev/null 2>&1', ],
+            ),
+            *(str(command) for command in self.commands),
+        ]
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html

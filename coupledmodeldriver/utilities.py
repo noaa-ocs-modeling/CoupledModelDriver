@@ -114,7 +114,11 @@ def create_symlink(
         symlink_filename.symlink_to(source_filename)
     except Exception as error:
         LOGGER.warning(f'could not create symbolic link: {error}')
-        shutil.copyfile(source_filename, symlink_filename)
+        try:
+            shutil.copyfile(source_filename, symlink_filename)
+        except:
+            if starting_directory is not None:
+                os.chdir(starting_directory)
 
     if starting_directory is not None:
         os.chdir(starting_directory)
@@ -186,6 +190,8 @@ def convert_value(value: Any, to_type: type) -> Any:
                 value = f'{hours}:{minutes}:{seconds}'
             else:
                 value /= timedelta(seconds=1)
+        elif isinstance(value, CRS) and issubclass(to_type, str):
+            value = value.to_wkt()
         if issubclass(to_type, bool):
             value = eval(f'{value}')
         elif issubclass(to_type, datetime):

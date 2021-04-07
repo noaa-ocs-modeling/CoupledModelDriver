@@ -50,7 +50,7 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.nems import NEMSADCIRCRunConfiguration, NEMSADCIRCGenerationScript
+from coupledmodeldriver.generate.nems import NEMSADCIRCRunConfiguration, NEMSADCIRCGenerationScript
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
@@ -169,29 +169,6 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 
 ```
 📦 hera_shinnecock_ike/
-┣ 📂 coldstart/
-┃  ┣ 📜 fort.13
-┃  ┣ 🔗 fort.14 -> ../fort.14
-┃  ┗ 📜 fort.15
-┣ 📂 runs/
-┃  ┗ 📂 test_case_1/
-┃    ┣ 📜 fort.13
-┃    ┣ 🔗 fort.14 -> ../../fort.14
-┃    ┗ 📜 fort.15
-┣ 📜 fort.14
-┣ 📜 nems.configure.coldstart
-┣ 📜 nems.configure.hotstart
-┣ 📜 config.rc.coldstart
-┣ 📜 config.rc.hotstart
-┣ 📜 model_configure.coldstart
-┣ 📜 model_configure.hotstart
-┣ 📜 job_adcprep_hera.job
-┣ 📜 job_adcirc_hera.job.coldstart
-┣ 📜 job_adcirc_hera.job.hotstart
-┣ 📜 setup.sh.coldstart
-┣ 📜 setup.sh.hotstart
-┣ 📜 cleanup.sh
-┣ 📜 setup_hera.sh
 ┣ ✎ configure_modeldriver.json
 ┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
@@ -200,24 +177,6 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 ┣ ✎ configure_atmesh.json
 ┣ ✎ configure_ww3data.json
 ┣  ▶ generate_nems_adcirc.py
-┗  ▶ run_hera.sh
-```
-
-_**Note:** the required NEMS configuration files (`nems.configure`, `model_configure`) do not yet exist in the run
-directories (`coldstart/`, `runs/test_case_1/`). These will be populated in the next step._
-
-### 3. run job submission script
-
-Running `run_hera.sh` will start the actual model run.
-
-```bash
-sh run_hera.sh
-``` 
-
-This will first create symbolic links to populate configuration directories (by calling `setup_hera.sh`),
-
-```
-📦 hera_shinnecock_ike/
 ┣ 📂 coldstart/
 ┃  ┣ 📜 fort.13
 ┃  ┣ 🔗 fort.14 -> ../fort.14
@@ -254,17 +213,18 @@ This will first create symbolic links to populate configuration directories (by 
 ┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh
 ┣ 📜 setup_hera.sh
-┣ ✎ configure_modeldriver.json
-┣ ✎ configure_adcirc.json
-┣ ✎ configure_nems.json
-┣ ✎ configure_slurm.json
-┣ ✎ configure_tidal_forcing.json
-┣ ✎ configure_atmesh.json
-┣ ✎ configure_ww3data.json
 ┗  ▶ run_hera.sh
 ```
 
-and then submit the requested jobs to the queue (or run the commands directly if the platform is set to `LOCAL`):
+### 3. run job submission script
+
+Running `run_hera.sh` will start the actual model run.
+
+```bash
+sh run_hera.sh
+``` 
+
+This will submit the requested jobs to the queue (or run the commands directly if the platform is set to `LOCAL`):
 
 ```bash
 squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"
