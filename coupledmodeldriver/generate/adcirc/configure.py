@@ -117,8 +117,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
     def add_forcing(self, forcing: ForcingJSON):
         if not isinstance(forcing, ForcingJSON):
             class_name = forcing.__class__.__name__
-            if class_name in FORCING_SOURCES:
-                forcing = FORCING_SOURCES[class_name].from_adcircpy(forcing)
+            if class_name.upper() in FORCING_SOURCES:
+                forcing = FORCING_SOURCES[class_name.upper()].from_adcircpy(forcing)
             else:
                 raise NotImplementedError(f'unable to parse object of type {type(forcing)}')
 
