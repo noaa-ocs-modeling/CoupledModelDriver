@@ -1,0 +1,20 @@
+# `nems.configure` generated with NEMSpy 1.1.4.post7.dev0+b66505b
+# EARTH #
+EARTH_component_list: OCN
+EARTH_attributes::
+  Verbosity = off
+::
+
+# OCN #
+OCN_model:                      adcirc
+OCN_petlist_bounds:             0 10
+OCN_attributes::
+  Verbosity = off
+::
+
+# Run Sequence #
+runSeq::
+  @3600
+    OCN
+  @
+::

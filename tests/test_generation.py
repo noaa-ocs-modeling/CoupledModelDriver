@@ -13,6 +13,8 @@ import pytest
 import wget
 
 from coupledmodeldriver import Platform
+from coupledmodeldriver.generate import ADCIRCRunConfiguration, \
+    generate_adcirc_configuration
 from coupledmodeldriver.generate.nems import (
     NEMSADCIRCRunConfiguration,
     generate_nems_adcirc_configuration,
@@ -34,7 +36,7 @@ MESH_URLS = {
 }
 
 
-def test_local_shinnecock_ike():
+def test_nems_local_shinnecock_ike():
     platform = Platform.LOCAL
     mesh = 'shinnecock'
     storm = 'ike'
@@ -50,8 +52,8 @@ def test_local_shinnecock_ike():
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': None}
 
@@ -113,7 +115,7 @@ def test_local_shinnecock_ike():
     )
 
 
-def test_hera_shinnecock_ike():
+def test_nems_hera_shinnecock_ike():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -129,8 +131,8 @@ def test_hera_shinnecock_ike():
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': None}
 
@@ -192,7 +194,7 @@ def test_hera_shinnecock_ike():
     )
 
 
-def test_stampede2_shinnecock_ike():
+def test_nems_stampede2_shinnecock_ike():
     platform = Platform.STAMPEDE2
     mesh = 'shinnecock'
     storm = 'ike'
@@ -208,8 +210,8 @@ def test_stampede2_shinnecock_ike():
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': None}
 
@@ -264,6 +266,162 @@ def test_stampede2_shinnecock_ike():
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_nems_adcirc_configuration(output_directory, overwrite=True)
+
+    check_reference_directory(
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
+    )
+
+
+def test_adcirc_local_shinnecock_ike():
+    platform = Platform.LOCAL
+    mesh = 'shinnecock'
+    storm = 'ike'
+    adcirc_processors = 11
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = timedelta(days=12.5)
+    job_duration = timedelta(hours=6)
+
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
+    mesh_directory = download_mesh(mesh, storm, input_directory)
+
+    output_directory = Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+
+    runs = {f'test_case_1': None}
+
+    slurm_email_address = 'example@email.gov'
+
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
+    tidal_forcing.use_all()
+    forcings = [tidal_forcing]
+
+    configuration = ADCIRCRunConfiguration(
+        fort13=mesh_directory / 'fort.13',
+        fort14=mesh_directory / 'fort.14',
+        modeled_start_time=modeled_start_time,
+        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        platform=platform,
+        runs=runs,
+        forcings=forcings,
+        adcirc_processors=adcirc_processors,
+        slurm_partition=None,
+        slurm_job_duration=job_duration,
+        slurm_email_address=slurm_email_address,
+        adcprep_executable=None,
+        source_filename=None,
+    )
+
+    configuration.write_directory(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, overwrite=True)
+
+    check_reference_directory(
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
+    )
+
+
+def test_adcirc_hera_shinnecock_ike():
+    platform = Platform.HERA
+    mesh = 'shinnecock'
+    storm = 'ike'
+    adcirc_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = timedelta(days=12.5)
+    job_duration = timedelta(hours=6)
+
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
+    mesh_directory = download_mesh(mesh, storm, input_directory)
+
+    output_directory = Path('.') / 'output'/'adcirc' / f'adcirc_{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference'/'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+
+    runs = {f'test_case_1': None}
+
+    slurm_email_address = 'example@email.gov'
+
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
+    tidal_forcing.use_all()
+    forcings = [tidal_forcing]
+
+    configuration = ADCIRCRunConfiguration(
+        fort13=mesh_directory / 'fort.13',
+        fort14=mesh_directory / 'fort.14',
+        modeled_start_time=modeled_start_time,
+        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        platform=platform,
+        runs=runs,
+        forcings=forcings,
+        adcirc_processors=adcirc_processors,
+        slurm_partition=None,
+        slurm_job_duration=job_duration,
+        slurm_email_address=slurm_email_address,
+        adcprep_executable=None,
+        source_filename=None,
+    )
+
+    configuration.write_directory(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, overwrite=True)
+
+    check_reference_directory(
+        test_directory=DATA_DIRECTORY / output_directory,
+        reference_directory=DATA_DIRECTORY / reference_directory,
+    )
+
+
+def test_adcirc_stampede2_shinnecock_ike():
+    platform = Platform.STAMPEDE2
+    mesh = 'shinnecock'
+    storm = 'ike'
+    adcirc_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = timedelta(days=12.5)
+    job_duration = timedelta(hours=6)
+
+    input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
+    mesh_directory = download_mesh(mesh, storm, input_directory)
+
+    output_directory = Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+
+    runs = {f'test_case_1': None}
+
+    slurm_email_address = 'example@email.gov'
+
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
+    tidal_forcing.use_all()
+    forcings = [tidal_forcing]
+
+    configuration = ADCIRCRunConfiguration(
+        fort13=mesh_directory / 'fort.13',
+        fort14=mesh_directory / 'fort.14',
+        modeled_start_time=modeled_start_time,
+        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        platform=platform,
+        runs=runs,
+        forcings=forcings,
+        adcirc_processors=adcirc_processors,
+        slurm_partition=None,
+        slurm_job_duration=job_duration,
+        slurm_email_address=slurm_email_address,
+        adcprep_executable=None,
+        source_filename=None,
+    )
+
+    configuration.write_directory(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, overwrite=True)
 
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,

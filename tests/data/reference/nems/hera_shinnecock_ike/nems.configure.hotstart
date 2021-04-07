@@ -1,0 +1,38 @@
+# `nems.configure` generated with NEMSpy 1.1.4.post7.dev0+b66505b
+# EARTH #
+EARTH_component_list: ATM WAV OCN
+EARTH_attributes::
+  Verbosity = off
+::
+
+# ATM #
+ATM_model:                      atmesh
+ATM_petlist_bounds:             0 0
+ATM_attributes::
+  Verbosity = off
+::
+
+# WAV #
+WAV_model:                      ww3data
+WAV_petlist_bounds:             1 1
+WAV_attributes::
+  Verbosity = off
+::
+
+# OCN #
+OCN_model:                      adcirc
+OCN_petlist_bounds:             2 601
+OCN_attributes::
+  Verbosity = off
+::
+
+# Run Sequence #
+runSeq::
+  @3600
+    ATM -> OCN   :remapMethod=redist
+    WAV -> OCN   :remapMethod=redist
+    ATM
+    WAV
+    OCN
+  @
+::
