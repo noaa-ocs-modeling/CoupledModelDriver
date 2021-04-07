@@ -30,7 +30,7 @@ def main():
     argument_parser.add_argument('--tidal-forcing-source', default='TPXO',
                                  help=f'source of tidal forcing (can be one of `{[entry.name for entry in TidalSource]}`)')
     argument_parser.add_argument('--tidal-forcing-path', default=None, help='file path to tidal forcing resource')
-    argument_parser.add_argument('--additional-forcings', default=[],
+    argument_parser.add_argument('--additional-forcings', default=None,
                                  help='comma-separated list of additional forcings to configure')
     argument_parser.add_argument('--adcirc-executable', default='adcirc', help='filename of compiled `adcirc` or `NEMS.x`')
     argument_parser.add_argument('--adcprep-executable', default='adcprep', help='filename of compiled `adcprep`')
