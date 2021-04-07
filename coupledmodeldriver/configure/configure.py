@@ -6,8 +6,8 @@ from typing import Collection, Mapping, Union
 from adcircpy.forcing.base import Forcing
 from nemspy.model import ModelEntry
 
-from coupledmodeldriver.configure.forcings.base import ForcingJSON
 from .base import ConfigurationJSON, NEMSCapJSON
+from .forcings.base import ForcingJSON
 
 
 class RunConfiguration(ABC):
