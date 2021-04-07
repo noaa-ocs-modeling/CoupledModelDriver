@@ -34,6 +34,8 @@ class Script(ABC):
     def __init__(self, commands: [str]):
         if commands is None:
             commands = []
+        elif isinstance(commands, str):
+            commands = [commands]
         self.commands = commands
 
     def __str__(self) -> str:

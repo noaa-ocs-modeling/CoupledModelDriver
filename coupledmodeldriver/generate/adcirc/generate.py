@@ -97,7 +97,6 @@ def generate_adcirc_configuration(
         output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
     )
 
-    setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     cleanup_script_filename = output_directory / f'cleanup.sh'
 
@@ -247,7 +246,7 @@ def generate_adcirc_configuration(
             )
 
     LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
-    run_script = EnsembleRunScript(platform, setup_script_filename.name)
+    run_script = EnsembleRunScript(platform)
     run_script.write(run_script_filename, overwrite=overwrite)
 
     cleanup_script = EnsembleCleanupScript()
