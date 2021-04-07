@@ -211,7 +211,7 @@ def convert_value(value: Any, to_type: type) -> Any:
                     if len(parts) > 3:
                         days = parts.pop(0)
                     else:
-                        days = None
+                        days = 0
                     value = timedelta(days=days, hours=parts[0], minutes=parts[1], seconds=parts[2])
             else:
                 value = timedelta(seconds=float(value))
