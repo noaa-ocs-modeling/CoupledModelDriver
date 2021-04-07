@@ -193,7 +193,7 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
 
     @property
     def adcircpy_forcing(self) -> OwiForcing:
-        return OwiForcing(interval_seconds=self['modeled_timestep'] / timedelta(seconds=1), )
+        return OwiForcing(interval_seconds=self['modeled_timestep'] / timedelta(seconds=1))
 
     @classmethod
     def from_adcircpy(cls, forcing: OwiForcing) -> 'OWIForcingJSON':
