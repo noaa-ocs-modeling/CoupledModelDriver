@@ -50,7 +50,6 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
-
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -203,10 +202,18 @@ def convert_value(value: Any, to_type: type) -> Any:
         elif issubclass(to_type, datetime):
             value = parse_date(value)
         elif issubclass(to_type, timedelta):
-            try:
-                time = datetime.strptime(value, '%H:%M:%S')
-                value = timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
-            except:
+            if ':' in value:
+                try:
+                    time = datetime.strptime(value, '%H:%M:%S')
+                    value = timedelta(hours=time.hour, minutes=time.minute, seconds=time.second)
+                except:
+                    parts = [float(part) for part in value.split(':')]
+                    if len(parts) > 3:
+                        days = parts.pop(0)
+                    else:
+                        days = None
+                    value = timedelta(days=days, hours=parts[0], minutes=parts[1], seconds=parts[2])
+            else:
                 value = timedelta(seconds=float(value))
         elif isinstance(value, str):
             try:
