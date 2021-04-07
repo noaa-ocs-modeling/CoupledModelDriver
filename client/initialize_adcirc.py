@@ -25,10 +25,10 @@ def main():
     argument_parser.add_argument('--modeled-duration', required=True, help=' end time within the modeled system')
     argument_parser.add_argument('--modeled-timestep', required=True, help='time interval within the modeled system')
     argument_parser.add_argument('--nems-interval', default=None, help='main loop interval of NEMS run')
-    argument_parser.add_argument('--modulefile', required=True, help='path to module file to `source`')
+    argument_parser.add_argument('--modulefile', default=None, help='path to module file to `source`')
     argument_parser.add_argument('--tidal-spinup-duration', default=None, help='spinup time for ADCIRC tidal coldstart')
     argument_parser.add_argument('--tidal-forcing-source', default='TPXO',
-                                 help=f'source of tidal forcing (can be one of `{list(TidalSource)}`)')
+                                 help=f'source of tidal forcing (can be one of `{[entry.name for entry in TidalSource]}`)')
     argument_parser.add_argument('--tidal-forcing-path', default=None, help='file path to tidal forcing resource')
     argument_parser.add_argument('--additional-forcings', default=[],
                                  help='comma-separated list of additional forcings to configure')
