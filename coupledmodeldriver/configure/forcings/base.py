@@ -13,8 +13,7 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveMeshEntry
 
-from coupledmodeldriver.configure.base import ConfigurationJSON, \
-    NEMSCapJSON
+from ..base import ConfigurationJSON, NEMSCapJSON
 
 
 class ForcingJSON(ConfigurationJSON, ABC):

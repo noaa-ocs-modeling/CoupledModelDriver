@@ -9,8 +9,8 @@ from adcircpy.forcing.base import Forcing
 from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
-from coupledmodeldriver.configure.forcings.base import ForcingJSON
 from .base import ConfigurationJSON, NEMSCapJSON, SlurmJSON
+from .forcings.base import ForcingJSON
 from ..utilities import LOGGER
 
 

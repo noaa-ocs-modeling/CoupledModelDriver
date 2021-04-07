@@ -8,17 +8,16 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 
-from coupledmodeldriver.configure import NEMSJSON
-from coupledmodeldriver.configure.base import ModelDriverJSON, SlurmJSON
-from coupledmodeldriver.configure.forcings import (
+from ...configure.base import ModelDriverJSON, NEMSJSON, SlurmJSON
+from ...configure.configure import RunConfiguration
+from ...configure.forcings.base import (
     ATMESHForcingJSON,
+    ForcingJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from coupledmodeldriver.configure.forcings.base import ForcingJSON
-from coupledmodeldriver.configure.models import ADCIRCJSON
-from coupledmodeldriver.configure.run import RunConfiguration
-from coupledmodeldriver.platforms import Platform
+from ...configure.models import ADCIRCJSON
+from ...platforms import Platform
 
 
 class ADCIRCRunConfiguration(RunConfiguration):

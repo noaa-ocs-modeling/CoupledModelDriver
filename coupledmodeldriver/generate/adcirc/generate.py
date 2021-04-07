@@ -6,15 +6,11 @@ from pathlib import Path
 
 from nemspy import ModelingSystem
 
-from coupledmodeldriver.script import (
-    EnsembleCleanupScript,
-    EnsembleRunScript,
-)
-from coupledmodeldriver.utilities import LOGGER, create_symlink, \
-    get_logger
-from .configure import ADCIRCRunConfiguration
+from .configure import ADCIRCRunConfiguration, \
+    NEMSADCIRCRunConfiguration
 from .script import AdcircMeshPartitionJob, AdcircRunJob
-from .. import NEMSADCIRCRunConfiguration
+from ...script import EnsembleCleanupScript, EnsembleRunScript
+from ...utilities import LOGGER, create_symlink, get_logger
 
 
 def generate_adcirc_configuration(
