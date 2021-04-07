@@ -138,10 +138,11 @@ generation_script = NEMSADCIRCGenerationScript()
 generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)
 ```
 
-This code will generate JSON configuration files in the directory `hera_shinnecock_ike/`, with the following structure:
+This code will generate JSON configuration files in the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/`, with the
+following structure:
 
 ```
-📦 hera_shinnecock_ike/
+📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
 ┣ ✎ configure_modeldriver.json
 ┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
@@ -160,7 +161,7 @@ resulting run configuration.
 Alternatively, you may use the command-line interface, as so:
 
 ```bash
-initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 --modeled-start-time 20080823 --modeled-duration 14:06:00:00 --modeled-timestep 00:00:02 --nems-interval 01:00:00 --tidal-spinup-duration 12:06:00:00 --tidal-forcing-source TPXO --additional-forcings AtmosphericMeshForcing,WaveWatch3DataForcing --directory .
+initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 --modeled-start-time 20080823 --modeled-duration 14:06:00:00 --modeled-timestep 00:00:02 --nems-interval 01:00:00 --tidal-spinup-duration 12:06:00:00 --tidal-forcing-source TPXO --tidal-forcing-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc --forcings AtmosphericMeshForcing,WaveWatch3DataForcing --directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
 ```
 
 ### 2. run generation script
@@ -168,7 +169,7 @@ initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hso
 Running `generate_nems_adcirc.py` will read the JSON configuration and generate an ADCIRC run configuration, as so:
 
 ```
-📦 hera_shinnecock_ike/
+📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
 ┣ ✎ configure_modeldriver.json
 ┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
