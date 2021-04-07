@@ -339,8 +339,8 @@ def test_adcirc_hera_shinnecock_ike():
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
 
-    output_directory = Path('.') / 'output'/'adcirc' / f'adcirc_{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference'/'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    reference_directory = Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
 
     runs = {f'test_case_1': None}
 
