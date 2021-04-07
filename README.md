@@ -212,7 +212,6 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 ┣ 📜 setup.sh.coldstart
 ┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh
-┣ 📜 setup_hera.sh
 ┗  ▶ run_hera.sh
 ```
 
