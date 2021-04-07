@@ -13,10 +13,10 @@ import pytest
 import wget
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import ADCIRCRunConfiguration, \
-    generate_adcirc_configuration
-from coupledmodeldriver.generate.nems import (
+from coupledmodeldriver.generate import (
+    ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
+    generate_adcirc_configuration,
     generate_nems_adcirc_configuration,
 )
 
@@ -52,8 +52,12 @@ def test_nems_local_shinnecock_ike():
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = (
+        Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
+    reference_directory = (
+        Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
 
     runs = {f'test_case_1': None}
 
@@ -131,8 +135,12 @@ def test_nems_hera_shinnecock_ike():
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = (
+        Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
+    reference_directory = (
+        Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
 
     runs = {f'test_case_1': None}
 
@@ -210,8 +218,12 @@ def test_nems_stampede2_shinnecock_ike():
     mesh_directory = download_mesh(mesh, storm, input_directory)
     forcings_directory = input_directory / 'forcings'
 
-    output_directory = Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = (
+        Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
+    reference_directory = (
+        Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
 
     runs = {f'test_case_1': None}
 
@@ -287,8 +299,12 @@ def test_adcirc_local_shinnecock_ike():
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
 
-    output_directory = Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = (
+        Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
+    reference_directory = (
+        Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
 
     runs = {f'test_case_1': None}
 
@@ -339,8 +355,12 @@ def test_adcirc_hera_shinnecock_ike():
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
 
-    output_directory = Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = (
+        Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
+    reference_directory = (
+        Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
 
     runs = {f'test_case_1': None}
 
@@ -391,8 +411,12 @@ def test_adcirc_stampede2_shinnecock_ike():
     input_directory = Path('.') / 'input' / f'{mesh}_{storm}'
     mesh_directory = download_mesh(mesh, storm, input_directory)
 
-    output_directory = Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
-    reference_directory = Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    output_directory = (
+        Path('.') / 'output' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
+    reference_directory = (
+        Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
+    )
 
     runs = {f'test_case_1': None}
 

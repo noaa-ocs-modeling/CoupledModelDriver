@@ -5,17 +5,15 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
 import pytest
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure.base import (
-    ModelDriverJSON,
-    SlurmJSON,
-)
-from coupledmodeldriver.configure.forcings import (
+from coupledmodeldriver.configure import (
+    ADCIRCJSON,
     ATMESHForcingJSON,
+    ModelDriverJSON,
+    NEMSJSON,
+    SlurmJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from coupledmodeldriver.configure.models import ADCIRCJSON
-from coupledmodeldriver.generate.nems import NEMSJSON
 
 
 def test_update():
