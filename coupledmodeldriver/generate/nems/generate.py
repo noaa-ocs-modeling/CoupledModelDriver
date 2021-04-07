@@ -310,9 +310,9 @@ def generate_nems_adcirc_configuration(
                 if name is not None:
                     # if not isinstance(value, numpy.ndarray):
                     #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-                    if not driver.mesh.has_attribute(name):
-                        driver.mesh.add_attribute(name)
-                    driver.mesh.set_attribute(name, value)
+                    if not driver.mesh.has_nodal_attribute(name):
+                        driver.mesh.add_nodal_attribute(name)
+                    driver.mesh.set_nodal_attribute(name, value)
 
         driver.write(
             hotstart_directory,

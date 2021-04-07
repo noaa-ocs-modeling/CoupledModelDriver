@@ -213,9 +213,9 @@ def generate_adcirc_configuration(
         LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
         if not isinstance(value, numpy.ndarray):
             value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-        if not driver.mesh.has_attribute(attribute_name):
-            driver.mesh.add_attribute(attribute_name)
-        driver.mesh.set_attribute(attribute_name, value)
+        if not driver.mesh.has_nodal_attribute(attribute_name):
+            driver.mesh.add_nodal_attribute(attribute_name)
+        driver.mesh.set_nodal_attribute(attribute_name, value)
 
         driver.write(
             hotstart_directory,
