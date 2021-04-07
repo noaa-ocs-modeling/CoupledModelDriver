@@ -2,16 +2,16 @@ from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.base import Forcing
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
-from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from nemspy import ModelingSystem
 
-from ...configure.base import ModelDriverJSON, NEMSJSON, SlurmJSON
+from ...configure.base import ModelDriverJSON, NEMSCapJSON, NEMSJSON, \
+    SlurmJSON
 from ...configure.configure import RunConfiguration
 from ...configure.forcings.base import (
     ATMESHForcingJSON,
+    FORCING_SOURCES,
     ForcingJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
@@ -59,9 +59,9 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param modeled_start_time: start time within the modeled system
         :param modeled_end_time: end time within the modeled system
         :param modeled_timestep: time interval within the modeled system
-        :param adcirc_processors: numbers of processors to use for Slurm job
+        :param adcirc_processors: numbers of processors to assign for ADCIRC
         :param platform: HPC platform for which to configure
-        :param tidal_spinup_duration: spinup time for ADCIRC coldstart
+        :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
         :param runs: dictionary of run name to run value and mesh attribute name
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
@@ -113,12 +113,9 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
     def add_forcing(self, forcing: ForcingJSON):
         if not isinstance(forcing, ForcingJSON):
-            if isinstance(forcing, AtmosphericMeshForcing):
-                forcing = ATMESHForcingJSON.from_adcircpy(forcing)
-            elif isinstance(forcing, WaveWatch3DataForcing):
-                forcing = WW3DATAForcingJSON.from_adcircpy(forcing)
-            elif isinstance(forcing, Tides):
-                forcing = TidalForcingJSON.from_adcircpy(forcing)
+            class_name = forcing.__class__.__name__
+            if class_name in FORCING_SOURCES:
+                forcing = FORCING_SOURCES[class_name].from_adcircpy(forcing)
             else:
                 raise NotImplementedError(f'unable to parse object of type {type(forcing)}')
 
@@ -259,16 +256,13 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
 
     def add_forcing(self, forcing: Forcing):
         if not isinstance(forcing, ForcingJSON):
-            if isinstance(forcing, AtmosphericMeshForcing):
-                forcing = ATMESHForcingJSON.from_adcircpy(forcing)
-                self['nems']['models'].append(forcing.nemspy_entry)
-            elif isinstance(forcing, WaveWatch3DataForcing):
-                forcing = WW3DATAForcingJSON.from_adcircpy(forcing)
-                self['nems']['models'].append(forcing.nemspy_entry)
-            elif isinstance(forcing, Tides):
-                forcing = TidalForcingJSON.from_adcircpy(forcing)
+            class_name = forcing.__class__.__name__
+            if class_name in FORCING_SOURCES:
+                forcing = FORCING_SOURCES[class_name].from_adcircpy(forcing)
             else:
                 raise NotImplementedError(f'unable to parse object of type {type(forcing)}')
+            if isinstance(forcing, NEMSCapJSON):
+                self['nems']['models'].append(forcing.nemspy_entry)
 
         if forcing not in self:
             self[forcing.name] = forcing

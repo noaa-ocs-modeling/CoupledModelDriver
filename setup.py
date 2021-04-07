@@ -83,4 +83,10 @@ setup(
         'testing': ['flake8', 'pytest', 'pytest-cov', 'wget'],
         'development': ['oitnb'],
     },
+    entry_points={
+        'console_scripts': [
+            'initialize_adcirc=client.initialize_adcirc:main',
+            'generate_adcirc=client.generate_adcirc:main',
+        ],
+    },
 )
