@@ -284,10 +284,22 @@ def generate_nems_adcirc_configuration(
         if local_fort13_filename.exists():
             create_symlink('../fort.13', coldstart_directory / 'fort.13', relative=True)
     create_symlink('../fort.14', coldstart_directory / 'fort.14', relative=True)
-    create_symlink(f'../{adcprep_job_script_filename.name}', coldstart_directory / 'adcprep.job', relative=True)
-    create_symlink(f'../{coldstart_run_script_filename.name}', coldstart_directory / 'adcirc.job', relative=True)
-    create_symlink('../nems.configure.coldstart', coldstart_directory / 'nems.configure', relative=True)
-    create_symlink('../model_configure.coldstart', coldstart_directory / 'model_configure', relative=True)
+    create_symlink(
+        f'../{adcprep_job_script_filename.name}',
+        coldstart_directory / 'adcprep.job',
+        relative=True,
+    )
+    create_symlink(
+        f'../{coldstart_run_script_filename.name}',
+        coldstart_directory / 'adcirc.job',
+        relative=True,
+    )
+    create_symlink(
+        '../nems.configure.coldstart', coldstart_directory / 'nems.configure', relative=True
+    )
+    create_symlink(
+        '../model_configure.coldstart', coldstart_directory / 'model_configure', relative=True
+    )
     create_symlink('../config.rc.coldstart', coldstart_directory / 'config.rc', relative=True)
 
     for run_name, attributes in runs.items():
@@ -315,16 +327,37 @@ def generate_nems_adcirc_configuration(
             if local_fort13_filename.exists():
                 create_symlink('../../fort.13', hotstart_directory / 'fort.13', relative=True)
         create_symlink('../../fort.14', hotstart_directory / 'fort.14', relative=True)
-        create_symlink(f'../../{adcprep_job_script_filename.name}', hotstart_directory / 'adcprep.job', relative=True)
-        create_symlink(f'../../{hotstart_run_script_filename.name}', hotstart_directory / 'adcirc.job', relative=True)
-        create_symlink('../../nems.configure.hotstart', hotstart_directory / 'nems.configure', relative=True)
-        create_symlink('../../model_configure.hotstart', hotstart_directory / 'model_configure', relative=True)
-        create_symlink('../../config.rc.hotstart', hotstart_directory / 'config.rc', relative=True)
+        create_symlink(
+            f'../../{adcprep_job_script_filename.name}',
+            hotstart_directory / 'adcprep.job',
+            relative=True,
+        )
+        create_symlink(
+            f'../../{hotstart_run_script_filename.name}',
+            hotstart_directory / 'adcirc.job',
+            relative=True,
+        )
+        create_symlink(
+            '../../nems.configure.hotstart',
+            hotstart_directory / 'nems.configure',
+            relative=True,
+        )
+        create_symlink(
+            '../../model_configure.hotstart',
+            hotstart_directory / 'model_configure',
+            relative=True,
+        )
+        create_symlink(
+            '../../config.rc.hotstart', hotstart_directory / 'config.rc', relative=True
+        )
         try:
-            create_symlink('../../coldstart/fort.67.nc', hotstart_directory / 'fort.67.nc', relative=True)
+            create_symlink(
+                '../../coldstart/fort.67.nc', hotstart_directory / 'fort.67.nc', relative=True
+            )
         except:
             LOGGER.warning(
-                'unable to link `fort.67.nc` from coldstart to hotstart; you must manually link or copy this file after coldstart completes')
+                'unable to link `fort.67.nc` from coldstart to hotstart; you must manually link or copy this file after coldstart completes'
+            )
 
     LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
     run_script = EnsembleRunScript(platform)

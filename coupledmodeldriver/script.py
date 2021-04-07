@@ -239,9 +239,7 @@ class JobScript(Script):
 
 
 class EnsembleRunScript(Script):
-    def __init__(
-        self, platform: Platform, commands: [str] = None
-    ):
+    def __init__(self, platform: Platform, commands: [str] = None):
         self.platform = platform
         super().__init__(commands)
 
@@ -257,11 +255,7 @@ class EnsembleRunScript(Script):
             '# run every hotstart configuration',
             bash_for_loop(
                 'for hotstart in ${DIRECTORY}/runs/*/',
-                [
-                    'pushd ${hotstart} >/dev/null 2>&1',
-                    self.hotstart,
-                    'popd >/dev/null 2>&1',
-                ],
+                ['pushd ${hotstart} >/dev/null 2>&1', self.hotstart, 'popd >/dev/null 2>&1', ],
             ),
             *(str(command) for command in self.commands),
         ]

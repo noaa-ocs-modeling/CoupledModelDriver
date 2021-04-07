@@ -119,7 +119,9 @@ def generate_adcirc_configuration(
         source_filename=source_filename,
     )
 
-    LOGGER.debug(f'writing mesh partitioning job script ' f'"{adcprep_job_script_filename.name}"')
+    LOGGER.debug(
+        f'writing mesh partitioning job script ' f'"{adcprep_job_script_filename.name}"'
+    )
     adcprep_script.write(adcprep_job_script_filename, overwrite=overwrite)
 
     LOGGER.debug(f'setting ADCIRC executable "{adcirc_executable_path}"')
@@ -199,8 +201,12 @@ def generate_adcirc_configuration(
         if local_fort13_filename.exists():
             create_symlink('../fort.13', coldstart_directory / 'fort.13', relative=True)
     create_symlink('../fort.14', coldstart_directory / 'fort.14', relative=True)
-    create_symlink(adcprep_job_script_filename, coldstart_directory / 'adcprep.job', relative=True)
-    create_symlink(coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True)
+    create_symlink(
+        adcprep_job_script_filename, coldstart_directory / 'adcprep.job', relative=True
+    )
+    create_symlink(
+        coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True
+    )
 
     for run_name, (value, attribute_name) in runs.items():
         hotstart_directory = runs_directory / run_name
@@ -224,13 +230,20 @@ def generate_adcirc_configuration(
             if local_fort13_filename.exists():
                 create_symlink('../../fort.13', hotstart_directory / 'fort.13', relative=True)
         create_symlink('../../fort.14', hotstart_directory / 'fort.14', relative=True)
-        create_symlink(adcprep_job_script_filename, hotstart_directory / 'adcprep.job', relative=True)
-        create_symlink(hotstart_run_script_filename, hotstart_directory / 'adcirc.job', relative=True)
+        create_symlink(
+            adcprep_job_script_filename, hotstart_directory / 'adcprep.job', relative=True
+        )
+        create_symlink(
+            hotstart_run_script_filename, hotstart_directory / 'adcirc.job', relative=True
+        )
         try:
-            create_symlink('../../coldstart/fort.67.nc', hotstart_directory / 'fort.67.nc', relative=True)
+            create_symlink(
+                '../../coldstart/fort.67.nc', hotstart_directory / 'fort.67.nc', relative=True
+            )
         except:
             LOGGER.warning(
-                'unable to link `fort.67.nc` from coldstart to hotstart; you must manually link or copy this file after coldstart completes')
+                'unable to link `fort.67.nc` from coldstart to hotstart; you must manually link or copy this file after coldstart completes'
+            )
 
     LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
     run_script = EnsembleRunScript(platform, setup_script_filename.name)
