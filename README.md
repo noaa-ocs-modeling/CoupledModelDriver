@@ -50,7 +50,7 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configurations.nems import NEMSADCIRCRunConfiguration, NEMSADCIRCGenerationScript
+from coupledmodeldriver.generate.nems import NEMSADCIRCRunConfiguration, NEMSADCIRCGenerationScript
 
 # paths to compiled `NEMS.x` and `adcprep`
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
@@ -169,6 +169,14 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 
 ```
 📦 hera_shinnecock_ike/
+┣ ✎ configure_modeldriver.json
+┣ ✎ configure_adcirc.json
+┣ ✎ configure_nems.json
+┣ ✎ configure_slurm.json
+┣ ✎ configure_tidal_forcing.json
+┣ ✎ configure_atmesh.json
+┣ ✎ configure_ww3data.json
+┣  ▶ generate_nems_adcirc.py
 ┣ 📂 coldstart/
 ┃  ┣ 📜 fort.13
 ┃  ┣ 🔗 fort.14 -> ../fort.14
@@ -192,14 +200,6 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 ┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh
 ┣ 📜 setup_hera.sh
-┣ ✎ configure_modeldriver.json
-┣ ✎ configure_adcirc.json
-┣ ✎ configure_nems.json
-┣ ✎ configure_slurm.json
-┣ ✎ configure_tidal_forcing.json
-┣ ✎ configure_atmesh.json
-┣ ✎ configure_ww3data.json
-┣  ▶ generate_nems_adcirc.py
 ┗  ▶ run_hera.sh
 ```
 
@@ -218,6 +218,14 @@ This will first create symbolic links to populate configuration directories (by 
 
 ```
 📦 hera_shinnecock_ike/
+┣ ✎ configure_modeldriver.json
+┣ ✎ configure_adcirc.json
+┣ ✎ configure_nems.json
+┣ ✎ configure_slurm.json
+┣ ✎ configure_tidal_forcing.json
+┣ ✎ configure_atmesh.json
+┣ ✎ configure_ww3data.json
+┣  ▶ generate_nems_adcirc.py
 ┣ 📂 coldstart/
 ┃  ┣ 📜 fort.13
 ┃  ┣ 🔗 fort.14 -> ../fort.14
@@ -254,13 +262,6 @@ This will first create symbolic links to populate configuration directories (by 
 ┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh
 ┣ 📜 setup_hera.sh
-┣ ✎ configure_modeldriver.json
-┣ ✎ configure_adcirc.json
-┣ ✎ configure_nems.json
-┣ ✎ configure_slurm.json
-┣ ✎ configure_tidal_forcing.json
-┣ ✎ configure_atmesh.json
-┣ ✎ configure_ww3data.json
 ┗  ▶ run_hera.sh
 ```
 

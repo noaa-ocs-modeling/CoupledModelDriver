@@ -5,14 +5,17 @@ from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
 import pytest
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configurations.base import (
+from coupledmodeldriver.configure.base import (
     ModelDriverJSON,
     SlurmJSON,
 )
-from coupledmodeldriver.configurations.forcings import \
-    ATMESHForcingJSON, TidalForcingJSON, WW3DATAForcingJSON
-from coupledmodeldriver.configurations.models import ADCIRCJSON
-from coupledmodeldriver.configurations.nems import NEMSJSON
+from coupledmodeldriver.configure.forcings import (
+    ATMESHForcingJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
+)
+from coupledmodeldriver.configure.models import ADCIRCJSON
+from coupledmodeldriver.generate.nems import NEMSJSON
 
 
 def test_update():
@@ -150,7 +153,7 @@ def test_tidal():
     ]
 
     configuration['tidal_source'] = 'TPXO'
-    configuration['resource'] = 'nonesistant/path/to/h_tpxo9.nc'
+    configuration['resource'] = 'nonexistent/path/to/h_tpxo9.nc'
 
     with pytest.raises((FileNotFoundError, OSError)):
         configuration.adcircpy_forcing

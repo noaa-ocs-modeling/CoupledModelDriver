@@ -1,5 +1,3 @@
-sh setup_local.sh
-
 DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # run single coldstart configuration

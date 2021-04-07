@@ -9,8 +9,7 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configurations.adcirc import \
-    ADCIRCGenerationScript, \
+from coupledmodeldriver.generate import ADCIRCGenerationScript, \
     ADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`

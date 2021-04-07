@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configurations.adcirc import \
-    ADCIRCGenerationScript, \
+from coupledmodeldriver.generate import ADCIRCGenerationScript, \
     ADCIRCRunConfiguration
 
 # paths to compiled `NEMS.x` and `adcprep`
