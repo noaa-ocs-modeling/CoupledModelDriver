@@ -31,7 +31,7 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
 
 Example scripts can be found at `examples/<platform>`
 
-### 1. write a configuration to a directory
+### 1. generate JSON configuration files
 
 The following code (`examples/nems_adcirc/hera_shinnecock_ike_spinup_tidal_atmesh_ww3data.py`) creates a configuration for
 coupling `(ATMESH + WW3DATA) -> ADCIRC`
@@ -138,8 +138,14 @@ generation_script = NEMSADCIRCGenerationScript()
 generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)
 ```
 
-This code will generate JSON configuration files in the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/`, with the
-following structure:
+Alternatively, you may use the command-line interface:
+
+```bash
+initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 --modeled-start-time 20080823 --modeled-duration 14:06:00:00 --modeled-timestep 00:00:02 --nems-interval 01:00:00 --tidal-spinup-duration 12:06:00:00 --tidal-forcing-source TPXO --tidal-forcing-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc --forcings AtmosphericMeshForcing,WaveWatch3DataForcing --directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
+```
+
+Either method will create the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/` and generate the following JSON
+configuration files:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
@@ -153,20 +159,12 @@ following structure:
 ┗  ▶ generate_nems_adcirc.py
 ```
 
-These JSON configuration files contain the configuration values for an ADCIRC run. You may change these values to alter the
-resulting run configuration.
+These files contain relevant configuration values for an ADCIRC run. You will likely wish to change these values to alter the
+resulting run, before generating the actual model configuration.
 
-#### command-line interface
+### 2. generate model configuration files
 
-Alternatively, you may use the command-line interface, as so:
-
-```bash
-initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 --modeled-start-time 20080823 --modeled-duration 14:06:00:00 --modeled-timestep 00:00:02 --nems-interval 01:00:00 --tidal-spinup-duration 12:06:00:00 --tidal-forcing-source TPXO --tidal-forcing-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc --forcings AtmosphericMeshForcing,WaveWatch3DataForcing --directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
-```
-
-### 2. run generation script
-
-Running `generate_nems_adcirc.py` will read the JSON configuration and generate an ADCIRC run configuration, as so:
+Run `generate_nems_adcirc.py` to read the JSON configuration and generate the ADCIRC run configuration:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
@@ -216,15 +214,13 @@ Running `generate_nems_adcirc.py` will read the JSON configuration and generate 
 ┗  ▶ run_hera.sh
 ```
 
-### 3. run job submission script
+### 3. run the model
 
-Running `run_hera.sh` will start the actual model run.
+Run the following to submit the model run to the Slurm job queue:
 
 ```bash
 sh run_hera.sh
 ``` 
-
-This will submit the requested jobs to the queue (or run the commands directly if the platform is set to `LOCAL`):
 
 ```bash
 squeue -u $USER -o "%.8i %.21j %.4C %.4D %.31E %.20V %.20S %.20e"
