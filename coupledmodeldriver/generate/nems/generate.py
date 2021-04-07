@@ -167,7 +167,7 @@ def generate_nems_adcirc_configuration(
     hotstart_run_script_filename = (
         output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
     )
-    setup_script_filename = output_directory / f'setup_{platform.name.lower()}.sh'
+
     run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     cleanup_script_filename = output_directory / f'cleanup.sh'
 
@@ -224,7 +224,7 @@ def generate_nems_adcirc_configuration(
             source_filename=source_filename,
         )
 
-    LOGGER.debug(f'writing coldstart run script ' f'"{coldstart_run_script_filename.name}"')
+    LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
     coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
     if tidal_spinup_nems is not None:

@@ -137,28 +137,28 @@ def generate_adcirc_configuration(
             slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
             source_filename=source_filename,
         )
+
+        LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
         coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
-        LOGGER.debug(
-            f'writing coldstart run script ' f'"{coldstart_run_script_filename.name}"'
+
+    if tidal_spinup_duration is not None:
+        hotstart_run_script = AdcircRunJob(
+            platform=platform,
+            slurm_tasks=adcirc_processors,
+            slurm_account=slurm_account,
+            slurm_duration=job_duration,
+            slurm_run_name=adcirc_hotstart_run_name,
+            executable=adcirc_executable_path,
+            slurm_partition=partition,
+            slurm_email_type=email_type,
+            slurm_email_address=email_address,
+            slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
+            slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
+            source_filename=source_filename,
         )
 
-    hotstart_run_script = AdcircRunJob(
-        platform=platform,
-        slurm_tasks=adcirc_processors,
-        slurm_account=slurm_account,
-        slurm_duration=job_duration,
-        slurm_run_name=adcirc_hotstart_run_name,
-        executable=adcirc_executable_path,
-        slurm_partition=partition,
-        slurm_email_type=email_type,
-        slurm_email_address=email_address,
-        slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
-        slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
-        source_filename=source_filename,
-    )
-
-    LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
-    hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
+        LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
+        hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     # instantiate AdcircRun object.
     driver = coupled_configuration.adcircpy_driver
@@ -199,10 +199,14 @@ def generate_adcirc_configuration(
             create_symlink('../fort.13', coldstart_directory / 'fort.13', relative=True)
     create_symlink('../fort.14', coldstart_directory / 'fort.14', relative=True)
     create_symlink(
-        adcprep_job_script_filename, coldstart_directory / 'adcprep.job', relative=True
+        f'../{adcprep_job_script_filename.name}',
+        coldstart_directory / 'adcprep.job',
+        relative=True,
     )
     create_symlink(
-        coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True
+        f'../{coldstart_run_script_filename.name}',
+        coldstart_directory / 'adcirc.job',
+        relative=True,
     )
 
     for run_name, attributes in runs.items():
@@ -231,10 +235,14 @@ def generate_adcirc_configuration(
                 create_symlink('../../fort.13', hotstart_directory / 'fort.13', relative=True)
         create_symlink('../../fort.14', hotstart_directory / 'fort.14', relative=True)
         create_symlink(
-            adcprep_job_script_filename, hotstart_directory / 'adcprep.job', relative=True
+            f'../../{adcprep_job_script_filename.name}',
+            hotstart_directory / 'adcprep.job',
+            relative=True,
         )
         create_symlink(
-            hotstart_run_script_filename, hotstart_directory / 'adcirc.job', relative=True
+            f'../../{hotstart_run_script_filename.name}',
+            hotstart_directory / 'adcirc.job',
+            relative=True,
         )
         try:
             create_symlink(
