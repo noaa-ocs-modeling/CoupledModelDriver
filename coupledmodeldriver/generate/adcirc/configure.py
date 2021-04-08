@@ -315,13 +315,12 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             if filename.exists():
                 forcings.append(configuration_class.from_file(filename))
 
-        nems['models'] = [entry.nemspy_entry for entry in (adcirc, *forcings)
-                          if isinstance(entry, NEMSCapJSON)]
+        nems['models'] = [
+            entry.nemspy_entry
+            for entry in (adcirc, *forcings)
+            if isinstance(entry, NEMSCapJSON)
+        ]
 
         return cls.from_configurations(
-            driver=driver,
-            nems=nems,
-            slurm=slurm,
-            adcirc=adcirc,
-            forcings=forcings,
+            driver=driver, nems=nems, slurm=slurm, adcirc=adcirc, forcings=forcings,
         )

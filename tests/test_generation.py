@@ -521,7 +521,9 @@ def extract_download(
     os.remove(temporary_filename)
 
 
-def check_reference_directory(test_directory: PathLike, reference_directory: PathLike, skip_lines: int = None):
+def check_reference_directory(
+    test_directory: PathLike, reference_directory: PathLike, skip_lines: int = None
+):
     if not isinstance(test_directory, Path):
         test_directory = Path(test_directory)
     if not isinstance(reference_directory, Path):
@@ -531,10 +533,13 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
 
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
-            check_reference_directory(test_directory / reference_filename.name,
-                                      reference_filename, skip_lines)
+            check_reference_directory(
+                test_directory / reference_filename.name, reference_filename, skip_lines
+            )
         else:
             test_filename = test_directory / reference_filename.name
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
-                assert test_file.readlines()[skip_lines:] == reference_file.readlines()[skip_lines:], \
-                    f'"{test_filename}" != "{reference_filename}"'
+                assert (
+                    test_file.readlines()[skip_lines:]
+                    == reference_file.readlines()[skip_lines:]
+                ), f'"{test_filename}" != "{reference_filename}"'

@@ -81,6 +81,9 @@ def main():
         action='store_true',
         help='write a Python script to load configuration',
     )
+    argument_parser.add_argument(
+        '--skip-existing', action='store_true', help='skip existing files',
+    )
 
     arguments = argument_parser.parse_args()
 
@@ -110,6 +113,8 @@ def main():
 
     job_duration = convert_value(arguments.job_duration, timedelta)
     directory = convert_value(arguments.directory, Path)
+
+    overwrite = not arguments.skip_existing
 
     # initialize `adcircpy` forcing objects
     adcircpy_forcings = []
@@ -183,10 +188,10 @@ def main():
         )
         generation_script = ADCIRCGenerationScript()
 
-    configuration.write_directory(directory=directory, overwrite=True)
+    configuration.write_directory(directory=directory, overwrite=overwrite)
 
     if arguments.generate_script:
-        generation_script.write(filename=directory / 'generate_adcirc.py', overwrite=True)
+        generation_script.write(filename=directory / 'generate_adcirc.py', overwrite=overwrite)
 
 
 if __name__ == '__main__':

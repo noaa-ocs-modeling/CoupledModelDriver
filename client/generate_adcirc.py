@@ -20,6 +20,9 @@ def main():
         '--output-directory', default=None, help='path to store generated configuration files'
     )
     argument_parser.add_argument(
+        '--skip-existing', action='store_true', help='skip existing files',
+    )
+    argument_parser.add_argument(
         '--verbose', action='store_true', help='show more verbose log messages'
     )
 
@@ -27,6 +30,8 @@ def main():
 
     configuration_directory = convert_value(arguments.configuration_directory, Path)
     output_directory = convert_value(arguments.output_directory, Path)
+
+    overwrite = not arguments.skip_existing
 
     if output_directory is None:
         output_directory = configuration_directory
