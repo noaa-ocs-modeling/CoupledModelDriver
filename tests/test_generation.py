@@ -529,4 +529,4 @@ def check_reference_directory(test_directory: PathLike, reference_directory: Pat
         else:
             test_filename = test_directory / reference_filename.name
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
-                assert test_file.readlines()[1:] == reference_file.readlines()[1:]
+                assert test_file.readlines()[1:] == reference_file.readlines()[1:], f'{test_filename} != {reference_filename}'
