@@ -307,16 +307,21 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             else:
                 raise FileNotFoundError(f'missing required configuration file "{filename}"')
 
+        driver, nems, slurm, adcirc = configurations
+
         forcings = []
         for configuration_class in cls.forcings:
             filename = directory / configuration_class.default_filename
             if filename.exists():
                 forcings.append(configuration_class.from_file(filename))
 
+        nems['models'] = [entry.nemspy_entry for entry in (adcirc, *forcings)
+                          if isinstance(entry, NEMSCapJSON)]
+
         return cls.from_configurations(
-            driver=configurations[0],
-            nems=configurations[1],
-            slurm=configurations[2],
-            adcirc=configurations[3],
+            driver=driver,
+            nems=nems,
+            slurm=slurm,
+            adcirc=adcirc,
             forcings=forcings,
         )
