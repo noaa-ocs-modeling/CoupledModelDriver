@@ -116,6 +116,7 @@ def test_nems_local_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
+        skip_lines=1,
     )
 
 
@@ -199,6 +200,7 @@ def test_nems_hera_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
+        skip_lines=1,
     )
 
 
@@ -282,6 +284,7 @@ def test_nems_stampede2_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
+        skip_lines=1,
     )
 
 
@@ -338,6 +341,7 @@ def test_adcirc_local_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
+        skip_lines=1,
     )
 
 
@@ -394,6 +398,7 @@ def test_adcirc_hera_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
+        skip_lines=1,
     )
 
 
@@ -450,6 +455,7 @@ def test_adcirc_stampede2_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
+        skip_lines=1,
     )
 
 
@@ -515,18 +521,20 @@ def extract_download(
     os.remove(temporary_filename)
 
 
-def check_reference_directory(test_directory: PathLike, reference_directory: PathLike):
+def check_reference_directory(test_directory: PathLike, reference_directory: PathLike, skip_lines: int = None):
     if not isinstance(test_directory, Path):
         test_directory = Path(test_directory)
     if not isinstance(reference_directory, Path):
         reference_directory = Path(reference_directory)
+    if skip_lines is None:
+        skip_lines = 0
 
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
-            check_reference_directory(
-                test_directory / reference_filename.name, reference_filename
-            )
+            check_reference_directory(test_directory / reference_filename.name,
+                                      reference_filename, skip_lines)
         else:
             test_filename = test_directory / reference_filename.name
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
-                assert test_file.readlines()[1:] == reference_file.readlines()[1:], f'{test_filename} != {reference_filename}'
+                assert test_file.readlines()[skip_lines:] == reference_file.readlines()[skip_lines:], \
+                    f'"{test_filename}" != "{reference_filename}"'
