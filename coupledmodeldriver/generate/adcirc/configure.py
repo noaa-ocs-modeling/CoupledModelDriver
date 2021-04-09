@@ -11,7 +11,6 @@ from ...configure.base import ModelDriverJSON, NEMSCapJSON, NEMSJSON, \
 from ...configure.configure import RunConfiguration
 from ...configure.forcings.base import (
     ATMESHForcingJSON,
-    FORCING_SOURCES,
     ForcingJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
@@ -115,16 +114,9 @@ class ADCIRCRunConfiguration(RunConfiguration):
             self.add_forcing(forcing)
 
     def add_forcing(self, forcing: ForcingJSON):
-        if not isinstance(forcing, ForcingJSON):
-            class_name = forcing.__class__.__name__
-            if class_name.upper() in FORCING_SOURCES:
-                forcing = FORCING_SOURCES[class_name.upper()].from_adcircpy(forcing)
-            else:
-                raise NotImplementedError(f'unable to parse object of type {type(forcing)}')
-
         if forcing not in self:
-            self.configurations[forcing.name] = forcing
-            self['adcirc'].forcings.append(forcing)
+            name = self.add(forcing)
+            self['adcirc'].add_forcing(self[name])
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
@@ -246,7 +238,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             sequence=nems_sequence,
         )
 
-        self.configurations[nems.name] = nems
+        self[nems.name] = nems
 
         for forcing in forcings:
             self.add_forcing(forcing)
@@ -258,18 +250,12 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         return self['nems'].nemspy_modeling_system
 
     def add_forcing(self, forcing: Forcing):
-        if not isinstance(forcing, ForcingJSON):
-            class_name = forcing.__class__.__name__
-            if class_name.upper() in FORCING_SOURCES:
-                forcing = FORCING_SOURCES[class_name.upper()].from_adcircpy(forcing)
-            else:
-                raise NotImplementedError(f'unable to parse object of type {type(forcing)}')
+        if forcing not in self:
+            name = self.add(forcing)
+            forcing = self[name]
             if isinstance(forcing, NEMSCapJSON):
                 self['nems']['models'].append(forcing.nemspy_entry)
-
-        if forcing not in self:
-            self[forcing.name] = forcing
-            self['adcirc'].forcings.append(forcing)
+            self['adcirc'].add_forcing(forcing)
 
     @classmethod
     def from_configurations(
@@ -284,7 +270,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             driver=driver, slurm=slurm, adcirc=adcirc, forcings=None,
         )
         instance.__class__ = cls
-        instance.configurations['nems'] = nems
+        instance[nems.name.lower()] = nems
 
         if forcings is not None:
             for forcing in forcings:

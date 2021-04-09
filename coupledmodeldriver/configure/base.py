@@ -15,8 +15,8 @@ from ..utilities import LOGGER, convert_to_json, convert_value
 
 
 class ConfigurationJSON(ABC):
-    name: PathLike
-    default_filename: str
+    name: str
+    default_filename: PathLike
     field_types: {str: type}
 
     def __init__(self, fields: {str: type} = None, configuration: {str: Any} = None):
@@ -59,7 +59,7 @@ class ConfigurationJSON(ABC):
         else:
             field_type = type(value)
             LOGGER.info(
-                f'adding new configuration entry "{key}: {field_type}"' f' to {self.name}"'
+                f'adding new configuration entry "{key}: {field_type}" to {self.name}"'
             )
         self.configuration[key] = convert_value(value, field_type)
         if key not in self.fields:
@@ -163,7 +163,7 @@ class ConfigurationJSON(ABC):
 
 
 class NEMSJSON(ConfigurationJSON):
-    name = 'nems'
+    name = 'NEMS'
     default_filename = f'configure_nems.json'
     field_types = {
         'executable_path': Path,
@@ -263,7 +263,7 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
 
 
 class SlurmJSON(ConfigurationJSON):
-    name = 'slurm'
+    name = 'Slurm'
     default_filename = f'configure_slurm.json'
     field_types = {
         'account': str,
@@ -367,7 +367,7 @@ class SlurmJSON(ConfigurationJSON):
 
 
 class ModelDriverJSON(ConfigurationJSON):
-    name = 'modeldriver'
+    name = 'ModelDriver'
     default_filename = f'configure_modeldriver.json'
     field_types = {
         'platform': Platform,

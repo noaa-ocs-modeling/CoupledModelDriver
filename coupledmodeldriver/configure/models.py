@@ -10,7 +10,7 @@ from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
 from .base import ConfigurationJSON, NEMSCapJSON, SlurmJSON
-from .forcings.base import ForcingJSON
+from .forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
 from ..utilities import LOGGER
 
 
@@ -38,7 +38,7 @@ class GWCESolutionScheme(Enum):
 
 
 class ADCIRCJSON(ModelJSON, NEMSCapJSON):
-    name = 'adcirc'
+    name = 'ADCIRC'
     default_filename = f'configure_adcirc.json'
     field_types = {
         'adcirc_executable_path': Path,
@@ -108,10 +108,10 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param nems_parameters: parameters to give to NEMS cap
         """
 
+        self.__forcings = []
+
         if tidal_spinup_timestep is None:
             tidal_spinup_timestep = modeled_timestep
-        if forcings is None:
-            forcings = []
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(ADCIRCJSON.field_types)
@@ -142,15 +142,41 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self.slurm_configuration = slurm_configuration
 
     @property
-    def forcings(self) -> ['ForcingJSON']:
-        return self.__forcings
+    def forcings(self) -> [ForcingJSON]:
+        return list(self.__forcings)
 
     @forcings.setter
-    def forcings(self, forcings: ['ForcingJSON']):
-        for index, forcing in enumerate(forcings):
-            if isinstance(forcing, Forcing):
-                forcings[index] = ForcingJSON.from_adcircpy(forcing)
-        self.__forcings = forcings
+    def forcings(self, forcings: [ForcingJSON]):
+        if forcings is None:
+            forcings = []
+        for forcing in forcings:
+            self.add_forcing(forcing)
+
+    def add_forcing(self, forcing: ForcingJSON):
+        if isinstance(forcing, str):
+            try:
+                forcing = ForcingJSON.from_file(Path(forcing))
+            except:
+                forcing = ForcingJSON.from_string(forcing)
+        if isinstance(forcing, ADCIRCPY_FORCING_CLASSES):
+            adcircpy_forcing = forcing
+            forcing = ForcingJSON.from_adcircpy(forcing)
+        elif isinstance(forcing, ForcingJSON):
+            adcircpy_forcing = forcing.adcircpy_forcing
+        else:
+            raise NotImplementedError(f'unrecognized forcing type {type(forcing)}')
+
+        existing_forcings = [
+            existing_forcing.__class__.__name__ for existing_forcing in self.adcircpy_forcings
+        ]
+        if adcircpy_forcing.__class__.__name__ in existing_forcings:
+            existing_index = existing_forcings.index(adcircpy_forcing.__class__.__name__)
+        else:
+            existing_index = -1
+        if existing_index > -1:
+            self.__forcings[existing_index] = forcing
+        else:
+            self.__forcings.append(forcing)
 
     @property
     def slurm_configuration(self) -> [SlurmJSON]:
@@ -163,22 +189,25 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self.__slurm_configuration = slurm_configuration
 
     @property
+    def adcircpy_forcings(self) -> [Forcing]:
+        return [forcing.adcircpy_forcing for forcing in self.forcings]
+
+    @property
     def adcircpy_mesh(self) -> AdcircMesh:
         LOGGER.info(f'opening mesh "{self["fort_14_path"]}"')
         mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
-        for forcing in self.forcings:
-            adcircpy_forcing = forcing.adcircpy_forcing
+        for adcircpy_forcing in self.adcircpy_forcings:
             if (
                 isinstance(adcircpy_forcing, Tides)
                 and self['tidal_spinup_duration'] is not None
             ):
                 adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
                 adcircpy_forcing.start_date = self['modeled_start_time']
-                adcircpy_forcing.end_date = self['modeled_end_time']
                 if self['tidal_spinup_duration'] is not None:
                     adcircpy_forcing.start_date -= self['tidal_spinup_duration']
+                adcircpy_forcing.end_date = self['modeled_end_time']
             mesh.add_forcing(adcircpy_forcing)
 
         if self['fort_13_path'] is not None:

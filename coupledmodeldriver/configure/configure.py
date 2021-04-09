@@ -1,13 +1,12 @@
 from abc import ABC
 from os import PathLike
 from pathlib import Path
-from typing import Collection, Mapping, Union
+from typing import Any, Collection, Mapping, Union
 
-from adcircpy.forcing.base import Forcing
 from nemspy.model import ModelEntry
 
 from .base import ConfigurationJSON, NEMSCapJSON
-from .forcings.base import ForcingJSON
+from .forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
 
 
 class RunConfiguration(ABC):
@@ -20,7 +19,7 @@ class RunConfiguration(ABC):
 
     @property
     def configurations(self) -> {str: ConfigurationJSON}:
-        return self.__configurations
+        return list(self.__configurations)
 
     @configurations.setter
     def configurations(self, configurations: {str: ConfigurationJSON}):
@@ -33,27 +32,31 @@ class RunConfiguration(ABC):
     def nemspy_entries(self) -> [ModelEntry]:
         return [
             configuration.nemspy_entry
-            for configuration in self.configurations.values()
+            for configuration in self.__configurations.values()
             if isinstance(configuration, NEMSCapJSON)
         ]
 
     def __contains__(self, configuration: Union[str, ConfigurationJSON]) -> bool:
-        if isinstance(configuration, ConfigurationJSON):
-            configuration = configuration.name
-        return configuration in self.configurations
+        if isinstance(configuration, str):
+            return configuration.lower() in self.__configurations
+        else:
+            if not isinstance(configuration, ConfigurationJSON):
+                configuration = from_user_input(configuration)
+            return configuration in self.__configurations.values()
 
     def __getitem__(self, name: str) -> ConfigurationJSON:
-        return self.configurations[name]
+        return self.__configurations[name.lower()]
 
-    def __setitem__(self, name: str, value: ConfigurationJSON):
-        if isinstance(value, str):
-            if Path(value).exists():
-                value = ConfigurationJSON.from_file(value)
-            else:
-                value = ConfigurationJSON.from_string(value)
-        elif isinstance(value, Forcing):
-            value = ForcingJSON.from_adcircpy(value)
-        self.configurations[name] = value
+    def __setitem__(self, name: str, configuration: ConfigurationJSON):
+        if not isinstance(configuration, ConfigurationJSON):
+            configuration = from_user_input(configuration)
+        self.__configurations[name.lower()] = configuration
+
+    def add(self, configuration: ConfigurationJSON) -> str:
+        if not isinstance(configuration, ConfigurationJSON):
+            configuration = from_user_input(configuration)
+        self.__configurations[configuration.name.lower()] = configuration
+        return configuration.name.lower()
 
     @classmethod
     def read_directory(cls, directory: PathLike) -> 'RunConfiguration':
@@ -91,3 +94,14 @@ class RunConfiguration(ABC):
 
         for configuration in self.__configurations.values():
             configuration.to_file(directory, overwrite=overwrite)
+
+
+def from_user_input(value: Any) -> ConfigurationJSON:
+    if isinstance(value, str):
+        if Path(value).exists():
+            value = ConfigurationJSON.from_file(value)
+        else:
+            value = ConfigurationJSON.from_string(value)
+    elif isinstance(value, ADCIRCPY_FORCING_CLASSES):
+        value = ForcingJSON.from_adcircpy(value)
+    return value

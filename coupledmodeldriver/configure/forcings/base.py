@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
+import sys
 
 from adcircpy import Tides
 from adcircpy.forcing.base import Forcing
@@ -16,6 +17,16 @@ from nemspy.model import AtmosphericMeshEntry, WaveMeshEntry
 from ..base import ConfigurationJSON, NEMSCapJSON
 from ...utilities import LOGGER
 
+ADCIRCPY_FORCINGS = {
+    'Tides': 'TidalForcingJSON',
+    'AtmosphericMeshForcing': 'ATMESHForcingJSON',
+    'BestTrackForcing': 'BestTrackForcingJSON',
+    'OWIForcing': 'OWIForcingJSON',
+    'WaveWatch3DataForcing': 'WW3DATAForcingJSON',
+}
+
+ADCIRCPY_FORCING_CLASSES = (Forcing, Tides)
+
 
 class ForcingJSON(ConfigurationJSON, ABC):
     @property
@@ -29,7 +40,14 @@ class ForcingJSON(ConfigurationJSON, ABC):
     @classmethod
     @abstractmethod
     def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
-        raise NotImplementedError()
+        forcing_class_name = forcing.__class__.__name__
+        if forcing_class_name in ADCIRCPY_FORCINGS:
+            configuration_class = getattr(
+                sys.modules[__name__], ADCIRCPY_FORCINGS[forcing_class_name]
+            )
+            return configuration_class.from_adcircpy(forcing)
+        else:
+            raise NotImplementedError()
 
 
 class TimestepForcingJSON(ForcingJSON, ABC):
@@ -68,8 +86,8 @@ class FileForcingJSON(ForcingJSON, ABC):
 
 
 class TidalForcingJSON(FileForcingJSON):
-    name = 'tidal_forcing'
-    default_filename = f'configure_tidal_forcing.json'
+    name = 'TidalForcing'
+    default_filename = f'configure_tidalforcing.json'
     field_types = {'tidal_source': TidalSource, 'constituents': [str]}
 
     def __init__(
@@ -148,7 +166,7 @@ class WindForcingJSON(ForcingJSON, ABC):
 
 
 class BestTrackForcingJSON(WindForcingJSON):
-    name = 'besttrack'
+    name = 'BestTrack'
     default_filename = f'configure_besttrack.json'
     field_types = {
         'storm_id': str,
@@ -189,7 +207,7 @@ class BestTrackForcingJSON(WindForcingJSON):
 
 
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
-    name = 'owi'
+    name = 'OWI'
     default_filename = f'configure_owi.json'
 
     def __init__(self, modeled_timestep: timedelta = timedelta(hours=1), **kwargs):
@@ -206,7 +224,7 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
 
 
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
-    name = 'atmesh'
+    name = 'ATMESH'
     default_filename = f'configure_atmesh.json'
 
     def __init__(
@@ -260,7 +278,7 @@ class WaveForcingJSON(ForcingJSON, ABC):
 
 
 class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
-    name = 'ww3data'
+    name = 'WW3DATA'
     default_filename = f'configure_ww3data.json'
 
     def __init__(
@@ -298,12 +316,3 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         return WaveMeshEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
         )
-
-
-FORCING_SOURCES = {
-    'TIDES': TidalForcingJSON,
-    'ATMOSPHERICMESHFORCING': ATMESHForcingJSON,
-    'BESTTRACKFORCING': BestTrackForcingJSON,
-    'OWIFORCING': OWIForcingJSON,
-    'WAVEWATCH3DATAFORCING': WW3DATAForcingJSON,
-}
