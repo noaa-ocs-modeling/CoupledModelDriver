@@ -1,13 +1,19 @@
 from argparse import ArgumentParser
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
 
-from adcircpy import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure.forcings.base import FORCING_SOURCES, \
-    FileForcingJSON
+from coupledmodeldriver.configure.forcings.base import (
+    ATMESHForcingJSON,
+    BestTrackForcingJSON,
+    FileForcingJSON,
+    OWIForcingJSON,
+    TidalForcingJSON,
+    WW3DATAForcingJSON,
+)
 from coupledmodeldriver.generate import (
     ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
@@ -15,6 +21,20 @@ from coupledmodeldriver.generate import (
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.utilities import convert_value
+
+
+class ForcingConfigurations(Enum):
+    tidal = TidalForcingJSON
+    atmesh = ATMESHForcingJSON
+    besttrack = BestTrackForcingJSON
+    owi = OWIForcingJSON
+    ww3data = WW3DATAForcingJSON
+
+
+FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)
+
+DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
+DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
 def main():
@@ -45,17 +65,9 @@ def main():
         '--tidal-spinup-duration', default=None, help='spinup time for ADCIRC tidal coldstart'
     )
     argument_parser.add_argument(
-        '--tidal-forcing-source',
-        default='TPXO',
-        help=f'source of tidal forcing (can be one of `{[entry.name for entry in TidalSource]}`)',
-    )
-    argument_parser.add_argument(
-        '--tidal-forcing-path', default=None, help='resource path for tidal forcing'
-    )
-    argument_parser.add_argument(
         '--forcings',
         default=None,
-        help=f'comma-separated list of forcings to configure, from {list(FORCING_SOURCES)}',
+        help=f'comma-separated list of forcings to configure, from {FORCING_NAMES}',
     )
     argument_parser.add_argument(
         '--adcirc-executable',
@@ -72,7 +84,7 @@ def main():
         '--job-duration', default='06:00:00', help='wall clock time for job'
     )
     argument_parser.add_argument(
-        '--directory',
+        '--output-directory',
         default=Path().cwd(),
         help='directory to which to write configuration files',
     )
@@ -85,7 +97,7 @@ def main():
         '--skip-existing', action='store_true', help='skip existing files',
     )
 
-    arguments = argument_parser.parse_args()
+    arguments, extra_arguments = argument_parser.parse_known_args()
 
     platform = convert_value(arguments.platform, Platform)
     mesh_directory = convert_value(arguments.mesh_directory, Path)
@@ -100,8 +112,6 @@ def main():
     modulefile = convert_value(arguments.modulefile, Path)
 
     tidal_spinup_duration = convert_value(arguments.tidal_spinup_duration, timedelta)
-    tidal_source = convert_value(arguments.tidal_forcing_source, TidalSource)
-    tidal_forcing_path = convert_value(arguments.tidal_forcing_path, Path)
     forcings = arguments.forcings
     if forcings is not None:
         forcings = [forcing.strip() for forcing in forcings.split(',')]
@@ -112,29 +122,90 @@ def main():
     adcprep_executable = convert_value(arguments.adcprep_executable, Path)
 
     job_duration = convert_value(arguments.job_duration, timedelta)
-    directory = convert_value(arguments.directory, Path)
+    output_directory = convert_value(arguments.output_directory, Path)
 
     overwrite = not arguments.skip_existing
 
+    generate_script = arguments.generate_script
+
+    arguments = {}
+    for index in range(len(extra_arguments)):
+        argument = extra_arguments[index]
+        value = None
+        if argument.startswith('-'):
+            argument = argument.strip('-').strip()
+            if not extra_arguments[index + 1].startswith('-'):
+                value = extra_arguments[index + 1].strip()
+        arguments[argument] = value
+    extra_arguments = arguments
+    del arguments
+
     # initialize `adcircpy` forcing objects
-    adcircpy_forcings = []
-
-    if tidal_spinup_duration is not None:
-        tidal_forcing = Tides(tidal_source=tidal_source, resource=tidal_forcing_path)
-        tidal_forcing.use_all()
-        adcircpy_forcings.append(tidal_forcing)
-
-    for forcing in forcings:
-        if forcing.upper() in FORCING_SOURCES:
-            forcing_class = FORCING_SOURCES[forcing.upper()]
+    forcing_configurations = []
+    for provided_name in forcings:
+        if provided_name.lower() in FORCING_NAMES:
+            forcing_configuration_class = ForcingConfigurations[provided_name.lower()].value
             kwargs = {}
-            if issubclass(forcing_class, FileForcingJSON):
-                kwargs['resource'] = input(f'enter "{forcing_class.name}" resource path: ')
-            forcing = forcing_class(**kwargs)
-            adcircpy_forcings.append(forcing)
+            if issubclass(forcing_configuration_class, TidalForcingJSON):
+                if tidal_spinup_duration is None:
+                    tidal_spinup_duration = input('enter tidal spinup time (`HH:MM:SS`): ')
+                    if len(tidal_spinup_duration.strip()) == 0:
+                        tidal_spinup_duration = None
+                    else:
+                        tidal_spinup_duration = convert_value(tidal_spinup_duration, timedelta)
+
+                if tidal_spinup_duration is not None:
+                    argument = f'{provided_name}-source'
+                    if argument in extra_arguments:
+                        tidal_source = extra_arguments[argument]
+                    else:
+                        tidal_source_options_string = '/'.join(
+                            tidal_source.name
+                            if tidal_source != DEFAULT_TIDAL_SOURCE
+                            else '[' + DEFAULT_TIDAL_SOURCE.name + ']'
+                            for tidal_source in TidalSource
+                        )
+                        tidal_source = input(
+                            f'enter tidal forcing source ({tidal_source_options_string}): '
+                        )
+                    if len(tidal_source.strip()) == 0:
+                        tidal_source = None
+                    else:
+                        tidal_source = convert_value(tidal_source, TidalSource)
+                    if tidal_source is None:
+                        tidal_source = DEFAULT_TIDAL_SOURCE
+
+                    argument = f'{provided_name}-constituents'
+                    if argument in extra_arguments:
+                        tidal_constituents = extra_arguments[argument]
+                    else:
+                        tidal_constituents = ''
+                    if len(tidal_constituents.strip()) == 0:
+                        tidal_constituents = None
+                    else:
+                        tidal_constituents = [
+                            entry.strip() for entry in tidal_constituents.split(',')
+                        ]
+                    if tidal_constituents is None:
+                        tidal_constituents = DEFAULT_TIDAL_CONSTITUENTS
+                else:
+                    tidal_source = None
+                    tidal_constituents = None
+                kwargs['tidal_source'] = tidal_source
+                kwargs['constituents'] = tidal_constituents
+            if issubclass(forcing_configuration_class, FileForcingJSON):
+                argument = f'{provided_name}-path'
+                if argument in extra_arguments:
+                    forcing_path = extra_arguments[argument]
+                else:
+                    forcing_path = input(
+                        f'enter resource path for ' f'"{forcing_configuration_class.name}": '
+                    )
+                kwargs['resource'] = forcing_path
+            forcing_configurations.append(forcing_configuration_class(**kwargs))
         else:
             raise NotImplementedError(
-                f'unrecognized forcing "{forcing}"; must be one of {list(FORCING_SOURCES)}'
+                f'unrecognized forcing "{provided_name}"; ' f'must be from {FORCING_NAMES}'
             )
 
     fort13_filename = mesh_directory / 'fort.13'
@@ -157,7 +228,7 @@ def main():
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
             runs=None,
-            forcings=adcircpy_forcings,
+            forcings=forcing_configurations,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -177,7 +248,7 @@ def main():
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
             runs=None,
-            forcings=adcircpy_forcings,
+            forcings=forcing_configurations,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -188,10 +259,12 @@ def main():
         )
         generation_script = ADCIRCGenerationScript()
 
-    configuration.write_directory(directory=directory, overwrite=overwrite)
+    configuration.write_directory(directory=output_directory, overwrite=overwrite)
 
-    if arguments.generate_script:
-        generation_script.write(filename=directory / 'generate_adcirc.py', overwrite=overwrite)
+    if generate_script:
+        generation_script.write(
+            filename=output_directory / 'generate_adcirc.py', overwrite=overwrite
+        )
 
 
 if __name__ == '__main__':

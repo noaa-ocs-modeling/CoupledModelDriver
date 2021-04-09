@@ -144,19 +144,21 @@ Alternatively, you may use the command-line interface:
 initialize_adcirc \
     --platform HERA \
     --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 \
+    --output-directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data \
     --modeled-start-time 20080823 \
     --modeled-duration 14:06:00:00 \
     --modeled-timestep 00:00:02 \
     --nems-interval 01:00:00 \
     --tidal-spinup-duration 12:06:00:00 \
-    --tidal-forcing-source TPXO \
-    --tidal-forcing-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc \
-    --forcings AtmosphericMeshForcing,WaveWatch3DataForcing \
     --adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x \
     --adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep \
     --modulefile /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera \
-    --directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data \
-    --generate-script
+    --generate-script \
+    --forcings tidal,atmesh,ww3data \
+    --tidal-source TPXO \
+    --tidal-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc \
+    --atmesh-path /scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike/wind_atm_fin_ch_time_vec.nc \
+    --ww3data-path /scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike/ww3.Constant.20151214_sxy_ike_date.nc
 ```
 
 Either method will create the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/` and generate the following JSON
