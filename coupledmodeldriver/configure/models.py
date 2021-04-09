@@ -92,7 +92,6 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param modeled_timestep: time interval between model steps
         :param fort_13_path: file path to `fort.13`
         :param fort_14_path: file path to `fort.14`
-        :param fort_14_path: file path to `fort.14`
         :param tidal_spinup_duration: tidal spinup duration for ADCIRC coldstart
         :param tidal_spinup_timestep: tidal spinup modeled time interval for ADCIRC coldstart
         :param forcings: list of Forcing objects to apply to the mesh
