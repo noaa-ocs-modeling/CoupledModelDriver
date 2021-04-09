@@ -7,7 +7,8 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import ADCIRCGenerationScript, ADCIRCRunConfiguration
+from coupledmodeldriver.generate import ADCIRCGenerationScript, \
+    ADCIRCRunConfiguration
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem

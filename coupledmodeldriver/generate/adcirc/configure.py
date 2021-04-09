@@ -6,7 +6,8 @@ from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.base import Forcing
 from nemspy import ModelingSystem
 
-from ...configure.base import ModelDriverJSON, NEMSCapJSON, NEMSJSON, SlurmJSON
+from ...configure.base import ModelDriverJSON, NEMSCapJSON, NEMSJSON, \
+    SlurmJSON
 from ...configure.configure import RunConfiguration
 from ...configure.forcings.base import (
     ATMESHForcingJSON,

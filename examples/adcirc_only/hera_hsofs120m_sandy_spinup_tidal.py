@@ -5,7 +5,8 @@ from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import ADCIRCGenerationScript, ADCIRCRunConfiguration
+from coupledmodeldriver.generate import ADCIRCGenerationScript, \
+    ADCIRCRunConfiguration
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
