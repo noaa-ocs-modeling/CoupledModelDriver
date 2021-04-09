@@ -254,3 +254,78 @@ The queue will have the following jobs added:
 16368046 ADCIRC_MESH_PARTITION    1    1  afterany:16368045(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
 16368047       ADCIRC_HOTSTART   13    1  afterany:16368046(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
 ```
+
+## Command-line interface
+
+`coupledmodeldriver` exposes the following CLI commands:
+
+- `initialize_adcirc`
+- `generate_adcirc`
+
+### Initialize ADCIRC configuration (`initialize_adcirc`)
+
+`initialize_adcirc` creates JSON configuration files according to the given parameters.
+
+```
+usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME
+                         --modeled-duration MODELED_DURATION --modeled-timestep MODELED_TIMESTEP [--nems-interval NEMS_INTERVAL]
+                         [--modulefile MODULEFILE] [--tidal-spinup-duration TIDAL_SPINUP_DURATION] [--forcings FORCINGS]
+                         [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
+                         [--adcirc-processors ADCIRC_PROCESSORS] [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY]
+                         [--generate-script] [--skip-existing]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --platform PLATFORM   HPC platform for which to configure
+  --mesh-directory MESH_DIRECTORY
+                        path to input mesh (`fort.13`, `fort.14`)
+  --modeled-start-time MODELED_START_TIME
+                        start time within the modeled system
+  --modeled-duration MODELED_DURATION
+                        end time within the modeled system
+  --modeled-timestep MODELED_TIMESTEP
+                        time interval within the modeled system
+  --nems-interval NEMS_INTERVAL
+                        main loop interval of NEMS run
+  --modulefile MODULEFILE
+                        path to module file to `source`
+  --tidal-spinup-duration TIDAL_SPINUP_DURATION
+                        spinup time for ADCIRC tidal coldstart
+  --forcings FORCINGS   comma-separated list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi', 'ww3data']
+  --adcirc-executable ADCIRC_EXECUTABLE
+                        filename of compiled `adcirc` or `NEMS.x`
+  --adcprep-executable ADCPREP_EXECUTABLE
+                        filename of compiled `adcprep`
+  --adcirc-processors ADCIRC_PROCESSORS
+                        numbers of processors to assign for ADCIRC
+  --job-duration JOB_DURATION
+                        wall clock time for job
+  --output-directory OUTPUT_DIRECTORY
+                        directory to which to write configuration files
+  --generate-script     write a Python script to load configuration
+  --skip-existing       skip existing files
+```
+
+ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly
+modifying the JSON files.
+
+### Generate ADCIRC configuration (`generate_adcirc`)
+
+`generate_adcirc` reads a set of JSON configuration files and generates an ADCIRC run configuration from the options read from
+these files.
+
+```
+usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY]
+                       [--skip-existing] [--verbose]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --configuration-directory CONFIGURATION_DIRECTORY
+                        path containing JSON configuration files
+  --output-directory OUTPUT_DIRECTORY
+                        path to store generated configuration files
+  --skip-existing       skip existing files
+  --verbose             show more verbose log messages
+```
+
+After this configuration is generated, the model can be started by executing the `run_<platform>.sh` script.
