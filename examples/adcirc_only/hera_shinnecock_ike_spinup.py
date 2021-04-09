@@ -9,7 +9,7 @@ from coupledmodeldriver.generate import ADCIRCGenerationScript, \
 
 # paths to compiled `NEMS.x` and `adcprep`
 ADCIRC_EXECUTABLE = (
-    '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcirc'
+    '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/padcirc'
 )
 ADCPREP_EXECUTABLE = (
     '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
