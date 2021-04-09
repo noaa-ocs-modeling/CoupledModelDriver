@@ -53,10 +53,10 @@ def test_nems_adcirc_local_shinnecock_ike():
     forcings_directory = input_directory / 'forcings'
 
     output_directory = (
-        Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+        Path('.') / 'output' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
     reference_directory = (
-        Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+        Path('.') / 'reference' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
     runs = {f'test_case_1': None}
@@ -137,10 +137,10 @@ def test_nems_adcirc_hera_shinnecock_ike():
     forcings_directory = input_directory / 'forcings'
 
     output_directory = (
-        Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+        Path('.') / 'output' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
     reference_directory = (
-        Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+        Path('.') / 'reference' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
     runs = {f'test_case_1': None}
@@ -221,10 +221,10 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
     forcings_directory = input_directory / 'forcings'
 
     output_directory = (
-        Path('.') / 'output' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+        Path('.') / 'output' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
     reference_directory = (
-        Path('.') / 'reference' / 'nems' / f'{platform.name.lower()}_{mesh}_{storm}'
+        Path('.') / 'reference' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
     runs = {f'test_case_1': None}
