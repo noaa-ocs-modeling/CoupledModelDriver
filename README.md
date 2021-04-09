@@ -141,7 +141,22 @@ generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=
 Alternatively, you may use the command-line interface:
 
 ```bash
-initialize_adcirc --platform HERA --mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 --modeled-start-time 20080823 --modeled-duration 14:06:00:00 --modeled-timestep 00:00:02 --nems-interval 01:00:00 --tidal-spinup-duration 12:06:00:00 --tidal-forcing-source TPXO --tidal-forcing-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc --forcings AtmosphericMeshForcing,WaveWatch3DataForcing --directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data --generate-script
+initialize_adcirc \
+--platform HERA \
+--mesh-directory ../../../../models/meshes/hsofs/250m/v1.0 \
+--modeled-start-time 20080823 \
+--modeled-duration 14:06:00:00 \
+--modeled-timestep 00:00:02 \
+--nems-interval 01:00:00 \
+--tidal-spinup-duration 12:06:00:00 \
+--tidal-forcing-source TPXO \
+--tidal-forcing-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc \
+--forcings AtmosphericMeshForcing,WaveWatch3DataForcing \
+--adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x \
+--adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep \
+--modulefile /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera \
+--directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data \
+--generate-script
 ```
 
 Either method will create the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/` and generate the following JSON
