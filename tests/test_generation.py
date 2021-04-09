@@ -36,7 +36,7 @@ MESH_URLS = {
 }
 
 
-def test_nems_local_shinnecock_ike():
+def test_nems_adcirc_local_shinnecock_ike():
     platform = Platform.LOCAL
     mesh = 'shinnecock'
     storm = 'ike'
@@ -120,7 +120,7 @@ def test_nems_local_shinnecock_ike():
     )
 
 
-def test_nems_hera_shinnecock_ike():
+def test_nems_adcirc_hera_shinnecock_ike():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -204,7 +204,7 @@ def test_nems_hera_shinnecock_ike():
     )
 
 
-def test_nems_stampede2_shinnecock_ike():
+def test_nems_adcirc_stampede2_shinnecock_ike():
     platform = Platform.STAMPEDE2
     mesh = 'shinnecock'
     storm = 'ike'
