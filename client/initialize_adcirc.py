@@ -135,7 +135,9 @@ def main():
         value = None
         if argument.startswith('-'):
             parsed_argument = argument.strip('-').strip()
-            if len(extra_arguments) > index + 1 and not extra_arguments[index + 1].startswith('-'):
+            if len(extra_arguments) > index + 1 and not extra_arguments[index + 1].startswith(
+                '-'
+            ):
                 value = extra_arguments[index + 1].strip()
             forcing = parsed_argument.split('-')[0]
             if forcing not in forcings:
@@ -219,16 +221,9 @@ def main():
                 f'unrecognized forcing "{provided_name}"; ' f'must be from {FORCING_NAMES}'
             )
 
-    fort13_filename = mesh_directory / 'fort.13'
-    fort14_filename = mesh_directory / 'fort.14'
-
-    if not fort13_filename.exists():
-        fort13_filename = None
-
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
-            fort13=fort13_filename,
-            fort14=fort14_filename,
+            mesh_directory=mesh_directory,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
@@ -251,8 +246,7 @@ def main():
         generation_script = NEMSADCIRCGenerationScript()
     else:
         configuration = ADCIRCRunConfiguration(
-            fort13=fort13_filename,
-            fort14=fort14_filename,
+            mesh_directory=mesh_directory,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
@@ -270,11 +264,13 @@ def main():
         )
         generation_script = ADCIRCGenerationScript()
 
-    configuration.write_directory(directory=output_directory, overwrite=overwrite)
+    configuration.write_directory(
+        directory=output_directory, overwrite=overwrite,
+    )
 
     if generate_script:
         generation_script.write(
-            filename=output_directory / 'generate_adcirc.py', overwrite=overwrite
+            filename=output_directory / 'generate_adcirc.py', overwrite=overwrite,
         )
 
 
