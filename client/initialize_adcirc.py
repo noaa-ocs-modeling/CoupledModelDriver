@@ -129,14 +129,25 @@ def main():
     generate_script = arguments.generate_script
 
     arguments = {}
+    unrecognized_arguments = []
     for index in range(len(extra_arguments)):
         argument = extra_arguments[index]
         value = None
         if argument.startswith('-'):
-            argument = argument.strip('-').strip()
-            if not extra_arguments[index + 1].startswith('-'):
+            parsed_argument = argument.strip('-').strip()
+            if len(extra_arguments) > index + 1 and not extra_arguments[index + 1].startswith('-'):
                 value = extra_arguments[index + 1].strip()
-        arguments[argument] = value
+            forcing = parsed_argument.split('-')[0]
+            if forcing not in forcings:
+                if forcing.lower() in FORCING_NAMES:
+                    forcings.append(forcing.lower())
+                else:
+                    unrecognized_arguments.append(argument)
+            arguments[parsed_argument] = value
+
+    if len(unrecognized_arguments) > 0:
+        argument_parser.error(f'unrecognized arguments: {" ".join(unrecognized_arguments)}')
+
     extra_arguments = arguments
     del arguments
 
