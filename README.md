@@ -38,7 +38,7 @@ The following command creates a configuration for coupling `(ATMESH + WW3DATA) -
 ```bash
 initialize_adcirc \
     --platform HERA \
-    --mesh-directory ../../../../models/meshes/shinnecock/v1.0 \
+    --mesh-directory /scratch2/COASTAL/coastal/save/shared/models/meshes/shinnecock/v1.0 \
     --output-directory hera_shinnecock_ike_spinup_tidal_atmesh_ww3data \
     --modeled-start-time 20080823 \
     --modeled-duration 14:06:00:00 \
