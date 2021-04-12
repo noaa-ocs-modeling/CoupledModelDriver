@@ -175,14 +175,9 @@ def main():
                     if argument in extra_arguments:
                         tidal_source = extra_arguments[argument]
                     else:
-                        tidal_source_options_string = '/'.join(
-                            tidal_source.name
-                            if tidal_source != DEFAULT_TIDAL_SOURCE
-                            else '[' + DEFAULT_TIDAL_SOURCE.name + ']'
-                            for tidal_source in TidalSource
-                        )
                         tidal_source = input(
-                            f'enter tidal forcing source ({tidal_source_options_string}): '
+                            f'enter tidal forcing source '
+                            f'({"/".join(tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE else tidal_source.name.upper() for tidal_source in TidalSource)}): '
                         )
                     if len(tidal_source.strip()) == 0:
                         tidal_source = None
