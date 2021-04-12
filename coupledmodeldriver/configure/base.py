@@ -152,7 +152,7 @@ class ConfigurationJSON(ABC):
 
         for key, value in self.configuration.items():
             if isinstance(value, Path):
-                if not value.is_absolute():
+                if not os.path.isabs(value):
                     value = value.absolute()
                     try:
                         value = Path(os.path.relpath(value, filename.absolute().parent))

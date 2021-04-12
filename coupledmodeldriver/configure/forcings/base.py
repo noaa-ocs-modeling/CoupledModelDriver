@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from os import PathLike
+import os.path
 from pathlib import Path
 import sys
 
@@ -83,6 +84,21 @@ class FileForcingJSON(ForcingJSON, ABC):
         ForcingJSON.__init__(self, **kwargs)
 
         self['resource'] = resource
+
+    def to_file(self, filename: PathLike = None, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / self.default_filename
+
+        try:
+            if Path(self['resource']).exists():
+                self['resource'] = Path(os.path.relpath(self['resource'], filename.parent)).as_posix()
+        except:
+            pass
+
+        super().to_file(filename=filename, overwrite=overwrite)
 
 
 class TidalForcingJSON(FileForcingJSON):

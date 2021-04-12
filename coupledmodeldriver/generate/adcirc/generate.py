@@ -42,7 +42,7 @@ def generate_adcirc_configuration(
         os.makedirs(output_directory, exist_ok=True)
 
     output_directory = output_directory.resolve()
-    if not output_directory.is_absolute():
+    if not os.path.isabs(output_directory):
         output_directory = output_directory.absolute()
 
     starting_directory = Path.cwd()
@@ -311,7 +311,7 @@ def generate_nems_adcirc_configuration(
         os.makedirs(output_directory, exist_ok=True)
 
     output_directory = output_directory.resolve()
-    if not output_directory.is_absolute():
+    if not os.path.isabs(output_directory):
         output_directory = output_directory.absolute()
 
     starting_directory = Path.cwd()
