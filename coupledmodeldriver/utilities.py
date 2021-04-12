@@ -103,7 +103,7 @@ def create_symlink(
         os.chdir(symlink_filename.parent)
         if os.path.isabs(source_filename):
             try:
-                source_filename = Path(os.path.relpath(source_filename, symlink_filename))
+                source_filename = Path(os.path.relpath(source_filename, symlink_filename.parent))
             except ValueError as error:
                 LOGGER.warning(error)
                 os.chdir(starting_directory)
