@@ -106,53 +106,18 @@ class AdcircMeshPartitionJob(AdcircJob):
 
 
 class ADCIRCGenerationScript(Script):
-    """ Python script for generating ADCIRC NEMS configurations """
+    """ Bash script for generating an ADCIRC run configuration from JSON files """
 
     def __init__(self, commands: [str] = None):
         super().__init__(commands)
 
-    def __str__(self):
-        lines = [
-            'from pathlib import Path',
-            '',
-            'from coupledmodeldriver.generate import generate_adcirc_configuration',
-            '',
-            '',
-            "if __name__ == '__main__':",
-            '    generate_adcirc_configuration(output_directory=Path(__file__).parent, overwrite=True)',
-        ]
-
-        return '\n'.join(lines)
+        self.commands.append('generate_adcirc')
 
     def write(self, filename: PathLike, overwrite: bool = False):
         if not isinstance(filename, Path):
             filename = Path(filename)
 
         if filename.is_dir():
-            filename = filename / f'generate_adcirc.py'
-
-        super().write(filename, overwrite)
-
-
-class NEMSADCIRCGenerationScript(ADCIRCGenerationScript):
-    def __str__(self):
-        lines = [
-            'from pathlib import Path',
-            '',
-            'from coupledmodeldriver.generate import generate_nems_adcirc_configuration',
-            '',
-            '',
-            "if __name__ == '__main__':",
-            '    generate_nems_adcirc_configuration(output_directory=Path(__file__).parent, overwrite=True)',
-        ]
-
-        return '\n'.join(lines)
-
-    def write(self, filename: PathLike, overwrite: bool = False):
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / f'generate_nems_adcirc.py'
+            filename = filename / f'generate.sh'
 
         super().write(filename, overwrite)

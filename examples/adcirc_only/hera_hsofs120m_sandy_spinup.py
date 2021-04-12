@@ -47,8 +47,7 @@ if __name__ == '__main__':
         adcprep_executable=ADCPREP_EXECUTABLE,
         source_filename=MODULEFILE,
     )
-
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
 
     generation_script = ADCIRCGenerationScript()
-    generation_script.write(OUTPUT_DIRECTORY / 'generate_adcirc.py', overwrite=True)
+    generation_script.write(OUTPUT_DIRECTORY, overwrite=True)

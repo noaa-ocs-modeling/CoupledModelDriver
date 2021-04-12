@@ -1,3 +1,3 @@
 from .configure import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration
 from .generate import generate_adcirc_configuration, generate_nems_adcirc_configuration
-from .script import ADCIRCGenerationScript, NEMSADCIRCGenerationScript
+from .script import ADCIRCGenerationScript

@@ -9,8 +9,7 @@ import numpy
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.generate import (
-    NEMSADCIRCGenerationScript,
-    NEMSADCIRCRunConfiguration,
+    ADCIRCGenerationScript, NEMSADCIRCRunConfiguration,
 )
 
 # directory to which to write configuration
@@ -100,5 +99,5 @@ if __name__ == '__main__':
 
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
 
-    generation_script = NEMSADCIRCGenerationScript()
-    generation_script.write(OUTPUT_DIRECTORY / 'generate_nems_adcirc.py', overwrite=True)
+    generation_script = ADCIRCGenerationScript()
+    generation_script.write(OUTPUT_DIRECTORY, overwrite=True)

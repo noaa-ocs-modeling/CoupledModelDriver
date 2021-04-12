@@ -17,7 +17,6 @@ from coupledmodeldriver.configure.forcings.base import (
 from coupledmodeldriver.generate import (
     ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
-    NEMSADCIRCGenerationScript,
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.utilities import convert_value
@@ -86,7 +85,7 @@ def main():
     argument_parser.add_argument(
         '--output-directory',
         default=Path().cwd(),
-        help='directory to which to write configuration files',
+        help='directory to which to write configuration files (defaults to `.`)',
     )
     argument_parser.add_argument(
         '--generate-script',
@@ -241,7 +240,6 @@ def main():
             adcprep_executable=adcprep_executable,
             source_filename=modulefile,
         )
-        generation_script = NEMSADCIRCGenerationScript()
     else:
         configuration = ADCIRCRunConfiguration(
             mesh_directory=mesh_directory,
@@ -260,16 +258,14 @@ def main():
             adcprep_executable=adcprep_executable,
             source_filename=modulefile,
         )
-        generation_script = ADCIRCGenerationScript()
 
     configuration.write_directory(
         directory=output_directory, overwrite=overwrite,
     )
 
     if generate_script:
-        generation_script.write(
-            filename=output_directory / 'generate_adcirc.py', overwrite=overwrite,
-        )
+        generation_script = ADCIRCGenerationScript()
+        generation_script.write(filename=output_directory, overwrite=overwrite)
 
 
 if __name__ == '__main__':

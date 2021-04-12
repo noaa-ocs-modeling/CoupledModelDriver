@@ -1,4 +1,3 @@
-from abc import ABC
 from datetime import timedelta
 from enum import Enum
 from os import PathLike
@@ -28,7 +27,7 @@ class SlurmEmailType(Enum):
     ARRAY_TASKS = 'ARRAY_TASKS'  # send emails for each array task
 
 
-class Script(ABC):
+class Script:
     shebang = '#!/bin/bash --login'
 
     def __init__(self, commands: [str]):
