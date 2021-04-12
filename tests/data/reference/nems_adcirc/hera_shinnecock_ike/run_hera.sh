@@ -16,4 +16,4 @@ done
 
 # display job queue with dependencies
 squeue -u $USER -o "%.8i %3C %4D %97Z %15j" --sort i
-echo squeue -u $USER -o \"%.8i %3C %4D %97Z %15j\"
+echo squeue -u $USER -o \"%.8i %3C %4D %97Z %15j\" --sort i
