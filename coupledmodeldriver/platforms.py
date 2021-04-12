@@ -21,7 +21,7 @@ class Platform(Enum):
     LOCAL = {
         'source_filename': None,
         'processors_per_node': 1,
-        'launcher': '',
+        'launcher': None,
         'uses_slurm': False,
         'slurm_account': None,
         'default_partition': None,
