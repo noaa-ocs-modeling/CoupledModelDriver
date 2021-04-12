@@ -33,6 +33,13 @@ def generate_adcirc_configuration(
     if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
 
+    starting_directory = Path.cwd()
+    if configuration_directory != starting_directory:
+        os.chdir(configuration_directory)
+        configuration_directory = Path.cwd()
+    else:
+        starting_directory = None
+
     if output_directory is None:
         output_directory = configuration_directory
     elif not isinstance(output_directory, Path):
@@ -47,12 +54,6 @@ def generate_adcirc_configuration(
         output_directory = output_directory.resolve().relative_to(Path().cwd())
 
     coupled_configuration = ADCIRCRunConfiguration.read_directory(configuration_directory)
-
-    starting_directory = Path.cwd()
-    if configuration_directory != starting_directory:
-        os.chdir(configuration_directory)
-    else:
-        starting_directory = None
 
     runs = coupled_configuration['modeldriver']['runs']
     platform = coupled_configuration['modeldriver']['platform']
@@ -291,6 +292,13 @@ def generate_nems_adcirc_configuration(
     if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
 
+    starting_directory = Path.cwd()
+    if configuration_directory != starting_directory:
+        os.chdir(configuration_directory)
+        configuration_directory = Path.cwd()
+    else:
+        starting_directory = None
+
     if output_directory is None:
         output_directory = configuration_directory
     elif not isinstance(output_directory, Path):
@@ -305,12 +313,6 @@ def generate_nems_adcirc_configuration(
         output_directory = output_directory.resolve().relative_to(Path().cwd())
 
     coupled_configuration = NEMSADCIRCRunConfiguration.read_directory(configuration_directory)
-
-    starting_directory = Path.cwd()
-    if configuration_directory != starting_directory:
-        os.chdir(configuration_directory)
-    else:
-        starting_directory = None
 
     runs = coupled_configuration['modeldriver']['runs']
     platform = coupled_configuration['modeldriver']['platform']
