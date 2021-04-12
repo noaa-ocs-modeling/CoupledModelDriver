@@ -9,8 +9,8 @@ from coupledmodeldriver.generate import ADCIRCGenerationScript, \
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
 
 # start and end times for model
-MODELED_START_TIME = datetime(year=2008, month=8, day=23)
-MODELED_DURATION = timedelta(days=14.5)
+MODELED_START_TIME = datetime(year=2012, month=10, day=22, hour=6)
+MODELED_DURATION = timedelta(days=4, hours=5)
 MODELED_TIMESTEP = timedelta(seconds=2)
 TIDAL_SPINUP_DURATION = timedelta(days=12.5)
 
