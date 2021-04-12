@@ -148,50 +148,54 @@ def generate_adcirc_configuration(
         LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
         coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
-    if tidal_spinup_duration is not None:
-        hotstart_run_script = AdcircRunJob(
-            platform=platform,
-            slurm_tasks=adcirc_processors,
-            slurm_account=slurm_account,
-            slurm_duration=job_duration,
-            slurm_run_name=adcirc_hotstart_run_name,
-            executable=adcirc_executable_path,
-            slurm_partition=partition,
-            slurm_email_type=email_type,
-            slurm_email_address=email_address,
-            slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
-            slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
-            source_filename=source_filename,
-        )
+    hotstart_run_script = AdcircRunJob(
+        platform=platform,
+        slurm_tasks=adcirc_processors,
+        slurm_account=slurm_account,
+        slurm_duration=job_duration,
+        slurm_run_name=adcirc_hotstart_run_name,
+        executable=adcirc_executable_path,
+        slurm_partition=partition,
+        slurm_email_type=email_type,
+        slurm_email_address=email_address,
+        slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
+        slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
+        source_filename=source_filename,
+    )
 
-        LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
-        hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
+    LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
+    hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     try:
         # instantiate AdcircRun object.
         driver = coupled_configuration.adcircpy_driver
+    finally:
+        if starting_directory is not None:
+            LOGGER.debug(f'moving out of "{configuration_directory}"')
+            os.chdir(starting_directory)
 
-        local_fort13_filename = output_directory / 'fort.13'
-        local_fort14_filename = output_directory / 'fort.14'
-        if use_original_mesh:
-            LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
-            if original_fort13_filename.exists():
-                create_symlink(original_fort13_filename, local_fort13_filename)
-            create_symlink(original_fort14_filename, local_fort14_filename)
-        else:
-            LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
-            driver.write(
-                output_directory,
-                overwrite=overwrite,
-                fort13=None,
-                fort14='fort.14',
-                fort15=None,
-                fort22=None,
-                coldstart=None,
-                hotstart=None,
-                driver=None,
-            )
+    local_fort13_filename = output_directory / 'fort.13'
+    local_fort14_filename = output_directory / 'fort.14'
+    if use_original_mesh:
+        LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
+        if original_fort13_filename.exists():
+            create_symlink(original_fort13_filename, local_fort13_filename)
+        create_symlink(original_fort14_filename, local_fort14_filename)
+    else:
+        LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
+        driver.write(
+            output_directory,
+            overwrite=overwrite,
+            fort13=None,
+            fort14='fort.14',
+            fort15=None,
+            fort22=None,
+            coldstart=None,
+            hotstart=None,
+            driver=None,
+        )
 
+    if coldstart_run_script_filename.exists():
         LOGGER.debug(f'writing coldstart configuration to ' f'"{coldstart_directory}"')
         driver.write(
             coldstart_directory,
@@ -217,41 +221,42 @@ def generate_adcirc_configuration(
             relative=True,
         )
 
-        for run_name, attributes in runs.items():
-            hotstart_directory = runs_directory / run_name
-            LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
-            if attributes is not None:
-                for name, value in attributes.items():
-                    if name is not None:
-                        # if not isinstance(value, numpy.ndarray):
-                        #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-                        if not driver.mesh.has_nodal_attribute(name):
-                            driver.mesh.add_nodal_attribute(name, '1')
-                        driver.mesh.set_nodal_attribute(name, value)
+    for run_name, attributes in runs.items():
+        hotstart_directory = runs_directory / run_name
+        LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
+        if attributes is not None:
+            for name, value in attributes.items():
+                if name is not None:
+                    # if not isinstance(value, numpy.ndarray):
+                    #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
+                    if not driver.mesh.has_nodal_attribute(name):
+                        driver.mesh.add_nodal_attribute(name, '1')
+                    driver.mesh.set_nodal_attribute(name, value)
 
-            driver.write(
-                hotstart_directory,
-                overwrite=overwrite,
-                fort13=None if use_original_mesh else 'fort.13',
-                fort14=None,
-                coldstart=None,
-                hotstart='fort.15',
-                driver=None,
-            )
-            if use_original_mesh:
-                if local_fort13_filename.exists():
-                    create_symlink(local_fort13_filename, hotstart_directory / 'fort.13', relative=True)
-            create_symlink(local_fort14_filename, hotstart_directory / 'fort.14', relative=True)
-            create_symlink(
-                adcprep_job_script_filename,
-                hotstart_directory / 'adcprep.job',
-                relative=True,
-            )
-            create_symlink(
-                hotstart_run_script_filename,
-                hotstart_directory / 'adcirc.job',
-                relative=True,
-            )
+        driver.write(
+            hotstart_directory,
+            overwrite=overwrite,
+            fort13=None if use_original_mesh else 'fort.13',
+            fort14=None,
+            coldstart=None,
+            hotstart='fort.15',
+            driver=None,
+        )
+        if use_original_mesh:
+            if local_fort13_filename.exists():
+                create_symlink(local_fort13_filename, hotstart_directory / 'fort.13', relative=True)
+        create_symlink(local_fort14_filename, hotstart_directory / 'fort.14', relative=True)
+        create_symlink(
+            adcprep_job_script_filename,
+            hotstart_directory / 'adcprep.job',
+            relative=True,
+        )
+        create_symlink(
+            hotstart_run_script_filename,
+            hotstart_directory / 'adcirc.job',
+            relative=True,
+        )
+        if tidal_spinup_duration is not None:
             try:
                 create_symlink(
                     coldstart_directory / 'fort.67.nc',
@@ -264,17 +269,17 @@ def generate_adcirc_configuration(
                     'you must manually link or copy this file after coldstart completes'
                 )
 
-        LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
-        run_script = EnsembleRunScript(platform)
-        run_script.write(run_script_filename, overwrite=overwrite)
+    LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
+    run_script = EnsembleRunScript(platform)
+    run_script.write(run_script_filename, overwrite=overwrite)
 
-        cleanup_script = EnsembleCleanupScript()
-        LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
-        cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
-    finally:
-        if starting_directory is not None:
-            LOGGER.debug(f'moving out of "{configuration_directory}"')
-            os.chdir(starting_directory)
+    cleanup_script = EnsembleCleanupScript()
+    LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
+    cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
+
+    if starting_directory is not None:
+        LOGGER.debug(f'moving out of "{configuration_directory}"')
+        os.chdir(starting_directory)
 
 
 def generate_nems_adcirc_configuration(
@@ -476,69 +481,58 @@ def generate_nems_adcirc_configuration(
             slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
             source_filename=source_filename,
         )
-    else:
-        coldstart_run_script = AdcircRunJob(
-            platform=platform,
-            slurm_tasks=nems.processors,
-            slurm_account=slurm_account,
-            slurm_duration=job_duration,
-            slurm_run_name=adcirc_coldstart_run_name,
-            executable=nems_executable,
-            slurm_partition=partition,
-            slurm_email_type=email_type,
-            slurm_email_address=email_address,
-            slurm_error_filename=f'{adcirc_coldstart_run_name}.err.log',
-            slurm_log_filename=f'{adcirc_coldstart_run_name}.out.log',
-            source_filename=source_filename,
-        )
 
-    LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
-    coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
+        LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
+        coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
-    if tidal_spinup_nems is not None:
-        hotstart_run_script = AdcircRunJob(
-            platform=platform,
-            slurm_tasks=nems.processors,
-            slurm_account=slurm_account,
-            slurm_duration=job_duration,
-            slurm_run_name=adcirc_hotstart_run_name,
-            executable=nems_executable,
-            slurm_partition=partition,
-            slurm_email_type=email_type,
-            slurm_email_address=email_address,
-            slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
-            slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
-            source_filename=source_filename,
-        )
+    hotstart_run_script = AdcircRunJob(
+        platform=platform,
+        slurm_tasks=nems.processors,
+        slurm_account=slurm_account,
+        slurm_duration=job_duration,
+        slurm_run_name=adcirc_hotstart_run_name,
+        executable=nems_executable,
+        slurm_partition=partition,
+        slurm_email_type=email_type,
+        slurm_email_address=email_address,
+        slurm_error_filename=f'{adcirc_hotstart_run_name}.err.log',
+        slurm_log_filename=f'{adcirc_hotstart_run_name}.out.log',
+        source_filename=source_filename,
+    )
 
-        LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
-        hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
+    LOGGER.debug(f'writing hotstart run script ' f'"{hotstart_run_script_filename.name}"')
+    hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
 
     try:
         # instantiate AdcircRun object.
         driver = coupled_configuration.adcircpy_driver
+    finally:
+        if starting_directory is not None:
+            LOGGER.debug(f'moving out of "{configuration_directory}"')
+            os.chdir(starting_directory)
 
-        local_fort13_filename = output_directory / 'fort.13'
-        local_fort14_filename = output_directory / 'fort.14'
-        if use_original_mesh:
-            LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
-            if original_fort13_filename.exists():
-                create_symlink(original_fort13_filename, local_fort13_filename)
-            create_symlink(original_fort14_filename, local_fort14_filename)
-        else:
-            LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
-            driver.write(
-                output_directory,
-                overwrite=overwrite,
-                fort13=None,
-                fort14='fort.14',
-                fort15=None,
-                fort22=None,
-                coldstart=None,
-                hotstart=None,
-                driver=None,
-            )
+    local_fort13_filename = output_directory / 'fort.13'
+    local_fort14_filename = output_directory / 'fort.14'
+    if use_original_mesh:
+        LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
+        if original_fort13_filename.exists():
+            create_symlink(original_fort13_filename, local_fort13_filename)
+        create_symlink(original_fort14_filename, local_fort14_filename)
+    else:
+        LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
+        driver.write(
+            output_directory,
+            overwrite=overwrite,
+            fort13=None,
+            fort14='fort.14',
+            fort15=None,
+            fort22=None,
+            coldstart=None,
+            hotstart=None,
+            driver=None,
+        )
 
+    if coldstart_run_script_filename.exists():
         LOGGER.debug(f'writing coldstart configuration to ' f'"{coldstart_directory}"')
         driver.write(
             coldstart_directory,
@@ -579,56 +573,57 @@ def generate_nems_adcirc_configuration(
             relative=True,
         )
 
-        for run_name, attributes in runs.items():
-            hotstart_directory = runs_directory / run_name
-            LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
-            if attributes is not None:
-                for name, value in attributes.items():
-                    if name is not None:
-                        # if not isinstance(value, numpy.ndarray):
-                        #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-                        if not driver.mesh.has_nodal_attribute(name):
-                            driver.mesh.add_nodal_attribute(name, '1')
-                        driver.mesh.set_nodal_attribute(name, value)
+    for run_name, attributes in runs.items():
+        hotstart_directory = runs_directory / run_name
+        LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
+        if attributes is not None:
+            for name, value in attributes.items():
+                if name is not None:
+                    # if not isinstance(value, numpy.ndarray):
+                    #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
+                    if not driver.mesh.has_nodal_attribute(name):
+                        driver.mesh.add_nodal_attribute(name, '1')
+                    driver.mesh.set_nodal_attribute(name, value)
 
-            driver.write(
-                hotstart_directory,
-                overwrite=overwrite,
-                fort13=None if use_original_mesh else 'fort.13',
-                fort14=None,
-                coldstart=None,
-                hotstart='fort.15',
-                driver=None,
-            )
-            if use_original_mesh:
-                if local_fort13_filename.exists():
-                    create_symlink(local_fort13_filename, hotstart_directory / 'fort.13', relative=True)
-            create_symlink(local_fort14_filename, hotstart_directory / 'fort.14', relative=True)
-            create_symlink(
-                adcprep_job_script_filename,
-                hotstart_directory / 'adcprep.job',
-                relative=True,
-            )
-            create_symlink(
-                hotstart_run_script_filename,
-                hotstart_directory / 'adcirc.job',
-                relative=True,
-            )
-            create_symlink(
-                output_directory / 'nems.configure.hotstart',
-                hotstart_directory / 'nems.configure',
-                relative=True,
-            )
-            create_symlink(
-                output_directory / 'model_configure.hotstart',
-                hotstart_directory / 'model_configure',
-                relative=True,
-            )
-            create_symlink(
-                output_directory / 'config.rc.hotstart',
-                hotstart_directory / 'config.rc',
-                relative=True,
-            )
+        driver.write(
+            hotstart_directory,
+            overwrite=overwrite,
+            fort13=None if use_original_mesh else 'fort.13',
+            fort14=None,
+            coldstart=None,
+            hotstart='fort.15',
+            driver=None,
+        )
+        if use_original_mesh:
+            if local_fort13_filename.exists():
+                create_symlink(local_fort13_filename, hotstart_directory / 'fort.13', relative=True)
+        create_symlink(local_fort14_filename, hotstart_directory / 'fort.14', relative=True)
+        create_symlink(
+            adcprep_job_script_filename,
+            hotstart_directory / 'adcprep.job',
+            relative=True,
+        )
+        create_symlink(
+            hotstart_run_script_filename,
+            hotstart_directory / 'adcirc.job',
+            relative=True,
+        )
+        create_symlink(
+            output_directory / 'nems.configure.hotstart',
+            hotstart_directory / 'nems.configure',
+            relative=True,
+        )
+        create_symlink(
+            output_directory / 'model_configure.hotstart',
+            hotstart_directory / 'model_configure',
+            relative=True,
+        )
+        create_symlink(
+            output_directory / 'config.rc.hotstart',
+            hotstart_directory / 'config.rc',
+            relative=True,
+        )
+        if tidal_spinup_nems is not None:
             try:
                 create_symlink(
                     coldstart_directory / 'fort.67.nc',
@@ -637,17 +632,18 @@ def generate_nems_adcirc_configuration(
                 )
             except:
                 LOGGER.warning(
-                    'unable to link `fort.67.nc` from coldstart to hotstart; you must manually link or copy this file after coldstart completes'
+                    'unable to link `fort.67.nc` from coldstart to hotstart; '
+                    'you must manually link or copy this file after coldstart completes'
                 )
 
-        LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
-        run_script = EnsembleRunScript(platform)
-        run_script.write(run_script_filename, overwrite=overwrite)
+    LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
+    run_script = EnsembleRunScript(platform)
+    run_script.write(run_script_filename, overwrite=overwrite)
 
-        cleanup_script = EnsembleCleanupScript()
-        LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
-        cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
-    finally:
-        if starting_directory is not None:
-            LOGGER.debug(f'moving out of "{configuration_directory}"')
-            os.chdir(starting_directory)
+    cleanup_script = EnsembleCleanupScript()
+    LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
+    cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
+
+    if starting_directory is not None:
+        LOGGER.debug(f'moving out of "{configuration_directory}"')
+        os.chdir(starting_directory)
