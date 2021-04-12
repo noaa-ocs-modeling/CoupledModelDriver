@@ -103,7 +103,7 @@ def create_symlink(
         os.chdir(symlink_filename.parent)
         if source_filename.is_absolute():
             try:
-                source_filename = source_filename.relative_to(symlink_filename.parent)
+                source_filename = Path(os.path.relpath(source_filename, symlink_filename.parent))
             except ValueError as error:
                 LOGGER.warning(error)
                 os.chdir(starting_directory)

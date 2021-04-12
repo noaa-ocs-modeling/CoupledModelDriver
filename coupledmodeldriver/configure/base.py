@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import json
+import os
 from os import PathLike
 from pathlib import Path
 from typing import Any
@@ -148,6 +149,16 @@ class ConfigurationJSON(ABC):
 
         if not filename.parent.exists():
             filename.mkdir(parents=True, exist_ok=True)
+
+        for key, value in self.configuration.items():
+            if isinstance(value, Path):
+                if not value.is_absolute():
+                    value = value.absolute()
+                    try:
+                        value = Path(os.path.relpath(value, filename.absolute().parent))
+                    except:
+                        pass
+                    self.configuration[key] = value
 
         configuration = convert_to_json(self.configuration)
 
