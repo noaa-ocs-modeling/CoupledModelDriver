@@ -61,8 +61,11 @@ class AdcircRunJob(AdcircJob):
 
         if executable is None:
             executable = 'adcirc'
-        self.executable = executable
+        else:
+            if isinstance(executable, Path):
+                executable = executable.as_posix()
 
+        self.executable = executable
         self.commands.append(f'{self.launcher} {self.executable}')
 
 
