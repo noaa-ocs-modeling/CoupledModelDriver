@@ -12,5 +12,5 @@
 
 set -e
 
-ibrun ..\..\..\adcprep --np 1020 --partmesh
-ibrun ..\..\..\adcprep --np 1020 --prepall
+ibrun ../../../adcprep --np 1020 --partmesh
+ibrun ../../../adcprep --np 1020 --prepall
