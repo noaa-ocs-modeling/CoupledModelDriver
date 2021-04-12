@@ -17,6 +17,7 @@ from ...configure.forcings.base import (
 )
 from ...configure.models import ADCIRCJSON
 from ...platforms import Platform
+from ...utilities import LOGGER
 
 
 class ADCIRCRunConfiguration(RunConfiguration):
@@ -117,7 +118,10 @@ class ADCIRCRunConfiguration(RunConfiguration):
     def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
             name = self.add(forcing)
-            self['adcirc'].add_forcing(self[name])
+            try:
+                self['adcirc'].add_forcing(self[name])
+            except Exception as error:
+                LOGGER.error(error)
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
