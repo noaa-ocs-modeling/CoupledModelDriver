@@ -9,7 +9,8 @@ import numpy
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.generate import (
-    ADCIRCGenerationScript, NEMSADCIRCRunConfiguration,
+    ADCIRCGenerationScript,
+    NEMSADCIRCRunConfiguration,
 )
 
 # directory to which to write configuration

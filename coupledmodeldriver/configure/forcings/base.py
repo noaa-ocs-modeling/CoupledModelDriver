@@ -94,7 +94,9 @@ class FileForcingJSON(ForcingJSON, ABC):
 
         try:
             if Path(self['resource']).exists():
-                self['resource'] = Path(os.path.relpath(self['resource'], filename.parent)).as_posix()
+                self['resource'] = Path(
+                    os.path.relpath(self['resource'], filename.parent)
+                ).as_posix()
         except:
             pass
 

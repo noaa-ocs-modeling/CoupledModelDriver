@@ -208,17 +208,15 @@ def generate_adcirc_configuration(
         )
         if use_original_mesh:
             if local_fort13_filename.exists():
-                create_symlink(local_fort13_filename, coldstart_directory / 'fort.13', relative=True)
+                create_symlink(
+                    local_fort13_filename, coldstart_directory / 'fort.13', relative=True
+                )
         create_symlink(local_fort14_filename, coldstart_directory / 'fort.14', relative=True)
         create_symlink(
-            adcprep_job_script_filename,
-            coldstart_directory / 'adcprep.job',
-            relative=True,
+            adcprep_job_script_filename, coldstart_directory / 'adcprep.job', relative=True,
         )
         create_symlink(
-            coldstart_run_script_filename,
-            coldstart_directory / 'adcirc.job',
-            relative=True,
+            coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True,
         )
 
     for run_name, attributes in runs.items():
@@ -244,17 +242,15 @@ def generate_adcirc_configuration(
         )
         if use_original_mesh:
             if local_fort13_filename.exists():
-                create_symlink(local_fort13_filename, hotstart_directory / 'fort.13', relative=True)
+                create_symlink(
+                    local_fort13_filename, hotstart_directory / 'fort.13', relative=True
+                )
         create_symlink(local_fort14_filename, hotstart_directory / 'fort.14', relative=True)
         create_symlink(
-            adcprep_job_script_filename,
-            hotstart_directory / 'adcprep.job',
-            relative=True,
+            adcprep_job_script_filename, hotstart_directory / 'adcprep.job', relative=True,
         )
         create_symlink(
-            hotstart_run_script_filename,
-            hotstart_directory / 'adcirc.job',
-            relative=True,
+            hotstart_run_script_filename, hotstart_directory / 'adcirc.job', relative=True,
         )
         if tidal_spinup_duration is not None:
             try:
@@ -545,17 +541,15 @@ def generate_nems_adcirc_configuration(
         )
         if use_original_mesh:
             if local_fort13_filename.exists():
-                create_symlink(local_fort13_filename, coldstart_directory / 'fort.13', relative=True)
+                create_symlink(
+                    local_fort13_filename, coldstart_directory / 'fort.13', relative=True
+                )
         create_symlink(local_fort14_filename, coldstart_directory / 'fort.14', relative=True)
         create_symlink(
-            adcprep_job_script_filename,
-            coldstart_directory / 'adcprep.job',
-            relative=True,
+            adcprep_job_script_filename, coldstart_directory / 'adcprep.job', relative=True,
         )
         create_symlink(
-            coldstart_run_script_filename,
-            coldstart_directory / 'adcirc.job',
-            relative=True,
+            coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True,
         )
         create_symlink(
             output_directory / 'nems.configure.coldstart',
@@ -596,17 +590,15 @@ def generate_nems_adcirc_configuration(
         )
         if use_original_mesh:
             if local_fort13_filename.exists():
-                create_symlink(local_fort13_filename, hotstart_directory / 'fort.13', relative=True)
+                create_symlink(
+                    local_fort13_filename, hotstart_directory / 'fort.13', relative=True
+                )
         create_symlink(local_fort14_filename, hotstart_directory / 'fort.14', relative=True)
         create_symlink(
-            adcprep_job_script_filename,
-            hotstart_directory / 'adcprep.job',
-            relative=True,
+            adcprep_job_script_filename, hotstart_directory / 'adcprep.job', relative=True,
         )
         create_symlink(
-            hotstart_run_script_filename,
-            hotstart_directory / 'adcirc.job',
-            relative=True,
+            hotstart_run_script_filename, hotstart_directory / 'adcirc.job', relative=True,
         )
         create_symlink(
             output_directory / 'nems.configure.hotstart',
@@ -628,7 +620,7 @@ def generate_nems_adcirc_configuration(
                 create_symlink(
                     coldstart_directory / 'fort.67.nc',
                     hotstart_directory / 'fort.67.nc',
-                    relative=True
+                    relative=True,
                 )
             except:
                 LOGGER.warning(

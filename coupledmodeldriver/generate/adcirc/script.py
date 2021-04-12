@@ -66,7 +66,11 @@ class AdcircRunJob(AdcircJob):
                 executable = executable.as_posix()
 
         self.executable = executable
-        self.commands.append(f'{self.launcher} {self.executable}' if self.launcher is not None else f'{self.executable}')
+        self.commands.append(
+            f'{self.launcher} {self.executable}'
+            if self.launcher is not None
+            else f'{self.executable}'
+        )
 
 
 class AdcircMeshPartitionJob(AdcircJob):
@@ -104,15 +108,19 @@ class AdcircMeshPartitionJob(AdcircJob):
 
         self.adcprep_path = adcprep_path
         if self.launcher is not None:
-            self.commands.extend([
-                f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
-                f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
-            ])
+            self.commands.extend(
+                [
+                    f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
+                    f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
+                ]
+            )
         else:
-            self.commands.extend([
-                f'{self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
-                f'{self.adcprep_path} --np {self.adcirc_partitions} --prepall',
-            ])
+            self.commands.extend(
+                [
+                    f'{self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
+                    f'{self.adcprep_path} --np {self.adcirc_partitions} --prepall',
+                ]
+            )
 
 
 class ADCIRCGenerationScript(Script):
