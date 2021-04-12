@@ -128,6 +128,9 @@ def main():
 
     generate_script = arguments.generate_script
 
+    if tidal_spinup_duration is not None and 'tidal' not in forcings:
+        forcings.append('tidal')
+
     arguments = {}
     unrecognized_arguments = []
     for index in range(len(extra_arguments)):
@@ -161,7 +164,7 @@ def main():
             kwargs = {}
             if issubclass(forcing_configuration_class, TidalForcingJSON):
                 if tidal_spinup_duration is None:
-                    tidal_spinup_duration = input('enter tidal spinup time (`HH:MM:SS`): ')
+                    tidal_spinup_duration = input('enter tidal spinup duration (`HH:MM:SS`): ')
                     if len(tidal_spinup_duration.strip()) == 0:
                         tidal_spinup_duration = None
                     else:
