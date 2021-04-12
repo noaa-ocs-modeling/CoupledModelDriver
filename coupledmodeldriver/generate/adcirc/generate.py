@@ -35,6 +35,7 @@ def generate_adcirc_configuration(
 
     starting_directory = Path.cwd()
     if configuration_directory != starting_directory:
+        LOGGER.debug(f'moving into "{configuration_directory}"')
         os.chdir(configuration_directory)
         configuration_directory = Path.cwd()
     else:
@@ -269,6 +270,7 @@ def generate_adcirc_configuration(
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
 
     if starting_directory is not None:
+        LOGGER.debug(f'moving out of "{configuration_directory}"')
         os.chdir(starting_directory)
 
 
@@ -294,6 +296,7 @@ def generate_nems_adcirc_configuration(
 
     starting_directory = Path.cwd()
     if configuration_directory != starting_directory:
+        LOGGER.debug(f'moving into "{configuration_directory}"')
         os.chdir(configuration_directory)
         configuration_directory = Path.cwd()
     else:
@@ -631,4 +634,5 @@ def generate_nems_adcirc_configuration(
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
 
     if starting_directory is not None:
+        LOGGER.debug(f'moving out of "{configuration_directory}"')
         os.chdir(starting_directory)
