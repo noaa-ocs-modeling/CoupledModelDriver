@@ -33,14 +33,6 @@ def generate_adcirc_configuration(
     if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
 
-    starting_directory = Path.cwd()
-    if configuration_directory != starting_directory:
-        LOGGER.debug(f'moving into "{configuration_directory}"')
-        os.chdir(configuration_directory)
-        configuration_directory = Path.cwd()
-    else:
-        starting_directory = None
-
     if output_directory is None:
         output_directory = configuration_directory
     elif not isinstance(output_directory, Path):
@@ -49,10 +41,17 @@ def generate_adcirc_configuration(
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
 
-    if output_directory.is_absolute():
-        output_directory = output_directory.resolve()
+    output_directory = output_directory.resolve()
+    if not output_directory.is_absolute():
+        output_directory = output_directory.absolute()
+
+    starting_directory = Path.cwd()
+    if configuration_directory != starting_directory:
+        LOGGER.debug(f'moving into "{configuration_directory}"')
+        os.chdir(configuration_directory)
+        configuration_directory = Path.cwd()
     else:
-        output_directory = output_directory.resolve().relative_to(Path().cwd())
+        starting_directory = None
 
     coupled_configuration = ADCIRCRunConfiguration.read_directory(configuration_directory)
 
@@ -294,14 +293,6 @@ def generate_nems_adcirc_configuration(
     if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
 
-    starting_directory = Path.cwd()
-    if configuration_directory != starting_directory:
-        LOGGER.debug(f'moving into "{configuration_directory}"')
-        os.chdir(configuration_directory)
-        configuration_directory = Path.cwd()
-    else:
-        starting_directory = None
-
     if output_directory is None:
         output_directory = configuration_directory
     elif not isinstance(output_directory, Path):
@@ -310,11 +301,18 @@ def generate_nems_adcirc_configuration(
     if not output_directory.exists():
         os.makedirs(output_directory, exist_ok=True)
 
-    if output_directory.is_absolute():
-        output_directory = output_directory.resolve()
-    else:
-        output_directory = output_directory.resolve().relative_to(Path().cwd())
+    output_directory = output_directory.resolve()
+    if not output_directory.is_absolute():
+        output_directory = output_directory.absolute()
 
+    starting_directory = Path.cwd()
+    if configuration_directory != starting_directory:
+        LOGGER.debug(f'moving into "{configuration_directory}"')
+        os.chdir(configuration_directory)
+        configuration_directory = Path.cwd()
+    else:
+        starting_directory = None
+        
     coupled_configuration = NEMSADCIRCRunConfiguration.read_directory(configuration_directory)
 
     runs = coupled_configuration['modeldriver']['runs']
