@@ -48,6 +48,12 @@ def generate_adcirc_configuration(
 
     coupled_configuration = ADCIRCRunConfiguration.read_directory(configuration_directory)
 
+    starting_directory = Path.cwd()
+    if configuration_directory != starting_directory:
+        os.chdir(configuration_directory)
+    else:
+        starting_directory = None
+
     runs = coupled_configuration['modeldriver']['runs']
     platform = coupled_configuration['modeldriver']['platform']
 
@@ -261,6 +267,9 @@ def generate_adcirc_configuration(
     LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
 
+    if starting_directory is not None:
+        os.chdir(starting_directory)
+
 
 def generate_nems_adcirc_configuration(
     configuration_directory: PathLike,
@@ -296,6 +305,12 @@ def generate_nems_adcirc_configuration(
         output_directory = output_directory.resolve().relative_to(Path().cwd())
 
     coupled_configuration = NEMSADCIRCRunConfiguration.read_directory(configuration_directory)
+
+    starting_directory = Path.cwd()
+    if configuration_directory != starting_directory:
+        os.chdir(configuration_directory)
+    else:
+        starting_directory = None
 
     runs = coupled_configuration['modeldriver']['runs']
     platform = coupled_configuration['modeldriver']['platform']
@@ -612,3 +627,6 @@ def generate_nems_adcirc_configuration(
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{cleanup_script_filename.name}"')
     cleanup_script.write(cleanup_script_filename, overwrite=overwrite)
+
+    if starting_directory is not None:
+        os.chdir(starting_directory)
