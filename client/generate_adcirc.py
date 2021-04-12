@@ -30,8 +30,8 @@ def main():
 
     configuration_directory = convert_value(arguments.configuration_directory, Path)
     output_directory = convert_value(arguments.output_directory, Path)
-
     overwrite = not arguments.skip_existing
+    verbose = arguments.verbose
 
     if output_directory is None:
         output_directory = configuration_directory
@@ -46,8 +46,8 @@ def main():
     generate(
         configuration_directory=configuration_directory,
         output_directory=output_directory,
-        overwrite=True,
-        verbose=arguments.verbose,
+        overwrite=overwrite,
+        verbose=verbose,
     )
 
 
