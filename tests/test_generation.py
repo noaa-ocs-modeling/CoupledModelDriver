@@ -24,7 +24,6 @@ NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
-
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
 
 TPXO_FILENAME = INPUT_DIRECTORY / 'h_tpxo9.v1.nc'

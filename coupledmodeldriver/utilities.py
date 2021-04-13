@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum, EnumMeta
+import json
 import logging
 import os
 from os import PathLike
@@ -50,7 +51,6 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
-
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -98,6 +98,8 @@ def create_symlink(
         os.remove(symlink_filename)
     symlink_filename = symlink_filename.parent.absolute().resolve() / symlink_filename.name
 
+    print(f'{source_filename} -> {symlink_filename}')
+
     starting_directory = None
     if relative:
         starting_directory = Path().cwd().resolve()
@@ -117,14 +119,10 @@ def create_symlink(
         symlink_filename.symlink_to(source_filename)
     except Exception as error:
         LOGGER.warning(f'could not create symbolic link: {error}')
-        try:
-            shutil.copyfile(source_filename, symlink_filename)
-        except:
-            if starting_directory is not None:
-                os.chdir(starting_directory)
-
-    if starting_directory is not None:
-        os.chdir(starting_directory)
+        shutil.copyfile(source_filename, symlink_filename)
+    finally:
+        if starting_directory is not None:
+            os.chdir(starting_directory)
 
 
 def ellipsoidal_distance(
@@ -179,6 +177,10 @@ def convert_value(value: Any, to_type: type) -> Any:
                     )
                 else:
                     value = collection_type()
+            elif isinstance(value, str):
+                value = json.loads(value)
+            elif isinstance(value, CRS):
+                value = value.to_json_dict()
         elif value is not None:
             try:
                 value = to_type[value]
@@ -195,11 +197,16 @@ def convert_value(value: Any, to_type: type) -> Any:
                 hours, remainder = divmod(value, timedelta(hours=1))
                 minutes, remainder = divmod(remainder, timedelta(minutes=1))
                 seconds = remainder / timedelta(seconds=1)
-                value = f'{hours}:{minutes}:{seconds}'
+                value = f'{hours:02}:{minutes:02}:{seconds:04.3}'
             else:
                 value /= timedelta(seconds=1)
-        elif isinstance(value, CRS) and issubclass(to_type, str):
-            value = value.to_wkt()
+        elif isinstance(value, CRS):
+            if issubclass(to_type, str):
+                value = value.to_wkt()
+            elif issubclass(to_type, dict):
+                value = value.to_json_dict()
+            elif issubclass(to_type, int):
+                value = value.to_epsg()
         if issubclass(to_type, bool):
             value = eval(f'{value}')
         elif issubclass(to_type, datetime):
