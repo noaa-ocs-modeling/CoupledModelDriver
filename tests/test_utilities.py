@@ -1,13 +1,11 @@
 from datetime import datetime, timedelta
 from enum import Enum
-import os
 from pathlib import Path
 
 from pyproj import CRS
 import pytest
 
-from coupledmodeldriver.utilities import convert_to_json, convert_value, \
-    create_symlink
+from coupledmodeldriver.utilities import convert_to_json, convert_value
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
@@ -166,17 +164,3 @@ def test_convert_values_to_json():
 
     assert result_6 == 'test'
     assert result_7 == '2021-03-26 00:00:00'
-
-
-def test_create_symlink():
-    reference_filename = INPUT_DIRECTORY / 'symlink_test.txt'
-    test_filename = OUTPUT_DIRECTORY / reference_filename.name
-
-    if test_filename.exists():
-        os.remove(test_filename)
-
-    create_symlink(reference_filename, test_filename)
-
-    with open(test_filename) as test_file:
-        with open(reference_filename) as reference_file:
-            assert test_file.read() == reference_file.read()
