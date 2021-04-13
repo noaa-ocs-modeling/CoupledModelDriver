@@ -5,11 +5,13 @@ from pathlib import Path
 from pyproj import CRS
 import pytest
 
-from coupledmodeldriver.utilities import convert_to_json, convert_value
+from coupledmodeldriver.utilities import convert_to_json, convert_value, \
+    create_symlink
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
 OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
+REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
 
 
 class ValueTest:
@@ -190,3 +192,15 @@ def test_convert_values_to_json():
 
     assert result_6 == 'test'
     assert result_7 == '2021-03-26 00:00:00'
+
+
+def test_create_symlink():
+    input_filename = INPUT_DIRECTORY / 'symlink_test.txt'
+    output_filename = OUTPUT_DIRECTORY / input_filename.name
+    reference_filename = REFERENCE_DIRECTORY / input_filename.name
+
+    create_symlink(input_filename, output_filename)
+
+    with open(output_filename) as output_file:
+        with open(reference_filename) as reference_file:
+            assert output_file.read() == reference_file.read()
