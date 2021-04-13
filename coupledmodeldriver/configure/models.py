@@ -6,6 +6,7 @@ from pathlib import Path
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.forcing.base import Forcing
+from adcircpy.forcing.winds import BestTrackForcing
 from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
@@ -40,6 +41,7 @@ class GWCESolutionScheme(Enum):
 class ADCIRCJSON(ModelJSON, NEMSCapJSON):
     name = 'ADCIRC'
     default_filename = f'configure_adcirc.json'
+    default_processors = 11
     field_types = {
         'adcirc_executable_path': Path,
         'adcprep_executable_path': Path,
@@ -198,15 +200,19 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for adcircpy_forcing in self.adcircpy_forcings:
+            if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
+                adcircpy_forcing.start_date = self['modeled_start_time']
+                adcircpy_forcing.end_date = self['modeled_end_time']
+
             if (
                 isinstance(adcircpy_forcing, Tides)
                 and self['tidal_spinup_duration'] is not None
             ):
                 adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
-                adcircpy_forcing.start_date = self['modeled_start_time']
-                if self['tidal_spinup_duration'] is not None:
-                    adcircpy_forcing.start_date -= self['tidal_spinup_duration']
-                adcircpy_forcing.end_date = self['modeled_end_time']
+                adcircpy_forcing.start_date -= self['tidal_spinup_duration']
+            elif isinstance(adcircpy_forcing, BestTrackForcing):
+                adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
+
             mesh.add_forcing(adcircpy_forcing)
 
         if self['fort_13_path'] is not None:

@@ -51,9 +51,12 @@ class ForcingJSON(ConfigurationJSON, ABC):
 
 
 class TimestepForcingJSON(ForcingJSON, ABC):
+    default_modeled_timestep: timedelta
     field_types = {'modeled_timestep': timedelta}
 
-    def __init__(self, modeled_timestep: timedelta, **kwargs):
+    def __init__(self, modeled_timestep: timedelta = None, **kwargs):
+        if modeled_timestep is None:
+            modeled_timestep = self.default_modeled_timestep
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(TimestepForcingJSON.field_types)
@@ -149,9 +152,12 @@ class TidalForcingJSON(FileForcingJSON):
 
 
 class WindForcingJSON(ForcingJSON, ABC):
+    default_nws: int
     field_types = {'nws': int}
 
-    def __init__(self, nws: int, **kwargs):
+    def __init__(self, nws: int = None, **kwargs):
+        if nws is None:
+            nws = self.default_nws
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(WindForcingJSON.field_types)
@@ -164,6 +170,7 @@ class WindForcingJSON(ForcingJSON, ABC):
 class BestTrackForcingJSON(WindForcingJSON):
     name = 'BestTrack'
     default_filename = f'configure_besttrack.json'
+    default_nws = 20
     field_types = {
         'storm_id': str,
         'start_date': datetime,
@@ -171,7 +178,12 @@ class BestTrackForcingJSON(WindForcingJSON):
     }
 
     def __init__(
-        self, storm_id: str, start_date: datetime, end_date: datetime, nws: int = 20, **kwargs
+        self,
+        storm_id: str,
+        nws: int = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        **kwargs,
     ):
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
@@ -205,9 +217,11 @@ class BestTrackForcingJSON(WindForcingJSON):
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
     name = 'OWI'
     default_filename = f'configure_owi.json'
+    default_nws = 12
+    default_modeled_timestep = timedelta(hours=1)
 
-    def __init__(self, modeled_timestep: timedelta = timedelta(hours=1), **kwargs):
-        WindForcingJSON.__init__(self, nws=12, **kwargs)
+    def __init__(self, modeled_timestep: timedelta = None, **kwargs):
+        WindForcingJSON.__init__(self, nws=None, **kwargs)
         TimestepForcingJSON.__init__(self, modeled_timestep=modeled_timestep, **kwargs)
 
     @property
@@ -222,13 +236,16 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
     name = 'ATMESH'
     default_filename = f'configure_atmesh.json'
+    default_nws = 17
+    default_modeled_timestep: timedelta
+    default_processors = 1
 
     def __init__(
         self,
         resource: PathLike,
-        nws: int = 17,
-        modeled_timestep: timedelta = timedelta(hours=1),
-        processors: int = 1,
+        nws: int = None,
+        modeled_timestep: timedelta = None,
+        processors: int = None,
         nems_parameters: {str: str} = None,
         **kwargs,
     ):
@@ -261,9 +278,12 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
 
 
 class WaveForcingJSON(ForcingJSON, ABC):
+    default_nrs: int
     field_types = {'nrs': int}
 
-    def __init__(self, nrs: int, **kwargs):
+    def __init__(self, nrs: int = None, **kwargs):
+        if nrs is None:
+            nrs = self.default_nrs
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(WaveForcingJSON.field_types)
@@ -276,13 +296,16 @@ class WaveForcingJSON(ForcingJSON, ABC):
 class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
     name = 'WW3DATA'
     default_filename = f'configure_ww3data.json'
+    default_nrs = 5
+    default_modeled_timestep = timedelta(hours=1)
+    default_processors = 1
 
     def __init__(
         self,
         resource: PathLike,
-        nrs: int = 5,
-        modeled_timestep: timedelta = timedelta(hours=1),
-        processors: int = 1,
+        nrs: int = None,
+        modeled_timestep: timedelta = None,
+        processors: int = None,
         nems_parameters: {str: str} = None,
         **kwargs,
     ):

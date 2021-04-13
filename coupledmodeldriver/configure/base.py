@@ -251,12 +251,15 @@ class NEMSJSON(ConfigurationJSON):
 
 
 class NEMSCapJSON(ConfigurationJSON, ABC):
+    default_processors: int
     field_types = {
         'processors': int,
         'nems_parameters': {str: str},
     }
 
-    def __init__(self, processors: int, nems_parameters: {str: str} = None, **kwargs):
+    def __init__(self, processors: int = None, nems_parameters: {str: str} = None, **kwargs):
+        if processors is None:
+            processors = self.default_processors
         if nems_parameters is None:
             nems_parameters = {}
         if 'fields' not in kwargs:

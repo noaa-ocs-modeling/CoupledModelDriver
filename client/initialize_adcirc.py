@@ -6,13 +6,15 @@ from pathlib import Path
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver import Platform
+from coupledmodeldriver.configure import NEMSCapJSON
 from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
     BestTrackForcingJSON,
     FileForcingJSON,
     OWIForcingJSON,
     TidalForcingJSON,
-    WW3DATAForcingJSON,
+    TimestepForcingJSON, WW3DATAForcingJSON, WaveForcingJSON,
+    WindForcingJSON,
 )
 from coupledmodeldriver.generate import (
     ADCIRCGenerationScript,
@@ -61,9 +63,6 @@ def main():
         '--modulefile', default=None, help='path to module file to `source`'
     )
     argument_parser.add_argument(
-        '--tidal-spinup-duration', default=None, help='spinup time for ADCIRC tidal coldstart'
-    )
-    argument_parser.add_argument(
         '--forcings',
         default=None,
         help=f'comma-separated list of forcings to configure, from {FORCING_NAMES}',
@@ -110,7 +109,6 @@ def main():
 
     modulefile = convert_value(arguments.modulefile, Path)
 
-    tidal_spinup_duration = convert_value(arguments.tidal_spinup_duration, timedelta)
     forcings = arguments.forcings
     if forcings is not None:
         forcings = [forcing.strip() for forcing in forcings.split(',')]
@@ -126,9 +124,6 @@ def main():
     overwrite = not arguments.skip_existing
 
     generate_script = arguments.generate_script
-
-    if tidal_spinup_duration is not None and 'tidal' not in forcings:
-        forcings.append('tidal')
 
     arguments = {}
     unrecognized_arguments = []
@@ -155,6 +150,8 @@ def main():
     extra_arguments = arguments
     del arguments
 
+    tidal_spinup_duration = None
+
     # initialize `adcircpy` forcing objects
     forcing_configurations = []
     for provided_name in forcings:
@@ -162,60 +159,97 @@ def main():
             forcing_configuration_class = ForcingConfigurations[provided_name.lower()].value
             kwargs = {}
             if issubclass(forcing_configuration_class, TidalForcingJSON):
-                if tidal_spinup_duration is None:
-                    tidal_spinup_duration = input('enter tidal spinup duration (`HH:MM:SS`): ')
-                    if len(tidal_spinup_duration.strip()) == 0:
-                        tidal_spinup_duration = None
-                    else:
-                        tidal_spinup_duration = convert_value(tidal_spinup_duration, timedelta)
-
-                if tidal_spinup_duration is not None:
-                    argument = f'{provided_name}-source'
-                    if argument in extra_arguments:
-                        tidal_source = extra_arguments[argument]
-                    else:
-                        tidal_source = input(
-                            f'enter tidal forcing source '
+                tidal_spinup_duration = get_argument(
+                    argument=f'tidal-spinup-duration',
+                    arguments=extra_arguments,
+                    required=True,
+                    message=f'enter tidal spinup duration (`HH:MM:SS`): '
+                )
+                tidal_spinup_duration = convert_value(tidal_spinup_duration, timedelta)
+                tidal_source = get_argument(
+                    argument=f'tidal-source',
+                    arguments=extra_arguments,
+                    required=True,
+                    message=f'enter tidal forcing source '
                             f'({"/".join(tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE else tidal_source.name.upper() for tidal_source in TidalSource)}): '
-                        )
-                    if len(tidal_source.strip()) == 0:
-                        tidal_source = None
-                    else:
-                        tidal_source = convert_value(tidal_source, TidalSource)
-                    if tidal_source is None:
-                        tidal_source = DEFAULT_TIDAL_SOURCE
-
-                    argument = f'{provided_name}-constituents'
-                    if argument in extra_arguments:
-                        tidal_constituents = extra_arguments[argument]
-                    else:
-                        tidal_constituents = ''
-                    if len(tidal_constituents.strip()) == 0:
-                        tidal_constituents = None
-                    else:
-                        tidal_constituents = [
-                            entry.strip() for entry in tidal_constituents.split(',')
-                        ]
-                    if tidal_constituents is None:
-                        tidal_constituents = DEFAULT_TIDAL_CONSTITUENTS
+                )
+                if tidal_source is not None:
+                    tidal_source = convert_value(tidal_source, TidalSource)
                 else:
-                    tidal_source = None
-                    tidal_constituents = None
+                    tidal_source = DEFAULT_TIDAL_SOURCE
+                tidal_constituents = get_argument(
+                    argument='tidal-constituents',
+                    arguments=extra_arguments,
+                )
+                if tidal_constituents is not None:
+                    tidal_constituents = [
+                        entry.strip() for entry in tidal_constituents.split(',')
+                    ]
+                else:
+                    tidal_constituents = DEFAULT_TIDAL_CONSTITUENTS
                 kwargs['tidal_source'] = tidal_source
                 kwargs['constituents'] = tidal_constituents
+            if issubclass(forcing_configuration_class, BestTrackForcingJSON):
+                best_track_storm_id = get_argument(
+                    argument='besttrack-storm-id',
+                    arguments=extra_arguments,
+                    required=True,
+                    message='enter storm ID for best track: '
+                )
+                kwargs['storm_id'] = best_track_storm_id
+                best_track_start_date = get_argument(
+                    argument='besttrack-start-date',
+                    arguments=extra_arguments,
+                )
+                kwargs['start_date'] = best_track_start_date
+                best_track_end_date = get_argument(
+                    argument='besttrack-end-date',
+                    arguments=extra_arguments,
+                )
+                kwargs['end_date'] = best_track_end_date
+
             if issubclass(forcing_configuration_class, FileForcingJSON):
-                argument = f'{provided_name}-path'
-                if argument in extra_arguments:
-                    forcing_path = extra_arguments[argument]
-                else:
-                    forcing_path = input(
-                        f'enter resource path for ' f'"{forcing_configuration_class.name}": '
-                    )
+                forcing_path = get_argument(
+                    argument=f'{provided_name}-path',
+                    arguments=extra_arguments,
+                )
                 kwargs['resource'] = forcing_path
+            if issubclass(forcing_configuration_class, NEMSCapJSON):
+                nems_cap_processors = get_argument(
+                    argument=f'{provided_name}-processors',
+                    arguments=extra_arguments,
+                )
+                kwargs['processors'] = nems_cap_processors
+                nems_cap_parameters = get_argument(
+                    argument=f'{provided_name}-nems-parameters',
+                    arguments=extra_arguments,
+                )
+                kwargs['nems_parameters'] = nems_cap_parameters
+            if issubclass(forcing_configuration_class, TimestepForcingJSON):
+                forcing_timestep = get_argument(
+                    argument=f'{provided_name}-modeled_timestep',
+                    arguments=extra_arguments,
+                )
+                if forcing_timestep is None:
+                    forcing_timestep = modeled_timestep
+                kwargs['modeled_timestep'] = forcing_timestep
+            if issubclass(forcing_configuration_class, WindForcingJSON):
+                forcing_nws = get_argument(
+                    argument=f'{provided_name}-nws',
+                    arguments=extra_arguments,
+                )
+                kwargs['nws'] = forcing_nws
+            if issubclass(forcing_configuration_class, WaveForcingJSON):
+                forcing_nrs = get_argument(
+                    argument=f'{provided_name}-nrs',
+                    arguments=extra_arguments,
+                )
+                kwargs['nrs'] = forcing_nrs
+
             forcing_configurations.append(forcing_configuration_class(**kwargs))
         else:
             raise NotImplementedError(
-                f'unrecognized forcing "{provided_name}"; ' f'must be from {FORCING_NAMES}'
+                f'unrecognized forcing "{provided_name}"; must be from {FORCING_NAMES}'
             )
 
     if nems_interval is not None:
@@ -266,6 +300,23 @@ def main():
     if generate_script:
         generation_script = ADCIRCGenerationScript()
         generation_script.write(filename=output_directory, overwrite=overwrite)
+
+
+def get_argument(argument: str, arguments: {str: str} = None, required: bool = False, message: str = None) -> str:
+    if message is None:
+        message = f'enter value for "{argument}": '
+
+    if argument in arguments:
+        value = arguments[argument]
+    elif required:
+        value = input(message)
+    else:
+        value = ''
+
+    if len(value.strip()) == 0:
+        value = None
+
+    return value
 
 
 if __name__ == '__main__':
