@@ -171,13 +171,9 @@ def test_convert_values_to_json():
 def test_create_symlink():
     reference_filename = INPUT_DIRECTORY / 'symlink_test.txt'
     test_filename = OUTPUT_DIRECTORY / reference_filename.name
-    nonexistent_filename = OUTPUT_DIRECTORY / 'nonexistent.txt'
 
     if test_filename.exists():
         os.remove(test_filename)
-
-    with pytest.raises(FileNotFoundError):
-        create_symlink(nonexistent_filename, OUTPUT_DIRECTORY / nonexistent_filename.name)
 
     create_symlink(reference_filename, test_filename)
 
