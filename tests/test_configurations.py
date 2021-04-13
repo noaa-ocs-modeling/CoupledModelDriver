@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
     WaveMeshEntry
@@ -172,8 +173,8 @@ def test_atmesh():
 
     assert configuration.configuration == {
         'nws': 17,
-        'modeled_timestep': timedelta(seconds=3600),
-        'resource': 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
+        'modeled_timestep': timedelta(hours=1),
+        'resource': Path('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
         'processors': 1,
         'nems_parameters': {},
     }
@@ -187,7 +188,7 @@ def test_ww3data():
     assert configuration.configuration == {
         'nrs': 5,
         'modeled_timestep': timedelta(hours=1),
-        'resource': 'ww3.HWRF.NOV2018.2012_sxy.nc',
+        'resource': Path('ww3.HWRF.NOV2018.2012_sxy.nc'),
         'processors': 1,
         'nems_parameters': {},
     }

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from os import PathLike
-import os.path
 from pathlib import Path
 import sys
 
@@ -65,18 +64,14 @@ class TimestepForcingJSON(ForcingJSON, ABC):
 
 
 class FileForcingJSON(ForcingJSON, ABC):
-    field_types = {'resource': str}
+    field_types = {'resource': Path}
 
     def __init__(self, resource: PathLike, **kwargs):
         if resource is None:
             LOGGER.warning(
-                f'resource path not specified for "{self.default_filename}"; update entry before generating configuration'
+                f'resource path not specified for "{self.default_filename}"; '
+                f'update entry before generating configuration'
             )
-        else:
-            try:
-                resource = Path(resource).as_posix()
-            except:
-                pass
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(FileForcingJSON.field_types)
@@ -84,23 +79,6 @@ class FileForcingJSON(ForcingJSON, ABC):
         ForcingJSON.__init__(self, **kwargs)
 
         self['resource'] = resource
-
-    def to_file(self, filename: PathLike = None, overwrite: bool = False):
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / self.default_filename
-
-        try:
-            if Path(self['resource']).exists():
-                self['resource'] = Path(
-                    os.path.relpath(self['resource'], filename.parent)
-                ).as_posix()
-        except:
-            pass
-
-        super().to_file(filename=filename, overwrite=overwrite)
 
 
 class TidalForcingJSON(FileForcingJSON):
