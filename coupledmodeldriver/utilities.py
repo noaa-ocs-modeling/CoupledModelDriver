@@ -98,6 +98,8 @@ def create_symlink(
         os.remove(symlink_filename)
     symlink_filename = symlink_filename.parent.absolute().resolve() / symlink_filename.name
 
+    print(f'{source_filename} -> {symlink_filename}')
+
     starting_directory = None
     if relative:
         starting_directory = Path().cwd().resolve()
