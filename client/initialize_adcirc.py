@@ -13,7 +13,9 @@ from coupledmodeldriver.configure.forcings.base import (
     FileForcingJSON,
     OWIForcingJSON,
     TidalForcingJSON,
-    TimestepForcingJSON, WW3DATAForcingJSON, WaveForcingJSON,
+    TimestepForcingJSON,
+    WW3DATAForcingJSON,
+    WaveForcingJSON,
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import (
@@ -163,7 +165,7 @@ def main():
                     argument=f'tidal-spinup-duration',
                     arguments=extra_arguments,
                     required=True,
-                    message=f'enter tidal spinup duration (`HH:MM:SS`): '
+                    message=f'enter tidal spinup duration (`HH:MM:SS`): ',
                 )
                 tidal_spinup_duration = convert_value(tidal_spinup_duration, timedelta)
                 tidal_source = get_argument(
@@ -171,15 +173,14 @@ def main():
                     arguments=extra_arguments,
                     required=True,
                     message=f'enter tidal forcing source '
-                            f'({"/".join(tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE else tidal_source.name.upper() for tidal_source in TidalSource)}): '
+                            f'({"/".join(tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE else tidal_source.name.upper() for tidal_source in TidalSource)}): ',
                 )
                 if tidal_source is not None:
                     tidal_source = convert_value(tidal_source, TidalSource)
                 else:
                     tidal_source = DEFAULT_TIDAL_SOURCE
                 tidal_constituents = get_argument(
-                    argument='tidal-constituents',
-                    arguments=extra_arguments,
+                    argument='tidal-constituents', arguments=extra_arguments,
                 )
                 if tidal_constituents is not None:
                     tidal_constituents = [
@@ -194,55 +195,47 @@ def main():
                     argument='besttrack-storm-id',
                     arguments=extra_arguments,
                     required=True,
-                    message='enter storm ID for best track: '
+                    message='enter storm ID for best track: ',
                 )
                 kwargs['storm_id'] = best_track_storm_id
                 best_track_start_date = get_argument(
-                    argument='besttrack-start-date',
-                    arguments=extra_arguments,
+                    argument='besttrack-start-date', arguments=extra_arguments,
                 )
                 kwargs['start_date'] = best_track_start_date
                 best_track_end_date = get_argument(
-                    argument='besttrack-end-date',
-                    arguments=extra_arguments,
+                    argument='besttrack-end-date', arguments=extra_arguments,
                 )
                 kwargs['end_date'] = best_track_end_date
 
             if issubclass(forcing_configuration_class, FileForcingJSON):
                 forcing_path = get_argument(
-                    argument=f'{provided_name}-path',
-                    arguments=extra_arguments,
+                    argument=f'{provided_name}-path', arguments=extra_arguments,
                 )
                 kwargs['resource'] = forcing_path
             if issubclass(forcing_configuration_class, NEMSCapJSON):
                 nems_cap_processors = get_argument(
-                    argument=f'{provided_name}-processors',
-                    arguments=extra_arguments,
+                    argument=f'{provided_name}-processors', arguments=extra_arguments,
                 )
                 kwargs['processors'] = nems_cap_processors
                 nems_cap_parameters = get_argument(
-                    argument=f'{provided_name}-nems-parameters',
-                    arguments=extra_arguments,
+                    argument=f'{provided_name}-nems-parameters', arguments=extra_arguments,
                 )
                 kwargs['nems_parameters'] = nems_cap_parameters
             if issubclass(forcing_configuration_class, TimestepForcingJSON):
                 forcing_timestep = get_argument(
-                    argument=f'{provided_name}-modeled_timestep',
-                    arguments=extra_arguments,
+                    argument=f'{provided_name}-modeled_timestep', arguments=extra_arguments,
                 )
                 if forcing_timestep is None:
                     forcing_timestep = modeled_timestep
                 kwargs['modeled_timestep'] = forcing_timestep
             if issubclass(forcing_configuration_class, WindForcingJSON):
                 forcing_nws = get_argument(
-                    argument=f'{provided_name}-nws',
-                    arguments=extra_arguments,
+                    argument=f'{provided_name}-nws', arguments=extra_arguments,
                 )
                 kwargs['nws'] = forcing_nws
             if issubclass(forcing_configuration_class, WaveForcingJSON):
                 forcing_nrs = get_argument(
-                    argument=f'{provided_name}-nrs',
-                    arguments=extra_arguments,
+                    argument=f'{provided_name}-nrs', arguments=extra_arguments,
                 )
                 kwargs['nrs'] = forcing_nrs
 
@@ -302,7 +295,9 @@ def main():
         generation_script.write(filename=output_directory, overwrite=overwrite)
 
 
-def get_argument(argument: str, arguments: {str: str} = None, required: bool = False, message: str = None) -> str:
+def get_argument(
+    argument: str, arguments: {str: str} = None, required: bool = False, message: str = None
+) -> str:
     if message is None:
         message = f'enter value for "{argument}": '
 

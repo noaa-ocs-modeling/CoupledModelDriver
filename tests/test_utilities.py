@@ -123,7 +123,10 @@ def test_convert_value():
 
     assert none_1 is None
 
-    assert crs_1 == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+    assert (
+        crs_1
+        == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+    )
     assert crs_2 == 4326
     assert crs_3 == {
         '$schema': 'https://proj.org/schemas/v0.2/projjson.schema.json',
@@ -132,14 +135,37 @@ def test_convert_value():
         'datum': {
             'type': 'GeodeticReferenceFrame',
             'name': 'World Geodetic System 1984',
-            'ellipsoid': {'name': 'WGS 84', 'semi_major_axis': 6378137, 'inverse_flattening': 298.257223563}},
+            'ellipsoid': {
+                'name': 'WGS 84',
+                'semi_major_axis': 6378137,
+                'inverse_flattening': 298.257223563,
+            },
+        },
         'coordinate_system': {
             'subtype': 'ellipsoidal',
-            'axis': [{'name': 'Geodetic latitude', 'abbreviation': 'Lat', 'direction': 'north', 'unit': 'degree'},
-                     {'name': 'Geodetic longitude', 'abbreviation': 'Lon', 'direction': 'east', 'unit': 'degree'}]},
+            'axis': [
+                {
+                    'name': 'Geodetic latitude',
+                    'abbreviation': 'Lat',
+                    'direction': 'north',
+                    'unit': 'degree',
+                },
+                {
+                    'name': 'Geodetic longitude',
+                    'abbreviation': 'Lon',
+                    'direction': 'east',
+                    'unit': 'degree',
+                },
+            ],
+        },
         'scope': 'Horizontal component of 3D system.',
         'area': 'World.',
-        'bbox': {'south_latitude': -90, 'west_longitude': -180, 'north_latitude': 90, 'east_longitude': 180},
+        'bbox': {
+            'south_latitude': -90,
+            'west_longitude': -180,
+            'north_latitude': 90,
+            'east_longitude': 180,
+        },
         'id': {'authority': 'EPSG', 'code': 4326},
     }
 
