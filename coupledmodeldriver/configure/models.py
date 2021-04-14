@@ -58,8 +58,13 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         'source_filename': Path,
         'use_original_mesh': bool,
         'stations_file_path': Path,
-        'write_surface_output': bool,
-        'write_station_output': bool,
+        'modeled_output_interval': timedelta,
+        'output_stations': bool,
+        'output_surface': bool,
+        'output_elevations': bool,
+        'output_velocities': bool,
+        'output_concentrations': bool,
+        'output_meteorological_factors': bool,
     }
 
     def __init__(
@@ -80,13 +85,19 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         slurm_configuration: SlurmJSON = None,
         use_original_mesh: bool = False,
         stations_file_path: PathLike = None,
-        write_surface_output: bool = True,
-        write_station_output: bool = False,
+        modeled_output_interval: timedelta = None,
+        output_surface: bool = True,
+        output_stations: bool = False,
+        output_elevations: bool = True,
+        output_velocities: bool = True,
+        output_concentrations: bool = False,
+        output_meteorological_factors: bool = False,
         processors: int = 11,
         nems_parameters: {str: str} = None,
         **kwargs,
     ):
         """
+        Instantiate a new ADCIRCJSON configuration.
 
         :param adcirc_executable_path: file path to `adcirc` or `NEMS.x`
         :param adcprep_executable_path: file path to `adcprep`
@@ -104,8 +115,13 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param slurm_configuration: Slurm configuration object
         :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with `adcircpy`
         :param stations_file_path: file path to stations file
-        :param write_surface_output: whether to write surface output to NetCDF
-        :param write_station_output: whether to write station output to NetCDF (only applicable if stations file exists)
+        :param modeled_output_interval: frequency at which output is written to file
+        :param output_surface: write surface (entire mesh) to NetCDF
+        :param output_stations: write stations to NetCDF (only applicable if stations file exists)
+        :param output_elevations: write elevations to NetCDF
+        :param output_velocities: write velocities to NetCDF
+        :param output_concentrations: write concentrations to NetCDF
+        :param output_meteorological_factors: write meteorological factors to NetCDF
         :param processors: number of processors to use
         :param nems_parameters: parameters to give to NEMS cap
         """
@@ -137,11 +153,19 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self['source_filename'] = source_filename
         self['use_original_mesh'] = use_original_mesh
         self['stations_file_path'] = stations_file_path
-        self['write_surface_output'] = write_surface_output
-        self['write_station_output'] = write_station_output
+        self['modeled_output_interval'] = modeled_output_interval
+        self['output_surface'] = output_surface
+        self['output_stations'] = output_stations
+        self['output_elevations'] = output_elevations
+        self['output_velocities'] = output_velocities
+        self['output_concentrations'] = output_concentrations
+        self['output_meteorological_factors'] = output_meteorological_factors
 
         self.forcings = forcings
         self.slurm_configuration = slurm_configuration
+
+        if self['modeled_output_interval'] is None:
+            self['modeled_output_interval'] = self['modeled_timestep'] * 100
 
     @property
     def forcings(self) -> [ForcingJSON]:
@@ -239,6 +263,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
             else None,
         )
 
+        if self['stations_file_path'] is not None:
+            driver.import_stations(self['stations_file_path'])
+
         if self['modeled_timestep'] is not None:
             driver.timestep = self['modeled_timestep'] / timedelta(seconds=1)
 
@@ -253,30 +280,69 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         else:
             spinup_start = None
 
-        if self['write_station_output'] and self['stations_file_path'].exists():
-            driver.import_stations(self['stations_file_path'])
-            driver.set_elevation_stations_output(
-                self['modeled_timestep'],
-                spinup=self['tidal_spinup_timestep'],
-                spinup_start=spinup_start,
-            )
-            driver.set_velocity_stations_output(
-                self['modeled_timestep'],
-                spinup=self['tidal_spinup_timestep'],
-                spinup_start=spinup_start,
-            )
+        if self['output_elevations']:
+            if self['output_surface']:
+                driver.set_elevation_surface_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
+            if self['output_stations']:
+                driver.set_elevation_stations_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
 
-        if self['write_surface_output']:
-            driver.set_elevation_surface_output(
-                self['modeled_timestep'],
-                spinup=self['tidal_spinup_timestep'],
-                spinup_start=spinup_start,
-            )
-            driver.set_velocity_surface_output(
-                self['modeled_timestep'],
-                spinup=self['tidal_spinup_timestep'],
-                spinup_start=spinup_start,
-            )
+        if self['output_velocities']:
+            if self['output_surface']:
+                driver.set_velocity_surface_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
+            if self['output_stations']:
+                driver.set_velocity_stations_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
+
+        if self['output_concentrations']:
+            if self['output_surface']:
+                driver.set_concentration_surface_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
+            if self['output_stations']:
+                driver.set_concentration_stations_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
+
+        if self['output_meteorological_factors']:
+            if self['output_surface']:
+                driver.set_meteorological_surface_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
+            if self['output_stations']:
+                driver.set_meteorological_stations_output(
+                    sampling_rate=self['modeled_output_interval'],
+                    start=self['modeled_start_time'],
+                    spinup=self['tidal_spinup_timestep'],
+                    spinup_start=spinup_start,
+                )
 
         return driver
 
