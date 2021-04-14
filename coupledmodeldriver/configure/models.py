@@ -264,6 +264,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         )
 
         if self['stations_file_path'] is not None:
+            LOGGER.info(f'importing stations from "{self["stations_file_path"]}"')
             driver.import_stations(self['stations_file_path'])
 
         if self['modeled_timestep'] is not None:
