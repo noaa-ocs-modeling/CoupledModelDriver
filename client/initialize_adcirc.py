@@ -168,12 +168,16 @@ def main():
                     message=f'enter tidal spinup duration (`HH:MM:SS`): ',
                 )
                 tidal_spinup_duration = convert_value(tidal_spinup_duration, timedelta)
+                tidal_source_options = '/'.join(
+                    tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE
+                    else tidal_source.name.upper()
+                    for tidal_source in TidalSource
+                )
                 tidal_source = get_argument(
                     argument=f'tidal-source',
                     arguments=extra_arguments,
                     required=True,
-                    message=f'enter tidal forcing source '
-                            f'({"/".join(tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE else tidal_source.name.upper() for tidal_source in TidalSource)}): ',
+                    message=f'enter tidal forcing source ({tidal_source_options}): ',
                 )
                 if tidal_source is not None:
                     tidal_source = convert_value(tidal_source, TidalSource)
