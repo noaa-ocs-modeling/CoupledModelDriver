@@ -3,7 +3,6 @@ from os import PathLike
 from pathlib import Path
 
 from adcircpy import AdcircMesh, AdcircRun
-from adcircpy.forcing.base import Forcing
 from nemspy import ModelingSystem
 
 from ...configure.base import ModelDriverJSON, NEMSCapJSON, NEMSJSON, \
@@ -252,7 +251,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
     def nemspy_modeling_system(self) -> ModelingSystem:
         return self['nems'].nemspy_modeling_system
 
-    def add_forcing(self, forcing: Forcing):
+    def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
             name = self.add(forcing)
             forcing = self[name]
