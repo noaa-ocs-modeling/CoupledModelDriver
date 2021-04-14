@@ -13,8 +13,13 @@
   "source_filename": null,
   "use_original_mesh": false,
   "stations_file_path": null,
-  "write_surface_output": true,
-  "write_station_output": false,
+  "modeled_output_interval": 200.0,
+  "output_stations": false,
+  "output_surface": true,
+  "output_elevations": true,
+  "output_velocities": true,
+  "output_concentrations": false,
+  "output_meteorological_factors": false,
   "processors": 11,
   "nems_parameters": {}
 }
