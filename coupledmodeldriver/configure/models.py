@@ -11,7 +11,8 @@ from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
 from .base import ConfigurationJSON, NEMSCapJSON, SlurmJSON
-from .forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
+from .configure import from_user_input
+from .forcings.base import ForcingJSON
 from ..utilities import LOGGER
 
 
@@ -154,18 +155,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
             self.add_forcing(forcing)
 
     def add_forcing(self, forcing: ForcingJSON):
-        if isinstance(forcing, str):
-            try:
-                forcing = ForcingJSON.from_file(Path(forcing))
-            except:
-                forcing = ForcingJSON.from_string(forcing)
-        if isinstance(forcing, ADCIRCPY_FORCING_CLASSES):
-            adcircpy_forcing = forcing
-            forcing = ForcingJSON.from_adcircpy(forcing)
-        elif isinstance(forcing, ForcingJSON):
-            adcircpy_forcing = forcing.adcircpy_forcing
-        else:
-            raise NotImplementedError(f'unrecognized forcing type {type(forcing)}')
+        if not isinstance(forcing, ForcingJSON):
+            forcing = from_user_input(forcing)
+        adcircpy_forcing = forcing.adcircpy_forcing
 
         existing_forcings = [
             existing_forcing.__class__.__name__ for existing_forcing in self.adcircpy_forcings
