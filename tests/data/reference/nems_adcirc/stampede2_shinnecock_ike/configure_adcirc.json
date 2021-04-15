@@ -21,6 +21,7 @@
   "output_velocities": true,
   "output_concentrations": false,
   "output_meteorological_factors": false,
+  "output_spinup": false,
   "processors": 1020,
   "nems_parameters": {}
 }
