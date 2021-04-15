@@ -39,10 +39,17 @@ class GWCESolutionScheme(Enum):
     semi_implicit_legacy = 'semi-implicit-legacy'
 
 
+OUTPUT_INTERVAL_DEFAULTS = {
+    'surface_output_interval': timedelta(hours=1),
+    'stations_output_interval': timedelta(minutes=6),
+}
+
+
 class ADCIRCJSON(ModelJSON, NEMSCapJSON):
     name = 'ADCIRC'
     default_filename = f'configure_adcirc.json'
     default_processors = 11
+
     field_types = {
         'adcirc_executable_path': Path,
         'adcprep_executable_path': Path,
@@ -57,10 +64,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         'use_smagorinsky': bool,
         'source_filename': Path,
         'use_original_mesh': bool,
-        'stations_file_path': Path,
-        'modeled_output_interval': timedelta,
-        'output_stations': bool,
         'output_surface': bool,
+        'surface_output_interval': timedelta,
+        'output_stations': bool,
+        'stations_file_path': Path,
+        'stations_output_interval': timedelta,
         'output_elevations': bool,
         'output_velocities': bool,
         'output_concentrations': bool,
@@ -84,10 +92,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
         use_original_mesh: bool = False,
-        stations_file_path: PathLike = None,
-        modeled_output_interval: timedelta = None,
         output_surface: bool = True,
+        surface_output_interval: timedelta = None,
         output_stations: bool = False,
+        stations_output_interval=None,
+        stations_file_path: PathLike = None,
         output_elevations: bool = True,
         output_velocities: bool = True,
         output_concentrations: bool = False,
@@ -114,10 +123,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param source_filename: path to modulefile to `source`
         :param slurm_configuration: Slurm configuration object
         :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with `adcircpy`
-        :param stations_file_path: file path to stations file
-        :param modeled_output_interval: frequency at which output is written to file
         :param output_surface: write surface (entire mesh) to NetCDF
+        :param surface_output_interval: frequency at which output is written to file
         :param output_stations: write stations to NetCDF (only applicable if stations file exists)
+        :param stations_output_interval: frequency at which stations output is written to file
+        :param stations_file_path: file path to stations file
         :param output_elevations: write elevations to NetCDF
         :param output_velocities: write velocities to NetCDF
         :param output_concentrations: write concentrations to NetCDF
@@ -152,10 +162,12 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self['use_smagorinsky'] = use_smagorinsky
         self['source_filename'] = source_filename
         self['use_original_mesh'] = use_original_mesh
-        self['stations_file_path'] = stations_file_path
-        self['modeled_output_interval'] = modeled_output_interval
+
         self['output_surface'] = output_surface
+        self['surface_output_interval'] = surface_output_interval
         self['output_stations'] = output_stations
+        self['stations_output_interval'] = stations_output_interval
+        self['stations_file_path'] = stations_file_path
         self['output_elevations'] = output_elevations
         self['output_velocities'] = output_velocities
         self['output_concentrations'] = output_concentrations
@@ -164,8 +176,10 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self.forcings = forcings
         self.slurm_configuration = slurm_configuration
 
-        if self['modeled_output_interval'] is None:
-            self['modeled_output_interval'] = self['modeled_timestep'] * 100
+        for output_interval_entry, default_interval in OUTPUT_INTERVAL_DEFAULTS.items():
+            if self[output_interval_entry] is None:
+                LOGGER.debug(f'setting `{output_interval_entry}` to {default_interval}')
+                self[output_interval_entry] = default_interval
 
     @property
     def forcings(self) -> [ForcingJSON]:
@@ -278,71 +292,89 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
         if self['tidal_spinup_duration'] is not None:
             spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
+            spinup_end = self['modeled_start_time']
         else:
             spinup_start = None
+            spinup_end = None
 
         if self['output_elevations']:
             if self['output_surface']:
                 driver.set_elevation_surface_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
             if self['output_stations']:
                 driver.set_elevation_stations_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
 
         if self['output_velocities']:
             if self['output_surface']:
                 driver.set_velocity_surface_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
             if self['output_stations']:
                 driver.set_velocity_stations_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
 
         if self['output_concentrations']:
             if self['output_surface']:
                 driver.set_concentration_surface_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
             if self['output_stations']:
                 driver.set_concentration_stations_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
 
         if self['output_meteorological_factors']:
             if self['output_surface']:
                 driver.set_meteorological_surface_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
             if self['output_stations']:
                 driver.set_meteorological_stations_output(
-                    sampling_rate=self['modeled_output_interval'],
+                    sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
+                    end=self['modeled_end_time'],
                     spinup=self['tidal_spinup_timestep'],
                     spinup_start=spinup_start,
+                    spinup_end=spinup_end,
                 )
 
         return driver
