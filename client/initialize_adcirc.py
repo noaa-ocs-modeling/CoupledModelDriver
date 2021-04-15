@@ -169,7 +169,8 @@ def main():
                 )
                 tidal_spinup_duration = convert_value(tidal_spinup_duration, timedelta)
                 tidal_source_options = '/'.join(
-                    tidal_source.name.lower() if tidal_source != DEFAULT_TIDAL_SOURCE
+                    tidal_source.name.lower()
+                    if tidal_source != DEFAULT_TIDAL_SOURCE
                     else tidal_source.name.upper()
                     for tidal_source in TidalSource
                 )
