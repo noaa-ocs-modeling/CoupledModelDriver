@@ -1,4 +1,4 @@
-created on 2021-04-15 14:41                                     ! RUNDES
+created on 2021-04-15 14:52                                     ! RUNDES
 Shinacock Inlet Coarse Grid                                     ! RUNID
 1                                                               ! NFOVER
 1                                                               ! NABOUT
@@ -676,8 +676,8 @@ K2
 0                                                               ! NSTAE
 0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV
 0                                                               ! NSTAV
-0 0.000000 0.000000 0                                           ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE
-0 0.000000 0.000000 0                                           ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV
+-5 0.000000 12.500000 1800                                      ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE
+-5 0.000000 0.000000 1800                                       ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV
 0                                                               ! NFREQ
 0 0 0 0                                                         ! THAS THAF NHAINC FMV
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV
