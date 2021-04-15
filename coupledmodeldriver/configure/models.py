@@ -303,7 +303,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['surface_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -312,7 +312,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['stations_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -323,7 +323,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['surface_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -332,7 +332,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['stations_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -343,7 +343,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['surface_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -352,7 +352,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['stations_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -363,7 +363,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['surface_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -372,7 +372,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['tidal_spinup_timestep'],
+                    spinup=self['stations_output_interval'],
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
