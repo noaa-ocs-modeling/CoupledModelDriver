@@ -68,6 +68,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         'surface_output_interval': timedelta,
         'output_stations': bool,
         'stations_file_path': Path,
+        'output_spinup': bool,
         'stations_output_interval': timedelta,
         'output_elevations': bool,
         'output_velocities': bool,
@@ -97,6 +98,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         output_stations: bool = False,
         stations_output_interval=None,
         stations_file_path: PathLike = None,
+        output_spinup: bool = True,
         output_elevations: bool = True,
         output_velocities: bool = True,
         output_concentrations: bool = False,
@@ -128,6 +130,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param output_stations: write stations to NetCDF (only applicable if stations file exists)
         :param stations_output_interval: frequency at which stations output is written to file
         :param stations_file_path: file path to stations file
+        :param output_spinup: write spinup to NetCDF
         :param output_elevations: write elevations to NetCDF
         :param output_velocities: write velocities to NetCDF
         :param output_concentrations: write concentrations to NetCDF
@@ -168,6 +171,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self['output_stations'] = output_stations
         self['stations_output_interval'] = stations_output_interval
         self['stations_file_path'] = stations_file_path
+        self['output_spinup'] = output_spinup
         self['output_elevations'] = output_elevations
         self['output_velocities'] = output_velocities
         self['output_concentrations'] = output_concentrations
@@ -290,12 +294,14 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         if self['use_smagorinsky'] is not None:
             driver.smagorinsky = self['use_smagorinsky']
 
-        if self['tidal_spinup_duration'] is not None:
+        if self['tidal_spinup_duration'] is not None and self['output_spinup']:
             spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
             spinup_end = self['modeled_start_time']
+            spinup_output_interval = self['surface_output_interval']
         else:
             spinup_start = None
             spinup_end = None
+            spinup_output_interval = None
 
         if self['output_elevations']:
             if self['output_surface']:
@@ -303,7 +309,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['surface_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -312,7 +318,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['stations_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -323,7 +329,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['surface_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -332,7 +338,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['stations_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -343,7 +349,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['surface_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -352,7 +358,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['stations_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -363,7 +369,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['surface_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
@@ -372,7 +378,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
                     end=self['modeled_end_time'],
-                    spinup=self['stations_output_interval'],
+                    spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
                 )
