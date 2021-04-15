@@ -147,7 +147,9 @@ def make_executable(path: PathLike):
 
 
 def convert_value(value: Any, to_type: type) -> Any:
-    if isinstance(to_type, str):
+    if to_type is None:
+        return value
+    elif isinstance(to_type, str):
         to_type = eval(to_type)
     if isinstance(value, Enum):
         value = value.name
