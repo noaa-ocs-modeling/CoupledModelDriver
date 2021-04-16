@@ -214,8 +214,8 @@ class BestTrackForcingJSON(WindForcingJSON):
         )
 
     @classmethod
-    def from_fort22(cls, filename: PathLike):
-        return cls.from_adcircpy(BestTrackForcing.from_fort22(filename))
+    def from_fort22(cls, filename: PathLike, nws: int = None):
+        return cls.from_adcircpy(BestTrackForcing.from_fort22(filename, nws))
 
 
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
