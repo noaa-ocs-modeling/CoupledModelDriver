@@ -213,6 +213,10 @@ class BestTrackForcingJSON(WindForcingJSON):
             end_date=forcing.end_date,
         )
 
+    @classmethod
+    def from_fort22(cls, filename: PathLike):
+        return cls.from_adcircpy(BestTrackForcing.from_fort22(filename))
+
 
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
     name = 'OWI'
