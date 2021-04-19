@@ -62,6 +62,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         'tidal_spinup_timestep': timedelta,
         'gwce_solution_scheme': GWCESolutionScheme,
         'use_smagorinsky': bool,
+        'ESLM': float,
         'source_filename': Path,
         'use_original_mesh': bool,
         'output_surface': bool,
@@ -90,6 +91,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         forcings: [Forcing] = None,
         gwce_solution_scheme: str = None,
         use_smagorinsky: bool = None,
+        ESLM: float = None,
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
         use_original_mesh: bool = False,
@@ -122,6 +124,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param forcings: list of Forcing objects to apply to the mesh
         :param gwce_solution_scheme: solution scheme (can be `explicit`, `semi-implicit`, or `semi-implicit-legacy`)
         :param use_smagorinsky: whether to use Smagorinsky coefficient
+        :param ESLM: ESLM parameter - spatially constant horizontal eddy viscosity for the momentum equations (units of length^2/time)
         :param source_filename: path to modulefile to `source`
         :param slurm_configuration: Slurm configuration object
         :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with `adcircpy`
@@ -163,6 +166,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self['tidal_spinup_timestep'] = tidal_spinup_timestep
         self['gwce_solution_scheme'] = gwce_solution_scheme
         self['use_smagorinsky'] = use_smagorinsky
+        self['ESLM'] = ESLM
         self['source_filename'] = source_filename
         self['use_original_mesh'] = use_original_mesh
 
@@ -293,6 +297,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
 
         if self['use_smagorinsky'] is not None:
             driver.smagorinsky = self['use_smagorinsky']
+
+        if self['ESLM'] is not None:
+            driver.ESLM = self['ESLM']
 
         if self['tidal_spinup_duration'] is not None and self['output_spinup']:
             spinup_start = self['modeled_start_time'] - self['tidal_spinup_duration']
