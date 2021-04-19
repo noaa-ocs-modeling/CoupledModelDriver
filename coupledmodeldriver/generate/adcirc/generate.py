@@ -616,20 +616,18 @@ def generate_nems_adcirc_configuration(
             relative=True,
         )
         if tidal_spinup_nems is not None:
-            hotstart_filename = 'fort.67.nc'
-            # if (coldstart_directory / hotstart_filename).exists():
-            #     hotstart_filename = 'fort.68.nc'
-            try:
-                create_symlink(
-                    coldstart_directory / hotstart_filename,
-                    hotstart_directory / hotstart_filename,
-                    relative=True,
-                )
-            except:
-                LOGGER.warning(
-                    f'unable to link `{hotstart_filename}` from coldstart to hotstart; '
-                    'you must manually link or copy this file after coldstart completes'
-                )
+            for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:
+                try:
+                    create_symlink(
+                        coldstart_directory / hotstart_filename,
+                        hotstart_directory / hotstart_filename,
+                        relative=True,
+                    )
+                except:
+                    LOGGER.warning(
+                        f'unable to link `{hotstart_filename}` from coldstart to hotstart; '
+                        'you must manually link or copy this file after coldstart completes'
+                    )
 
     LOGGER.info(f'writing ensemble run script "{run_script_filename.name}"')
     run_script = EnsembleRunScript(platform)
