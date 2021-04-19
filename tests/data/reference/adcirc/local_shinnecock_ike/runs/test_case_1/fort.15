@@ -1,4 +1,4 @@
-created on 2021-04-19 16:35                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2021-04-19 18:13                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
@@ -6,12 +6,12 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 567                                                             ! IHOT                                - HOT START PARAMETER
 2                                                               ! ICS                                 - COORDINATE SYSTEM SELECTION PARAMETER
 511113                                                          ! IM                                  - MODEL SELECTION PARAMETER
-2                                                               ! NOLIBF                              - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, "2" was used
+2                                                               ! NOLIBF                              - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, '2' was used
 2                                                               ! NOLIFA                              - FINITE AMPLITUDE TERM SELECTION PARAMETER
 1                                                               ! NOLICA                              - SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER
 1                                                               ! NOLICAT                             - TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER
 1                                                               ! NWP                                 - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0
-primitive_weighting_in_continuity_equation                     
+primitive_weighting_in_continuity_equation
 1                                                               ! NCOR                                - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER
 1                                                               ! NTIP                                - TIDAL POTENTIAL OPTION PARAMETER
 0                                                               ! NWS                                 - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER
