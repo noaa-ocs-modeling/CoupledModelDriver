@@ -1,4 +1,4 @@
-# `config.rc` generated with NEMSpy 1.2.18.post6.dev0+194e15a
+# `config.rc` generated with NEMSpy 1.2.18.post7.dev0+b68e7a4
  atm_dir: ../../../input/shinnecock_ike/forcings
  atm_nam: wind_atm_fin_ch_time_vec.nc
  wav_dir: ../../../input/shinnecock_ike/forcings
