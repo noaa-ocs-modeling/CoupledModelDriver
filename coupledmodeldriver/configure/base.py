@@ -123,7 +123,7 @@ class ConfigurationJSON(ABC):
             configuration = json.load(file)
 
         configuration = {
-            key.lower(): convert_value(value, cls.field_types[key])
+            key: convert_value(value, cls.field_types[key])
             if key in cls.field_types
             else convert_to_json(value)
             for key, value in configuration.items()
