@@ -10,6 +10,7 @@
   "tidal_spinup_timestep": 2.0,
   "gwce_solution_scheme": null,
   "use_smagorinsky": null,
+  "horizontal_eddy_viscosity": null,
   "source_filename": null,
   "use_original_mesh": false,
   "output_surface": true,

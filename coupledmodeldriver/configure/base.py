@@ -21,10 +21,15 @@ class ConfigurationJSON(ABC):
     field_types: {str: type}
 
     def __init__(self, fields: {str: type} = None, configuration: {str: Any} = None):
+        self.field_types = {key.lower(): value for key, value in self.field_types.items()}
+
         if not hasattr(self, 'fields'):
             self.fields = {}
 
+        self.fields.update({key: None for key in self.field_types if key not in self.fields})
+
         if fields is not None:
+            fields = {key.lower(): value for key, value in fields.items()}
             self.fields.update(fields)
 
         if not hasattr(self, 'configuration'):
@@ -123,7 +128,7 @@ class ConfigurationJSON(ABC):
             configuration = json.load(file)
 
         configuration = {
-            key: convert_value(value, cls.field_types[key])
+            key.lower(): convert_value(value, cls.field_types[key])
             if key in cls.field_types
             else convert_to_json(value)
             for key, value in configuration.items()
