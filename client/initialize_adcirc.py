@@ -91,7 +91,7 @@ def main():
     argument_parser.add_argument(
         '--generate-script',
         action='store_true',
-        help='write a Python script to load configuration',
+        help='write shell script to load configuration',
     )
     argument_parser.add_argument(
         '--skip-existing', action='store_true', help='skip existing files',

@@ -287,7 +287,7 @@ optional arguments:
                         wall clock time for job
   --output-directory OUTPUT_DIRECTORY
                         directory to which to write configuration files
-  --generate-script     write a Python script to load configuration
+  --generate-script     write shell script to load configuration
   --skip-existing       skip existing files
 ```
 
