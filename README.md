@@ -21,6 +21,8 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
     - forcings
         - ATMESH
         - WW3DATA
+        - HURDAT best track
+        - OWI
 - **platforms**
     - local
     - Slurm
