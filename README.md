@@ -21,6 +21,8 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
     - forcings
         - ATMESH
         - WW3DATA
+        - HURDAT best track
+        - OWI
 - **platforms**
     - local
     - Slurm
@@ -285,7 +287,7 @@ optional arguments:
                         wall clock time for job
   --output-directory OUTPUT_DIRECTORY
                         directory to which to write configuration files
-  --generate-script     write a Python script to load configuration
+  --generate-script     write shell script to load configuration
   --skip-existing       skip existing files
 ```
 
