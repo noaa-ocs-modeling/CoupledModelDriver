@@ -76,8 +76,7 @@ if __name__ == '__main__':
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
     configuration = NEMSADCIRCRunConfiguration(
-        fort13=MESH_DIRECTORY / 'fort.13',
-        mesh_directory=MESH_DIRECTORY / 'fort.14',
+        mesh_directory=MESH_DIRECTORY,
         modeled_start_time=MODELED_START_TIME,
         modeled_end_time=MODELED_START_TIME + MODELED_DURATION,
         modeled_timestep=MODELED_TIMESTEP,

@@ -5,6 +5,7 @@ from os import PathLike
 from pathlib import Path
 
 from nemspy import ModelingSystem
+import numpy
 
 from .configure import ADCIRCRunConfiguration, \
     NEMSADCIRCRunConfiguration
@@ -574,8 +575,8 @@ def generate_nems_adcirc_configuration(
         if attributes is not None:
             for name, value in attributes.items():
                 if name is not None:
-                    # if not isinstance(value, numpy.ndarray):
-                    #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
+                    if not isinstance(value, numpy.ndarray):
+                        value = numpy.full([len(driver.mesh.coords)], fill_value=value)
                     if not driver.mesh.has_nodal_attribute(name):
                         driver.mesh.add_nodal_attribute(name, '1')
                     driver.mesh.set_nodal_attribute(name, value)
