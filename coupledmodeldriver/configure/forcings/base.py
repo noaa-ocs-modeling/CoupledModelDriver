@@ -169,11 +169,21 @@ class WindForcingJSON(ForcingJSON, ABC):
         self['nws'] = nws
 
 
+BESTTRACK_ATTRIBUTES = [
+    'NWS',
+    'BLADj',
+    '_storm_id',
+    'geofactor',
+    'start_date',
+    'end_date',
+]
+
+
 class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     name = 'BestTrack'
     default_filename = f'configure_besttrack.json'
     default_nws = 20
-    default_attributes = ['Rmax', 'Vmax', 'radius']
+    default_attributes = BESTTRACK_ATTRIBUTES
     field_types = {
         'storm_id': str,
         'start_date': datetime,
