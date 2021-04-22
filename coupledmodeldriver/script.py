@@ -8,8 +8,8 @@ import uuid
 
 import numpy
 
-from .platforms import Platform
-from .utilities import make_executable
+from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver.utilities import make_executable
 
 
 class SlurmEmailType(Enum):

@@ -7,8 +7,7 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import ADCIRCGenerationScript, \
-    ADCIRCRunConfiguration
+from coupledmodeldriver.generate import ADCIRCGenerationScript, ADCIRCRunConfiguration
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
@@ -60,7 +59,7 @@ if __name__ == '__main__':
         modeled_timestep=MODELED_TIMESTEP,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,
-        runs=None,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=ADCIRC_PROCESSORS,
         slurm_partition=None,

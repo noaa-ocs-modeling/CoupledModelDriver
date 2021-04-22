@@ -70,21 +70,23 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import NEMSADCIRCRunConfiguration
+from coupledmodeldriver.generate import (
+    NEMSADCIRCRunConfiguration,
+)
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
 
 # start and end times for model
-MODELED_START_TIME = datetime(year=2008, month=8, day=23)
-MODELED_DURATION = timedelta(days=14.5)
+MODELED_START_TIME = datetime(year=2012, month=10, day=22, hour=6)
+MODELED_DURATION = timedelta(days=4, hours=5)
 MODELED_TIMESTEP = timedelta(seconds=2)
 TIDAL_SPINUP_DURATION = timedelta(days=12.5)
 NEMS_INTERVAL = timedelta(hours=1)
 
 # directories containing forcings and mesh
-MESH_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/meshes/shinnecock/v1.0'
-FORCINGS_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike'
+MESH_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/meshes/hsofs/120m/v3.0_20210401'
+FORCINGS_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/hsofs/120m/sandy'
 HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
 TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
 
@@ -100,9 +102,13 @@ NEMS_SEQUENCE = [
 
 # platform-specific parameters
 PLATFORM = Platform.HERA
-ADCIRC_PROCESSORS = 11
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
-ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+ADCIRC_PROCESSORS = 15 * PLATFORM.value['processors_per_node']
+NEMS_EXECUTABLE = (
+    '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
+)
+ADCPREP_EXECUTABLE = (
+    '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
+)
 MODULEFILE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
 SLURM_JOB_DURATION = timedelta(hours=6)
 
@@ -112,12 +118,12 @@ if __name__ == '__main__':
     tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
-        filename=FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc',
+        filename=FORCINGS_DIRECTORY / 'Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
         nws=17,
         interval_seconds=3600,
     )
     wave_forcing = WaveWatch3DataForcing(
-        filename=FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc',
+        filename=FORCINGS_DIRECTORY / 'ww3.HWRF.NOV2018.2012_sxy.nc',
         nrs=5,
         interval_seconds=3600,
     )
@@ -134,7 +140,7 @@ if __name__ == '__main__':
         nems_sequence=NEMS_SEQUENCE,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,
-        runs=None,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=ADCIRC_PROCESSORS,
         slurm_partition=None,
@@ -144,7 +150,6 @@ if __name__ == '__main__':
         adcprep_executable=ADCPREP_EXECUTABLE,
         source_filename=MODULEFILE,
     )
-
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
 ```
 

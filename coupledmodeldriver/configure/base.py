@@ -10,9 +10,10 @@ from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model import ModelEntry
 
-from ..platforms import Platform
-from ..script import SlurmEmailType
-from ..utilities import LOGGER, convert_to_json, convert_value
+from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver.script import SlurmEmailType
+from coupledmodeldriver.utilities import LOGGER, convert_to_json, \
+    convert_value
 
 
 class ConfigurationJSON(ABC):
@@ -20,7 +21,7 @@ class ConfigurationJSON(ABC):
     default_filename: PathLike
     field_types: {str: type}
 
-    def __init__(self, fields: {str: type} = None, configuration: {str: Any} = None):
+    def __init__(self, fields: {str: type} = None, **configuration):
         self.field_types = {key.lower(): value for key, value in self.field_types.items()}
 
         if not hasattr(self, 'fields'):
@@ -35,7 +36,7 @@ class ConfigurationJSON(ABC):
         if not hasattr(self, 'configuration'):
             self.configuration = {field: None for field in self.fields}
 
-        if configuration is not None:
+        if len(configuration) > 0:
             self.configuration.update(configuration)
 
     def update(self, configuration: {str: Any}):
@@ -52,6 +53,25 @@ class ConfigurationJSON(ABC):
         with open(filename) as file:
             configuration = json.load(file)
         self.update(configuration)
+
+    def move_paths(self, relative_path: PathLike):
+        """
+        :param relative_path: path to which to move Path attributes
+        """
+
+        if isinstance(relative_path, int):
+            if relative_path <= 0:
+                relative_path = Path('.') / ('../' * (-relative_path))
+        elif not isinstance(relative_path, Path):
+            relative_path = Path(relative_path)
+
+        for name, value in self.configuration.items():
+            if isinstance(value, Path):
+                if not value.is_absolute():
+                    if isinstance(relative_path, int):
+                        self[name] = Path(*value.parts[relative_path:])
+                    elif isinstance(relative_path, Path):
+                        self[name] = relative_path / value
 
     def __contains__(self, key: str) -> bool:
         return key in self.configuration
@@ -107,6 +127,9 @@ class ConfigurationJSON(ABC):
             configuration = {key.lower(): value for key, value in configuration.items()}
 
         return json.dumps(configuration, indent=2)
+
+    def __copy__(self) -> 'ConfigurationJSON':
+        return self.__class__(**self.configuration)
 
     @classmethod
     def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
@@ -390,12 +413,20 @@ class ModelDriverJSON(ConfigurationJSON):
     default_filename = f'configure_modeldriver.json'
     field_types = {
         'platform': Platform,
-        'runs': {str: {str: Any}},
+        'perturbations': {str: {str: {str: Any}}},
     }
 
-    def __init__(self, platform: Platform, runs: {str: {str: Any}} = None, **kwargs):
-        if runs is None:
-            runs = {'run_1': None}
+    def __init__(
+        self, platform: Platform, perturbations: {str: {str: {str: Any}}} = None, **kwargs
+    ):
+        """
+        :param platform: platform on which to run
+        :param perturbations: dictionary of runs encompassing run names to parameter values
+        """
+
+        if perturbations is None:
+            perturbations = {'unperturbed': None}
+
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(ModelDriverJSON.field_types)
@@ -403,4 +434,30 @@ class ModelDriverJSON(ConfigurationJSON):
         ConfigurationJSON.__init__(self, **kwargs)
 
         self['platform'] = platform
-        self['runs'] = runs
+        self['perturbations'] = perturbations
+
+
+class AttributeJSON(ConfigurationJSON):
+    default_attributes: [str]
+    field_types = {
+        'attributes': {str: Any},
+    }
+
+    def __init__(self, attributes: {str: Any} = None, **kwargs):
+        """
+        :param attributes: attributes to store
+        """
+
+        if attributes is None:
+            if self.default_attributes is not None:
+                attributes = {attribute: None for attribute in self.default_attributes}
+            else:
+                attributes = {}
+
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(AttributeJSON.field_types)
+
+        ConfigurationJSON.__init__(self, **kwargs)
+
+        self['attributes'] = attributes

@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import ADCIRCGenerationScript, \
-    ADCIRCRunConfiguration
+from coupledmodeldriver.generate import ADCIRCGenerationScript, ADCIRCRunConfiguration
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
@@ -37,7 +36,7 @@ if __name__ == '__main__':
         modeled_timestep=MODELED_TIMESTEP,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,
-        runs=None,
+        perturbations=None,
         forcings=None,
         adcirc_processors=ADCIRC_PROCESSORS,
         slurm_partition=None,

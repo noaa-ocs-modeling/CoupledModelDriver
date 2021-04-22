@@ -1,4 +1,4 @@
-# `nems.configure` generated with NEMSpy 1.2.18.post10.dev0+69193ed
+# `nems.configure` generated with NEMSpy 1.2.20.post7.dev0+84d8c92
 # EARTH #
 EARTH_component_list: ATM WAV OCN
 EARTH_attributes::
@@ -21,7 +21,7 @@ WAV_attributes::
 
 # OCN #
 OCN_model:                      adcirc
-OCN_petlist_bounds:             2 601
+OCN_petlist_bounds:             2 12
 OCN_attributes::
   Verbosity = off
 ::

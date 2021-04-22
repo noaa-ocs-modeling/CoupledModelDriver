@@ -1,13 +1,11 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
-    WaveMeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 import pytest
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
-    ADCIRCJSON,
     ATMESHForcingJSON,
     ModelDriverJSON,
     NEMSJSON,
@@ -15,6 +13,7 @@ from coupledmodeldriver.configure import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
+from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 
 
 def test_update():
@@ -107,19 +106,19 @@ def test_adcirc():
 
     assert configuration.adcircpy_driver.IM == 511113
 
-    configuration['gwce_solution_scheme'] = 'semi-implicit-legacy'
+    configuration['attributes']['gwce_solution_scheme'] = 'semi-implicit-legacy'
 
     assert configuration.adcircpy_driver.IM == 511111
 
-    configuration['use_smagorinsky'] = False
+    configuration['attributes']['smagorinsky'] = False
 
     assert configuration.adcircpy_driver.IM == 111111
 
-    configuration['gwce_solution_scheme'] = 'explicit'
+    configuration['attributes']['gwce_solution_scheme'] = 'explicit'
 
     assert configuration.adcircpy_driver.IM == 111112
 
-    configuration['use_smagorinsky'] = True
+    configuration['attributes']['smagorinsky'] = True
 
     assert configuration.adcircpy_driver.IM == 511112
 
@@ -195,9 +194,9 @@ def test_ww3data():
 
 
 def test_modeldriver():
-    configuration = ModelDriverJSON(platform=Platform.HERA, runs=None)
+    configuration = ModelDriverJSON(platform=Platform.HERA, perturbations=None)
 
     assert configuration.configuration == {
         'platform': Platform.HERA,
-        'runs': {'run_1': None},
+        'perturbations': {'unperturbed': None},
     }

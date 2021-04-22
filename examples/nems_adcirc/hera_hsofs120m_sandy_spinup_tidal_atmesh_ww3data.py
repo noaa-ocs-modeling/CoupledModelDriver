@@ -52,6 +52,7 @@ SLURM_JOB_DURATION = timedelta(hours=6)
 
 if __name__ == '__main__':
     # initialize `adcircpy` forcing objects
+    FORCINGS_DIRECTORY = Path(FORCINGS_DIRECTORY)
     tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
@@ -77,7 +78,7 @@ if __name__ == '__main__':
         nems_sequence=NEMS_SEQUENCE,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,
-        runs=None,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=ADCIRC_PROCESSORS,
         slurm_partition=None,

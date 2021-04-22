@@ -5,8 +5,7 @@ from pathlib import Path
 from pyproj import CRS
 import pytest
 
-from coupledmodeldriver.utilities import convert_to_json, convert_value, \
-    create_symlink
+from coupledmodeldriver.utilities import convert_to_json, convert_value, create_symlink
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'

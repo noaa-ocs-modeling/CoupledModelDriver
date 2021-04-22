@@ -1,35 +1,41 @@
 from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
+from typing import Any
 
 from adcircpy import AdcircMesh, AdcircRun
 from nemspy import ModelingSystem
 
-from ...configure.base import ModelDriverJSON, NEMSCapJSON, NEMSJSON, \
-    SlurmJSON
-from ...configure.configure import RunConfiguration
-from ...configure.forcings.base import (
+from coupledmodeldriver.configure.base import (
+    ConfigurationJSON,
+    ModelDriverJSON,
+    NEMSCapJSON,
+    NEMSJSON,
+    SlurmJSON,
+)
+from coupledmodeldriver.configure.configure import RunConfiguration
+from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
     ForcingJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from ...configure.models import ADCIRCJSON
-from ...platforms import Platform
-from ...utilities import LOGGER
+from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
+from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver.utilities import LOGGER
 
 
 class ADCIRCRunConfiguration(RunConfiguration):
-    required = [
+    REQUIRED = {
         ModelDriverJSON,
         SlurmJSON,
         ADCIRCJSON,
-    ]
-    forcings = [
+    }
+    SUPPLEMENTARY = {
         TidalForcingJSON,
         ATMESHForcingJSON,
         WW3DATAForcingJSON,
-    ]
+    }
 
     def __init__(
         self,
@@ -39,7 +45,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         modeled_timestep: timedelta,
         tidal_spinup_duration: timedelta = None,
         platform: Platform = None,
-        runs: {str: (float, str)} = None,
+        perturbations: {str: {str: Any}} = None,
         forcings: [ForcingJSON] = None,
         adcirc_processors: int = None,
         slurm_job_duration: timedelta = None,
@@ -59,7 +65,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param adcirc_processors: numbers of processors to assign for ADCIRC
         :param platform: HPC platform for which to configure
         :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
-        :param runs: dictionary of run name to run value and mesh attribute name
+        :param perturbations: dictionary of runs encompassing run names to parameter values
+        :param forcings: list of forcing configurations to connect to ADCIRC
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
@@ -108,7 +115,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
             processors=adcirc_processors,
         )
 
-        driver = ModelDriverJSON(platform=platform, runs=runs)
+        driver = ModelDriverJSON(platform=platform, perturbations=perturbations)
         super().__init__([driver, slurm, adcirc])
 
         for forcing in forcings:
@@ -116,11 +123,19 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
     def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
-            name = self.add(forcing)
+            forcing = self[self.add(forcing)]
             try:
-                self['adcirc'].add_forcing(self[name])
+                self['adcirc'].add_forcing(forcing)
             except Exception as error:
                 LOGGER.error(error)
+
+    @property
+    def forcings(self) -> [ForcingJSON]:
+        return [
+            configuration
+            for configuration in self.configurations
+            if isinstance(configuration, ForcingJSON)
+        ]
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
@@ -130,63 +145,74 @@ class ADCIRCRunConfiguration(RunConfiguration):
     def adcircpy_driver(self) -> AdcircRun:
         return self['adcirc'].adcircpy_driver
 
+    def __copy__(self) -> 'ADCIRCRunConfiguration':
+        return self.__class__.from_configurations(self.configurations)
+
     @classmethod
     def from_configurations(
-        cls,
-        driver: ModelDriverJSON,
-        slurm: SlurmJSON,
-        adcirc: ADCIRCJSON,
-        forcings: [ForcingJSON] = None,
+        cls, configurations: [ConfigurationJSON]
     ) -> 'ADCIRCRunConfiguration':
-        instance = RunConfiguration([driver, slurm, adcirc])
+        required = {configuration_class: None for configuration_class in cls.REQUIRED}
+        supplementary = {
+            configuration_class: None for configuration_class in cls.SUPPLEMENTARY
+        }
+
+        for configuration in configurations:
+            for configuration_class in required:
+                if isinstance(configuration, configuration_class):
+                    if required[configuration_class] is None:
+                        required[configuration_class] = configuration
+                        break
+                    else:
+                        raise ValueError(
+                            f'multiple configurations given for "{configuration_class.__name__}"'
+                        )
+            for configuration_class in supplementary:
+                if isinstance(configuration, configuration_class):
+                    supplementary[configuration_class] = configuration
+
+        instance = RunConfiguration(required.values())
         instance.__class__ = cls
 
-        instance['modeldriver'] = driver
-        instance['slurm'] = slurm
-        instance['adcirc'] = adcirc
+        instance['modeldriver'] = required[ModelDriverJSON]
+        instance['slurm'] = required[SlurmJSON]
+        instance['adcirc'] = required[ADCIRCJSON]
 
-        if forcings is not None:
-            for forcing in forcings:
-                instance.add_forcing(forcing)
+        forcings = [
+            configuration
+            for configuration in supplementary
+            if isinstance(configuration, ForcingJSON)
+        ]
+        for forcing in forcings:
+            instance.add_forcing(forcing)
 
         return instance
 
     @classmethod
-    def read_directory(cls, directory: PathLike) -> 'ADCIRCRunConfiguration':
+    def read_directory(
+        cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
+    ) -> 'ADCIRCRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
         if directory.is_file():
             directory = directory.parent
+        if required is None:
+            required = set()
+        required.update(ADCIRCRunConfiguration.REQUIRED)
+        if supplementary is None:
+            supplementary = set()
+        supplementary.update(ADCIRCRunConfiguration.SUPPLEMENTARY)
 
-        configurations = []
-        for configuration_class in cls.required:
-            filename = directory / configuration_class.default_filename
-            if filename.exists():
-                configurations.append(configuration_class.from_file(filename))
-            else:
-                raise FileNotFoundError(f'missing required configuration file "{filename}"')
-
-        forcings = []
-        for configuration_class in cls.forcings:
-            filename = directory / configuration_class.default_filename
-            if filename.exists():
-                forcings.append(configuration_class.from_file(filename))
-
-        return cls.from_configurations(
-            driver=configurations[0],
-            slurm=configurations[1],
-            adcirc=configurations[2],
-            forcings=forcings,
-        )
+        return super().read_directory(directory, required, supplementary)
 
 
 class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
-    required = [
+    REQUIRED = {
         ModelDriverJSON,
         NEMSJSON,
         SlurmJSON,
         ADCIRCJSON,
-    ]
+    }
 
     def __init__(
         self,
@@ -200,7 +226,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         nems_sequence: [str],
         tidal_spinup_duration: timedelta = None,
         platform: Platform = None,
-        runs: {str: (float, str)} = None,
+        perturbations: {str: {str: Any}} = None,
         forcings: [ForcingJSON] = None,
         adcirc_processors: int = None,
         slurm_job_duration: timedelta = None,
@@ -219,7 +245,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            runs=runs,
+            perturbations=perturbations,
             forcings=None,
             adcirc_processors=adcirc_processors,
             slurm_job_duration=slurm_job_duration,
@@ -240,7 +266,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             sequence=nems_sequence,
         )
 
-        self[nems.name] = nems
+        self[nems.name.lower()] = nems
 
         for forcing in forcings:
             self.add_forcing(forcing)
@@ -253,62 +279,48 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
 
     def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
-            name = self.add(forcing)
-            forcing = self[name]
+            forcing = self[self.add(forcing)]
             if isinstance(forcing, NEMSCapJSON):
                 self['nems']['models'].append(forcing.nemspy_entry)
             self['adcirc'].add_forcing(forcing)
 
+    def __copy__(self) -> 'NEMSADCIRCRunConfiguration':
+        return self.__class__.from_configurations(self.configurations)
+
     @classmethod
     def from_configurations(
-        cls,
-        driver: ModelDriverJSON,
-        nems: NEMSJSON,
-        slurm: SlurmJSON,
-        adcirc: ADCIRCJSON,
-        forcings: [ForcingJSON] = None,
+        cls, configurations: [ConfigurationJSON]
     ) -> 'NEMSADCIRCRunConfiguration':
-        instance = super().from_configurations(
-            driver=driver, slurm=slurm, adcirc=adcirc, forcings=None,
-        )
+        instance = ADCIRCRunConfiguration.from_configurations(configurations)
         instance.__class__ = cls
-        instance[nems.name.lower()] = nems
 
-        if forcings is not None:
-            for forcing in forcings:
-                instance.add_forcing(forcing)
+        nems = None
+        for configuration in configurations:
+            if isinstance(configuration, NEMSJSON):
+                if nems is None:
+                    nems = configuration
+                    break
+                else:
+                    raise ValueError(
+                        f'multiple configurations given for "{NEMSJSON.__name__}"'
+                    )
+        instance['nems'] = nems
 
         return instance
 
     @classmethod
-    def read_directory(cls, directory: PathLike) -> 'NEMSADCIRCRunConfiguration':
+    def read_directory(
+        cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
+    ) -> 'NEMSADCIRCRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
         if directory.is_file():
             directory = directory.parent
+        if required is None:
+            required = set()
+        required.update(NEMSADCIRCRunConfiguration.REQUIRED)
+        if supplementary is None:
+            supplementary = set()
+        supplementary.update(NEMSADCIRCRunConfiguration.SUPPLEMENTARY)
 
-        configurations = []
-        for configuration_class in cls.required:
-            filename = directory / configuration_class.default_filename
-            if filename.exists():
-                configurations.append(configuration_class.from_file(filename))
-            else:
-                raise FileNotFoundError(f'missing required configuration file "{filename}"')
-
-        driver, nems, slurm, adcirc = configurations
-
-        forcings = []
-        for configuration_class in cls.forcings:
-            filename = directory / configuration_class.default_filename
-            if filename.exists():
-                forcings.append(configuration_class.from_file(filename))
-
-        nems['models'] = [
-            entry.nemspy_entry
-            for entry in (adcirc, *forcings)
-            if isinstance(entry, NEMSCapJSON)
-        ]
-
-        return cls.from_configurations(
-            driver=driver, nems=nems, slurm=slurm, adcirc=adcirc, forcings=forcings,
-        )
+        return super().read_directory(directory, required, supplementary)

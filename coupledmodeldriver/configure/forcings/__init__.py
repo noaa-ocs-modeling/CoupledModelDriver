@@ -1,4 +1,4 @@
-from .base import (
+from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
     BestTrackForcingJSON,
     OWIForcingJSON,

@@ -1,1 +1,1 @@
-from .platforms import Platform
+from coupledmodeldriver.platforms import Platform

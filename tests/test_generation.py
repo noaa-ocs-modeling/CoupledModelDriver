@@ -58,8 +58,6 @@ def test_nems_adcirc_local_shinnecock_ike():
         Path('.') / 'reference' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
-    runs = {f'test_case_1': None}
-
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']
     nems_mediations = None
     nems_sequence = [
@@ -97,7 +95,7 @@ def test_nems_adcirc_local_shinnecock_ike():
         nems_sequence=nems_sequence,
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
-        runs=runs,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=adcirc_processors,
         slurm_partition=None,
@@ -141,8 +139,6 @@ def test_nems_adcirc_hera_shinnecock_ike():
         Path('.') / 'reference' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
-    runs = {f'test_case_1': None}
-
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']
     nems_mediations = None
     nems_sequence = [
@@ -180,7 +176,7 @@ def test_nems_adcirc_hera_shinnecock_ike():
         nems_sequence=nems_sequence,
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
-        runs=runs,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=adcirc_processors,
         slurm_partition=None,
@@ -224,8 +220,6 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
         Path('.') / 'reference' / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
-    runs = {f'test_case_1': None}
-
     nems_connections = ['ATM -> OCN', 'WAV -> OCN']
     nems_mediations = None
     nems_sequence = [
@@ -263,7 +257,7 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
         nems_sequence=nems_sequence,
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
-        runs=runs,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=adcirc_processors,
         slurm_partition=None,
@@ -305,8 +299,6 @@ def test_adcirc_local_shinnecock_ike():
         Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
-    runs = {f'test_case_1': None}
-
     slurm_email_address = 'example@email.gov'
 
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
@@ -320,7 +312,7 @@ def test_adcirc_local_shinnecock_ike():
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
-        runs=runs,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=adcirc_processors,
         slurm_partition=None,
@@ -361,8 +353,6 @@ def test_adcirc_hera_shinnecock_ike():
         Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
-    runs = {f'test_case_1': None}
-
     slurm_email_address = 'example@email.gov'
 
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
@@ -376,7 +366,7 @@ def test_adcirc_hera_shinnecock_ike():
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
-        runs=runs,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=adcirc_processors,
         slurm_partition=None,
@@ -417,8 +407,6 @@ def test_adcirc_stampede2_shinnecock_ike():
         Path('.') / 'reference' / 'adcirc' / f'{platform.name.lower()}_{mesh}_{storm}'
     )
 
-    runs = {f'test_case_1': None}
-
     slurm_email_address = 'example@email.gov'
 
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
@@ -432,7 +420,7 @@ def test_adcirc_stampede2_shinnecock_ike():
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
-        runs=runs,
+        perturbations=None,
         forcings=forcings,
         adcirc_processors=adcirc_processors,
         slurm_partition=None,

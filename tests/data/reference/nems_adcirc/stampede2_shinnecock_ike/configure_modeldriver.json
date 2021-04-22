@@ -1,6 +1,6 @@
 {
   "platform": "STAMPEDE2",
-  "runs": {
-    "test_case_1": null
+  "perturbations": {
+    "unperturbed": null
   }
 }
