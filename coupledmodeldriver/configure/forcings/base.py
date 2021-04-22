@@ -15,8 +15,8 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveMeshEntry
 
-from coupledmodeldriver.configure.base import ConfigurationJSON, \
-    NEMSCapJSON
+from coupledmodeldriver.configure.base import AttributeJSON, \
+    ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
 
 ADCIRCPY_FORCINGS = {
@@ -169,16 +169,16 @@ class WindForcingJSON(ForcingJSON, ABC):
         self['nws'] = nws
 
 
-class BestTrackForcingJSON(WindForcingJSON):
+class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     name = 'BestTrack'
     default_filename = f'configure_besttrack.json'
     default_nws = 20
+    default_attributes = ['Rmax', 'Vmax', 'radius']
     field_types = {
         'storm_id': str,
         'start_date': datetime,
         'end_date': datetime,
         'fort22_filename': Path,
-        'adcircpy_attributes': {str: Any},
     }
 
     def __init__(
@@ -188,26 +188,23 @@ class BestTrackForcingJSON(WindForcingJSON):
         start_date: datetime = None,
         end_date: datetime = None,
         fort22_filename: PathLike = None,
-        adcircpy_attributes: {str: Any} = None,
+        attributes: {str: Any} = None,
         **kwargs,
     ):
         if storm_id is None and fort22_filename is None:
             raise TypeError("function missing required argument 'storm_id'")
-        if adcircpy_attributes is None:
-            adcircpy_attributes = {}
 
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(BestTrackForcingJSON.field_types)
 
         WindForcingJSON.__init__(self, nws=nws, **kwargs)
+        AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
         self['storm_id'] = storm_id
         self['start_date'] = start_date
         self['end_date'] = end_date
         self['fort22_filename'] = fort22_filename
-
-        self['adcircpy_attributes'] = adcircpy_attributes
 
     @property
     def adcircpy_forcing(self) -> BestTrackForcing:
@@ -227,7 +224,7 @@ class BestTrackForcingJSON(WindForcingJSON):
                 end_date=self['end_date'],
             )
 
-        for name, value in self['adcircpy_attributes'].items():
+        for name, value in self['attributes'].items():
             if value is not None:
                 try:
                     setattr(forcing, name, value)

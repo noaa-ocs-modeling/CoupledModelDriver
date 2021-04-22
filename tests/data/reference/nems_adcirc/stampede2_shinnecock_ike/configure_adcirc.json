@@ -20,7 +20,9 @@
   "output_velocities": true,
   "output_concentrations": false,
   "output_meteorological_factors": false,
-  "adcircpy_attributes": {
+  "processors": 1020,
+  "nems_parameters": {},
+  "attributes": {
     "predictor_corrector": null,
     "RUNDES": null,
     "_IHOT": null,
@@ -118,7 +120,5 @@
     "smagorinsky_coefficient": null,
     "horizontal_mixing_coefficient": null,
     "CFL": null
-  },
-  "processors": 1020,
-  "nems_parameters": {}
+  }
 }

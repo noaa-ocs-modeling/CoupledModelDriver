@@ -59,7 +59,7 @@ if __name__ == '__main__':
     n = 5
     values = numpy.random.normal(mean, std, n)
     perturbations = {
-        f'mannings_n_{value:.3}': {'adcirc': {'mannings_n_at_sea_floor': value, }, }
+        f'mannings_n_{value:.3}': {'adcirc': {'mannings_n_at_sea_floor': value}}
         for value in values
     }
 

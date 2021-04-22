@@ -435,3 +435,29 @@ class ModelDriverJSON(ConfigurationJSON):
 
         self['platform'] = platform
         self['perturbations'] = perturbations
+
+
+class AttributeJSON(ConfigurationJSON):
+    default_attributes: [str]
+    field_types = {
+        'attributes': {str: Any},
+    }
+
+    def __init__(self, attributes: {str: Any} = None, **kwargs):
+        """
+        :param attributes: attributes to store
+        """
+
+        if attributes is None:
+            if self.default_attributes is not None:
+                attributes = {attribute: None for attribute in self.default_attributes}
+            else:
+                attributes = {}
+
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(AttributeJSON.field_types)
+
+        ConfigurationJSON.__init__(self, **kwargs)
+
+        self['attributes'] = attributes

@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import ADCIRCGenerationScript, \
-    ADCIRCRunConfiguration
+from coupledmodeldriver.generate import ADCIRCGenerationScript, ADCIRCRunConfiguration
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem

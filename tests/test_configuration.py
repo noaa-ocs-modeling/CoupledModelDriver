@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
-    WaveMeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveMeshEntry
 import pytest
 
 from coupledmodeldriver import Platform
@@ -107,19 +106,19 @@ def test_adcirc():
 
     assert configuration.adcircpy_driver.IM == 511113
 
-    configuration['adcircpy_attributes']['gwce_solution_scheme'] = 'semi-implicit-legacy'
+    configuration['attributes']['gwce_solution_scheme'] = 'semi-implicit-legacy'
 
     assert configuration.adcircpy_driver.IM == 511111
 
-    configuration['adcircpy_attributes']['smagorinsky'] = False
+    configuration['attributes']['smagorinsky'] = False
 
     assert configuration.adcircpy_driver.IM == 111111
 
-    configuration['adcircpy_attributes']['gwce_solution_scheme'] = 'explicit'
+    configuration['attributes']['gwce_solution_scheme'] = 'explicit'
 
     assert configuration.adcircpy_driver.IM == 111112
 
-    configuration['adcircpy_attributes']['smagorinsky'] = True
+    configuration['attributes']['smagorinsky'] = True
 
     assert configuration.adcircpy_driver.IM == 511112
 

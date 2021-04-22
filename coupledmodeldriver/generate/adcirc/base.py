@@ -10,7 +10,7 @@ from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
 from coupledmodeldriver.configure import Model, ModelJSON, SlurmJSON
-from coupledmodeldriver.configure.base import NEMSCapJSON
+from coupledmodeldriver.configure.base import AttributeJSON, NEMSCapJSON
 from coupledmodeldriver.configure.configure import from_user_input
 from coupledmodeldriver.configure.forcings.base import ForcingJSON
 from coupledmodeldriver.utilities import LOGGER
@@ -120,10 +120,11 @@ OUTPUT_INTERVAL_DEFAULTS = {
 }
 
 
-class ADCIRCJSON(ModelJSON, NEMSCapJSON):
+class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     name = 'ADCIRC'
     default_filename = f'configure_adcirc.json'
     default_processors = 11
+    default_attributes = ADCIRCPY_ATTRIBUTES
 
     field_types = {
         'adcirc_executable_path': Path,
@@ -147,7 +148,6 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         'output_velocities': bool,
         'output_concentrations': bool,
         'output_meteorological_factors': bool,
-        'adcircpy_attributes': {str: Any},
     }
 
     def __init__(
@@ -177,7 +177,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         output_meteorological_factors: bool = False,
         processors: int = 11,
         nems_parameters: {str: str} = None,
-        adcircpy_attributes: {str: Any} = None,
+        attributes: {str: Any} = None,
         **kwargs,
     ):
         """
@@ -208,17 +208,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         :param output_meteorological_factors: write meteorological factors to NetCDF
         :param processors: number of processors to use
         :param nems_parameters: parameters to give to NEMS cap
-        :param adcircpy_attributes: attributes to set in `adcircpy.AdcircRun` object
+        :param attributes: attributes to set in `adcircpy.AdcircRun` object
         """
 
         if tidal_spinup_timestep is None:
             tidal_spinup_timestep = modeled_timestep
-        if adcircpy_attributes is None:
-            adcircpy_attributes = {}
-        adcircpy_attributes = {
-            **{name: None for name in ADCIRCPY_ATTRIBUTES},
-            **adcircpy_attributes,
-        }
 
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
@@ -228,6 +222,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         NEMSCapJSON.__init__(
             self, processors=processors, nems_parameters=nems_parameters, **kwargs
         )
+        AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
         self['adcirc_executable_path'] = adcirc_executable_path
         self['adcprep_executable_path'] = adcprep_executable_path
@@ -251,8 +246,6 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         self['output_velocities'] = output_velocities
         self['output_concentrations'] = output_concentrations
         self['output_meteorological_factors'] = output_meteorological_factors
-
-        self['adcircpy_attributes'] = adcircpy_attributes
 
         self.__forcings = []
         self.forcings = forcings
@@ -366,7 +359,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON):
         if self['modeled_timestep'] is not None:
             driver.timestep = self['modeled_timestep'] / timedelta(seconds=1)
 
-        for name, value in self['adcircpy_attributes'].items():
+        for name, value in self['attributes'].items():
             if value is not None:
                 try:
                     setattr(driver, name, value)
