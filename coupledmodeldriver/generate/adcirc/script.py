@@ -2,8 +2,8 @@ from datetime import timedelta
 from os import PathLike
 from pathlib import Path
 
-from ...platforms import Platform
-from ...script import JobScript, Script
+from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver.script import JobScript, Script
 
 
 class AdcircJob(JobScript):

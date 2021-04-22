@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
 import sys
+from typing import Any
 
 from adcircpy import Tides
 from adcircpy.forcing.base import Forcing
@@ -14,8 +15,9 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveMeshEntry
 
-from ..base import ConfigurationJSON, NEMSCapJSON
-from ...utilities import LOGGER
+from coupledmodeldriver.configure.base import ConfigurationJSON, \
+    NEMSCapJSON
+from coupledmodeldriver.utilities import LOGGER
 
 ADCIRCPY_FORCINGS = {
     'Tides': 'TidalForcingJSON',
@@ -175,16 +177,25 @@ class BestTrackForcingJSON(WindForcingJSON):
         'storm_id': str,
         'start_date': datetime,
         'end_date': datetime,
+        'fort22_filename': Path,
+        'adcircpy_attributes': {str: Any},
     }
 
     def __init__(
         self,
-        storm_id: str,
+        storm_id: str = None,
         nws: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
+        fort22_filename: PathLike = None,
+        adcircpy_attributes: {str: Any} = None,
         **kwargs,
     ):
+        if storm_id is None and fort22_filename is None:
+            raise TypeError("function missing required argument 'storm_id'")
+        if adcircpy_attributes is None:
+            adcircpy_attributes = {}
+
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(BestTrackForcingJSON.field_types)
@@ -194,15 +205,38 @@ class BestTrackForcingJSON(WindForcingJSON):
         self['storm_id'] = storm_id
         self['start_date'] = start_date
         self['end_date'] = end_date
+        self['fort22_filename'] = fort22_filename
+
+        self['adcircpy_attributes'] = adcircpy_attributes
 
     @property
     def adcircpy_forcing(self) -> BestTrackForcing:
-        return BestTrackForcing(
-            storm_id=self['storm_id'],
-            nws=self['nws'],
-            start_date=self['start_date'],
-            end_date=self['end_date'],
-        )
+        if self['fort22_filename'] is not None:
+            forcing = BestTrackForcing.from_fort22(self['fort22_filename'], self['nws'])
+            if self['storm_id'] is not None:
+                forcing._storm_id = self['storm_id']
+            if ['start_date'] is not None:
+                forcing.start_date = self['start_date']
+            if ['end_date'] is not None:
+                forcing.end_date = self['end_date']
+        else:
+            forcing = BestTrackForcing(
+                storm_id=self['storm_id'],
+                nws=self['nws'],
+                start_date=self['start_date'],
+                end_date=self['end_date'],
+            )
+
+        for name, value in self['adcircpy_attributes'].items():
+            if value is not None:
+                try:
+                    setattr(forcing, name, value)
+                except:
+                    LOGGER.warning(
+                        f'could not set `{forcing.__class__.__name__}` attribute `{name}` to `{value}`'
+                    )
+
+        return forcing
 
     @classmethod
     def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':

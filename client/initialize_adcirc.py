@@ -6,7 +6,7 @@ from pathlib import Path
 from adcircpy.forcing.tides.tides import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure import NEMSCapJSON
+from coupledmodeldriver.configure.base import NEMSCapJSON
 from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
     BestTrackForcingJSON,
@@ -262,7 +262,7 @@ def main():
             nems_sequence=None,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            runs=None,
+            perturbations=None,
             forcings=forcing_configurations,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
@@ -280,7 +280,7 @@ def main():
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            runs=None,
+            perturbations=None,
             forcings=forcing_configurations,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,

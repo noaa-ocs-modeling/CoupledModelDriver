@@ -1,1 +1,1 @@
-from .adcirc import *
+from coupledmodeldriver.generate.adcirc import *

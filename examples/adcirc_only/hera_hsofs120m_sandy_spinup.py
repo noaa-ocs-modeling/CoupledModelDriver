@@ -37,7 +37,7 @@ if __name__ == '__main__':
         modeled_timestep=MODELED_TIMESTEP,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,
-        runs=None,
+        perturbations=None,
         forcings=None,
         adcirc_processors=ADCIRC_PROCESSORS,
         slurm_partition=None,

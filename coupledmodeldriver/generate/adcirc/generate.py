@@ -1,17 +1,21 @@
-import copy
+from copy import deepcopy
 import logging
 import os
 from os import PathLike
 from pathlib import Path
 
 from nemspy import ModelingSystem
-import numpy
 
-from .configure import ADCIRCRunConfiguration, \
-    NEMSADCIRCRunConfiguration
-from .script import AdcircMeshPartitionJob, AdcircRunJob
-from ...script import EnsembleCleanupScript, EnsembleRunScript
-from ...utilities import LOGGER, create_symlink, get_logger
+from coupledmodeldriver.generate.adcirc.configure import (
+    ADCIRCRunConfiguration,
+    NEMSADCIRCRunConfiguration,
+)
+from coupledmodeldriver.generate.adcirc.script import \
+    AdcircMeshPartitionJob, AdcircRunJob
+from coupledmodeldriver.script import EnsembleCleanupScript, \
+    EnsembleRunScript
+from coupledmodeldriver.utilities import LOGGER, create_symlink, \
+    get_logger
 
 
 def generate_adcirc_configuration(
@@ -54,29 +58,23 @@ def generate_adcirc_configuration(
     else:
         starting_directory = None
 
-    coupled_configuration = ADCIRCRunConfiguration.read_directory(configuration_directory)
+    ensemble_configuration = ADCIRCRunConfiguration.read_directory(configuration_directory)
 
-    runs = coupled_configuration['modeldriver']['runs']
-    platform = coupled_configuration['modeldriver']['platform']
+    platform = ensemble_configuration['modeldriver']['platform']
 
-    job_duration = coupled_configuration['slurm']['job_duration']
-    partition = coupled_configuration['slurm']['partition']
-    email_type = coupled_configuration['slurm']['email_type']
-    email_address = coupled_configuration['slurm']['email_address']
+    job_duration = ensemble_configuration['slurm']['job_duration']
+    partition = ensemble_configuration['slurm']['partition']
+    email_type = ensemble_configuration['slurm']['email_type']
+    email_address = ensemble_configuration['slurm']['email_address']
 
-    original_fort13_filename = coupled_configuration['adcirc']['fort_13_path']
-    original_fort14_filename = coupled_configuration['adcirc']['fort_14_path']
-    adcirc_executable_path = coupled_configuration['adcirc']['adcirc_executable_path']
-    adcprep_executable_path = coupled_configuration['adcirc']['adcprep_executable_path']
-    adcirc_processors = coupled_configuration['adcirc']['processors']
-    tidal_spinup_duration = coupled_configuration['adcirc']['tidal_spinup_duration']
-    source_filename = coupled_configuration['adcirc']['source_filename']
-    use_original_mesh = coupled_configuration['adcirc']['use_original_mesh']
-
-    LOGGER.info(
-        f'generating {len(runs)} '
-        f'"{platform.name.lower()}" configuration(s) in "{output_directory}"'
-    )
+    original_fort13_filename = ensemble_configuration['adcirc']['fort_13_path']
+    original_fort14_filename = ensemble_configuration['adcirc']['fort_14_path']
+    adcirc_executable_path = ensemble_configuration['adcirc']['adcirc_executable_path']
+    adcprep_executable_path = ensemble_configuration['adcirc']['adcprep_executable_path']
+    adcirc_processors = ensemble_configuration['adcirc']['processors']
+    tidal_spinup_duration = ensemble_configuration['adcirc']['tidal_spinup_duration']
+    source_filename = ensemble_configuration['adcirc']['source_filename']
+    use_original_mesh = ensemble_configuration['adcirc']['use_original_mesh']
 
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
@@ -169,7 +167,9 @@ def generate_adcirc_configuration(
 
     try:
         # instantiate AdcircRun object.
-        driver = coupled_configuration.adcircpy_driver
+        coldstart_driver = ensemble_configuration.adcircpy_driver
+    except:
+        raise
     finally:
         if starting_directory is not None:
             LOGGER.debug(f'moving out of "{configuration_directory}"')
@@ -184,7 +184,7 @@ def generate_adcirc_configuration(
         create_symlink(original_fort14_filename, local_fort14_filename)
     else:
         LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
-        driver.write(
+        coldstart_driver.write(
             output_directory,
             overwrite=overwrite,
             fort13=None,
@@ -198,7 +198,7 @@ def generate_adcirc_configuration(
 
     if coldstart_run_script_filename.exists():
         LOGGER.debug(f'writing coldstart configuration to ' f'"{coldstart_directory}"')
-        driver.write(
+        coldstart_driver.write(
             coldstart_directory,
             overwrite=overwrite,
             fort13=None if use_original_mesh else 'fort.13',
@@ -220,19 +220,20 @@ def generate_adcirc_configuration(
             coldstart_run_script_filename, coldstart_directory / 'adcirc.job', relative=True,
         )
 
-    for run_name, attributes in runs.items():
-        hotstart_directory = runs_directory / run_name
-        LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
-        if attributes is not None:
-            for name, value in attributes.items():
-                if name is not None:
-                    # if not isinstance(value, numpy.ndarray):
-                    #     value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-                    if not driver.mesh.has_nodal_attribute(name):
-                        driver.mesh.add_nodal_attribute(name, '1')
-                    driver.mesh.set_nodal_attribute(name, value)
+    perturbations = ensemble_configuration.perturb(relative_path=3)
 
-        driver.write(
+    LOGGER.info(
+        f'generating {len(perturbations)} '
+        f'"{platform.name.lower()}" configuration(s) in "{runs_directory}"'
+    )
+
+    for run_name, hotstart_configuration in perturbations.items():
+        hotstart_directory = runs_directory / run_name
+        LOGGER.debug(f'writing hotstart configuration to "{hotstart_directory}"')
+
+        hotstart_driver = hotstart_configuration.adcircpy_driver
+
+        hotstart_driver.write(
             hotstart_directory,
             overwrite=overwrite,
             fort13=None if use_original_mesh else 'fort.13',
@@ -320,30 +321,24 @@ def generate_nems_adcirc_configuration(
     else:
         starting_directory = None
 
-    coupled_configuration = NEMSADCIRCRunConfiguration.read_directory(configuration_directory)
+    ensemble_configuration = NEMSADCIRCRunConfiguration.read_directory(configuration_directory)
 
-    runs = coupled_configuration['modeldriver']['runs']
-    platform = coupled_configuration['modeldriver']['platform']
+    platform = ensemble_configuration['modeldriver']['platform']
 
-    nems_executable = coupled_configuration['nems']['executable_path']
-    nems = coupled_configuration['nems'].nemspy_modeling_system
+    nems_executable = ensemble_configuration['nems']['executable_path']
+    nems = ensemble_configuration['nems'].nemspy_modeling_system
 
-    job_duration = coupled_configuration['slurm']['job_duration']
-    partition = coupled_configuration['slurm']['partition']
-    email_type = coupled_configuration['slurm']['email_type']
-    email_address = coupled_configuration['slurm']['email_address']
+    job_duration = ensemble_configuration['slurm']['job_duration']
+    partition = ensemble_configuration['slurm']['partition']
+    email_type = ensemble_configuration['slurm']['email_type']
+    email_address = ensemble_configuration['slurm']['email_address']
 
-    original_fort13_filename = coupled_configuration['adcirc']['fort_13_path']
-    original_fort14_filename = coupled_configuration['adcirc']['fort_14_path']
-    adcprep_executable_path = coupled_configuration['adcirc']['adcprep_executable_path']
-    tidal_spinup_duration = coupled_configuration['adcirc']['tidal_spinup_duration']
-    source_filename = coupled_configuration['adcirc']['source_filename']
-    use_original_mesh = coupled_configuration['adcirc']['use_original_mesh']
-
-    LOGGER.info(
-        f'generating {len(runs)} '
-        f'"{platform.name.lower()}" configuration(s) in "{output_directory}"'
-    )
+    original_fort13_filename = ensemble_configuration['adcirc']['fort_13_path']
+    original_fort14_filename = ensemble_configuration['adcirc']['fort_14_path']
+    adcprep_executable_path = ensemble_configuration['adcirc']['adcprep_executable_path']
+    tidal_spinup_duration = ensemble_configuration['adcirc']['tidal_spinup_duration']
+    source_filename = ensemble_configuration['adcirc']['source_filename']
+    use_original_mesh = ensemble_configuration['adcirc']['use_original_mesh']
 
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
@@ -357,7 +352,7 @@ def generate_nems_adcirc_configuration(
             nems.start_time - tidal_spinup_duration,
             nems.start_time,
             nems.interval,
-            ocn=copy.deepcopy(nems['OCN']),
+            ocn=deepcopy(nems['OCN']),
             **nems.attributes,
         )
     else:
@@ -503,7 +498,7 @@ def generate_nems_adcirc_configuration(
 
     try:
         # instantiate AdcircRun object.
-        driver = coupled_configuration.adcircpy_driver
+        coldstart_driver = ensemble_configuration.adcircpy_driver
     finally:
         if starting_directory is not None:
             LOGGER.debug(f'moving out of "{configuration_directory}"')
@@ -518,7 +513,7 @@ def generate_nems_adcirc_configuration(
         create_symlink(original_fort14_filename, local_fort14_filename)
     else:
         LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
-        driver.write(
+        coldstart_driver.write(
             output_directory,
             overwrite=overwrite,
             fort13=None,
@@ -532,7 +527,7 @@ def generate_nems_adcirc_configuration(
 
     if coldstart_run_script_filename.exists():
         LOGGER.debug(f'writing coldstart configuration to ' f'"{coldstart_directory}"')
-        driver.write(
+        coldstart_driver.write(
             coldstart_directory,
             overwrite=overwrite,
             fort13=None if use_original_mesh else 'fort.13',
@@ -569,19 +564,20 @@ def generate_nems_adcirc_configuration(
             relative=True,
         )
 
-    for run_name, attributes in runs.items():
-        hotstart_directory = runs_directory / run_name
-        LOGGER.debug(f'writing hotstart configuration to ' f'"{hotstart_directory}"')
-        if attributes is not None:
-            for name, value in attributes.items():
-                if name is not None:
-                    if not isinstance(value, numpy.ndarray):
-                        value = numpy.full([len(driver.mesh.coords)], fill_value=value)
-                    if not driver.mesh.has_nodal_attribute(name):
-                        driver.mesh.add_nodal_attribute(name, '1')
-                    driver.mesh.set_nodal_attribute(name, value)
+    perturbations = ensemble_configuration.perturb(relative_path=3)
 
-        driver.write(
+    LOGGER.info(
+        f'generating {len(perturbations)} '
+        f'"{platform.name.lower()}" configuration(s) in "{runs_directory}"'
+    )
+
+    for run_name, hotstart_configuration in perturbations.items():
+        hotstart_directory = runs_directory / run_name
+        LOGGER.debug(f'writing hotstart configuration to "{hotstart_directory}"')
+
+        hotstart_driver = hotstart_configuration.adcircpy_driver
+
+        hotstart_driver.write(
             hotstart_directory,
             overwrite=overwrite,
             fort13=None if use_original_mesh else 'fort.13',

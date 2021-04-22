@@ -24,10 +24,10 @@ TIDAL_SPINUP_DURATION = timedelta(days=12.5)
 NEMS_INTERVAL = timedelta(hours=1)
 
 # directories containing forcings and mesh
-MESH_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/meshes/shinnecock/v1.0'
-FORCINGS_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike'
-HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
-TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
+MESH_DIRECTORY = r'C:\Data\COASTAL_Act\meshes\shinnecock\v1.0'
+FORCINGS_DIRECTORY = r'C:\Data\COASTAL_Act\forcings\shinnecock\ike'
+HAMTIDE_DIRECTORY = r'C:\Data\COASTAL_Act\forcings\tides\hamtide'
+TPXO_FILENAME = r'C:\Data\COASTAL_Act\forcings\tides\h_tpxo9.v1.nc'
 
 # connections between coupled components
 NEMS_CONNECTIONS = ['ATM -> OCN', 'WAV -> OCN']
@@ -56,8 +56,12 @@ if __name__ == '__main__':
     range = [0.016, 0.08]
     mean = numpy.mean(range)
     std = mean / 3
-    values = numpy.random.normal(mean, std, 5)
-    runs = {f'mannings_n_{value:.3}': {'mannings_n_at_sea_floor': value} for value in values}
+    n = 5
+    values = numpy.random.normal(mean, std, n)
+    perturbations = {
+        f'mannings_n_{value:.3}': {'adcirc': {'mannings_n_at_sea_floor': value, }, }
+        for value in values
+    }
 
     # initialize `adcircpy` forcing objects
     FORCINGS_DIRECTORY = Path(FORCINGS_DIRECTORY)
@@ -86,7 +90,7 @@ if __name__ == '__main__':
         nems_sequence=NEMS_SEQUENCE,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,
-        runs=runs,
+        perturbations=perturbations,
         forcings=forcings,
         adcirc_processors=ADCIRC_PROCESSORS,
         slurm_partition=None,
