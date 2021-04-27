@@ -16,8 +16,8 @@ from coupledmodeldriver.configure.base import (
 from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
-    ForcingJSON,
-    TidalForcingJSON,
+    BestTrackForcingJSON, ForcingJSON,
+    OWIForcingJSON, TidalForcingJSON,
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
@@ -33,6 +33,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
     }
     SUPPLEMENTARY = {
         TidalForcingJSON,
+        BestTrackForcingJSON,
+        OWIForcingJSON,
         ATMESHForcingJSON,
         WW3DATAForcingJSON,
     }
@@ -180,7 +182,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
         forcings = [
             configuration
-            for configuration in supplementary
+            for configuration in supplementary.values()
             if isinstance(configuration, ForcingJSON)
         ]
         for forcing in forcings:
