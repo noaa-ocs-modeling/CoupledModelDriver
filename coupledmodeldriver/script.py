@@ -240,8 +240,9 @@ class JobScript(Script):
 
 
 class EnsembleRunScript(Script):
-    def __init__(self, platform: Platform, commands: [str] = None):
+    def __init__(self, platform: Platform, spinup: bool = False, commands: [str] = None):
         self.platform = platform
+        self.spinup = spinup
         super().__init__(commands)
 
     def __str__(self) -> str:
@@ -249,17 +250,48 @@ class EnsembleRunScript(Script):
             *(str(command) for command in self.commands),
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
-            '# run single coldstart configuration',
-            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
-            self.coldstart,
-            'popd >/dev/null 2>&1',
-            '',
-            '# run every hotstart configuration',
+        ]
+        if self.spinup:
+            lines.extend([
+                '# run spinup',
+                'pushd ${DIRECTORY}/spinup >/dev/null 2>&1',
+            ])
+            if self.platform.value['uses_slurm']:
+                lines.extend(
+                    [
+                        "spinup_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
+                        "spinup_jobid=$(sbatch --dependency=afterany:$spinup_adcprep_jobid adcirc.job | awk '{print $NF}')",
+                    ]
+                )
+            else:
+                lines.extend(['sh adcprep.job', 'sh adcirc.job'])
+            lines.extend([
+                'popd >/dev/null 2>&1',
+                '',
+            ])
+
+        hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
+        if self.platform.value['uses_slurm']:
+            if self.spinup:
+                dependency = '--dependency=afterany:$spinup_jobid'
+            else:
+                dependency = ''
+
+            hotstart_lines.extend([
+                f"hotstart_adcprep_jobid=$(sbatch {dependency} adcprep.job | awk '{{print $NF}}')",
+                'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
+            ])
+        else:
+            hotstart_lines.extend(['sh adcprep.job', 'sh adcirc.job'])
+        hotstart_lines.append('popd >/dev/null 2>&1')
+
+        lines.extend([
+            '# run configurations',
             bash_for_loop(
                 'for hotstart in ${DIRECTORY}/runs/*/',
-                ['pushd ${hotstart} >/dev/null 2>&1', self.hotstart, 'popd >/dev/null 2>&1'],
+                hotstart_lines
             ),
-        ]
+        ])
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html
@@ -274,34 +306,6 @@ class EnsembleRunScript(Script):
                 ]
             )
 
-        return '\n'.join(lines)
-
-    @property
-    def coldstart(self) -> str:
-        lines = []
-        if self.platform.value['uses_slurm']:
-            lines.extend(
-                [
-                    "coldstart_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
-                    "coldstart_jobid=$(sbatch --dependency=afterany:$coldstart_adcprep_jobid adcirc.job | awk '{print $NF}')",
-                ]
-            )
-        else:
-            lines.extend(['sh adcprep.job', 'sh adcirc.job'])
-        return '\n'.join(lines)
-
-    @property
-    def hotstart(self) -> str:
-        lines = []
-        if self.platform.value['uses_slurm']:
-            lines.extend(
-                [
-                    "hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$coldstart_jobid adcprep.job | awk '{print $NF}')",
-                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
-                ]
-            )
-        else:
-            lines.extend(['sh adcprep.job', 'sh adcirc.job'])
         return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):
@@ -328,14 +332,14 @@ class EnsembleCleanupScript(Script):
             *(str(command) for command in self.commands),
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
-            '# prepare single coldstart directory',
-            'pushd ${DIRECTORY}/coldstart >/dev/null 2>&1',
+            '# clean spinup files',
+            'pushd ${DIRECTORY}/spinup >/dev/null 2>&1',
             'rm -rf PE* ADC_*',
             'rm max* partmesh.txt metis_graph.txt',
             'rm fort.16 fort.6* fort.80',
             'popd >/dev/null 2>&1',
             '',
-            '# prepare every hotstart directory',
+            '# clean run configurations',
             bash_for_loop(
                 'for hotstart in ${DIRECTORY}/runs/*/',
                 [
