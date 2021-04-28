@@ -6,12 +6,11 @@ from typing import Any
 from adcircpy import AdcircMesh, AdcircRun
 from nemspy import ModelingSystem
 
+from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
     ConfigurationJSON,
     ModelDriverJSON,
-    NEMSCapJSON,
-    NEMSJSON,
-    SlurmJSON,
+    NEMSCapJSON, SlurmJSON,
 )
 from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (

@@ -410,7 +410,7 @@ def generate_adcirc_configuration(
 
     LOGGER.info(f'writing ensemble run script "{ensemble_run_script_filename.name}"')
     run_script = EnsembleRunScript(platform, commands=['echo deleting previous ADCIRC output',
-                                                       f'sh {ensemble_cleanup_script_filename}'])
+                                                       f'sh {ensemble_cleanup_script_filename.name}'])
     run_script.write(ensemble_run_script_filename, overwrite=overwrite)
 
     if starting_directory is not None:

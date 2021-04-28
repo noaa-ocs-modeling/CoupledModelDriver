@@ -4,10 +4,12 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Collection, Mapping, Union
 
-from nemspy.model import ModelEntry
+from nemspy.model.base import ModelEntry
 
-from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON, NEMSCapJSON
-from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
+from coupledmodeldriver.configure.base import ConfigurationJSON, \
+    ModelDriverJSON, NEMSCapJSON
+from coupledmodeldriver.configure.forcings.base import \
+    ADCIRCPY_FORCING_CLASSES, ForcingJSON
 
 
 class RunConfiguration(ABC):
