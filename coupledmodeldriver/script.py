@@ -246,6 +246,7 @@ class EnsembleRunScript(Script):
 
     def __str__(self) -> str:
         lines = [
+            *(str(command) for command in self.commands),
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
             '# run single coldstart configuration',
@@ -258,7 +259,6 @@ class EnsembleRunScript(Script):
                 'for hotstart in ${DIRECTORY}/runs/*/',
                 ['pushd ${hotstart} >/dev/null 2>&1', self.hotstart, 'popd >/dev/null 2>&1'],
             ),
-            *(str(command) for command in self.commands),
         ]
 
         if self.platform.value['uses_slurm']:
@@ -325,6 +325,7 @@ class EnsembleCleanupScript(Script):
 
     def __str__(self):
         lines = [
+            *(str(command) for command in self.commands),
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
             '# prepare single coldstart directory',
@@ -345,7 +346,6 @@ class EnsembleCleanupScript(Script):
                     'popd >/dev/null 2>&1',
                 ],
             ),
-            *(str(command) for command in self.commands),
         ]
 
         return '\n'.join(lines)

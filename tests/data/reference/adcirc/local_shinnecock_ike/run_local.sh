@@ -1,3 +1,5 @@
+echo deleting previous ADCIRC output
+sh C:\Repositories\CoupledModelDriver\tests\data\output\adcirc\local_shinnecock_ike\cleanup.sh
 DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # run single coldstart configuration

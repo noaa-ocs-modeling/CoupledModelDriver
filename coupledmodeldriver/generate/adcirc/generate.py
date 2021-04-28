@@ -111,18 +111,19 @@ def generate_adcirc_configuration(
     adcprep_run_name = 'ADCIRC_MESH_PREP'
     adcprep_job_script_filename = output_directory / f'job_adcprep_{platform.name.lower()}.job'
 
-    coldstart_run_script_filename = (
-        output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
-    )
-
     local_fort13_filename = output_directory / 'fort.13'
     local_fort14_filename = output_directory / 'fort.14'
     local_fort15_filename = output_directory / 'fort.15'
 
-    if tidal_spinup_duration is not None:
+    spinup_tides = tidal_spinup_duration is not None
+
+    if spinup_tides:
         run_phase = RunPhase.HOTSTART
         coldstart_run_name = 'ADCIRC_SPINUP'
         hotstart_run_name = 'ADCIRC_HOTSTART'
+        coldstart_run_script_filename = (
+            output_directory / f'job_adcirc_{platform.name.lower()}.job.spinup'
+        )
         hotstart_run_script_filename = (
             output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
         )
@@ -131,11 +132,14 @@ def generate_adcirc_configuration(
         run_phase = RunPhase.COLDSTART
         coldstart_run_name = 'ADCIRC_COLDSTART'
         hotstart_run_name = None
-        hotstart_run_script_filename = coldstart_run_script_filename
+        coldstart_run_script_filename = (
+            output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
+        )
+        hotstart_run_script_filename = None
         run_script_filename = coldstart_run_script_filename
 
     if use_nems:
-        if run_phase == RunPhase.HOTSTART:
+        if spinup_tides:
             LOGGER.debug(f'setting spinup to {tidal_spinup_duration}')
             tidal_spinup_nems_configuration = ModelingSystem(
                 nems_configuration.start_time - tidal_spinup_duration,
@@ -173,7 +177,7 @@ def generate_adcirc_configuration(
             else:
                 filename.rename(coldstart_filename)
 
-        if run_phase == RunPhase.HOTSTART:
+        if spinup_tides:
             hotstart_filenames = nems_configuration.write(
                 output_directory,
                 overwrite=overwrite,
@@ -239,7 +243,7 @@ def generate_adcirc_configuration(
     LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
     coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
 
-    if run_phase == RunPhase.HOTSTART:
+    if spinup_tides:
         hotstart_run_script = AdcircRunJob(
             platform=platform,
             slurm_tasks=run_processors,
@@ -288,8 +292,8 @@ def generate_adcirc_configuration(
     if local_fort15_filename.exists():
         os.remove(local_fort15_filename)
 
-    if run_phase == RunPhase.HOTSTART:
-        tidal_spinup_directory = output_directory / 'tidal_spinup'
+    if spinup_tides:
+        tidal_spinup_directory = output_directory / 'spinup'
         if not tidal_spinup_directory.exists():
             tidal_spinup_directory.mkdir(parents=True, exist_ok=True)
 
@@ -335,6 +339,8 @@ def generate_adcirc_configuration(
                 tidal_spinup_directory / 'config.rc',
                 relative=True,
             )
+    else:
+        tidal_spinup_directory = None
 
     perturbations = ensemble_configuration.perturb(relative_path=3)
 
@@ -384,7 +390,7 @@ def generate_adcirc_configuration(
                 run_directory / 'config.rc',
                 relative=True,
             )
-        if run_phase == RunPhase.HOTSTART:
+        if spinup_tides:
             for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:
                 try:
                     create_symlink(
@@ -403,7 +409,8 @@ def generate_adcirc_configuration(
     cleanup_script.write(ensemble_cleanup_script_filename, overwrite=overwrite)
 
     LOGGER.info(f'writing ensemble run script "{ensemble_run_script_filename.name}"')
-    run_script = EnsembleRunScript(platform)
+    run_script = EnsembleRunScript(platform, commands=['echo deleting previous ADCIRC output',
+                                                       f'sh {ensemble_cleanup_script_filename}'])
     run_script.write(ensemble_run_script_filename, overwrite=overwrite)
 
     if starting_directory is not None:
