@@ -273,12 +273,12 @@ class EnsembleRunScript(Script):
         hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
         if self.platform.value['uses_slurm']:
             if self.spinup:
-                dependency = '--dependency=afterany:$spinup_jobid'
+                run_command = 'sbatch --dependency=afterany:$spinup_jobid'
             else:
-                dependency = ''
+                run_command = 'sbatch'
 
             hotstart_lines.extend([
-                f"hotstart_adcprep_jobid=$(sbatch {dependency} adcprep.job | awk '{{print $NF}}')",
+                f"hotstart_adcprep_jobid=$({run_command} adcprep.job | awk '{{print $NF}}')",
                 'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
             ])
         else:
