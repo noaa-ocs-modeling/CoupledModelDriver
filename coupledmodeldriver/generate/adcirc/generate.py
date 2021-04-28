@@ -111,7 +111,6 @@ def generate_adcirc_configuration(
     adcprep_run_name = 'ADCIRC_MESH_PREP'
     adcprep_job_script_filename = output_directory / f'job_adcprep_{platform.name.lower()}.job'
 
-    coldstart_run_name = 'ADCIRC_COLDSTART'
     coldstart_run_script_filename = (
         output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
     )
@@ -122,6 +121,7 @@ def generate_adcirc_configuration(
 
     if tidal_spinup_duration is not None:
         run_phase = RunPhase.HOTSTART
+        coldstart_run_name = 'ADCIRC_SPINUP'
         hotstart_run_name = 'ADCIRC_HOTSTART'
         hotstart_run_script_filename = (
             output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
@@ -129,7 +129,8 @@ def generate_adcirc_configuration(
         run_script_filename = hotstart_run_script_filename
     else:
         run_phase = RunPhase.COLDSTART
-        hotstart_run_name = coldstart_run_name
+        coldstart_run_name = 'ADCIRC_COLDSTART'
+        hotstart_run_name = None
         hotstart_run_script_filename = coldstart_run_script_filename
         run_script_filename = coldstart_run_script_filename
 
