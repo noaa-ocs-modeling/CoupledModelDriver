@@ -1,10 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from coupledmodeldriver.generate import (
-    generate_adcirc_configuration,
-    generate_nems_adcirc_configuration,
-)
+from coupledmodeldriver.generate import generate_adcirc_configuration
 from coupledmodeldriver.utilities import convert_value
 
 
@@ -36,16 +33,14 @@ def main():
     if output_directory is None:
         output_directory = configuration_directory
 
-    if 'configure_nems.json' in [
+    use_nems = 'configure_nems.json' in [
         filename.name.lower() for filename in configuration_directory.iterdir()
-    ]:
-        generate = generate_nems_adcirc_configuration
-    else:
-        generate = generate_adcirc_configuration
+    ]
 
-    generate(
+    generate_adcirc_configuration(
         configuration_directory=configuration_directory,
         output_directory=output_directory,
+        use_nems=use_nems,
         overwrite=overwrite,
         verbose=verbose,
     )

@@ -16,8 +16,10 @@ from coupledmodeldriver.configure.base import (
 from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
-    BestTrackForcingJSON, ForcingJSON,
-    OWIForcingJSON, TidalForcingJSON,
+    BestTrackForcingJSON,
+    ForcingJSON,
+    OWIForcingJSON,
+    TidalForcingJSON,
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON

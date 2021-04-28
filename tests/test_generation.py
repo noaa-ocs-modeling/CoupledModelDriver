@@ -17,7 +17,6 @@ from coupledmodeldriver.generate import (
     ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
     generate_adcirc_configuration,
-    generate_nems_adcirc_configuration,
 )
 
 NEMS_PATH = 'NEMS.x'
@@ -107,7 +106,7 @@ def test_nems_adcirc_local_shinnecock_ike():
     )
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_nems_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, use_nems=True, overwrite=True)
 
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
@@ -188,7 +187,7 @@ def test_nems_adcirc_hera_shinnecock_ike():
     )
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_nems_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, use_nems=True, overwrite=True)
 
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
@@ -269,7 +268,7 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
     )
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_nems_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, use_nems=True, overwrite=True)
 
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
