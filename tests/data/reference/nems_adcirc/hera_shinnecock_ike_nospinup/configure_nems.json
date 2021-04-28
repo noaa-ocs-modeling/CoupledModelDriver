@@ -1,0 +1,27 @@
+{
+  "executable_path": null,
+  "modeled_start_time": "2008-08-23 00:00:00",
+  "modeled_end_time": "2008-09-06 12:00:00",
+  "interval": 3600.0,
+  "models": [
+    "OCN_model:                      adcirc\nOCN_petlist_bounds:             2 601\nOCN_attributes::\n  Verbosity = off\n::",
+    "ATM_model:                      atmesh\nATM_petlist_bounds:             0 0\nATM_attributes::\n  Verbosity = off\n::",
+    "WAV_model:                      ww3data\nWAV_petlist_bounds:             1 1\nWAV_attributes::\n  Verbosity = off\n::"
+  ],
+  "connections": [
+    [
+      "ATM -> OCN"
+    ],
+    [
+      "WAV -> OCN"
+    ]
+  ],
+  "mediations": [],
+  "sequence": [
+    "ATM -> OCN",
+    "WAV -> OCN",
+    "ATM",
+    "WAV",
+    "OCN"
+  ]
+}

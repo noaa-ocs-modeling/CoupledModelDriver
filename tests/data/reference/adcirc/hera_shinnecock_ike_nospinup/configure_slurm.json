@@ -1,0 +1,16 @@
+{
+  "account": "coastal",
+  "tasks": 600,
+  "partition": null,
+  "job_duration": 21600.0,
+  "run_directory": null,
+  "run_name": null,
+  "email_type": "ALL",
+  "email_address": "example@email.gov",
+  "log_filename": null,
+  "modules": [],
+  "path_prefix": null,
+  "extra_commands": [],
+  "launcher": null,
+  "nodes": null
+}

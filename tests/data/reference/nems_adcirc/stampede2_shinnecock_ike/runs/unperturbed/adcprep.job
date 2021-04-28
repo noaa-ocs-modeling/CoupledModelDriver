@@ -1,10 +1,10 @@
 #!/bin/bash --login
-#SBATCH -J ADC_MESH_DECOMP
+#SBATCH -J ADCIRC_MESH_PREP
 #SBATCH -A coastal
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=example@email.gov
-#SBATCH --error=ADC_MESH_DECOMP.err.log
-#SBATCH --output=ADC_MESH_DECOMP.out.log
+#SBATCH --error=ADCIRC_MESH_PREP.err.log
+#SBATCH --output=ADCIRC_MESH_PREP.out.log
 #SBATCH -n 1
 #SBATCH -N 1
 #SBATCH --time=06:00:00
