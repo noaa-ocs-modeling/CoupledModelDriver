@@ -21,7 +21,6 @@ from coupledmodeldriver.utilities import LOGGER, create_symlink, \
 def generate_adcirc_configuration(
     configuration_directory: PathLike,
     output_directory: PathLike = None,
-    use_nems: bool = False,
     overwrite: bool = False,
     verbose: bool = False,
 ):
@@ -30,7 +29,6 @@ def generate_adcirc_configuration(
 
     :param configuration_directory: path containing JSON configuration files
     :param output_directory: path to store generated configuration files
-    :param use_nems: whether to generate NEMS configuration
     :param overwrite: whether to overwrite existing files
     :param verbose: whether to show more verbose log messages
     """
@@ -60,9 +58,15 @@ def generate_adcirc_configuration(
     else:
         starting_directory = None
 
+    use_nems = 'configure_nems.json' in [
+        filename.name.lower() for filename in configuration_directory.iterdir()
+    ]
+
     if use_nems:
+        LOGGER.debug(f'generating NEMS configuration')
         ensemble_configuration = NEMSADCIRCRunConfiguration.read_directory(configuration_directory)
     else:
+        LOGGER.debug(f'generating ADCIRC-only configuration')
         ensemble_configuration = ADCIRCRunConfiguration.read_directory(configuration_directory)
 
     platform = ensemble_configuration['modeldriver']['platform']
@@ -163,8 +167,6 @@ def generate_adcirc_configuration(
                 os.remove(filename)
             else:
                 filename.rename(hotstart_filename)
-    else:
-        nems_spinup_modeling_system = None
 
     coldstart_directory = output_directory / 'coldstart'
     runs_directory = output_directory / 'runs'

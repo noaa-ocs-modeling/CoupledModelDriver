@@ -33,14 +33,9 @@ def main():
     if output_directory is None:
         output_directory = configuration_directory
 
-    use_nems = 'configure_nems.json' in [
-        filename.name.lower() for filename in configuration_directory.iterdir()
-    ]
-
     generate_adcirc_configuration(
         configuration_directory=configuration_directory,
         output_directory=output_directory,
-        use_nems=use_nems,
         overwrite=overwrite,
         verbose=verbose,
     )
