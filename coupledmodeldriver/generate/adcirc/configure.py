@@ -6,18 +6,19 @@ from typing import Any
 from adcircpy import AdcircMesh, AdcircRun
 from nemspy import ModelingSystem
 
+from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
     ConfigurationJSON,
     ModelDriverJSON,
-    NEMSCapJSON,
-    NEMSJSON,
-    SlurmJSON,
+    NEMSCapJSON, SlurmJSON,
 )
 from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (
     ATMESHForcingJSON,
-    BestTrackForcingJSON, ForcingJSON,
-    OWIForcingJSON, TidalForcingJSON,
+    BestTrackForcingJSON,
+    ForcingJSON,
+    OWIForcingJSON,
+    TidalForcingJSON,
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
@@ -325,4 +326,6 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             supplementary = set()
         supplementary.update(NEMSADCIRCRunConfiguration.SUPPLEMENTARY)
 
-        return super().read_directory(directory, required, supplementary)
+        instance = super().read_directory(directory, required, supplementary)
+        instance['nems']['models'] = instance.nemspy_entries
+        return instance

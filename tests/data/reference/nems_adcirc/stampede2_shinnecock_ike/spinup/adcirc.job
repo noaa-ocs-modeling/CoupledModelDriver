@@ -1,0 +1,15 @@
+#!/bin/bash --login
+#SBATCH -J ADCIRC_SPINUP
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_SPINUP.err.log
+#SBATCH --output=ADCIRC_SPINUP.out.log
+#SBATCH -n 1022
+#SBATCH -N 16
+#SBATCH --time=06:00:00
+#SBATCH --partition=development
+
+set -e
+
+ibrun adcirc

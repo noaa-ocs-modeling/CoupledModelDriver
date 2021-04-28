@@ -1,3 +1,5 @@
+echo deleting previous ADCIRC output
+sh cleanup.sh
 DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # run single coldstart configuration
