@@ -326,4 +326,6 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             supplementary = set()
         supplementary.update(NEMSADCIRCRunConfiguration.SUPPLEMENTARY)
 
-        return super().read_directory(directory, required, supplementary)
+        instance = super().read_directory(directory, required, supplementary)
+        instance['nems']['models'] = instance.nemspy_entries
+        return instance
