@@ -24,10 +24,10 @@ TIDAL_SPINUP_DURATION = timedelta(days=12.5)
 NEMS_INTERVAL = timedelta(hours=1)
 
 # directories containing forcings and mesh
-MESH_DIRECTORY = r'C:\Data\COASTAL_Act\meshes\shinnecock\v1.0'
-FORCINGS_DIRECTORY = r'C:\Data\COASTAL_Act\forcings\shinnecock\ike'
-HAMTIDE_DIRECTORY = r'C:\Data\COASTAL_Act\forcings\tides\hamtide'
-TPXO_FILENAME = r'C:\Data\COASTAL_Act\forcings\tides\h_tpxo9.v1.nc'
+MESH_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/meshes/shinnecock/v1.0'
+FORCINGS_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike'
+HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
+TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
 
 # connections between coupled components
 NEMS_CONNECTIONS = ['ATM -> OCN', 'WAV -> OCN']
