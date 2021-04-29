@@ -10,7 +10,8 @@ from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
     ConfigurationJSON,
     ModelDriverJSON,
-    NEMSCapJSON, SlurmJSON,
+    NEMSCapJSON,
+    SlurmJSON,
 )
 from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (

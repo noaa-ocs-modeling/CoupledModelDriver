@@ -252,10 +252,7 @@ class EnsembleRunScript(Script):
             '',
         ]
         if self.spinup:
-            lines.extend([
-                '# run spinup',
-                'pushd ${DIRECTORY}/spinup >/dev/null 2>&1',
-            ])
+            lines.extend(['# run spinup', 'pushd ${DIRECTORY}/spinup >/dev/null 2>&1'])
             if self.platform.value['uses_slurm']:
                 lines.extend(
                     [
@@ -265,10 +262,7 @@ class EnsembleRunScript(Script):
                 )
             else:
                 lines.extend(['sh adcprep.job', 'sh adcirc.job'])
-            lines.extend([
-                'popd >/dev/null 2>&1',
-                '',
-            ])
+            lines.extend(['popd >/dev/null 2>&1', ''])
 
         hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
         if self.platform.value['uses_slurm']:
@@ -277,21 +271,22 @@ class EnsembleRunScript(Script):
             else:
                 run_command = 'sbatch'
 
-            hotstart_lines.extend([
-                f"hotstart_adcprep_jobid=$({run_command} adcprep.job | awk '{{print $NF}}')",
-                'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
-            ])
+            hotstart_lines.extend(
+                [
+                    f"hotstart_adcprep_jobid=$({run_command} adcprep.job | awk '{{print $NF}}')",
+                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
+                ]
+            )
         else:
             hotstart_lines.extend(['sh adcprep.job', 'sh adcirc.job'])
         hotstart_lines.append('popd >/dev/null 2>&1')
 
-        lines.extend([
-            '# run configurations',
-            bash_for_loop(
-                'for hotstart in ${DIRECTORY}/runs/*/',
-                hotstart_lines
-            ),
-        ])
+        lines.extend(
+            [
+                '# run configurations',
+                bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', hotstart_lines),
+            ]
+        )
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html

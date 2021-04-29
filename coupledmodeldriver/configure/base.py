@@ -16,7 +16,9 @@ from coupledmodeldriver.script import SlurmEmailType
 from coupledmodeldriver.utilities import LOGGER, convert_to_json, \
     convert_value
 
-NEMS_MODEL_ENTRIES = [cls for name, cls in nemspy.model.__dict__.items() if isinstance(cls, type)] + [ModelEntry]
+NEMS_MODEL_ENTRIES = [
+                         cls for name, cls in nemspy.model.__dict__.items() if isinstance(cls, type)
+                     ] + [ModelEntry]
 
 
 class ConfigurationJSON(ABC):
