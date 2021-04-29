@@ -50,7 +50,6 @@ initialize_adcirc \
     --adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x \
     --adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep \
     --modulefile /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera \
-    --generate-script \
     --forcings tidal,atmesh,ww3data \
     --tidal-source TPXO \
     --tidal-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc \
@@ -156,12 +155,12 @@ configuration files:
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
 ┣ ✎ configure_modeldriver.json
-┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
 ┣ ✎ configure_slurm.json
+┣ ✎ configure_adcirc.json
 ┣ ✎ configure_tidal_forcing.json
 ┣ ✎ configure_atmesh.json
-┣ ✎ configure_ww3data.json
+┗ ✎ configure_ww3data.json
 ```
 
 These files contain relevant configuration values for an ADCIRC run. You will likely wish to change these values to alter the
@@ -172,6 +171,7 @@ resulting run, before generating the actual model configuration.
 Run the following command to read the JSON configuration and generate the ADCIRC run configuration:
 
 ```bash
+cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
 generate_adcirc
 ```
 
@@ -180,9 +180,9 @@ The resulting configuration will have the following structure:
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
 ┣ ✎ configure_modeldriver.json
-┣ ✎ configure_adcirc.json
 ┣ ✎ configure_nems.json
 ┣ ✎ configure_slurm.json
+┣ ✎ configure_adcirc.json
 ┣ ✎ configure_tidal_forcing.json
 ┣ ✎ configure_atmesh.json
 ┣ ✎ configure_ww3data.json
@@ -235,11 +235,11 @@ sh run_hera.sh
 The queue will have the following jobs added:
 
 ```
-   JOBID                  NAME CPUS NODE                      DEPENDENCY          SUBMIT_TIME           START_TIME             END_TIME
-16368044 ADCIRC_MESH_PARTITION    1    1                          (null)  2021-02-18T19:29:17                  N/A                  N/A
-16368045      ADCIRC_COLDSTART   11    1  afterany:16368044(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
-16368046 ADCIRC_MESH_PARTITION    1    1  afterany:16368045(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
-16368047       ADCIRC_HOTSTART   13    1  afterany:16368046(unfulfilled)  2021-02-18T19:29:17                  N/A                  N/A
+   JOBID CPU NODE WORK_DIR                                                              NAME
+18427286 1   1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/spinup              ADCIRC_MESH_PREP
+18427287 13  1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/spinup              ADCIRC_SPINUP
+18427288 1   1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/runs/unperturbed    ADCIRC_MESH_PREP
+18427289 13  1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/runs/unperturbed    ADCIRC_HOTSTART
 ```
 
 ## Command-line interface
@@ -254,10 +254,9 @@ The queue will have the following jobs added:
 `initialize_adcirc` creates JSON configuration files according to the given parameters.
 
 ```
-usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME
-                         --modeled-duration MODELED_DURATION --modeled-timestep MODELED_TIMESTEP [--nems-interval NEMS_INTERVAL]
-                         [--modulefile MODULEFILE] [--tidal-spinup-duration TIDAL_SPINUP_DURATION] [--forcings FORCINGS]
-                         [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
+usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME --modeled-duration
+                         MODELED_DURATION --modeled-timestep MODELED_TIMESTEP [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE]
+                         [--forcings FORCINGS] [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
                          [--adcirc-processors ADCIRC_PROCESSORS] [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY]
                          [--generate-script] [--skip-existing]
 
@@ -276,8 +275,6 @@ optional arguments:
                         main loop interval of NEMS run
   --modulefile MODULEFILE
                         path to module file to `source`
-  --tidal-spinup-duration TIDAL_SPINUP_DURATION
-                        spinup time for ADCIRC tidal coldstart
   --forcings FORCINGS   comma-separated list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi', 'ww3data']
   --adcirc-executable ADCIRC_EXECUTABLE
                         filename of compiled `adcirc` or `NEMS.x`
@@ -288,7 +285,7 @@ optional arguments:
   --job-duration JOB_DURATION
                         wall clock time for job
   --output-directory OUTPUT_DIRECTORY
-                        directory to which to write configuration files
+                        directory to which to write configuration files (defaults to `.`)
   --generate-script     write shell script to load configuration
   --skip-existing       skip existing files
 ```
@@ -302,8 +299,8 @@ modifying the JSON files.
 these files.
 
 ```
-usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY]
-                       [--skip-existing] [--verbose]
+usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--skip-existing]
+                       [--verbose]
 
 optional arguments:
   -h, --help            show this help message and exit
