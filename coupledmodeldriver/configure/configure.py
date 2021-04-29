@@ -1,6 +1,7 @@
 from abc import ABC
 from copy import copy
 from os import PathLike
+import os.path
 from pathlib import Path
 from typing import Any, Collection, Mapping, Union
 
@@ -137,7 +138,10 @@ class RunConfiguration(ABC):
         if not directory.exists():
             directory.mkdir(parents=True, exist_ok=True)
 
-        for configuration in self.__configurations.values():
+        if directory != Path.cwd():
+            self.move_paths(os.path.relpath(Path.cwd(), directory))
+
+        for configuration in self.configurations:
             configuration.to_file(directory, overwrite=overwrite)
 
     @classmethod

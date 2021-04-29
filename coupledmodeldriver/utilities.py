@@ -51,6 +51,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -156,7 +157,14 @@ def convert_value(value: Any, to_type: type) -> Any:
     if isinstance(to_type, Collection):
         collection_type = type(to_type)
         if collection_type is not EnumMeta:
-            if not issubclass(collection_type, Mapping):
+            if issubclass(collection_type, Mapping):
+                if isinstance(value, str):
+                    value = json.loads(value)
+                elif isinstance(value, CRS):
+                    value = value.to_json_dict()
+                else:
+                    LOGGER.debug('dicionaries not implemented')
+            else:
                 if value is not None:
                     to_type = list(to_type)
                     if not isinstance(value, Iterable) or isinstance(value, str):
@@ -177,10 +185,6 @@ def convert_value(value: Any, to_type: type) -> Any:
                     )
                 else:
                     value = collection_type()
-            elif isinstance(value, str):
-                value = json.loads(value)
-            elif isinstance(value, CRS):
-                value = value.to_json_dict()
         elif value is not None:
             try:
                 value = to_type[value]

@@ -70,6 +70,8 @@ def test_convert_value():
     list_3 = convert_value([1, 2, '3', '4'], [int])
     list_4 = convert_value([1, 2, '3', '4'], (int, str, float, str))
 
+    dict_1 = convert_value({'test_1': '5', 'test_2': 6}, {str: float})
+
     with pytest.raises(ValueError):
         convert_value([1, 2, '3', '4'], (int, str))
 
@@ -110,6 +112,8 @@ def test_convert_value():
     assert list_2 == '[1]'
     assert list_3 == [1, 2, 3, 4]
     assert list_4 == (1, '2', 3.0, '4')
+
+    assert dict_1 == {'test_1': '5', 'test_2': 6}
 
     assert datetime_1 == '2021-03-26 00:00:00'
     assert datetime_2 == datetime(2021, 3, 26)

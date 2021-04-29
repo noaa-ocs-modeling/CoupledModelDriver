@@ -7,10 +7,8 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (
-    ADCIRCGenerationScript,
-    NEMSADCIRCRunConfiguration,
-)
+from coupledmodeldriver.generate import NEMSADCIRCRunConfiguration
+from coupledmodeldriver.script import ModelGenerationScript
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
@@ -90,5 +88,5 @@ if __name__ == '__main__':
     )
     configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
 
-    generation_script = ADCIRCGenerationScript()
+    generation_script = ModelGenerationScript()
     generation_script.write(OUTPUT_DIRECTORY, overwrite=True)

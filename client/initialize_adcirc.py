@@ -19,10 +19,10 @@ from coupledmodeldriver.configure.forcings.base import (
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import (
-    ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
 )
+from coupledmodeldriver.script import ModelGenerationScript
 from coupledmodeldriver.utilities import convert_value
 
 
@@ -252,7 +252,8 @@ def main():
 
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
-            mesh_directory=mesh_directory,
+            fort13_path=mesh_directory / 'fort.13',
+            fort14_path=mesh_directory / 'fort.14',
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
@@ -274,7 +275,8 @@ def main():
         )
     else:
         configuration = ADCIRCRunConfiguration(
-            mesh_directory=mesh_directory,
+            fort13_path=mesh_directory / 'fort.13',
+            fort14_path=mesh_directory / 'fort.14',
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
@@ -296,7 +298,7 @@ def main():
     )
 
     if generate_script:
-        generation_script = ADCIRCGenerationScript()
+        generation_script = ModelGenerationScript()
         generation_script.write(filename=output_directory, overwrite=overwrite)
 
 

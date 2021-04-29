@@ -43,7 +43,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
     def __init__(
         self,
-        mesh_directory: PathLike,
+        fort13_path: PathLike,
+        fort14_path: PathLike,
         modeled_start_time: datetime,
         modeled_end_time: datetime,
         modeled_timestep: timedelta,
@@ -62,7 +63,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
         """
         Generate required configuration files for an ADCIRC run.
 
-        :param mesh_directory: path to input mesh directory (containing `fort.13`, `fort.14`)
+        :param fort13_path: path to input mesh nodes `fort.13`
+        :param fort14_path: path to input mesh attributes `fort.14`
         :param modeled_start_time: start time within the modeled system
         :param modeled_end_time: end time within the modeled system
         :param modeled_timestep: time interval within the modeled system
@@ -79,8 +81,11 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param source_filename: path to module file to `source`
         """
 
-        if not isinstance(mesh_directory, Path):
-            mesh_directory = Path(mesh_directory)
+        if not isinstance(fort13_path, Path):
+            fort13_path = Path(fort13_path)
+
+        if not isinstance(fort14_path, Path):
+            fort14_path = Path(fort14_path)
 
         if platform is None:
             platform = Platform.LOCAL
@@ -106,13 +111,12 @@ class ADCIRCRunConfiguration(RunConfiguration):
         )
 
         adcirc = ADCIRCJSON(
-            adcirc_executable_path=adcirc_executable,
-            adcprep_executable_path=adcprep_executable,
+            mesh_files=[fort13_path, fort14_path],
+            executable=adcirc_executable,
+            adcprep_executable=adcprep_executable,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             modeled_timestep=modeled_timestep,
-            fort_13_path=mesh_directory / 'fort.13',
-            fort_14_path=mesh_directory / 'fort.14',
             tidal_spinup_duration=tidal_spinup_duration,
             source_filename=source_filename,
             slurm_configuration=slurm,
@@ -220,7 +224,8 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
 
     def __init__(
         self,
-        mesh_directory: PathLike,
+        fort13_path: PathLike,
+        fort14_path: PathLike,
         modeled_start_time: datetime,
         modeled_end_time: datetime,
         modeled_timestep: timedelta,
@@ -243,7 +248,8 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         self.__nems = None
 
         super().__init__(
-            mesh_directory=mesh_directory,
+            fort13_path=fort13_path,
+            fort14_path=fort14_path,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             modeled_timestep=modeled_timestep,
@@ -260,7 +266,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         )
 
         nems = NEMSJSON(
-            executable_path=nems_executable,
+            executable=nems_executable,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             interval=nems_interval,

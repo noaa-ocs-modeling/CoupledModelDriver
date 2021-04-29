@@ -9,7 +9,7 @@ from adcircpy.forcing.base import Forcing
 from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
-from coupledmodeldriver.configure import Model, ModelJSON, SlurmJSON
+from coupledmodeldriver.configure import CirculationModelJSON, SlurmJSON
 from coupledmodeldriver.configure.base import AttributeJSON, NEMSCapJSON
 from coupledmodeldriver.configure.configure import from_user_input
 from coupledmodeldriver.configure.forcings.base import ForcingJSON
@@ -120,20 +120,18 @@ OUTPUT_INTERVAL_DEFAULTS = {
 }
 
 
-class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
+class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
     name = 'ADCIRC'
     default_filename = f'configure_adcirc.json'
     default_processors = 11
     default_attributes = ADCIRCPY_ATTRIBUTES
 
     field_types = {
-        'adcirc_executable_path': Path,
-        'adcprep_executable_path': Path,
+        'mesh_files': [Path],
+        'adcprep_executable': Path,
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
         'modeled_timestep': timedelta,
-        'fort_13_path': Path,
-        'fort_14_path': Path,
         'tidal_spinup_duration': timedelta,
         'tidal_spinup_timestep': timedelta,
         'source_filename': Path,
@@ -152,13 +150,12 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
     def __init__(
         self,
-        adcirc_executable_path: PathLike,
-        adcprep_executable_path: PathLike,
+        mesh_files: [PathLike],
+        executable: PathLike,
+        adcprep_executable: PathLike,
         modeled_start_time: datetime,
         modeled_end_time: datetime,
         modeled_timestep: timedelta,
-        fort_13_path: PathLike,
-        fort_14_path: PathLike,
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
         forcings: [Forcing] = None,
@@ -183,13 +180,12 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         """
         Instantiate a new ADCIRCJSON configuration.
 
-        :param adcirc_executable_path: file path to `adcirc` or `NEMS.x`
-        :param adcprep_executable_path: file path to `adcprep`
+        :param mesh_files: file paths to `fort.13`, `fort.14`
+        :param executable: file path to `adcirc` or `NEMS.x`
+        :param adcprep_executable: file path to `adcprep`
         :param modeled_start_time: start time in model run
         :param modeled_end_time: edn time in model run
         :param modeled_timestep: time interval between model steps
-        :param fort_13_path: file path to `fort.13`
-        :param fort_14_path: file path to `fort.14`
         :param tidal_spinup_duration: tidal spinup duration for ADCIRC coldstart
         :param tidal_spinup_timestep: tidal spinup modeled time interval for ADCIRC coldstart
         :param forcings: list of Forcing objects to apply to the mesh
@@ -218,19 +214,18 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             kwargs['fields'] = {}
         kwargs['fields'].update(ADCIRCJSON.field_types)
 
-        ModelJSON.__init__(self, model=Model.ADCIRC, **kwargs)
+        CirculationModelJSON.__init__(
+            self, mesh_files=mesh_files, executable=executable, **kwargs,
+        )
         NEMSCapJSON.__init__(
             self, processors=processors, nems_parameters=nems_parameters, **kwargs
         )
         AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
-        self['adcirc_executable_path'] = adcirc_executable_path
-        self['adcprep_executable_path'] = adcprep_executable_path
+        self['adcprep_executable'] = adcprep_executable
         self['modeled_start_time'] = modeled_start_time
         self['modeled_end_time'] = modeled_end_time
         self['modeled_timestep'] = modeled_timestep
-        self['fort_13_path'] = fort_13_path
-        self['fort_14_path'] = fort_14_path
         self['tidal_spinup_duration'] = tidal_spinup_duration
         self['tidal_spinup_timestep'] = tidal_spinup_timestep
         self['source_filename'] = source_filename
@@ -295,13 +290,29 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         self.__slurm_configuration = slurm_configuration
 
     @property
+    def fort13_path(self) -> Path:
+        for mesh_file in self['mesh_files']:
+            if mesh_file.suffix == '.13':
+                return mesh_file
+        else:
+            return None
+
+    @property
+    def fort14_path(self) -> Path:
+        for mesh_file in self['mesh_files']:
+            if mesh_file.suffix == '.14':
+                return mesh_file
+        else:
+            raise FileNotFoundError('no `fort.14` given')
+
+    @property
     def adcircpy_forcings(self) -> [Forcing]:
         return [forcing.adcircpy_forcing for forcing in self.forcings]
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
-        LOGGER.info(f'opening mesh "{self["fort_14_path"].resolve()}"')
-        mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
+        LOGGER.info(f'opening mesh "{self.fort14_path.resolve()}"')
+        mesh = AdcircMesh.open(self.fort14_path, crs=4326)
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for adcircpy_forcing in self.adcircpy_forcings:
@@ -320,17 +331,17 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
             mesh.add_forcing(adcircpy_forcing)
 
-        if self['fort_13_path'] is not None:
-            LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
-            if self['fort_13_path'].exists():
-                mesh.import_nodal_attributes(self['fort_13_path'])
+        if self.fort13_path is not None:
+            if self.fort13_path.exists():
+                LOGGER.info(f'reading attributes from "{self.fort13_path}"')
+                mesh.import_nodal_attributes(self.fort13_path)
                 for attribute_name in mesh.get_nodal_attribute_names():
                     mesh.set_nodal_attribute_state(
                         attribute_name, coldstart=True, hotstart=True
                     )
             else:
                 LOGGER.warning(
-                    f'mesh values (nodal attributes) not found at "{self["fort_13_path"]}"'
+                    f'mesh values (nodal attributes) not found at "{self.fort13_path}"'
                 )
 
         if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):

@@ -84,7 +84,8 @@ def test_nems_adcirc_local_shinnecock_ike():
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
     configuration = NEMSADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -165,7 +166,8 @@ def test_nems_adcirc_hera_shinnecock_ike():
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
     configuration = NEMSADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -246,7 +248,8 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
     configuration = NEMSADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -305,7 +308,8 @@ def test_adcirc_local_shinnecock_ike():
     forcings = [tidal_forcing]
 
     configuration = ADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -359,7 +363,8 @@ def test_adcirc_hera_shinnecock_ike():
     forcings = [tidal_forcing]
 
     configuration = ADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -413,7 +418,8 @@ def test_adcirc_stampede2_shinnecock_ike():
     forcings = [tidal_forcing]
 
     configuration = ADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -495,7 +501,8 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup():
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
     configuration = NEMSADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,
@@ -554,7 +561,8 @@ def test_adcirc_hera_shinnecock_ike_nospinup():
     forcings = [tidal_forcing]
 
     configuration = ADCIRCRunConfiguration(
-        mesh_directory=mesh_directory,
+        fort13_path=mesh_directory / 'fort.13',
+        fort14_path=mesh_directory / 'fort.14',
         modeled_start_time=modeled_start_time,
         modeled_end_time=modeled_start_time + modeled_duration,
         modeled_timestep=modeled_timestep,

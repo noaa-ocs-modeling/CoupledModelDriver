@@ -3,7 +3,7 @@ from os import PathLike
 from pathlib import Path
 
 from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.script import JobScript, Script
+from coupledmodeldriver.script import JobScript
 
 
 class AdcircJob(JobScript):
@@ -121,21 +121,3 @@ class AdcircMeshPartitionJob(AdcircJob):
                     f'{self.adcprep_path} --np {self.adcirc_partitions} --prepall',
                 ]
             )
-
-
-class ADCIRCGenerationScript(Script):
-    """ Bash script for generating an ADCIRC run configuration from JSON files """
-
-    def __init__(self, commands: [str] = None):
-        super().__init__(commands)
-
-        self.commands.append('generate_adcirc')
-
-    def write(self, filename: PathLike, overwrite: bool = False):
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / f'generate.sh'
-
-        super().write(filename, overwrite)
