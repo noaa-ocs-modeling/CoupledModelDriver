@@ -240,7 +240,7 @@ class JobScript(Script):
 
 
 class EnsembleRunScript(Script):
-    def __init__(self, platform: Platform, spinup: bool = False, commands: [str] = None):
+    def __init__(self, platform: Platform, spinup: bool = True, commands: [str] = None):
         self.platform = platform
         self.spinup = spinup
         super().__init__(commands)

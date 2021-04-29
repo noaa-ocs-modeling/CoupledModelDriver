@@ -406,11 +406,14 @@ def generate_adcirc_configuration(
 
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{ensemble_cleanup_script_filename.name}"')
-    cleanup_script.write(ensemble_cleanup_script_filename, overwrite=overwrite)
+    cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
 
     LOGGER.info(f'writing ensemble run script "{ensemble_run_script_filename.name}"')
-    run_script = EnsembleRunScript(platform, commands=['echo deleting previous ADCIRC output',
-                                                       f'sh {ensemble_cleanup_script_filename.name}'])
+    run_script = EnsembleRunScript(
+        platform=platform,
+        commands=['echo deleting previous ADCIRC output', f'sh {ensemble_cleanup_script_filename.name}'],
+        spinup=spinup_tides,
+    )
     run_script.write(ensemble_run_script_filename, overwrite=overwrite)
 
     if starting_directory is not None:
