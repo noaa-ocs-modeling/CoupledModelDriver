@@ -45,7 +45,6 @@ initialize_adcirc \
     --modeled-start-time 20080823 \
     --modeled-duration 14:06:00:00 \
     --modeled-timestep 00:00:02 \
-    --tidal-spinup-duration 12:06:00:00 \
     --nems-interval 01:00:00 \
     --adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x \
     --adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep \
@@ -53,6 +52,7 @@ initialize_adcirc \
     --forcings tidal,atmesh,ww3data \
     --tidal-source TPXO \
     --tidal-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc \
+    --tidal-spinup-duration 12:06:00:00 \
     --atmesh-path /scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike/wind_atm_fin_ch_time_vec.nc \
     --ww3data-path /scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike/ww3.Constant.20151214_sxy_ike_date.nc
 ```
