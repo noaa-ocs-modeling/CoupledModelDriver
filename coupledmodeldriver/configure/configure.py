@@ -6,10 +6,8 @@ from typing import Any, Collection, Mapping, Union
 
 from nemspy.model.base import ModelEntry
 
-from coupledmodeldriver.configure.base import ConfigurationJSON, \
-    ModelDriverJSON, NEMSCapJSON
-from coupledmodeldriver.configure.forcings.base import \
-    ADCIRCPY_FORCING_CLASSES, ForcingJSON
+from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON, NEMSCapJSON
+from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
 
 
 class RunConfiguration(ABC):
