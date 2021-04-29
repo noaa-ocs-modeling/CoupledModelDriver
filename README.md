@@ -47,6 +47,7 @@ initialize_adcirc \
     --modeled-timestep 00:00:02 \
     --nems-interval 01:00:00 \
     --adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x \
+    --adcirc-processors 40
     --adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep \
     --modulefile /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera \
     --forcings tidal,atmesh,ww3data \
@@ -99,7 +100,7 @@ NEMS_SEQUENCE = [
 
 # platform-specific parameters
 PLATFORM = Platform.HERA
-ADCIRC_PROCESSORS = 15 * PLATFORM.value['processors_per_node']
+ADCIRC_PROCESSORS = 1 * PLATFORM.value['processors_per_node']
 NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
 ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
 MODULEFILE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
