@@ -3,8 +3,8 @@ from os import PathLike
 from pathlib import Path
 from typing import Any
 
-from adcircpy import AdcircMesh, AdcircRun
 from nemspy import ModelingSystem
+from pyschism import ModelDomain, ModelDriver
 
 from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
@@ -22,16 +22,16 @@ from coupledmodeldriver.configure.forcings.base import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
+from coupledmodeldriver.generate.schism.base import SCHISMJSON
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.utilities import LOGGER
 
 
-class ADCIRCRunConfiguration(RunConfiguration):
+class SCHISMRunConfiguration(RunConfiguration):
     REQUIRED = {
         ModelDriverJSON,
         SlurmJSON,
-        ADCIRCJSON,
+        SCHISMJSON,
     }
     SUPPLEMENTARY = {
         TidalForcingJSON,
@@ -52,32 +52,32 @@ class ADCIRCRunConfiguration(RunConfiguration):
         platform: Platform = None,
         perturbations: {str: {str: Any}} = None,
         forcings: [ForcingJSON] = None,
-        adcirc_processors: int = None,
+        schism_processors: int = None,
         slurm_job_duration: timedelta = None,
         slurm_partition: str = None,
         slurm_email_address: str = None,
-        adcirc_executable: PathLike = None,
-        adcprep_executable: PathLike = None,
+        schism_executable: PathLike = None,
+        schismprep_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         """
-        Generate required configuration files for an ADCIRC run.
+        Generate required configuration files for an SCHISM run.
 
         :param fort13_path: path to input mesh nodes `fort.13`
         :param fort14_path: path to input mesh attributes `fort.14`
         :param modeled_start_time: start time within the modeled system
         :param modeled_end_time: end time within the modeled system
         :param modeled_timestep: time interval within the modeled system
-        :param adcirc_processors: numbers of processors to assign for ADCIRC
+        :param schism_processors: numbers of processors to assign for SCHISM
         :param platform: HPC platform for which to configure
-        :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
+        :param tidal_spinup_duration: spinup time for SCHISM tidal coldstart
         :param perturbations: dictionary of runs encompassing run names to parameter values
-        :param forcings: list of forcing configurations to connect to ADCIRC
+        :param forcings: list of forcing configurations to connect to SCHISM
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
-        :param adcirc_executable: filename of compiled `adcirc`
-        :param adcprep_executable: filename of compiled `adcprep`
+        :param schism_executable: filename of compiled `schism`
+        :param schismprep_executable: filename of compiled `adcprep`
         :param source_filename: path to module file to `source`
         """
 
@@ -93,34 +93,34 @@ class ADCIRCRunConfiguration(RunConfiguration):
         if forcings is None:
             forcings = []
 
-        if adcirc_processors is None:
-            adcirc_processors = 11
+        if schism_processors is None:
+            schism_processors = 11
 
-        if adcirc_executable is None:
-            adcirc_executable = 'adcirc'
+        if schism_executable is None:
+            schism_executable = 'schism'
 
-        if adcprep_executable is None:
-            adcprep_executable = 'adcprep'
+        if schismprep_executable is None:
+            schismprep_executable = 'adcprep'
 
         slurm = SlurmJSON(
             account=platform.value['slurm_account'],
-            tasks=adcirc_processors,
+            tasks=schism_processors,
             partition=slurm_partition,
             job_duration=slurm_job_duration,
             email_address=slurm_email_address,
         )
 
-        model = ADCIRCJSON(
+        model = SCHISMJSON(
             mesh_files=[fort13_path, fort14_path],
-            executable=adcirc_executable,
-            adcprep_executable=adcprep_executable,
+            executable=schism_executable,
+            schismprep_executable=schismprep_executable,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             source_filename=source_filename,
             slurm_configuration=slurm,
-            processors=adcirc_processors,
+            processors=schism_processors,
         )
 
         driver = ModelDriverJSON(platform=platform, perturbations=perturbations)
@@ -133,7 +133,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         if forcing not in self:
             forcing = self[self.add(forcing)]
             try:
-                self['adcirc'].add_forcing(forcing)
+                self['schism'].add_forcing(forcing)
             except Exception as error:
                 LOGGER.error(error)
 
@@ -146,20 +146,20 @@ class ADCIRCRunConfiguration(RunConfiguration):
         ]
 
     @property
-    def adcircpy_mesh(self) -> AdcircMesh:
-        return self['adcirc'].adcircpy_mesh
+    def pyschism_domain(self) -> ModelDomain:
+        return self['schism'].pyschism_domain
 
     @property
-    def adcircpy_driver(self) -> AdcircRun:
-        return self['adcirc'].adcircpy_driver
+    def pyschism_driver(self) -> ModelDriver:
+        return self['schism'].pyschism_driver
 
-    def __copy__(self) -> 'ADCIRCRunConfiguration':
+    def __copy__(self) -> 'SCHISMRunConfiguration':
         return self.__class__.from_configurations(self.configurations)
 
     @classmethod
     def from_configurations(
         cls, configurations: [ConfigurationJSON]
-    ) -> 'ADCIRCRunConfiguration':
+    ) -> 'SCHISMRunConfiguration':
         required = {configuration_class: None for configuration_class in cls.REQUIRED}
         supplementary = {
             configuration_class: None for configuration_class in cls.SUPPLEMENTARY
@@ -184,7 +184,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
         instance['modeldriver'] = required[ModelDriverJSON]
         instance['slurm'] = required[SlurmJSON]
-        instance['adcirc'] = required[ADCIRCJSON]
+        instance['schism'] = required[SCHISMJSON]
 
         forcings = [
             configuration
@@ -199,27 +199,27 @@ class ADCIRCRunConfiguration(RunConfiguration):
     @classmethod
     def read_directory(
         cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
-    ) -> 'ADCIRCRunConfiguration':
+    ) -> 'SCHISMRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
         if directory.is_file():
             directory = directory.parent
         if required is None:
             required = set()
-        required.update(ADCIRCRunConfiguration.REQUIRED)
+        required.update(SCHISMRunConfiguration.REQUIRED)
         if supplementary is None:
             supplementary = set()
-        supplementary.update(ADCIRCRunConfiguration.SUPPLEMENTARY)
+        supplementary.update(SCHISMRunConfiguration.SUPPLEMENTARY)
 
         return super().read_directory(directory, required, supplementary)
 
 
-class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
+class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
     REQUIRED = {
         ModelDriverJSON,
         NEMSJSON,
         SlurmJSON,
-        ADCIRCJSON,
+        SCHISMJSON,
     }
 
     def __init__(
@@ -237,12 +237,12 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         platform: Platform = None,
         perturbations: {str: {str: Any}} = None,
         forcings: [ForcingJSON] = None,
-        adcirc_processors: int = None,
+        schism_processors: int = None,
         slurm_job_duration: timedelta = None,
         slurm_partition: str = None,
         slurm_email_address: str = None,
         nems_executable: PathLike = None,
-        adcprep_executable: PathLike = None,
+        schismprep_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         self.__nems = None
@@ -257,11 +257,11 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             platform=platform,
             perturbations=perturbations,
             forcings=None,
-            adcirc_processors=adcirc_processors,
+            schism_processors=schism_processors,
             slurm_job_duration=slurm_job_duration,
             slurm_partition=slurm_partition,
             slurm_email_address=slurm_email_address,
-            adcprep_executable=adcprep_executable,
+            schismprep_executable=schismprep_executable,
             source_filename=source_filename,
         )
 
@@ -292,16 +292,16 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             forcing = self[self.add(forcing)]
             if isinstance(forcing, NEMSCapJSON):
                 self['nems']['models'].append(forcing.nemspy_entry)
-            self['adcirc'].add_forcing(forcing)
+            self['schism'].add_forcing(forcing)
 
-    def __copy__(self) -> 'NEMSADCIRCRunConfiguration':
+    def __copy__(self) -> 'NEMSSCHISMRunConfiguration':
         return self.__class__.from_configurations(self.configurations)
 
     @classmethod
     def from_configurations(
         cls, configurations: [ConfigurationJSON]
-    ) -> 'NEMSADCIRCRunConfiguration':
-        instance = ADCIRCRunConfiguration.from_configurations(configurations)
+    ) -> 'NEMSSCHISMRunConfiguration':
+        instance = SCHISMRunConfiguration.from_configurations(configurations)
         instance.__class__ = cls
 
         nems = None
@@ -321,17 +321,17 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
     @classmethod
     def read_directory(
         cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
-    ) -> 'NEMSADCIRCRunConfiguration':
+    ) -> 'NEMSSCHISMRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
         if directory.is_file():
             directory = directory.parent
         if required is None:
             required = set()
-        required.update(NEMSADCIRCRunConfiguration.REQUIRED)
+        required.update(NEMSSCHISMRunConfiguration.REQUIRED)
         if supplementary is None:
             supplementary = set()
-        supplementary.update(NEMSADCIRCRunConfiguration.SUPPLEMENTARY)
+        supplementary.update(NEMSSCHISMRunConfiguration.SUPPLEMENTARY)
 
         instance = super().read_directory(directory, required, supplementary)
         instance['nems']['models'] = instance.nemspy_entries
