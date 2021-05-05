@@ -201,7 +201,6 @@ class SlurmJSON(ConfigurationJSON):
     default_filename = f'configure_slurm.json'
     field_types = {
         'account': str,
-        'tasks': int,
         'partition': str,
         'job_duration': timedelta,
         'run_directory': Path,
@@ -234,14 +233,18 @@ class SlurmJSON(ConfigurationJSON):
         nodes: int = None,
         **kwargs,
     ):
+        if tasks is None:
+            tasks = 1
+
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(SlurmJSON.field_types)
 
         ConfigurationJSON.__init__(self, **kwargs)
 
+        self.tasks = tasks
+
         self['account'] = account
-        self['tasks'] = tasks
         self['partition'] = partition
         self['job_duration'] = job_duration
         self['run_directory'] = run_directory
@@ -262,7 +265,7 @@ class SlurmJSON(ConfigurationJSON):
     def to_adcircpy(self) -> SlurmConfig:
         return SlurmConfig(
             account=self['account'],
-            ntasks=self['tasks'],
+            ntasks=self.tasks,
             partition=self['partition'],
             walltime=self['job_duration'],
             filename=self['filename'] if 'filename' in self else None,
