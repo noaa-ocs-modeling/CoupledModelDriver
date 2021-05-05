@@ -51,7 +51,6 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
-
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -235,9 +234,13 @@ def convert_value(value: Any, to_type: type) -> Any:
                 value = timedelta(seconds=float(value))
         elif isinstance(value, str):
             try:
-                value = to_type.from_string(value)
+                if Path(value).exists():
+                    value = to_type.from_file(value)
             except:
-                value = to_type(value)
+                try:
+                    value = to_type.from_string(value)
+                except:
+                    value = to_type(value)
         else:
             value = to_type(value)
     return value

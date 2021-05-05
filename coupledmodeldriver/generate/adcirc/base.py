@@ -127,7 +127,6 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
     default_attributes = ADCIRCPY_ATTRIBUTES
 
     field_types = {
-        'mesh_files': [Path],
         'adcprep_executable': Path,
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
@@ -291,6 +290,9 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
 
     @property
     def fort13_path(self) -> Path:
+        """
+        :return: file path to nodal attributes
+        """
         for mesh_file in self['mesh_files']:
             if mesh_file.suffix == '.13':
                 return mesh_file
@@ -299,6 +301,9 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
 
     @property
     def fort14_path(self) -> Path:
+        """
+        :return: file path to nodal coordinates
+        """
         for mesh_file in self['mesh_files']:
             if mesh_file.suffix == '.14':
                 return mesh_file
