@@ -275,7 +275,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         for forcing in forcings:
             self.add_forcing(forcing)
 
-        self['slurm']['tasks'] = self['nems'].nemspy_modeling_system.processors
+        self['slurm'].tasks = self['nems'].nemspy_modeling_system.processors
 
     @property
     def nemspy_modeling_system(self) -> ModelingSystem:
