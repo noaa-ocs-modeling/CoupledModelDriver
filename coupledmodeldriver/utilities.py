@@ -51,6 +51,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -156,7 +157,14 @@ def convert_value(value: Any, to_type: type) -> Any:
     if isinstance(to_type, Collection):
         collection_type = type(to_type)
         if collection_type is not EnumMeta:
-            if not issubclass(collection_type, Mapping):
+            if issubclass(collection_type, Mapping):
+                if isinstance(value, str):
+                    value = json.loads(value)
+                elif isinstance(value, CRS):
+                    value = value.to_json_dict()
+                else:
+                    LOGGER.debug('dicionaries not implemented')
+            else:
                 if value is not None:
                     to_type = list(to_type)
                     if not isinstance(value, Iterable) or isinstance(value, str):
@@ -177,10 +185,6 @@ def convert_value(value: Any, to_type: type) -> Any:
                     )
                 else:
                     value = collection_type()
-            elif isinstance(value, str):
-                value = json.loads(value)
-            elif isinstance(value, CRS):
-                value = value.to_json_dict()
         elif value is not None:
             try:
                 value = to_type[value]
@@ -207,35 +211,43 @@ def convert_value(value: Any, to_type: type) -> Any:
                 value = value.to_json_dict()
             elif issubclass(to_type, int):
                 value = value.to_epsg()
-        if issubclass(to_type, bool):
-            value = eval(f'{value}')
-        elif issubclass(to_type, datetime):
-            value = parse_date(value)
-        elif issubclass(to_type, timedelta):
-            try:
+        if not isinstance(value, to_type):
+            if issubclass(to_type, bool):
+                value = eval(f'{value}')
+            elif issubclass(to_type, datetime):
+                value = parse_date(value)
+            elif issubclass(to_type, timedelta):
                 try:
-                    time = datetime.strptime(value, '%H:%M:%S')
-                    value = timedelta(
-                        hours=time.hour, minutes=time.minute, seconds=time.second
-                    )
+                    try:
+                        time = datetime.strptime(value, '%H:%M:%S')
+                        value = timedelta(
+                            hours=time.hour, minutes=time.minute, seconds=time.second
+                        )
+                    except:
+                        parts = [float(part) for part in value.split(':')]
+                        if len(parts) > 3:
+                            days = parts.pop(0)
+                        else:
+                            days = 0
+                        value = timedelta(
+                            days=days, hours=parts[0], minutes=parts[1], seconds=parts[2]
+                        )
                 except:
-                    parts = [float(part) for part in value.split(':')]
-                    if len(parts) > 3:
-                        days = parts.pop(0)
-                    else:
-                        days = 0
-                    value = timedelta(
-                        days=days, hours=parts[0], minutes=parts[1], seconds=parts[2]
-                    )
-            except:
-                value = timedelta(seconds=float(value))
-        elif isinstance(value, str):
-            try:
-                value = to_type.from_string(value)
-            except:
+                    value = timedelta(seconds=float(value))
+            elif isinstance(value, str):
+                try:
+                    path_exists = Path(value).exists()
+                except:
+                    path_exists = False
+                if path_exists:
+                    value = to_type.from_file(value)
+                else:
+                    try:
+                        value = to_type.from_string(value)
+                    except:
+                        value = to_type(value)
+            else:
                 value = to_type(value)
-        else:
-            value = to_type(value)
     return value
 
 

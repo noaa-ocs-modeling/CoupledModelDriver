@@ -10,18 +10,19 @@
 `coupledmodeldriver` generates an overlying job submission framework and configuration directories for NEMS-coupled coastal
 ocean model ensembles.
 
-It utilizes [`nemspy`](https://pypi.org/project/nemspy) to generate NEMS configuration files, shares common configurations
-between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
+It utilizes [`nemspy`](https://github.com/noaa-ocs-modeling/nemspy) to generate NEMS configuration files, shares common
+configurations between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
 
 ## Supported models and platforms
 
 - **models**
     - circulation models
-        - ADCIRC (uses [`adcircpy`](https://pypi.org/project/adcircpy))
+        - ADCIRC (uses [`adcircpy`](https://github.com/JaimeCalzadaNOAA/adcircpy))
+        - SCHISM (uses [`pyschism`](https://github.com/schism-dev/pyschism))
     - forcings
         - ATMESH
         - WW3DATA
-        - HURDAT best track
+        - best track (HURDAT)
         - OWI
 - **platforms**
     - local
@@ -248,7 +249,8 @@ The queue will have the following jobs added:
 `coupledmodeldriver` exposes the following CLI commands:
 
 - `initialize_adcirc`
-- `generate_adcirc`
+- `initialize_schism`
+- `generate_configuration`
 
 ### Initialize ADCIRC configuration (`initialize_adcirc`)
 
@@ -294,14 +296,14 @@ optional arguments:
 ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly
 modifying the JSON files.
 
-### Generate ADCIRC configuration (`generate_adcirc`)
+### Generate configuration (`generate_configuration`)
 
-`generate_adcirc` reads a set of JSON configuration files and generates an ADCIRC run configuration from the options read from
-these files.
+`generate_configuration` reads a set of JSON configuration files and generates a model run configuration from the options read
+from these files.
 
 ```
-usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--skip-existing]
-                       [--verbose]
+usage: generate_configuration [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] 
+                              [--skip-existing] [--verbose]
 
 optional arguments:
   -h, --help            show this help message and exit

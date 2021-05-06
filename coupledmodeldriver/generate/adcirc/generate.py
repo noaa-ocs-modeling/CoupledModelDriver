@@ -81,23 +81,34 @@ def generate_adcirc_configuration(
     email_type = ensemble_configuration['slurm']['email_type']
     email_address = ensemble_configuration['slurm']['email_address']
 
-    original_fort13_filename = ensemble_configuration['adcirc']['fort_13_path']
-    original_fort14_filename = ensemble_configuration['adcirc']['fort_14_path']
-    adcirc_executable_path = ensemble_configuration['adcirc']['adcirc_executable_path']
-    adcprep_executable_path = ensemble_configuration['adcirc']['adcprep_executable_path']
+    original_fort13_filename = ensemble_configuration['adcirc'].fort13_path
+    original_fort14_filename = ensemble_configuration['adcirc'].fort14_path
+    adcirc_executable = ensemble_configuration['adcirc']['executable']
+    adcprep_executable = ensemble_configuration['adcirc']['adcprep_executable']
     adcirc_processors = ensemble_configuration['adcirc']['processors']
     tidal_spinup_duration = ensemble_configuration['adcirc']['tidal_spinup_duration']
     source_filename = ensemble_configuration['adcirc']['source_filename']
     use_original_mesh = ensemble_configuration['adcirc']['use_original_mesh']
 
+    # if original_fort13_filename is not None and not original_fort13_filename.is_absolute():
+    #     original_fort13_filename = starting_directory / original_fort13_filename
+    # if original_fort14_filename is not None and not original_fort14_filename.is_absolute():
+    #     original_fort14_filename = starting_directory / original_fort14_filename
+    # if adcirc_executable is not None and not adcirc_executable.is_absolute():
+    #     adcirc_executable = starting_directory / adcirc_executable
+    # if adcprep_executable is not None and not adcprep_executable.is_absolute():
+    #     adcprep_executable = starting_directory / adcprep_executable
+    # if source_filename is not None and not source_filename.is_absolute():
+    #     source_filename = starting_directory / source_filename
+
     if use_nems:
         nems_configuration = ensemble_configuration['nems'].nemspy_modeling_system
         run_processors = nems_configuration.processors
-        run_executable = ensemble_configuration['nems']['executable_path']
+        run_executable = ensemble_configuration['nems']['executable']
     else:
         nems_configuration = None
         run_processors = adcirc_processors
-        run_executable = adcirc_executable_path
+        run_executable = adcirc_executable
 
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
@@ -202,7 +213,7 @@ def generate_adcirc_configuration(
     ensemble_run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
 
-    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable_path}"')
+    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
     adcprep_script = AdcircMeshPartitionJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
@@ -210,7 +221,7 @@ def generate_adcirc_configuration(
         slurm_duration=job_duration,
         slurm_partition=partition,
         slurm_run_name=adcprep_run_name,
-        adcprep_path=adcprep_executable_path,
+        adcprep_path=adcprep_executable,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
         slurm_error_filename=f'{adcprep_run_name}.err.log',

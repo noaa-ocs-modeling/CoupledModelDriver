@@ -78,7 +78,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6',
     setup_requires=['dunamai', 'setuptools>=41.2'],
-    install_requires=['adcircpy>=1.0.32', 'nemspy>=0.6.16', 'numpy', 'requests'],
+    install_requires=['adcircpy>=1.0.32', 'pyschism', 'nemspy>=0.6.16', 'numpy', 'requests'],
     extras_require={
         'testing': ['flake8', 'pytest', 'pytest-cov', 'pytest-xdist', 'wget'],
         'development': ['oitnb'],
@@ -86,7 +86,7 @@ setup(
     entry_points={
         'console_scripts': [
             'initialize_adcirc=client.initialize_adcirc:main',
-            'generate_adcirc=client.generate_adcirc:main',
+            'generate_configuration=client.generate_configuration:main',
         ],
     },
 )

@@ -1,0 +1,1 @@
+from coupledmodeldriver.generate.schism.generate import generate_schism_configuration

@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from coupledmodeldriver.generate import generate_adcirc_configuration
+from coupledmodeldriver.generate.base import generate_configuration
 from coupledmodeldriver.utilities import convert_value
 
 
@@ -33,7 +33,7 @@ def main():
     if output_directory is None:
         output_directory = configuration_directory
 
-    generate_adcirc_configuration(
+    generate_configuration(
         configuration_directory=configuration_directory,
         output_directory=output_directory,
         overwrite=overwrite,

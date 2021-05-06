@@ -1,1 +1,2 @@
 from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver.script import ModelGenerationScript

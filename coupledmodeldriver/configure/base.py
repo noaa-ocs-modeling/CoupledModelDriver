@@ -4,12 +4,13 @@ import json
 import os
 from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Union
 
 from adcircpy.server import SlurmConfig
 import nemspy
 from nemspy import ModelingSystem
 from nemspy.model.base import ModelEntry
+from pyschism.server import ServerConfig
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import SlurmEmailType
@@ -65,19 +66,8 @@ class ConfigurationJSON(ABC):
         :param relative_path: path to which to move Path attributes
         """
 
-        if isinstance(relative_path, int):
-            if relative_path <= 0:
-                relative_path = Path('.') / ('../' * (-relative_path))
-        elif not isinstance(relative_path, Path):
-            relative_path = Path(relative_path)
-
         for name, value in self.configuration.items():
-            if isinstance(value, Path):
-                if not value.is_absolute():
-                    if isinstance(relative_path, int):
-                        self[name] = Path(*value.parts[relative_path:])
-                    elif isinstance(relative_path, Path):
-                        self[name] = relative_path / value
+            self[name] = anchor_relative_path(value, relative_path)
 
     def __contains__(self, key: str) -> bool:
         return key in self.configuration
@@ -223,6 +213,7 @@ class SlurmJSON(ConfigurationJSON):
         'path_prefix': Path,
         'extra_commands': [str],
         'launcher': str,
+        'executable': Path,
         'nodes': int,
     }
 
@@ -241,6 +232,7 @@ class SlurmJSON(ConfigurationJSON):
         path_prefix: Path = None,
         extra_commands: [str] = None,
         launcher: str = None,
+        executable: PathLike = None,
         nodes: int = None,
         **kwargs,
     ):
@@ -267,6 +259,7 @@ class SlurmJSON(ConfigurationJSON):
         self['path_prefix'] = path_prefix
         self['extra_commands'] = extra_commands
         self['launcher'] = launcher
+        self['executable'] = executable
         self['nodes'] = nodes
 
         if self['email_type'] is None:
@@ -312,6 +305,15 @@ class SlurmJSON(ConfigurationJSON):
         )
 
         instance['filename'] = slurm_config._filename
+
+    @property
+    def to_pyschism(self) -> ServerConfig:
+        return ServerConfig(
+            nproc=self.tasks,
+            symlink_outputs=None,
+            schism_binary=self['executable'],
+            mpi_launcher=self['launcher'],
+        )
 
 
 class ModelDriverJSON(ConfigurationJSON):
@@ -373,9 +375,9 @@ class NEMSJSON(ConfigurationJSON):
     name = 'NEMS'
     default_filename = f'configure_nems.json'
     field_types = {
-        'executable_path': Path,
+        'executable': Path,
         'modeled_start_time': datetime,
-        'modeled_end_time': datetime,
+        'modeled_duration': timedelta,
         'interval': timedelta,
         'models': [ModelEntry],
         'connections': [[str]],
@@ -385,9 +387,9 @@ class NEMSJSON(ConfigurationJSON):
 
     def __init__(
         self,
-        executable_path: PathLike,
+        executable: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         interval: timedelta = None,
         models: [ModelEntry] = None,
         connections: [[str]] = None,
@@ -401,9 +403,9 @@ class NEMSJSON(ConfigurationJSON):
 
         ConfigurationJSON.__init__(self, **kwargs)
 
-        self['executable_path'] = executable_path
+        self['executable'] = executable
         self['modeled_start_time'] = modeled_start_time
-        self['modeled_end_time'] = modeled_end_time
+        self['modeled_duration'] = modeled_duration
         self['interval'] = interval
         self['models'] = models
         self['connections'] = connections
@@ -414,7 +416,7 @@ class NEMSJSON(ConfigurationJSON):
     def nemspy_modeling_system(self) -> ModelingSystem:
         modeling_system = ModelingSystem(
             start_time=self['modeled_start_time'],
-            end_time=self['modeled_end_time'],
+            end_time=self['modeled_start_time'] + self['modeled_duration'],
             interval=self['interval'],
             **{model.model_type.value.lower(): model for model in self['models']},
         )
@@ -432,11 +434,11 @@ class NEMSJSON(ConfigurationJSON):
         return self.nemspy_modeling_system
 
     @classmethod
-    def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
-        if executable_path is None:
-            executable_path = 'NEMS.x'
+    def from_nemspy(cls, modeling_system: ModelingSystem, executable: PathLike = None):
+        if executable is None:
+            executable = 'NEMS.x'
         return cls(
-            executable_path=executable_path,
+            executable=executable,
             modeled_start_time=modeling_system.start_time,
             modeled_end_time=modeling_system.end_time,
             interval=modeling_system.interval,
@@ -526,3 +528,22 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
     @abstractmethod
     def nemspy_entry(self) -> ModelEntry:
         raise NotImplementedError()
+
+
+def anchor_relative_path(value: Path, relative: Union[PathLike, int]):
+    if isinstance(value, List) and not isinstance(value, str):
+        value = [anchor_relative_path(entry, relative) for entry in value]
+    elif isinstance(value, Path):
+        if isinstance(relative, int):
+            if relative <= 0:
+                relative = Path('.') / ('../' * (-relative))
+        elif not isinstance(relative, Path):
+            relative = Path(relative)
+
+        if not value.is_absolute():
+            if isinstance(relative, int):
+                value = Path(*value.parts[relative:])
+            elif isinstance(relative, Path):
+                value = relative / value
+
+    return value

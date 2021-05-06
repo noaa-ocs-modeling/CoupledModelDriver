@@ -439,3 +439,21 @@ def bash_function(name: str, body: [str], indentation: str = '    ') -> str:
         body = '\n'.join(body)
 
     return '\n'.join([f'{name}() {{', textwrap.indent(body, indentation), '}'])
+
+
+class ModelGenerationScript(Script):
+    """ Bash script for generating a model run configuration from JSON files """
+
+    def __init__(self, commands: [str] = None):
+        super().__init__(commands)
+
+        self.commands.append('generate_configuration')
+
+    def write(self, filename: PathLike, overwrite: bool = False):
+        if not isinstance(filename, Path):
+            filename = Path(filename)
+
+        if filename.is_dir():
+            filename = filename / f'generate.sh'
+
+        super().write(filename, overwrite)

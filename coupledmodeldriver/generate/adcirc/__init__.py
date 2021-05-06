@@ -3,4 +3,3 @@ from coupledmodeldriver.generate.adcirc.configure import (
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.generate.adcirc.generate import generate_adcirc_configuration
-from coupledmodeldriver.generate.adcirc.script import ADCIRCGenerationScript

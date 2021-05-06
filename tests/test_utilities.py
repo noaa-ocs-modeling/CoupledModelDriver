@@ -70,6 +70,8 @@ def test_convert_value():
     list_3 = convert_value([1, 2, '3', '4'], [int])
     list_4 = convert_value([1, 2, '3', '4'], (int, str, float, str))
 
+    dict_1 = convert_value({'test_1': '5', 'test_2': 6}, {str: float})
+
     with pytest.raises(ValueError):
         convert_value([1, 2, '3', '4'], (int, str))
 
@@ -111,6 +113,8 @@ def test_convert_value():
     assert list_3 == [1, 2, 3, 4]
     assert list_4 == (1, '2', 3.0, '4')
 
+    assert dict_1 == {'test_1': '5', 'test_2': 6}
+
     assert datetime_1 == '2021-03-26 00:00:00'
     assert datetime_2 == datetime(2021, 3, 26)
 
@@ -126,11 +130,11 @@ def test_convert_value():
 
     assert (
         crs_1
-        == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+        == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["unknown"],AREA["World"],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
     )
     assert crs_2 == 4326
     assert crs_3 == {
-        '$schema': 'https://proj.org/schemas/v0.2/projjson.schema.json',
+        '$schema': 'https://proj.org/schemas/v0.1/projjson.schema.json',
         'type': 'GeographicCRS',
         'name': 'WGS 84',
         'datum': {
@@ -159,8 +163,7 @@ def test_convert_value():
                 },
             ],
         },
-        'scope': 'Horizontal component of 3D system.',
-        'area': 'World.',
+        'area': 'World',
         'bbox': {
             'south_latitude': -90,
             'west_longitude': -180,

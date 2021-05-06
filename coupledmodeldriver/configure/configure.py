@@ -1,13 +1,18 @@
 from abc import ABC
 from copy import copy
 from os import PathLike
+import os.path
 from pathlib import Path
 from typing import Any, Collection, Mapping, Union
 
 from nemspy.model.base import ModelEntry
 
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON, NEMSCapJSON
-from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
+from coupledmodeldriver.configure.forcings.base import (
+    ADCIRCPY_FORCING_CLASSES,
+    ForcingJSON,
+    PYSCHISM_FORCING_CLASSES,
+)
 
 
 class RunConfiguration(ABC):
@@ -137,7 +142,10 @@ class RunConfiguration(ABC):
         if not directory.exists():
             directory.mkdir(parents=True, exist_ok=True)
 
-        for configuration in self.__configurations.values():
+        if directory != Path.cwd():
+            self.move_paths(os.path.relpath(Path.cwd(), directory))
+
+        for configuration in self.configurations:
             configuration.to_file(directory, overwrite=overwrite)
 
     @classmethod
@@ -153,4 +161,6 @@ def from_user_input(value: Any) -> ConfigurationJSON:
             value = ConfigurationJSON.from_string(value)
     elif isinstance(value, ADCIRCPY_FORCING_CLASSES):
         value = ForcingJSON.from_adcircpy(value)
+    elif isinstance(value, PYSCHISM_FORCING_CLASSES):
+        value = ForcingJSON.from_pyschism(value)
     return value
