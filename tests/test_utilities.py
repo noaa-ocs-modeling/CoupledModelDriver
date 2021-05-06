@@ -5,7 +5,8 @@ from pathlib import Path
 from pyproj import CRS
 import pytest
 
-from coupledmodeldriver.utilities import convert_to_json, convert_value, create_symlink
+from coupledmodeldriver.utilities import convert_to_json, convert_value, \
+    create_symlink
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
@@ -126,11 +127,11 @@ def test_convert_value():
 
     assert (
         crs_1
-        == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+        == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["unknown"],AREA["World"],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
     )
     assert crs_2 == 4326
     assert crs_3 == {
-        '$schema': 'https://proj.org/schemas/v0.2/projjson.schema.json',
+        '$schema': 'https://proj.org/schemas/v0.1/projjson.schema.json',
         'type': 'GeographicCRS',
         'name': 'WGS 84',
         'datum': {
@@ -159,8 +160,7 @@ def test_convert_value():
                 },
             ],
         },
-        'scope': 'Horizontal component of 3D system.',
-        'area': 'World.',
+        'area': 'World',
         'bbox': {
             'south_latitude': -90,
             'west_longitude': -180,
