@@ -10,6 +10,7 @@ from adcircpy.server import SlurmConfig
 import nemspy
 from nemspy import ModelingSystem
 from nemspy.model.base import ModelEntry
+from pyschism.server import ServerConfig
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import SlurmEmailType
@@ -212,6 +213,7 @@ class SlurmJSON(ConfigurationJSON):
         'path_prefix': Path,
         'extra_commands': [str],
         'launcher': str,
+        'executable': Path,
         'nodes': int,
     }
 
@@ -230,6 +232,7 @@ class SlurmJSON(ConfigurationJSON):
         path_prefix: Path = None,
         extra_commands: [str] = None,
         launcher: str = None,
+        executable: PathLike = None,
         nodes: int = None,
         **kwargs,
     ):
@@ -256,6 +259,7 @@ class SlurmJSON(ConfigurationJSON):
         self['path_prefix'] = path_prefix
         self['extra_commands'] = extra_commands
         self['launcher'] = launcher
+        self['executable'] = executable
         self['nodes'] = nodes
 
         if self['email_type'] is None:
@@ -301,6 +305,15 @@ class SlurmJSON(ConfigurationJSON):
         )
 
         instance['filename'] = slurm_config._filename
+
+    @property
+    def to_pyschism(self) -> ServerConfig:
+        return ServerConfig(
+            nproc=self.tasks,
+            symlink_outputs=None,
+            schism_binary=self['executable'],
+            mpi_launcher=self['launcher'],
+        )
 
 
 class ModelDriverJSON(ConfigurationJSON):
@@ -364,7 +377,7 @@ class NEMSJSON(ConfigurationJSON):
     field_types = {
         'executable': Path,
         'modeled_start_time': datetime,
-        'modeled_end_time': datetime,
+        'modeled_duration': timedelta,
         'interval': timedelta,
         'models': [ModelEntry],
         'connections': [[str]],
@@ -376,7 +389,7 @@ class NEMSJSON(ConfigurationJSON):
         self,
         executable: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         interval: timedelta = None,
         models: [ModelEntry] = None,
         connections: [[str]] = None,
@@ -392,7 +405,7 @@ class NEMSJSON(ConfigurationJSON):
 
         self['executable'] = executable
         self['modeled_start_time'] = modeled_start_time
-        self['modeled_end_time'] = modeled_end_time
+        self['modeled_duration'] = modeled_duration
         self['interval'] = interval
         self['models'] = models
         self['connections'] = connections
@@ -403,7 +416,7 @@ class NEMSJSON(ConfigurationJSON):
     def nemspy_modeling_system(self) -> ModelingSystem:
         modeling_system = ModelingSystem(
             start_time=self['modeled_start_time'],
-            end_time=self['modeled_end_time'],
+            end_time=self['modeled_start_time'] + self['modeled_duration'],
             interval=self['interval'],
             **{model.model_type.value.lower(): model for model in self['models']},
         )

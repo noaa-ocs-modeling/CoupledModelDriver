@@ -44,7 +44,7 @@ if __name__ == '__main__':
     configuration = ADCIRCRunConfiguration(
         mesh_directory=MESH_DIRECTORY,
         modeled_start_time=MODELED_START_TIME,
-        modeled_end_time=MODELED_START_TIME + MODELED_DURATION,
+        modeled_duration=MODELED_START_TIME + MODELED_DURATION,
         modeled_timestep=MODELED_TIMESTEP,
         tidal_spinup_duration=TIDAL_SPINUP_DURATION,
         platform=PLATFORM,

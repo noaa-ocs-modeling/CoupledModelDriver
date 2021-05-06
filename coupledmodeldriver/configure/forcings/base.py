@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Union
 
-from adcircpy import Tides
+from adcircpy import Tides as adcircpy_Tides
 from adcircpy.forcing.base import Forcing
 from adcircpy.forcing.tides import HAMTIDE
 from adcircpy.forcing.tides.tides import TidalSource
@@ -14,10 +14,17 @@ from adcircpy.forcing.winds import BestTrackForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
+from pyschism.enums import GFSProduct
+from pyschism.forcing import GlobalForecastSystem, \
+    Tides as pyschism_Tides
+from pyschism.forcing.hydrology import NationalWaterModel
 
 from coupledmodeldriver.configure.base import AttributeJSON, \
     ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
+
+ADCIRCPY_FORCING_CLASSES = (adcircpy_Tides, Forcing)
+PYSCHISM_FORCING_CLASSES = (pyschism_Tides, NationalWaterModel, GlobalForecastSystem)
 
 ADCIRCPY_FORCINGS = {
     'Tides': 'TidalForcingJSON',
@@ -27,7 +34,11 @@ ADCIRCPY_FORCINGS = {
     'WaveWatch3DataForcing': 'WW3DATAForcingJSON',
 }
 
-ADCIRCPY_FORCING_CLASSES = (Forcing, Tides)
+PYSCHISM_FORCINGS = {
+    'Tides': 'TidalForcingJSON',
+    'GlobalForecastSystem': 'WindForcingJSON',
+    'NationalWaterModel': 'NWMForcingJSON',
+}
 
 
 class ForcingJSON(ConfigurationJSON, ABC):
@@ -36,14 +47,34 @@ class ForcingJSON(ConfigurationJSON, ABC):
     def adcircpy_forcing(self) -> Forcing:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def pyschism_forcing(self):
+        raise NotImplementedError
+
     def to_adcircpy(self) -> Forcing:
         return self.adcircpy_forcing
+
+    def to_pyschism(self) -> Union[PYSCHISM_FORCING_CLASSES]:
+        return self.pyschism_forcing
 
     @classmethod
     @abstractmethod
     def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
         forcing_class_name = forcing.__class__.__name__
         if forcing_class_name in ADCIRCPY_FORCINGS:
+            configuration_class = getattr(
+                sys.modules[__name__], ADCIRCPY_FORCINGS[forcing_class_name]
+            )
+            return configuration_class.from_adcircpy(forcing)
+        else:
+            raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def from_pyschism(cls, forcing: Union[PYSCHISM_FORCING_CLASSES]) -> 'ForcingJSON':
+        forcing_class_name = forcing.__class__.__name__
+        if forcing_class_name in PYSCHISM_FORCING_CLASSES:
             configuration_class = getattr(
                 sys.modules[__name__], ADCIRCPY_FORCINGS[forcing_class_name]
             )
@@ -113,7 +144,7 @@ class TidalForcingJSON(FileForcingJSON):
 
     @property
     def adcircpy_forcing(self) -> Forcing:
-        tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'])
+        tides = adcircpy_Tides(tidal_source=self['tidal_source'], resource=self['resource'])
 
         constituents = [constituent.capitalize() for constituent in self['constituents']]
 
@@ -139,8 +170,12 @@ class TidalForcingJSON(FileForcingJSON):
         self['constituents'] = list(tides.active_constituents)
         return tides
 
+    @property
+    def pyschism_forcing(self):
+        raise NotImplementedError
+
     @classmethod
-    def from_adcircpy(cls, forcing: Tides) -> 'TidalForcingJSON':
+    def from_adcircpy(cls, forcing: adcircpy_Tides) -> 'TidalForcingJSON':
         # TODO: workaround for this issue: https://github.com/JaimeCalzadaNOAA/adcircpy/pull/70#discussion_r607245713
         resource = forcing.tidal_dataset.path
         if resource == HAMTIDE.OPENDAP_URL:
@@ -151,6 +186,10 @@ class TidalForcingJSON(FileForcingJSON):
             tidal_source=forcing.tidal_source,
             constituents=forcing.active_constituents,
         )
+
+    @classmethod
+    def from_pyschism(cls, forcing: Union[PYSCHISM_FORCING_CLASSES]) -> 'ForcingJSON':
+        raise NotImplementedError
 
 
 class WindForcingJSON(ForcingJSON, ABC):
@@ -245,6 +284,10 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 
         return forcing
 
+    @property
+    def pyschism_forcing(self):
+        raise NotImplementedError
+
     @classmethod
     def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
@@ -253,6 +296,10 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             start_date=forcing.start_date,
             end_date=forcing.end_date,
         )
+
+    @classmethod
+    def from_pyschism(cls, forcing: Union[PYSCHISM_FORCING_CLASSES]) -> 'ForcingJSON':
+        raise NotImplementedError
 
     @classmethod
     def from_fort22(cls, filename: PathLike, nws: int = None):
@@ -273,9 +320,17 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
     def adcircpy_forcing(self) -> OwiForcing:
         return OwiForcing(interval_seconds=self['modeled_timestep'] / timedelta(seconds=1))
 
+    @property
+    def pyschism_forcing(self):
+        raise NotImplementedError
+
     @classmethod
     def from_adcircpy(cls, forcing: OwiForcing) -> 'OWIForcingJSON':
         return cls(modeled_timestep=timedelta(seconds=forcing.interval))
+
+    @classmethod
+    def from_pyschism(cls, forcing: Union[PYSCHISM_FORCING_CLASSES]) -> 'ForcingJSON':
+        raise NotImplementedError
 
 
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
@@ -309,17 +364,58 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
             interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
         )
 
+    @property
+    def pyschism_forcing(self):
+        raise NotImplementedError
+
     @classmethod
     def from_adcircpy(cls, forcing: AtmosphericMeshForcing) -> 'ATMESHForcingJSON':
         return cls(
             resource=forcing.filename, nws=forcing.NWS, modeled_timestep=forcing.interval,
         )
 
+    @classmethod
+    def from_pyschism(cls, forcing: Union[PYSCHISM_FORCING_CLASSES]) -> 'ForcingJSON':
+        raise NotImplementedError
+
     @property
     def nemspy_entry(self) -> AtmosphericMeshEntry:
         return AtmosphericMeshEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
         )
+
+
+class GFSForcingJSON(FileForcingJSON):
+    field_types = {'product': GFSProduct}
+
+    def __init__(
+        self, resource: PathLike, product: GFSProduct, **kwargs,
+    ):
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(GFSForcingJSON.field_types)
+
+        FileForcingJSON.__init__(
+            self, resource=resource, **kwargs,
+        )
+
+        self['product'] = product
+
+    @property
+    def adcircpy_forcing(self) -> Forcing:
+        raise NotImplementedError
+
+    @property
+    def pyschism_forcing(self) -> GlobalForecastSystem:
+        return GlobalForecastSystem(self['product'])
+
+    @classmethod
+    def from_adcircpy(cls, forcing: Forcing) -> 'GFSForcingJSON':
+        raise NotImplementedError
+
+    @classmethod
+    def from_pyschism(cls, forcing: GlobalForecastSystem) -> 'GFSForcingJSON':
+        return cls(resource=forcing.resource, product=forcing.product)
 
 
 class WaveForcingJSON(ForcingJSON, ABC):
@@ -369,14 +465,62 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
             interval_seconds=self['modeled_timestep'],
         )
 
+    @property
+    def pyschism_forcing(self):
+        raise NotImplementedError
+
     @classmethod
     def from_adcircpy(cls, forcing: WaveWatch3DataForcing) -> 'WW3DATAForcingJSON':
         return cls(
             resource=forcing.filename, nrs=forcing.NRS, modeled_timestep=forcing.interval,
         )
 
+    @classmethod
+    def from_pyschism(cls, forcing: Union[PYSCHISM_FORCING_CLASSES]) -> 'ForcingJSON':
+        raise NotImplementedError
+
     @property
     def nemspy_entry(self) -> WaveWatch3MeshEntry:
         return WaveWatch3MeshEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
         )
+
+
+class HydrologyForcingJSON(ForcingJSON, ABC):
+    field_types = {}
+
+    def __init__(self, **kwargs):
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(HydrologyForcingJSON.field_types)
+
+        ForcingJSON.__init__(self, **kwargs)
+
+
+class NWMForcingJSON(HydrologyForcingJSON):
+    field_types = {'aggregation_radius': float}
+
+    def __init__(self, aggregation_radius: float = None, **kwargs):
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(NWMForcingJSON.field_types)
+
+        ForcingJSON.__init__(self, **kwargs)
+
+        self['aggregation_radius'] = aggregation_radius
+
+    @property
+    def adcircpy_forcing(self) -> Forcing:
+        raise NotImplementedError
+
+    @property
+    def pyschism_forcing(self) -> NationalWaterModel:
+        return NationalWaterModel(self['aggregation_radius'])
+
+    @classmethod
+    def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
+        raise NotImplementedError
+
+    @classmethod
+    def from_pyschism(cls, forcing: NationalWaterModel) -> 'ForcingJSON':
+        return cls(forcing.aggregation_radius)

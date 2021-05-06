@@ -129,7 +129,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
     field_types = {
         'adcprep_executable': Path,
         'modeled_start_time': datetime,
-        'modeled_end_time': datetime,
+        'modeled_duration': timedelta,
         'modeled_timestep': timedelta,
         'tidal_spinup_duration': timedelta,
         'tidal_spinup_timestep': timedelta,
@@ -153,11 +153,11 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         executable: PathLike,
         adcprep_executable: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         modeled_timestep: timedelta,
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
-        forcings: [Forcing] = None,
+        forcings: [ForcingJSON] = None,
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
         use_original_mesh: bool = False,
@@ -183,11 +183,11 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         :param executable: file path to `adcirc` or `NEMS.x`
         :param adcprep_executable: file path to `adcprep`
         :param modeled_start_time: start time in model run
-        :param modeled_end_time: edn time in model run
+        :param modeled_duration: duration of model run
         :param modeled_timestep: time interval between model steps
         :param tidal_spinup_duration: tidal spinup duration for ADCIRC coldstart
         :param tidal_spinup_timestep: tidal spinup modeled time interval for ADCIRC coldstart
-        :param forcings: list of Forcing objects to apply to the mesh
+        :param forcings: list of forcing configurations to apply to the mesh
         :param source_filename: path to modulefile to `source`
         :param slurm_configuration: Slurm configuration object
         :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with `adcircpy`
@@ -214,7 +214,13 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         kwargs['fields'].update(ADCIRCJSON.field_types)
 
         CirculationModelJSON.__init__(
-            self, mesh_files=mesh_files, executable=executable, **kwargs,
+            self,
+            mesh_files=mesh_files,
+            modeled_start_time=modeled_start_time,
+            modeled_duration=modeled_duration,
+            modeled_timestep=modeled_timestep,
+            executable=executable,
+            **kwargs,
         )
         NEMSCapJSON.__init__(
             self, processors=processors, nems_parameters=nems_parameters, **kwargs
@@ -222,9 +228,6 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
         self['adcprep_executable'] = adcprep_executable
-        self['modeled_start_time'] = modeled_start_time
-        self['modeled_end_time'] = modeled_end_time
-        self['modeled_timestep'] = modeled_timestep
         self['tidal_spinup_duration'] = tidal_spinup_duration
         self['tidal_spinup_timestep'] = tidal_spinup_timestep
         self['source_filename'] = source_filename
@@ -323,7 +326,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         for adcircpy_forcing in self.adcircpy_forcings:
             if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
                 adcircpy_forcing.start_date = self['modeled_start_time']
-                adcircpy_forcing.end_date = self['modeled_end_time']
+                adcircpy_forcing.end_date = self.modeled_end_time
 
             if (
                 isinstance(adcircpy_forcing, Tides)
@@ -361,7 +364,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         driver = AdcircRun(
             mesh=self.adcircpy_mesh,
             start_date=self['modeled_start_time'],
-            end_date=self['modeled_end_time'],
+            end_date=self.modeled_end_time,
             spinup_time=self['tidal_spinup_duration'],
             server_config=self.slurm_configuration.to_adcircpy()
             if self.slurm_configuration is not None
@@ -398,7 +401,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_elevation_surface_output(
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -407,7 +410,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_elevation_stations_output(
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -418,7 +421,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_velocity_surface_output(
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -427,7 +430,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_velocity_stations_output(
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -438,7 +441,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_concentration_surface_output(
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -447,7 +450,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_concentration_stations_output(
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -458,7 +461,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_meteorological_surface_output(
                     sampling_rate=self['surface_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,
@@ -467,7 +470,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
                 driver.set_meteorological_stations_output(
                     sampling_rate=self['stations_output_interval'],
                     start=self['modeled_start_time'],
-                    end=self['modeled_end_time'],
+                    end=self.modeled_end_time,
                     spinup=spinup_output_interval,
                     spinup_start=spinup_start,
                     spinup_end=spinup_end,

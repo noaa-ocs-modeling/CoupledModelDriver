@@ -46,7 +46,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         fort13_path: PathLike,
         fort14_path: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         modeled_timestep: timedelta,
         tidal_spinup_duration: timedelta = None,
         platform: Platform = None,
@@ -66,13 +66,13 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param fort13_path: path to input mesh nodes `fort.13`
         :param fort14_path: path to input mesh attributes `fort.14`
         :param modeled_start_time: start time within the modeled system
-        :param modeled_end_time: end time within the modeled system
+        :param modeled_duration: duration within the modeled system
         :param modeled_timestep: time interval within the modeled system
-        :param adcirc_processors: numbers of processors to assign for ADCIRC
-        :param platform: HPC platform for which to configure
         :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
+        :param platform: HPC platform for which to configure
         :param perturbations: dictionary of runs encompassing run names to parameter values
         :param forcings: list of forcing configurations to connect to ADCIRC
+        :param adcirc_processors: numbers of processors to assign for ADCIRC
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
@@ -115,7 +115,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
             executable=adcirc_executable,
             adcprep_executable=adcprep_executable,
             modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
+            modeled_duration=modeled_duration,
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             source_filename=source_filename,
@@ -227,7 +227,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         fort13_path: PathLike,
         fort14_path: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         modeled_timestep: timedelta,
         nems_interval: timedelta,
         nems_connections: [str],
@@ -251,7 +251,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             fort13_path=fort13_path,
             fort14_path=fort14_path,
             modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
+            modeled_duration=modeled_duration,
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
@@ -268,7 +268,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         nems = NEMSJSON(
             executable=nems_executable,
             modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
+            modeled_duration=modeled_duration,
             interval=nems_interval,
             models=self.nemspy_entries,
             connections=nems_connections,

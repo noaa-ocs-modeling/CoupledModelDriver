@@ -80,7 +80,7 @@ if __name__ == '__main__':
     configuration = NEMSADCIRCRunConfiguration(
         mesh_directory=MESH_DIRECTORY,
         modeled_start_time=MODELED_START_TIME,
-        modeled_end_time=MODELED_START_TIME + MODELED_DURATION,
+        modeled_duration=MODELED_START_TIME + MODELED_DURATION,
         modeled_timestep=MODELED_TIMESTEP,
         nems_interval=NEMS_INTERVAL,
         nems_connections=NEMS_CONNECTIONS,

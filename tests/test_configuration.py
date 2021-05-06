@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveWatch3MeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
+    WaveWatch3MeshEntry
+from pyschism import ModelDomain, ModelDriver, Stations
 import pytest
 
 from coupledmodeldriver import Platform
@@ -14,6 +16,7 @@ from coupledmodeldriver.configure import (
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
+from coupledmodeldriver.generate.schism.base import SCHISMJSON
 
 
 def test_update():
@@ -73,7 +76,7 @@ def test_nems():
     configuration = NEMSJSON(
         executable='NEMS.x',
         modeled_start_time=datetime(2012, 10, 22, 6),
-        modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
+        modeled_duration=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
         interval=timedelta(hours=1),
         models=model_entries,
         connections=connections,
@@ -120,6 +123,22 @@ def test_adcirc():
     configuration['attributes']['smagorinsky'] = True
 
     assert configuration.adcircpy_driver.IM == 511112
+
+
+def test_schism():
+    configuration = SCHISMJSON(
+        mesh_files=[],
+        executable='schism',
+        modeled_start_time=datetime(2012, 10, 22, 6),
+        modeled_duration=timedelta(days=14.5),
+        modeled_timestep=timedelta(seconds=2),
+        tidal_spinup_duration=timedelta(days=12.5),
+        tidal_bc_spinup_duration=timedelta(days=12.5),
+    )
+
+    assert isinstance(configuration.pyschism_stations, Stations)
+    assert isinstance(configuration.pyschism_domain, ModelDomain)
+    assert isinstance(configuration.pyschism_driver, ModelDriver)
 
 
 def test_tidal():

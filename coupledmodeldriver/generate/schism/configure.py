@@ -5,6 +5,7 @@ from typing import Any
 
 from nemspy import ModelingSystem
 from pyschism import ModelDomain, ModelDriver
+from pyschism.enums import Stratification
 
 from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
@@ -43,12 +44,15 @@ class SCHISMRunConfiguration(RunConfiguration):
 
     def __init__(
         self,
-        fort13_path: PathLike,
-        fort14_path: PathLike,
+        hgrid_path: PathLike,
+        vgrid_path: PathLike,
+        fgrid_path: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         modeled_timestep: timedelta,
         tidal_spinup_duration: timedelta = None,
+        tidal_spinup_duration_bc: timedelta = None,
+        stratification: Stratification = None,
         platform: Platform = None,
         perturbations: {str: {str: Any}} = None,
         forcings: [ForcingJSON] = None,
@@ -57,35 +61,39 @@ class SCHISMRunConfiguration(RunConfiguration):
         slurm_partition: str = None,
         slurm_email_address: str = None,
         schism_executable: PathLike = None,
-        schismprep_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         """
         Generate required configuration files for an SCHISM run.
 
-        :param fort13_path: path to input mesh nodes `fort.13`
-        :param fort14_path: path to input mesh attributes `fort.14`
+        :param hgrid_path: path to input horizontal grid
+        :param vgrid_path: path to input vertical grid
+        :param fgrid_path: path to input friction grid
         :param modeled_start_time: start time within the modeled system
-        :param modeled_end_time: end time within the modeled system
+        :param modeled_duration: duration within the modeled system
         :param modeled_timestep: time interval within the modeled system
-        :param schism_processors: numbers of processors to assign for SCHISM
+        :param stratification:
         :param platform: HPC platform for which to configure
         :param tidal_spinup_duration: spinup time for SCHISM tidal coldstart
+        :param tidal_spinup_duration_bc: spinup time for SCHISM tidal coldstart
         :param perturbations: dictionary of runs encompassing run names to parameter values
         :param forcings: list of forcing configurations to connect to SCHISM
+        :param schism_processors: numbers of processors to assign for SCHISM
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
         :param schism_executable: filename of compiled `schism`
-        :param schismprep_executable: filename of compiled `adcprep`
         :param source_filename: path to module file to `source`
         """
 
-        if not isinstance(fort13_path, Path):
-            fort13_path = Path(fort13_path)
+        if not isinstance(hgrid_path, Path):
+            hgrid_path = Path(hgrid_path)
 
-        if not isinstance(fort14_path, Path):
-            fort14_path = Path(fort14_path)
+        if not isinstance(vgrid_path, Path):
+            vgrid_path = Path(vgrid_path)
+
+        if not isinstance(fgrid_path, Path):
+            fgrid_path = Path(fgrid_path)
 
         if platform is None:
             platform = Platform.LOCAL
@@ -97,10 +105,7 @@ class SCHISMRunConfiguration(RunConfiguration):
             schism_processors = 11
 
         if schism_executable is None:
-            schism_executable = 'schism'
-
-        if schismprep_executable is None:
-            schismprep_executable = 'adcprep'
+            schism_executable = 'pschism_TVD-VL'
 
         slurm = SlurmJSON(
             account=platform.value['slurm_account'],
@@ -108,19 +113,28 @@ class SCHISMRunConfiguration(RunConfiguration):
             partition=slurm_partition,
             job_duration=slurm_job_duration,
             email_address=slurm_email_address,
+            extra_commands=[f'source {source_filename}'],
         )
 
         model = SCHISMJSON(
-            mesh_files=[fort13_path, fort14_path],
+            mesh_files=[hgrid_path, vgrid_path, fgrid_path],
             executable=schism_executable,
-            schismprep_executable=schismprep_executable,
             modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
+            modeled_duration=modeled_duration,
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
-            source_filename=source_filename,
+            tidal_bc_spinup_duration=tidal_spinup_duration_bc,
+            tidal_bc_cutoff_depth=None,
+            stratification=stratification,
+            hotstart_output_interval=None,
             slurm_configuration=slurm,
-            processors=schism_processors,
+            hotstart_combination_executable=None,
+            surface_output_new_file_skips=None,
+            surface_output_variables=None,
+            stations_output_interval=None,
+            stations_file_path=None,
+            stations_crs=None,
+            output_frequency=None,
         )
 
         driver = ModelDriverJSON(platform=platform, perturbations=perturbations)
@@ -224,16 +238,19 @@ class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
 
     def __init__(
         self,
-        fort13_path: PathLike,
-        fort14_path: PathLike,
+        hgrid_path: PathLike,
+        vgrid_path: PathLike,
+        fgrid_path: PathLike,
         modeled_start_time: datetime,
-        modeled_end_time: datetime,
+        modeled_duration: timedelta,
         modeled_timestep: timedelta,
         nems_interval: timedelta,
         nems_connections: [str],
         nems_mediations: [str],
         nems_sequence: [str],
         tidal_spinup_duration: timedelta = None,
+        tidal_spinup_duration_bc: timedelta = None,
+        stratification: Stratification = None,
         platform: Platform = None,
         perturbations: {str: {str: Any}} = None,
         forcings: [ForcingJSON] = None,
@@ -242,18 +259,20 @@ class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
         slurm_partition: str = None,
         slurm_email_address: str = None,
         nems_executable: PathLike = None,
-        schismprep_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         self.__nems = None
 
         super().__init__(
-            fort13_path=fort13_path,
-            fort14_path=fort14_path,
+            hgrid_path=hgrid_path,
+            vgrid_path=vgrid_path,
+            fgrid_path=fgrid_path,
             modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
+            modeled_duration=modeled_duration,
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
+            tidal_spinup_duration_bc=tidal_spinup_duration_bc,
+            stratification=stratification,
             platform=platform,
             perturbations=perturbations,
             forcings=None,
@@ -261,14 +280,14 @@ class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
             slurm_job_duration=slurm_job_duration,
             slurm_partition=slurm_partition,
             slurm_email_address=slurm_email_address,
-            schismprep_executable=schismprep_executable,
+            schism_executable=None,
             source_filename=source_filename,
         )
 
         nems = NEMSJSON(
             executable=nems_executable,
             modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
+            modeled_duration=modeled_duration,
             interval=nems_interval,
             models=self.nemspy_entries,
             connections=nems_connections,
@@ -281,7 +300,7 @@ class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
         for forcing in forcings:
             self.add_forcing(forcing)
 
-        self['slurm']['tasks'] = self['nems'].nemspy_modeling_system.processors
+        self['slurm'].tasks = self['nems'].nemspy_modeling_system.processors
 
     @property
     def nemspy_modeling_system(self) -> ModelingSystem:

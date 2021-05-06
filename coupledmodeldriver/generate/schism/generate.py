@@ -3,7 +3,10 @@ import os
 from os import PathLike
 from pathlib import Path
 
-from coupledmodeldriver.generate.schism.configure import NEMSSCHISMRunConfiguration, SCHISMRunConfiguration
+from coupledmodeldriver.generate.schism.configure import (
+    NEMSSCHISMRunConfiguration,
+    SCHISMRunConfiguration,
+)
 from coupledmodeldriver.utilities import LOGGER, get_logger
 
 
