@@ -118,22 +118,30 @@ class AdcircSetupJob(AdcircJob):
         self.aswip_path = aswip_path
         self.use_aswip = use_aswip
 
-        setup_commands = [
+        setup_commands = []
+
+        adcprep_commands = [
             f'{self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
             f'{self.adcprep_path} --np {self.adcirc_partitions} --prepall',
         ]
+        if self.launcher is not None:
+            adcprep_commands = [f'{self.launcher} {line}' for line in adcprep_commands]
+        setup_commands.extend(adcprep_commands)
 
         if self.use_aswip:
+            setup_commands.append('')
+
+            aswip_command = f'{self.aswip_path}'
+            if self.launcher is not None:
+                setup_commands.append(f'{self.launcher} {aswip_command}')
+            setup_commands.append(aswip_command)
+
             setup_commands.extend(
                 [
-                    f'{self.aswip_path}',
                     'mv fort.22 fort.22.original',
                     'mv NWS_20_fort.22 fort.22',
                 ]
             )
-
-        if self.launcher is not None:
-            setup_commands = [f'{self.launcher} {line}' for line in setup_commands]
 
         self.commands.extend(setup_commands)
 
