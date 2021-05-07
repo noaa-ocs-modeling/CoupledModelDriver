@@ -73,7 +73,7 @@ class AdcircRunJob(AdcircJob):
         )
 
 
-class AdcircMeshPartitionJob(AdcircJob):
+class AdcircSetupJob(AdcircJob):
     """ script for performing domain decomposition with `adcprep` """
 
     def __init__(
@@ -84,6 +84,8 @@ class AdcircMeshPartitionJob(AdcircJob):
         slurm_duration: timedelta,
         slurm_run_name: str,
         adcprep_path: PathLike = None,
+        aswip_path: PathLike = None,
+        use_aswip: bool = False,
         slurm_tasks: int = 1,
         commands: [str] = None,
         **kwargs,
@@ -106,21 +108,34 @@ class AdcircMeshPartitionJob(AdcircJob):
             if isinstance(adcprep_path, Path):
                 adcprep_path = adcprep_path.as_posix()
 
-        self.adcprep_path = adcprep_path
-        if self.launcher is not None:
-            self.commands.extend(
-                [
-                    f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
-                    f'{self.launcher} {self.adcprep_path} --np {self.adcirc_partitions} --prepall',
-                ]
-            )
+        if aswip_path is None:
+            aswip_path = 'aswip'
         else:
-            self.commands.extend(
+            if isinstance(aswip_path, Path):
+                aswip_path = aswip_path.as_posix()
+
+        self.adcprep_path = adcprep_path
+        self.aswip_path = aswip_path
+        self.use_aswip = use_aswip
+
+        setup_commands = [
+            f'{self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
+            f'{self.adcprep_path} --np {self.adcirc_partitions} --prepall',
+        ]
+
+        if self.use_aswip:
+            setup_commands.extend(
                 [
-                    f'{self.adcprep_path} --np {self.adcirc_partitions} --partmesh',
-                    f'{self.adcprep_path} --np {self.adcirc_partitions} --prepall',
+                    f'{self.aswip_path}',
+                    'mv fort.22 fort.22.original',
+                    'mv NWS_20_fort.22 fort.22',
                 ]
             )
+
+        if self.launcher is not None:
+            setup_commands = [f'{self.launcher} {line}' for line in setup_commands]
+
+        self.commands.extend(setup_commands)
 
 
 class ADCIRCGenerationScript(Script):
