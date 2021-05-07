@@ -86,8 +86,9 @@ def generate_adcirc_configuration(
 
     original_fort13_filename = ensemble_configuration['adcirc']['fort_13_path']
     original_fort14_filename = ensemble_configuration['adcirc']['fort_14_path']
-    adcirc_executable_path = ensemble_configuration['adcirc']['adcirc_executable_path']
-    adcprep_executable_path = ensemble_configuration['adcirc']['adcprep_executable_path']
+    adcirc_path = ensemble_configuration['adcirc']['adcirc_executable_path']
+    adcprep_path = ensemble_configuration['adcirc']['adcprep_executable_path']
+    aswip_path = ensemble_configuration['adcirc']['aswip_executable_path']
     adcirc_processors = ensemble_configuration['adcirc']['processors']
     tidal_spinup_duration = ensemble_configuration['adcirc']['tidal_spinup_duration']
     source_filename = ensemble_configuration['adcirc']['source_filename']
@@ -100,7 +101,7 @@ def generate_adcirc_configuration(
     else:
         nems_configuration = None
         run_processors = adcirc_processors
-        run_executable = adcirc_executable_path
+        run_executable = adcirc_path
 
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
@@ -205,7 +206,12 @@ def generate_adcirc_configuration(
     ensemble_run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
 
-    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable_path}"')
+    if 'besttrack' in ensemble_configuration:
+        use_aswip = ensemble_configuration['besttrack']['nws'] == 20
+    else:
+        use_aswip = False
+
+    LOGGER.debug(f'setting mesh partitioner "{adcprep_path}"')
     setup_script = AdcircSetupJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
@@ -213,7 +219,9 @@ def generate_adcirc_configuration(
         slurm_duration=job_duration,
         slurm_partition=partition,
         slurm_run_name=setup_job_name,
-        adcprep_path=adcprep_executable_path,
+        adcprep_path=adcprep_path,
+        aswip_path=aswip_path,
+        use_aswip=use_aswip,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
         slurm_error_filename=f'{setup_job_name}.err.log',
