@@ -131,13 +131,9 @@ class AdcircSetupJob(AdcircJob):
         if self.use_aswip:
             setup_commands.append('')
 
-            aswip_command = f'{self.aswip_path}'
-            if self.launcher is not None:
-                setup_commands.append(f'{self.launcher} {aswip_command}')
-            setup_commands.append(aswip_command)
-
             setup_commands.extend(
                 [
+                    f'{self.aswip_path}',
                     'mv fort.22 fort.22.original',
                     'mv NWS_20_fort.22 fort.22',
                 ]
