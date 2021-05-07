@@ -256,9 +256,9 @@ class EnsembleRunScript(Script):
         if self.run_spinup:
             spinup_lines.extend(['# run spinup', 'pushd ${DIRECTORY}/spinup >/dev/null 2>&1'])
             if self.platform.value['uses_slurm']:
-                dependencies = ['afterok:$setup_jobid']
+                dependencies = ['$setup_jobid']
                 if len(dependencies) > 0:
-                    dependencies = f'--dependency={",".join(dependencies)}'
+                    dependencies = f'--dependency=afterok{":".join(dependencies)}'
                 spinup_lines.extend(
                     [
                         "setup_jobid=$(sbatch setup.job | awk '{print $NF}')",
@@ -272,11 +272,11 @@ class EnsembleRunScript(Script):
 
         hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
         if self.platform.value['uses_slurm']:
-            dependencies = ['afterok:$setup_jobid']
+            dependencies = ['$setup_jobid']
             if self.run_spinup:
-                dependencies.append('afterok:$spinup_jobid')
+                dependencies.append('$spinup_jobid')
             if len(dependencies) > 0:
-                dependencies = f'--dependency={",".join(dependencies)}'
+                dependencies = f'--dependency=afterok:{":".join(dependencies)}'
             hotstart_lines.extend(
                 [
                     f"setup_jobid=$(sbatch setup.job | awk '{{print $NF}}')",
