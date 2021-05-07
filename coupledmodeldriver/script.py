@@ -259,6 +259,8 @@ class EnsembleRunScript(Script):
                 dependencies = ['$setup_jobid']
                 if len(dependencies) > 0:
                     dependencies = f'--dependency=afterok{":".join(dependencies)}'
+                else:
+                    dependencies = ''
                 spinup_lines.extend(
                     [
                         "setup_jobid=$(sbatch setup.job | awk '{print $NF}')",
@@ -277,6 +279,8 @@ class EnsembleRunScript(Script):
                 dependencies.append('$spinup_jobid')
             if len(dependencies) > 0:
                 dependencies = f'--dependency=afterok:{":".join(dependencies)}'
+            else:
+                dependencies = ''
             hotstart_lines.extend(
                 [
                     f"setup_jobid=$(sbatch setup.job | awk '{{print $NF}}')",
