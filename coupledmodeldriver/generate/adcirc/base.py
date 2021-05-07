@@ -129,6 +129,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     field_types = {
         'adcirc_executable_path': Path,
         'adcprep_executable_path': Path,
+        'aswip_executable_path': Path,
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
         'modeled_timestep': timedelta,
@@ -162,6 +163,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
         forcings: [Forcing] = None,
+        aswip_executable_path: PathLike = None,
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
         use_original_mesh: bool = False,
@@ -185,6 +187,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
         :param adcirc_executable_path: file path to `adcirc` or `NEMS.x`
         :param adcprep_executable_path: file path to `adcprep`
+        :param aswip_executable_path: file path to `aswip`
         :param modeled_start_time: start time in model run
         :param modeled_end_time: edn time in model run
         :param modeled_timestep: time interval between model steps
@@ -226,6 +229,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
         self['adcirc_executable_path'] = adcirc_executable_path
         self['adcprep_executable_path'] = adcprep_executable_path
+        self['aswip_executable_path'] = aswip_executable_path
         self['modeled_start_time'] = modeled_start_time
         self['modeled_end_time'] = modeled_end_time
         self['modeled_timestep'] = modeled_timestep
