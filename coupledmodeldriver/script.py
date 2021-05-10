@@ -274,9 +274,10 @@ class EnsembleRunScript(Script):
 
         hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
         if self.platform.value['uses_slurm']:
-            dependencies = ['$setup_jobid']
+            dependencies = []
             if self.run_spinup:
                 dependencies.append('$spinup_jobid')
+            dependencies.append('$setup_jobid')
             if len(dependencies) > 0:
                 dependencies = f'--dependency=afterok:{":".join(dependencies)}'
             else:
