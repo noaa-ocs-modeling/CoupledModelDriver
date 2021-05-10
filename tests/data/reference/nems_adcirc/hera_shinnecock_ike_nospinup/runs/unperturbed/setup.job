@@ -1,0 +1,15 @@
+#!/bin/bash --login
+#SBATCH -J ADCIRC_SETUP
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_SETUP.err.log
+#SBATCH --output=ADCIRC_SETUP.out.log
+#SBATCH -n 1
+#SBATCH -N 1
+#SBATCH --time=06:00:00
+
+set -e
+
+srun ../../../adcprep --np 600 --partmesh
+srun ../../../adcprep --np 600 --prepall

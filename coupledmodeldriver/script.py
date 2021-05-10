@@ -240,9 +240,9 @@ class JobScript(Script):
 
 
 class EnsembleRunScript(Script):
-    def __init__(self, platform: Platform, spinup: bool = True, commands: [str] = None):
+    def __init__(self, platform: Platform, run_spinup: bool = True, commands: [str] = None):
         self.platform = platform
-        self.spinup = spinup
+        self.run_spinup = run_spinup
         super().__init__(commands)
 
     def __str__(self) -> str:
@@ -251,42 +251,50 @@ class EnsembleRunScript(Script):
             'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
             '',
         ]
-        if self.spinup:
-            lines.extend(['# run spinup', 'pushd ${DIRECTORY}/spinup >/dev/null 2>&1'])
+
+        spinup_lines = []
+        if self.run_spinup:
+            spinup_lines.extend(['# run spinup', 'pushd ${DIRECTORY}/spinup >/dev/null 2>&1'])
             if self.platform.value['uses_slurm']:
-                lines.extend(
+                dependencies = ['$setup_jobid']
+                if len(dependencies) > 0:
+                    dependencies = f'--dependency=afterok{":".join(dependencies)}'
+                else:
+                    dependencies = ''
+                spinup_lines.extend(
                     [
-                        "spinup_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')",
-                        "spinup_jobid=$(sbatch --dependency=afterany:$spinup_adcprep_jobid adcirc.job | awk '{print $NF}')",
+                        "setup_jobid=$(sbatch setup.job | awk '{print $NF}')",
+                        f"spinup_jobid=$(sbatch adcirc.job {dependencies} | awk '{{print $NF}}')",
                     ]
                 )
             else:
-                lines.extend(['sh adcprep.job', 'sh adcirc.job'])
-            lines.extend(['popd >/dev/null 2>&1', ''])
+                spinup_lines.extend(['sh setup.job', 'sh adcirc.job'])
+            spinup_lines.extend(['popd >/dev/null 2>&1', ''])
+        lines.extend(spinup_lines)
 
         hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
         if self.platform.value['uses_slurm']:
-            if self.spinup:
-                run_command = 'sbatch --dependency=afterany:$spinup_jobid'
+            dependencies = ['$setup_jobid']
+            if self.run_spinup:
+                dependencies.append('$spinup_jobid')
+            if len(dependencies) > 0:
+                dependencies = f'--dependency=afterok:{":".join(dependencies)}'
             else:
-                run_command = 'sbatch'
-
+                dependencies = ''
             hotstart_lines.extend(
                 [
-                    f"hotstart_adcprep_jobid=$({run_command} adcprep.job | awk '{{print $NF}}')",
-                    'sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job',
+                    f"setup_jobid=$(sbatch setup.job | awk '{{print $NF}}')",
+                    f'sbatch adcirc.job {dependencies}',
                 ]
             )
         else:
-            hotstart_lines.extend(['sh adcprep.job', 'sh adcirc.job'])
+            hotstart_lines.extend(['sh setup.job', 'sh adcirc.job'])
         hotstart_lines.append('popd >/dev/null 2>&1')
-
-        lines.extend(
-            [
-                '# run configurations',
-                bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', hotstart_lines),
-            ]
-        )
+        hotstart_lines = [
+            '# run configurations',
+            bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', hotstart_lines),
+        ]
+        lines.extend(hotstart_lines)
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html

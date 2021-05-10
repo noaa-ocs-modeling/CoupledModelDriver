@@ -4,15 +4,15 @@ DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # run spinup
 pushd ${DIRECTORY}/spinup >/dev/null 2>&1
-spinup_adcprep_jobid=$(sbatch adcprep.job | awk '{print $NF}')
-spinup_jobid=$(sbatch --dependency=afterany:$spinup_adcprep_jobid adcirc.job | awk '{print $NF}')
+setup_jobid=$(sbatch setup.job | awk '{print $NF}')
+spinup_jobid=$(sbatch adcirc.job --dependency=afterok:$setup_jobid | awk '{print $NF}')
 popd >/dev/null 2>&1
 
 # run configurations
 for hotstart in ${DIRECTORY}/runs/*/; do
     pushd ${hotstart} >/dev/null 2>&1
-    hotstart_adcprep_jobid=$(sbatch --dependency=afterany:$spinup_jobid adcprep.job | awk '{print $NF}')
-    sbatch --dependency=afterany:$hotstart_adcprep_jobid adcirc.job
+    setup_jobid=$(sbatch setup.job | awk '{print $NF}')
+    sbatch adcirc.job --dependency=afterok:$setup_jobid,afterok:$spinup_jobid
     popd >/dev/null 2>&1
 done
 

@@ -11,9 +11,12 @@ from coupledmodeldriver.generate.adcirc.configure import (
     ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
 )
-from coupledmodeldriver.generate.adcirc.script import AdcircMeshPartitionJob, AdcircRunJob
-from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript
-from coupledmodeldriver.utilities import LOGGER, create_symlink, get_logger
+from coupledmodeldriver.generate.adcirc.script import AdcircRunJob, \
+    AdcircSetupJob
+from coupledmodeldriver.script import EnsembleCleanupScript, \
+    EnsembleRunScript
+from coupledmodeldriver.utilities import LOGGER, create_symlink, \
+    get_logger
 
 
 class RunPhase(Enum):
@@ -81,25 +84,15 @@ def generate_adcirc_configuration(
     email_type = ensemble_configuration['slurm']['email_type']
     email_address = ensemble_configuration['slurm']['email_address']
 
-    original_fort13_filename = ensemble_configuration['adcirc'].fort13_path
-    original_fort14_filename = ensemble_configuration['adcirc'].fort14_path
-    adcirc_executable = ensemble_configuration['adcirc']['executable']
-    adcprep_executable = ensemble_configuration['adcirc']['adcprep_executable']
+    original_fort13_filename = ensemble_configuration['adcirc']['fort_13_path']
+    original_fort14_filename = ensemble_configuration['adcirc']['fort_14_path']
+    adcirc_path = ensemble_configuration['adcirc']['executable']
+    adcprep_path = ensemble_configuration['adcirc']['adcprep_executable']
+    aswip_path = ensemble_configuration['adcirc']['aswip_executable_path']
     adcirc_processors = ensemble_configuration['adcirc']['processors']
     tidal_spinup_duration = ensemble_configuration['adcirc']['tidal_spinup_duration']
     source_filename = ensemble_configuration['adcirc']['source_filename']
     use_original_mesh = ensemble_configuration['adcirc']['use_original_mesh']
-
-    # if original_fort13_filename is not None and not original_fort13_filename.is_absolute():
-    #     original_fort13_filename = starting_directory / original_fort13_filename
-    # if original_fort14_filename is not None and not original_fort14_filename.is_absolute():
-    #     original_fort14_filename = starting_directory / original_fort14_filename
-    # if adcirc_executable is not None and not adcirc_executable.is_absolute():
-    #     adcirc_executable = starting_directory / adcirc_executable
-    # if adcprep_executable is not None and not adcprep_executable.is_absolute():
-    #     adcprep_executable = starting_directory / adcprep_executable
-    # if source_filename is not None and not source_filename.is_absolute():
-    #     source_filename = starting_directory / source_filename
 
     if use_nems:
         nems_configuration = ensemble_configuration['nems'].nemspy_modeling_system
@@ -108,7 +101,7 @@ def generate_adcirc_configuration(
     else:
         nems_configuration = None
         run_processors = adcirc_processors
-        run_executable = adcirc_executable
+        run_executable = adcirc_path
 
     if source_filename is not None:
         LOGGER.debug(f'sourcing modules from "{source_filename}"')
@@ -116,38 +109,38 @@ def generate_adcirc_configuration(
     if original_fort14_filename is None or not original_fort14_filename.exists():
         raise FileNotFoundError(f'mesh XY not found at "{original_fort14_filename}"')
 
-    adcprep_run_name = 'ADCIRC_MESH_PREP'
-    adcprep_job_script_filename = output_directory / f'job_adcprep_{platform.name.lower()}.job'
+    setup_job_name = 'ADCIRC_SETUP'
+    setup_script_filename = output_directory / f'job_setup_{platform.name.lower()}.job'
 
     local_fort13_filename = output_directory / 'fort.13'
     local_fort14_filename = output_directory / 'fort.14'
     local_fort15_filename = output_directory / 'fort.15'
 
-    spinup_tides = tidal_spinup_duration is not None
+    run_tidal_spinup = tidal_spinup_duration is not None
 
-    if spinup_tides:
+    if run_tidal_spinup:
         run_phase = RunPhase.HOTSTART
         coldstart_run_name = 'ADCIRC_SPINUP'
         hotstart_run_name = 'ADCIRC_HOTSTART'
-        coldstart_run_script_filename = (
+        coldstart_script_filename = (
             output_directory / f'job_adcirc_{platform.name.lower()}.job.spinup'
         )
-        hotstart_run_script_filename = (
+        hotstart_script_filename = (
             output_directory / f'job_adcirc_{platform.name.lower()}.job.hotstart'
         )
-        run_script_filename = hotstart_run_script_filename
+        run_script_filename = hotstart_script_filename
     else:
         run_phase = RunPhase.COLDSTART
         coldstart_run_name = 'ADCIRC_COLDSTART'
         hotstart_run_name = None
-        coldstart_run_script_filename = (
+        coldstart_script_filename = (
             output_directory / f'job_adcirc_{platform.name.lower()}.job.coldstart'
         )
-        hotstart_run_script_filename = None
-        run_script_filename = coldstart_run_script_filename
+        hotstart_script_filename = None
+        run_script_filename = coldstart_script_filename
 
     if use_nems:
-        if spinup_tides:
+        if run_tidal_spinup:
             LOGGER.debug(f'setting spinup to {tidal_spinup_duration}')
             tidal_spinup_nems_configuration = ModelingSystem(
                 nems_configuration.start_time - tidal_spinup_duration,
@@ -185,7 +178,7 @@ def generate_adcirc_configuration(
             else:
                 filename.rename(coldstart_filename)
 
-        if spinup_tides:
+        if run_tidal_spinup:
             hotstart_filenames = nems_configuration.write(
                 output_directory,
                 overwrite=overwrite,
@@ -213,27 +206,34 @@ def generate_adcirc_configuration(
     ensemble_run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
 
-    LOGGER.debug(f'setting mesh partitioner "{adcprep_executable}"')
-    adcprep_script = AdcircMeshPartitionJob(
+    if 'besttrack' in ensemble_configuration:
+        use_aswip = ensemble_configuration['besttrack']['nws'] == 20
+    else:
+        use_aswip = False
+
+    LOGGER.debug(f'setting mesh partitioner "{adcprep_path}"')
+    setup_script = AdcircSetupJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
         slurm_partition=partition,
-        slurm_run_name=adcprep_run_name,
-        adcprep_path=adcprep_executable,
+        slurm_run_name=setup_job_name,
+        adcprep_path=adcprep_path,
+        aswip_path=aswip_path,
+        use_aswip=use_aswip,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
-        slurm_error_filename=f'{adcprep_run_name}.err.log',
-        slurm_log_filename=f'{adcprep_run_name}.out.log',
+        slurm_error_filename=f'{setup_job_name}.err.log',
+        slurm_log_filename=f'{setup_job_name}.out.log',
         source_filename=source_filename,
     )
 
-    LOGGER.debug(f'writing mesh partitioning job script "{adcprep_job_script_filename.name}"')
-    adcprep_script.write(adcprep_job_script_filename, overwrite=overwrite)
+    LOGGER.debug(f'writing setup job script "{setup_script_filename.name}"')
+    setup_script.write(setup_script_filename, overwrite=overwrite)
 
     LOGGER.debug(f'setting run executable "{run_executable}"')
-    coldstart_run_script = AdcircRunJob(
+    coldstart_script = AdcircRunJob(
         platform=platform,
         slurm_tasks=run_processors,
         slurm_account=slurm_account,
@@ -248,11 +248,11 @@ def generate_adcirc_configuration(
         source_filename=source_filename,
     )
 
-    LOGGER.debug(f'writing coldstart run script "{coldstart_run_script_filename.name}"')
-    coldstart_run_script.write(coldstart_run_script_filename, overwrite=overwrite)
+    LOGGER.debug(f'writing coldstart run script "{coldstart_script_filename.name}"')
+    coldstart_script.write(coldstart_script_filename, overwrite=overwrite)
 
-    if spinup_tides:
-        hotstart_run_script = AdcircRunJob(
+    if run_tidal_spinup:
+        hotstart_script = AdcircRunJob(
             platform=platform,
             slurm_tasks=run_processors,
             slurm_account=slurm_account,
@@ -267,8 +267,8 @@ def generate_adcirc_configuration(
             source_filename=source_filename,
         )
 
-        LOGGER.debug(f'writing hotstart run script "{hotstart_run_script_filename.name}"')
-        hotstart_run_script.write(hotstart_run_script_filename, overwrite=overwrite)
+        LOGGER.debug(f'writing hotstart run script "{hotstart_script_filename.name}"')
+        hotstart_script.write(hotstart_script_filename, overwrite=overwrite)
 
     try:
         # instantiate AdcircRun object.
@@ -300,7 +300,7 @@ def generate_adcirc_configuration(
     if local_fort15_filename.exists():
         os.remove(local_fort15_filename)
 
-    if spinup_tides:
+    if run_tidal_spinup:
         tidal_spinup_directory = output_directory / 'spinup'
         if not tidal_spinup_directory.exists():
             tidal_spinup_directory.mkdir(parents=True, exist_ok=True)
@@ -324,12 +324,10 @@ def generate_adcirc_configuration(
             local_fort14_filename, tidal_spinup_directory / 'fort.14', relative=True
         )
         create_symlink(
-            adcprep_job_script_filename, tidal_spinup_directory / 'adcprep.job', relative=True,
+            setup_script_filename, tidal_spinup_directory / 'setup.job', relative=True,
         )
         create_symlink(
-            coldstart_run_script_filename,
-            tidal_spinup_directory / 'adcirc.job',
-            relative=True,
+            coldstart_script_filename, tidal_spinup_directory / 'adcirc.job', relative=True,
         )
         if use_nems:
             create_symlink(
@@ -377,7 +375,7 @@ def generate_adcirc_configuration(
                 create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
         create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
         create_symlink(
-            adcprep_job_script_filename, run_directory / 'adcprep.job', relative=True,
+            setup_script_filename, run_directory / 'setup.job', relative=True,
         )
         create_symlink(
             run_script_filename, run_directory / 'adcirc.job', relative=True,
@@ -398,7 +396,7 @@ def generate_adcirc_configuration(
                 run_directory / 'config.rc',
                 relative=True,
             )
-        if spinup_tides:
+        if run_tidal_spinup:
             for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:
                 try:
                     create_symlink(
@@ -423,7 +421,7 @@ def generate_adcirc_configuration(
             'echo deleting previous ADCIRC output',
             f'sh {ensemble_cleanup_script_filename.name}',
         ],
-        spinup=spinup_tides,
+        run_spinup=run_tidal_spinup,
     )
     run_script.write(ensemble_run_script_filename, overwrite=overwrite)
 

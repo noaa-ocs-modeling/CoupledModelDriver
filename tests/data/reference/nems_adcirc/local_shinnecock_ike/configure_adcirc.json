@@ -1,12 +1,12 @@
 {
-  "mesh_files": [
-    "../../../input/shinnecock_ike/mesh/fort.13",
-    "../../../input/shinnecock_ike/mesh/fort.14"
-  ],
-  "adcprep_executable": "../../../../../../adcprep",
+  "adcirc_executable_path": "../../../adcirc",
+  "adcprep_executable_path": "../../../adcprep",
+  "aswip_executable_path": null,
   "modeled_start_time": "2008-08-23 00:00:00",
   "modeled_end_time": "2008-09-06 12:00:00",
   "modeled_timestep": 2.0,
+  "fort_13_path": "../../../input/shinnecock_ike/mesh/fort.13",
+  "fort_14_path": "../../../input/shinnecock_ike/mesh/fort.14",
   "tidal_spinup_duration": 1080000.0,
   "tidal_spinup_timestep": 2.0,
   "source_filename": null,
@@ -21,7 +21,6 @@
   "output_velocities": true,
   "output_concentrations": false,
   "output_meteorological_factors": false,
-  "executable": "../../../../../../adcirc",
   "processors": 11,
   "nems_parameters": {},
   "attributes": {

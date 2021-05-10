@@ -128,6 +128,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
 
     field_types = {
         'adcprep_executable': Path,
+        'aswip_executable_path': Path,
         'modeled_start_time': datetime,
         'modeled_duration': timedelta,
         'modeled_timestep': timedelta,
@@ -158,6 +159,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
         forcings: [ForcingJSON] = None,
+        aswip_executable_path: PathLike = None,
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
         use_original_mesh: bool = False,
@@ -182,6 +184,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         :param mesh_files: file paths to `fort.13`, `fort.14`
         :param executable: file path to `adcirc` or `NEMS.x`
         :param adcprep_executable: file path to `adcprep`
+        :param aswip_executable_path: file path to `aswip`
         :param modeled_start_time: start time in model run
         :param modeled_duration: duration of model run
         :param modeled_timestep: time interval between model steps
@@ -228,6 +231,7 @@ class ADCIRCJSON(CirculationModelJSON, NEMSCapJSON, AttributeJSON):
         AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
         self['adcprep_executable'] = adcprep_executable
+        self['aswip_executable_path'] = aswip_executable_path
         self['tidal_spinup_duration'] = tidal_spinup_duration
         self['tidal_spinup_timestep'] = tidal_spinup_timestep
         self['source_filename'] = source_filename
