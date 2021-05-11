@@ -258,7 +258,7 @@ class EnsembleRunScript(Script):
             if self.platform.value['uses_slurm']:
                 dependencies = ['$setup_jobid']
                 if len(dependencies) > 0:
-                    dependencies = f'--dependency=afterok{":".join(dependencies)}'
+                    dependencies = f'--dependency=afterok:{":".join(dependencies)}'
                 else:
                     dependencies = ''
                 # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
