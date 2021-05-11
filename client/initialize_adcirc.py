@@ -78,6 +78,9 @@ def main():
         '--adcprep-executable', default='adcprep', help='filename of compiled `adcprep`'
     )
     argument_parser.add_argument(
+        '--aswip-executable', default='aswip', help='filename of compiled `aswip`'
+    )
+    argument_parser.add_argument(
         '--adcirc-processors', default=11, help='numbers of processors to assign for ADCIRC'
     )
     argument_parser.add_argument(
