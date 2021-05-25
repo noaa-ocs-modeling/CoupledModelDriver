@@ -5,7 +5,7 @@ DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 # run spinup
 pushd ${DIRECTORY}/spinup >/dev/null 2>&1
 setup_jobid=$(sbatch setup.job | awk '{print $NF}')
-spinup_jobid=$(sbatch --dependency=afterok$setup_jobid adcirc.job | awk '{print $NF}')
+spinup_jobid=$(sbatch --dependency=afterok:$setup_jobid adcirc.job | awk '{print $NF}')
 popd >/dev/null 2>&1
 
 # run configurations
