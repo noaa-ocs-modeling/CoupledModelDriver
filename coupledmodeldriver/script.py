@@ -258,13 +258,14 @@ class EnsembleRunScript(Script):
             if self.platform.value['uses_slurm']:
                 dependencies = ['$setup_jobid']
                 if len(dependencies) > 0:
-                    dependencies = f'--dependency=afterok{":".join(dependencies)}'
+                    dependencies = f'--dependency=afterok:{":".join(dependencies)}'
                 else:
                     dependencies = ''
+                # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
                 spinup_lines.extend(
                     [
                         "setup_jobid=$(sbatch setup.job | awk '{print $NF}')",
-                        f"spinup_jobid=$(sbatch adcirc.job {dependencies} | awk '{{print $NF}}')",
+                        f"spinup_jobid=$(sbatch {dependencies} adcirc.job | awk '{{print $NF}}')",
                     ]
                 )
             else:
@@ -281,10 +282,11 @@ class EnsembleRunScript(Script):
                 dependencies = f'--dependency=afterok:{":".join(dependencies)}'
             else:
                 dependencies = ''
+            # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
             hotstart_lines.extend(
                 [
                     f"setup_jobid=$(sbatch setup.job | awk '{{print $NF}}')",
-                    f'sbatch adcirc.job {dependencies}',
+                    f'sbatch {dependencies} adcirc.job',
                 ]
             )
         else:
@@ -298,7 +300,7 @@ class EnsembleRunScript(Script):
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html
-            squeue_command = 'squeue -u $USER -o "%.8i %3C %4D %97Z %15j" --sort i'
+            squeue_command = 'squeue -u $USER -o "%.8i %3C %4D %15j %16E %Z" --sort i'
             echo_squeue_command = squeue_command.replace('"', r'\"')
             lines.extend(
                 [

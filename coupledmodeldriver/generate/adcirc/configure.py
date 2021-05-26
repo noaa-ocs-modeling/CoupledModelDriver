@@ -261,6 +261,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             slurm_job_duration=slurm_job_duration,
             slurm_partition=slurm_partition,
             slurm_email_address=slurm_email_address,
+            adcirc_executable=nems_executable,
             adcprep_executable=adcprep_executable,
             source_filename=source_filename,
         )

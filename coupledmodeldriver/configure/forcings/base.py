@@ -209,7 +209,6 @@ class WindForcingJSON(ForcingJSON, ABC):
 
 
 BESTTRACK_ATTRIBUTES = [
-    'NWS',
     'BLADj',
     '_storm_id',
     'geofactor',

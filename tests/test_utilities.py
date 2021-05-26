@@ -131,21 +131,68 @@ def test_convert_value():
 
     assert (
         crs_1
-        == 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["unknown"],AREA["World"],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+        == 'GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
     )
     assert crs_2 == 4326
     assert crs_3 == {
         '$schema': 'https://proj.org/schemas/v0.1/projjson.schema.json',
         'type': 'GeographicCRS',
         'name': 'WGS 84',
-        'datum': {
-            'type': 'GeodeticReferenceFrame',
-            'name': 'World Geodetic System 1984',
+        'datum_ensemble': {
+            'accuracy': '2.0',
+            'name': 'World Geodetic System 1984 ensemble',
             'ellipsoid': {
                 'name': 'WGS 84',
                 'semi_major_axis': 6378137,
                 'inverse_flattening': 298.257223563,
             },
+            'id': {
+                'authority': 'EPSG',
+                'code': 6326,
+            },
+            'members': [
+                {
+                    'id': {
+                        'authority': 'EPSG',
+                        'code': 1166,
+                    },
+                    'name': 'World Geodetic System 1984 (Transit)'},
+                {
+                    'id': {
+                        'authority': 'EPSG',
+                        'code': 1152,
+                    },
+                    'name': 'World Geodetic System 1984 (G730)',
+                },
+                {
+                    'id': {
+                        'authority': 'EPSG',
+                        'code': 1153,
+                    },
+                    'name': 'World Geodetic System 1984 (G873)',
+                },
+                {
+                    'id': {
+                        'authority': 'EPSG',
+                        'code': 1154,
+                    },
+                    'name': 'World Geodetic System 1984 (G1150)',
+                },
+                {
+                    'id': {
+                        'authority': 'EPSG',
+                        'code': 1155,
+                    },
+                    'name': 'World Geodetic System 1984 (G1674)',
+                },
+                {
+                    'id': {
+                        'authority': 'EPSG',
+                        'code': 1156,
+                    },
+                    'name': 'World Geodetic System 1984 (G1762)',
+                },
+            ],
         },
         'coordinate_system': {
             'subtype': 'ellipsoidal',
@@ -171,7 +218,10 @@ def test_convert_value():
             'north_latitude': 90,
             'east_longitude': 180,
         },
-        'id': {'authority': 'EPSG', 'code': 4326},
+        'id': {
+            'authority': 'EPSG',
+            'code': 4326,
+        },
     }
 
 
