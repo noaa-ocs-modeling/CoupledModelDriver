@@ -80,8 +80,8 @@ setup(
     setup_requires=['dunamai', 'setuptools>=41.2'],
     install_requires=['adcircpy>=1.0.32', 'nemspy>=0.6.16', 'numpy', 'requests'],
     extras_require={
-        'testing': ['flake8', 'pytest', 'pytest-cov', 'pytest-xdist', 'wget'],
-        'development': ['oitnb'],
+        'testing': ['pytest', 'pytest-cov', 'pytest-xdist', 'wget'],
+        'development': ['flake8', 'isort', 'oitnb'],
     },
     entry_points={
         'console_scripts': [
