@@ -15,8 +15,8 @@ import wget
 from coupledmodeldriver import Platform
 from coupledmodeldriver.generate import (
     ADCIRCRunConfiguration,
-    NEMSADCIRCRunConfiguration,
     generate_adcirc_configuration,
+    NEMSADCIRCRunConfiguration,
 )
 
 NEMS_PATH = 'NEMS.x'

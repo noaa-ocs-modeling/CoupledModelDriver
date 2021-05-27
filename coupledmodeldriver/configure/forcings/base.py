@@ -15,8 +15,7 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
 
-from coupledmodeldriver.configure.base import AttributeJSON, \
-    ConfigurationJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
 
 ADCIRCPY_FORCINGS = {
