@@ -8,10 +8,7 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 import numpy
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (
-    ADCIRCGenerationScript,
-    NEMSADCIRCRunConfiguration,
-)
+from coupledmodeldriver.generate import ADCIRCGenerationScript, NEMSADCIRCRunConfiguration
 
 # directory to which to write configuration
 OUTPUT_DIRECTORY = Path(__file__).parent / Path(__file__).stem
