@@ -13,10 +13,10 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds import BestTrackForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
-from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
-
-from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import AttributeJSON, \
+    ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
+from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
 
 ADCIRCPY_FORCINGS = {
     'Tides': 'TidalForcingJSON',
@@ -226,7 +226,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 forcing.end_date = self['end_date']
         else:
             forcing = BestTrackForcing(
-                storm_id=self['storm_id'],
+                storm=self['storm_id'],
                 nws=self['nws'],
                 start_date=self['start_date'],
                 end_date=self['end_date'],
@@ -246,7 +246,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     @classmethod
     def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
-            storm_id=forcing.storm_id,
+            storm=forcing.storm_id,
             nws=forcing.NWS,
             start_date=forcing.start_date,
             end_date=forcing.end_date,
