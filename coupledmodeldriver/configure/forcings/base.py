@@ -13,10 +13,11 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds import BestTrackForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
+from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
+
 from coupledmodeldriver.configure.base import AttributeJSON, \
     ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
-from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
 
 ADCIRCPY_FORCINGS = {
     'Tides': 'TidalForcingJSON',
