@@ -15,11 +15,9 @@ import pytest
 import wget
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (
-    ADCIRCRunConfiguration,
-    NEMSADCIRCRunConfiguration,
-    generate_adcirc_configuration,
-)
+from coupledmodeldriver.generate import (ADCIRCRunConfiguration,
+                                         NEMSADCIRCRunConfiguration,
+                                         generate_adcirc_configuration)
 
 NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
@@ -113,7 +111,12 @@ def test_nems_adcirc_local_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -194,7 +197,12 @@ def test_nems_adcirc_hera_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -275,7 +283,12 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -329,7 +342,12 @@ def test_adcirc_local_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -383,7 +401,12 @@ def test_adcirc_hera_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -437,7 +460,12 @@ def test_adcirc_stampede2_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -524,7 +552,12 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -578,7 +611,12 @@ def test_adcirc_hera_shinnecock_ike_nospinup():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines={'fort.15': [0], 'config.rc': [0], 'model_configure': [0], 'nems.configure': [0]},
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
