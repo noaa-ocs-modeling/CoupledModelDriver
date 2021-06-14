@@ -11,12 +11,9 @@ from coupledmodeldriver.generate.adcirc.configure import (
     ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
 )
-from coupledmodeldriver.generate.adcirc.script import AdcircRunJob, \
-    AdcircSetupJob
-from coupledmodeldriver.script import EnsembleCleanupScript, \
-    EnsembleRunScript
-from coupledmodeldriver.utilities import LOGGER, create_symlink, \
-    get_logger
+from coupledmodeldriver.generate.adcirc.script import AdcircRunJob, AdcircSetupJob
+from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript
+from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
 
 
 class RunPhase(Enum):

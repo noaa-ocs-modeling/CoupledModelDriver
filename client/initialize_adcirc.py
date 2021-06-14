@@ -14,9 +14,9 @@ from coupledmodeldriver.configure.forcings.base import (
     OWIForcingJSON,
     TidalForcingJSON,
     TimestepForcingJSON,
-    WW3DATAForcingJSON,
     WaveForcingJSON,
     WindForcingJSON,
+    WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate import (
     ADCIRCRunConfiguration,

@@ -266,7 +266,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 forcing.end_date = self['end_date']
         else:
             forcing = BestTrackForcing(
-                storm_id=self['storm_id'],
+                storm=self['storm_id'],
                 nws=self['nws'],
                 start_date=self['start_date'],
                 end_date=self['end_date'],
@@ -290,7 +290,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     @classmethod
     def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
-            storm_id=forcing.storm_id,
+            storm=forcing.storm_id,
             nws=forcing.NWS,
             start_date=forcing.start_date,
             end_date=forcing.end_date,

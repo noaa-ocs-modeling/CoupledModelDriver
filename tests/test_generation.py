@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+from difflib import Differ
 import logging
 import os
 from os import PathLike
 from pathlib import Path
+import re
 import tarfile
 
 from adcircpy.forcing.tides import Tides
@@ -13,11 +15,9 @@ import pytest
 import wget
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (
-    ADCIRCRunConfiguration,
-    NEMSADCIRCRunConfiguration,
-    generate_adcirc_configuration,
-)
+from coupledmodeldriver.generate import (ADCIRCRunConfiguration,
+                                         NEMSADCIRCRunConfiguration,
+                                         generate_adcirc_configuration)
 
 NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
@@ -112,7 +112,12 @@ def test_nems_adcirc_local_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -194,7 +199,12 @@ def test_nems_adcirc_hera_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -276,7 +286,12 @@ def test_nems_adcirc_stampede2_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -331,7 +346,12 @@ def test_adcirc_local_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -386,7 +406,12 @@ def test_adcirc_hera_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -441,7 +466,12 @@ def test_adcirc_stampede2_shinnecock_ike():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -529,7 +559,12 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -584,7 +619,12 @@ def test_adcirc_hera_shinnecock_ike_nospinup():
     check_reference_directory(
         test_directory=DATA_DIRECTORY / output_directory,
         reference_directory=DATA_DIRECTORY / reference_directory,
-        skip_lines=1,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
     )
 
 
@@ -651,14 +691,14 @@ def extract_download(
 
 
 def check_reference_directory(
-    test_directory: PathLike, reference_directory: PathLike, skip_lines: int = None
+    test_directory: PathLike, reference_directory: PathLike, skip_lines: {str: [int]} = None
 ):
     if not isinstance(test_directory, Path):
         test_directory = Path(test_directory)
     if not isinstance(reference_directory, Path):
         reference_directory = Path(reference_directory)
     if skip_lines is None:
-        skip_lines = 0
+        skip_lines = {}
 
     for reference_filename in reference_directory.iterdir():
         if reference_filename.is_dir():
@@ -667,8 +707,26 @@ def check_reference_directory(
             )
         else:
             test_filename = test_directory / reference_filename.name
+
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
-                assert (
-                    test_file.readlines()[skip_lines:]
-                    == reference_file.readlines()[skip_lines:]
-                ), f'"{test_filename}" != "{reference_filename}"'
+                test_lines = list(test_file.readlines())
+                reference_lines = list(reference_file.readlines())
+
+                diff = '\n'.join(Differ().compare(test_lines, reference_lines))
+                message = f'"{test_filename}" != "{reference_filename}"\n{diff}'
+
+                assert len(test_lines) == len(reference_lines), message
+
+                lines_to_skip = set()
+                for file_mask, line_indices in skip_lines.items():
+                    if file_mask in str(test_filename) or re.match(
+                        file_mask, str(test_filename)
+                    ):
+                        lines_to_skip.update(
+                            line_index % len(test_lines) for line_index in line_indices
+                        )
+
+                for line_index in sorted(lines_to_skip, reverse=True):
+                    del test_lines[line_index], reference_lines[line_index]
+
+                assert '\n'.join(test_lines) == '\n'.join(reference_lines), message

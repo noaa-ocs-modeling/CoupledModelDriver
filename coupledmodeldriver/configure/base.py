@@ -14,8 +14,7 @@ from pyschism.server import ServerConfig
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import SlurmEmailType
-from coupledmodeldriver.utilities import LOGGER, convert_to_json, \
-    convert_value
+from coupledmodeldriver.utilities import convert_to_json, convert_value, LOGGER
 
 NEMS_MODEL_ENTRIES = [
     *(cls for name, cls in nemspy.model.__dict__.items() if isinstance(cls, type)),
