@@ -3,20 +3,22 @@ from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 
-from adcircpy.forcing.tides.tides import TidalSource
+from adcircpy import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure.base import NEMSCapJSON
-from coupledmodeldriver.configure.forcings.base import (
+from coupledmodeldriver.configure import (
     ATMESHForcingJSON,
     BestTrackForcingJSON,
-    FileForcingJSON,
     OWIForcingJSON,
     TidalForcingJSON,
+    WW3DATAForcingJSON,
+)
+from coupledmodeldriver.configure.base import NEMSCapJSON
+from coupledmodeldriver.configure.forcings.base import (
+    FileForcingJSON,
     TimestepForcingJSON,
     WaveForcingJSON,
     WindForcingJSON,
-    WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate import (
     ADCIRCRunConfiguration,
@@ -35,7 +37,6 @@ class ForcingConfigurations(Enum):
 
 
 FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)
-
 DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
@@ -122,6 +123,7 @@ def main():
 
     adcirc_executable = convert_value(arguments.adcirc_executable, Path)
     adcprep_executable = convert_value(arguments.adcprep_executable, Path)
+    aswip_executable = convert_value(arguments.aswip_executable, Path)
 
     job_duration = convert_value(arguments.job_duration, timedelta)
     output_directory = convert_value(arguments.output_directory, Path)
@@ -274,6 +276,7 @@ def main():
             slurm_email_address=None,
             nems_executable=adcirc_executable,
             adcprep_executable=adcprep_executable,
+            aswip_executable=aswip_executable,
             source_filename=modulefile,
         )
     else:
@@ -293,6 +296,7 @@ def main():
             slurm_email_address=None,
             adcirc_executable=adcirc_executable,
             adcprep_executable=adcprep_executable,
+            aswip_executable=aswip_executable,
             source_filename=modulefile,
         )
 

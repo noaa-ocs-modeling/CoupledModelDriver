@@ -19,8 +19,7 @@ from pyschism.forcing import GlobalForecastSystem, \
     Tides as pyschism_Tides
 from pyschism.forcing.hydrology import NationalWaterModel
 
-from coupledmodeldriver.configure.base import AttributeJSON, \
-    ConfigurationJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
 
 ADCIRCPY_FORCING_CLASSES = (adcircpy_Tides, Forcing)

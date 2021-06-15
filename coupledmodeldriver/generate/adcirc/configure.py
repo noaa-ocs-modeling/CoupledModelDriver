@@ -43,8 +43,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
     def __init__(
         self,
-        fort13_path: PathLike,
-        fort14_path: PathLike,
+        mesh_directory: PathLike,
         modeled_start_time: datetime,
         modeled_duration: timedelta,
         modeled_timestep: timedelta,
@@ -58,34 +57,32 @@ class ADCIRCRunConfiguration(RunConfiguration):
         slurm_email_address: str = None,
         adcirc_executable: PathLike = None,
         adcprep_executable: PathLike = None,
+        aswip_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         """
         Generate required configuration files for an ADCIRC run.
 
-        :param fort13_path: path to input mesh nodes `fort.13`
-        :param fort14_path: path to input mesh attributes `fort.14`
+        :param mesh_directory: path to input mesh directory (containing `fort.13`, `fort.14`)
         :param modeled_start_time: start time within the modeled system
         :param modeled_duration: duration within the modeled system
         :param modeled_timestep: time interval within the modeled system
-        :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
+        :param adcirc_processors: numbers of processors to assign for ADCIRC
         :param platform: HPC platform for which to configure
+        :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
         :param perturbations: dictionary of runs encompassing run names to parameter values
         :param forcings: list of forcing configurations to connect to ADCIRC
-        :param adcirc_processors: numbers of processors to assign for ADCIRC
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
         :param adcirc_executable: filename of compiled `adcirc`
         :param adcprep_executable: filename of compiled `adcprep`
+        :param aswip_executable: filename of compiled `aswip`
         :param source_filename: path to module file to `source`
         """
 
-        if not isinstance(fort13_path, Path):
-            fort13_path = Path(fort13_path)
-
-        if not isinstance(fort14_path, Path):
-            fort14_path = Path(fort14_path)
+        if not isinstance(mesh_directory, Path):
+            mesh_directory = Path(mesh_directory)
 
         if platform is None:
             platform = Platform.LOCAL
@@ -111,9 +108,10 @@ class ADCIRCRunConfiguration(RunConfiguration):
         )
 
         model = ADCIRCJSON(
-            mesh_files=[fort13_path, fort14_path],
+            mesh_files=[mesh_directory / 'fort.13', mesh_directory / 'fort.14'],
             executable=adcirc_executable,
             adcprep_executable=adcprep_executable,
+            aswip_executable_path=aswip_executable,
             modeled_start_time=modeled_start_time,
             modeled_duration=modeled_duration,
             modeled_timestep=modeled_timestep,
@@ -243,6 +241,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         slurm_email_address: str = None,
         nems_executable: PathLike = None,
         adcprep_executable: PathLike = None,
+        aswip_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         self.__nems = None
@@ -263,6 +262,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             slurm_email_address=slurm_email_address,
             adcirc_executable=nems_executable,
             adcprep_executable=adcprep_executable,
+            aswip_executable=aswip_executable,
             source_filename=source_filename,
         )
 
