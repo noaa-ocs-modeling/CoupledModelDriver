@@ -85,8 +85,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'initialize_adcirc=client.initialize_adcirc:main',
-            'generate_adcirc=client.generate_adcirc:main',
+            'initialize_adcirc=coupledmodeldriver.__main__:initialize_adcirc',
+            'generate_adcirc=coupledmodeldriver.__main__:generate_adcirc',
         ],
     },
 )

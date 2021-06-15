@@ -3,24 +3,27 @@ from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 
-from adcircpy.forcing.tides.tides import TidalSource
+from adcircpy import TidalSource
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure.base import NEMSCapJSON
-from coupledmodeldriver.configure.forcings.base import (
+from coupledmodeldriver.configure import (
     ATMESHForcingJSON,
     BestTrackForcingJSON,
-    FileForcingJSON,
     OWIForcingJSON,
     TidalForcingJSON,
+    WW3DATAForcingJSON,
+)
+from coupledmodeldriver.configure.base import NEMSCapJSON
+from coupledmodeldriver.configure.forcings.base import (
+    FileForcingJSON,
     TimestepForcingJSON,
     WaveForcingJSON,
     WindForcingJSON,
-    WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate import (
     ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
+    generate_adcirc_configuration,
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.utilities import convert_value
@@ -35,12 +38,11 @@ class ForcingConfigurations(Enum):
 
 
 FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)
-
 DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def main():
+def initialize_adcirc():
     argument_parser = ArgumentParser()
 
     argument_parser.add_argument(
@@ -303,6 +305,42 @@ def main():
         generation_script.write(filename=output_directory, overwrite=overwrite)
 
 
+def generate_adcirc():
+    argument_parser = ArgumentParser()
+
+    argument_parser.add_argument(
+        '--configuration-directory',
+        default=Path().cwd(),
+        help='path containing JSON configuration files',
+    )
+    argument_parser.add_argument(
+        '--output-directory', default=None, help='path to store generated configuration files'
+    )
+    argument_parser.add_argument(
+        '--skip-existing', action='store_true', help='skip existing files',
+    )
+    argument_parser.add_argument(
+        '--verbose', action='store_true', help='show more verbose log messages'
+    )
+
+    arguments = argument_parser.parse_args()
+
+    configuration_directory = convert_value(arguments.configuration_directory, Path)
+    output_directory = convert_value(arguments.output_directory, Path)
+    overwrite = not arguments.skip_existing
+    verbose = arguments.verbose
+
+    if output_directory is None:
+        output_directory = configuration_directory
+
+    generate_adcirc_configuration(
+        configuration_directory=configuration_directory,
+        output_directory=output_directory,
+        overwrite=overwrite,
+        verbose=verbose,
+    )
+
+
 def get_argument(
     argument: str, arguments: {str: str} = None, required: bool = False, message: str = None
 ) -> str:
@@ -320,7 +358,3 @@ def get_argument(
         value = None
 
     return value
-
-
-if __name__ == '__main__':
-    main()

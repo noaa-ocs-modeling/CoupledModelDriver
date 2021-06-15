@@ -15,9 +15,11 @@ import pytest
 import wget
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (ADCIRCRunConfiguration,
-                                         NEMSADCIRCRunConfiguration,
-                                         generate_adcirc_configuration)
+from coupledmodeldriver.generate import (
+    ADCIRCRunConfiguration,
+    generate_adcirc_configuration,
+    NEMSADCIRCRunConfiguration,
+)
 
 NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
