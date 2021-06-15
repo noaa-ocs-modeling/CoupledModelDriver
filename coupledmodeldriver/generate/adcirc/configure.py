@@ -57,6 +57,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         slurm_email_address: str = None,
         adcirc_executable: PathLike = None,
         adcprep_executable: PathLike = None,
+        aswip_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         """
@@ -76,6 +77,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param slurm_email_address: email address to send Slurm notifications
         :param adcirc_executable: filename of compiled `adcirc`
         :param adcprep_executable: filename of compiled `adcprep`
+        :param aswip_executable: filename of compiled `aswip`
         :param source_filename: path to module file to `source`
         """
 
@@ -108,6 +110,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         adcirc = ADCIRCJSON(
             adcirc_executable_path=adcirc_executable,
             adcprep_executable_path=adcprep_executable,
+            aswip_executable_path=aswip_executable,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             modeled_timestep=modeled_timestep,
@@ -238,6 +241,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         slurm_email_address: str = None,
         nems_executable: PathLike = None,
         adcprep_executable: PathLike = None,
+        aswip_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
         self.__nems = None
@@ -257,6 +261,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             slurm_email_address=slurm_email_address,
             adcirc_executable=nems_executable,
             adcprep_executable=adcprep_executable,
+            aswip_executable=aswip_executable,
             source_filename=source_filename,
         )
 
