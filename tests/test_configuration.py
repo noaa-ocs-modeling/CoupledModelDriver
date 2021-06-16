@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
-    WaveWatch3MeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveWatch3MeshEntry
 from pyschism import ModelDomain, ModelDriver, Stations
 import pytest
 
@@ -137,8 +136,9 @@ def test_schism():
     )
 
     assert isinstance(configuration.pyschism_stations, Stations)
-    assert isinstance(configuration.pyschism_domain, ModelDomain)
-    assert isinstance(configuration.pyschism_driver, ModelDriver)
+    assert isinstance(configuration.pyschism_configuration, ModelDomain)
+    for driver in configuration.pyschism_drivers:
+        assert isinstance(driver, ModelDriver)
 
 
 def test_tidal():

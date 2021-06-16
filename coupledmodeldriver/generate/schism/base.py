@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union
 
 from pyproj import CRS
-from pyschism import ModelDomain, ModelDriver, Stations
+from pyschism import ModelConfig, ModelDriver, Stations
 from pyschism.enums import IofHydroVariables, Stratification
 from pyschism.forcing import Hydrology, Tides
 from pyschism.forcing.atmosphere import NWS2
@@ -251,27 +251,28 @@ class SCHISMJSON(CirculationModelJSON, NEMSCapJSON):
         return [forcing.pyschism_forcing for forcing in self.forcings]
 
     @property
-    def pyschism_domain(self) -> ModelDomain:
-        domain = ModelDomain(hgrid=self.hgrid, vgrid=self.vgrid, fgrid=self.fgrid)
+    def pyschism_configuration(self) -> ModelConfig:
+        configuration = ModelConfig(hgrid=self.hgrid, vgrid=self.vgrid, fgrid=self.fgrid)
         sflux_forcings = []
         for pyschism_forcing in self.pyschism_forcings:
             if isinstance(pyschism_forcing, Hydrology):
-                domain.add_hydrology(pyschism_forcing)
+                configuration.forcings.hydrology = pyschism_forcing
             elif isinstance(pyschism_forcing, SfluxDataset):
                 sflux_forcings.append(pyschism_forcing)
             elif isinstance(pyschism_forcing, Tides):
-                domain.add_boundary_condition(pyschism_forcing)
+                configuration.forcings.tides = pyschism_forcing
             # TODO add more atmospheric forcings
         if len(sflux_forcings) > 0:
             if len(sflux_forcings) > 2:
                 raise NotImplementedError('more than 2 sflux forcings not implemented')
-            domain.set_atmospheric_forcing(
-                NWS2(sflux_1=sflux_forcings[0], sflux_2=sflux_forcings[1])
+            configuration.forcings.atmosphere = NWS2(
+                sflux_1=sflux_forcings[0], sflux_2=sflux_forcings[1]
             )
-        return domain
+
+        return configuration
 
     @property
-    def pyschism_driver(self) -> ModelDriver:
+    def pyschism_drivers(self) -> [ModelDriver]:
         if self.slurm_configuration is not None:
             server_configuration = self.slurm_configuration.to_pyschism
         else:
@@ -281,22 +282,33 @@ class SCHISMJSON(CirculationModelJSON, NEMSCapJSON):
             key.value: value for key, value in self['surface_output_variables'].items()
         }
 
-        driver = ModelDriver(
-            model_domain=self.pyschism_domain,
-            dt=self['modeled_timestep'],
-            rnday=self['modeled_duration'],
-            ihfskip=self['surface_output_new_file_interval'],
-            dramp=self['tidal_spinup_duration'],
+        coldstart_driver = self.pyschism_configuration.coldstart(
+            timestep=self['modeled_timestep'],
             start_date=self['start_date'],
-            ibc=self['stratification'],
+            end_date=self['end_date'],
+            dramp=self['tidal_spinup_duration'],
             drampbc=self['tidal_bc_spinup_duration'],
-            stations=self.pyschism_stations,
+            dramp_ss=None,
+            drampwafo=None,
+            drampwind=None,
             nspool=self['surface_output_interval'],
+            ihfskip=self['surface_output_new_file_interval'],
             nhot_write=self['hotstart_output_interval'],
+            stations=self.pyschism_stations,
             server_config=server_configuration,
-            combine_hotstart=self['hotstart_combination_executable'],
-            cutoff_depth=self['tidal_bc_cutoff_depth'],
             **surface_output_variables,
         )
 
-        return driver
+        hotstart_driver = self.pyschism_configuration.hotstart(
+            hotstart=coldstart_driver,
+            timestep=self['modeled_timestep'],
+            end_date=self['end_date'],
+            nspool=self['surface_output_interval'],
+            ihfskip=self['surface_output_new_file_interval'],
+            nhot_write=self['hotstart_output_interval'],
+            stations=self.pyschism_stations,
+            server_config=server_configuration,
+            **surface_output_variables,
+        )
+
+        return [coldstart_driver, hotstart_driver]

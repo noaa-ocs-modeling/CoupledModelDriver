@@ -7,7 +7,7 @@ from coupledmodeldriver.generate.schism.configure import (
     NEMSSCHISMRunConfiguration,
     SCHISMRunConfiguration,
 )
-from coupledmodeldriver.utilities import LOGGER, get_logger
+from coupledmodeldriver.utilities import get_logger, LOGGER
 
 
 def generate_schism_configuration(
@@ -70,11 +70,21 @@ def generate_schism_configuration(
     email_type = ensemble_configuration['slurm']['email_type']
     email_address = ensemble_configuration['slurm']['email_address']
 
-    original_fort13_filename = ensemble_configuration['adcirc'].fort13_path
-    original_fort14_filename = ensemble_configuration['adcirc'].fort14_path
-    adcirc_executable = ensemble_configuration['adcirc']['executable']
-    adcprep_executable = ensemble_configuration['adcirc']['adcprep_executable']
-    adcirc_processors = ensemble_configuration['adcirc']['processors']
-    tidal_spinup_duration = ensemble_configuration['adcirc']['tidal_spinup_duration']
-    source_filename = ensemble_configuration['adcirc']['source_filename']
-    use_original_mesh = ensemble_configuration['adcirc']['use_original_mesh']
+    schism_path = ensemble_configuration['schism']['executable']
+    schism_processors = ensemble_configuration['schism']['processors']
+    tidal_spinup_duration = ensemble_configuration['schism']['tidal_spinup_duration']
+    source_filename = ensemble_configuration['schism']['source_filename']
+
+    if use_nems:
+        nems_configuration = ensemble_configuration['nems'].nemspy_modeling_system
+        run_processors = nems_configuration.processors
+        run_executable = ensemble_configuration['nems']['executable']
+    else:
+        nems_configuration = None
+        run_processors = schism_processors
+        run_executable = schism_path
+
+    if source_filename is not None:
+        LOGGER.debug(f'sourcing modules from "{source_filename}"')
+
+    # TODO finish this function

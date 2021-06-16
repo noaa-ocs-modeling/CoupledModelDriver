@@ -15,8 +15,8 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
 from pyschism.enums import GFSProduct
-from pyschism.forcing import GlobalForecastSystem, \
-    Tides as pyschism_Tides
+from pyschism.forcing import GlobalForecastSystem
+from pyschism.forcing import Tides as pyschism_Tides
 from pyschism.forcing.hydrology import NationalWaterModel
 
 from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
