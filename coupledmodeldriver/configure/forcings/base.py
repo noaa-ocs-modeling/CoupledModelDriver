@@ -218,8 +218,9 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     def adcircpy_forcing(self) -> BestTrackForcing:
         if self['fort22_filename'] is not None:
             forcing = BestTrackForcing.from_fort22(self['fort22_filename'], self['nws'])
-            if self['storm_id'] is not None:
+            if self['storm_id'] is not None and forcing.storm_id != self['storm_id']:
                 forcing._storm_id = self['storm_id']
+                self['storm_id'] = forcing.storm_id
             if ['start_date'] is not None:
                 forcing.start_date = self['start_date']
             if ['end_date'] is not None:
