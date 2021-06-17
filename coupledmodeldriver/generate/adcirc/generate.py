@@ -204,7 +204,13 @@ def generate_adcirc_configuration(
     ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
 
     if 'besttrack' in ensemble_configuration:
-        use_aswip = ensemble_configuration['besttrack']['nws'] == 20
+        nws = ensemble_configuration['besttrack']['nws']
+        use_aswip = nws == 20
+        if use_aswip and aswip_path is None:
+            use_aswip = False
+            LOGGER.warning(
+                f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
+            )
     else:
         use_aswip = False
 
