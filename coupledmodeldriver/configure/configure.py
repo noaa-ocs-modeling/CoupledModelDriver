@@ -8,6 +8,7 @@ from nemspy.model.base import ModelEntry
 
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON, NEMSCapJSON
 from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
+from coupledmodeldriver.utilities import LOGGER
 
 
 class RunConfiguration(ABC):
@@ -31,6 +32,8 @@ class RunConfiguration(ABC):
                     for name, configuration_perturbations in run_perturbations.items():
                         if name in instance:
                             instance[name].update(configuration_perturbations)
+                        else:
+                            LOGGER.warning(f'configuration "{name}" not found to perturb')
                 perturbed_configurations[run] = instance
         else:
             perturbed_configurations = {}
