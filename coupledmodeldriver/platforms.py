@@ -10,6 +10,14 @@ class Platform(Enum):
         'slurm_account': 'coastal',
         'default_partition': None,
     }
+    ORION = {
+        'source_filename': '/work/noaa/nosofs/share/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.orion',
+        'processors_per_node': 40,
+        'launcher': 'srun',
+        'uses_slurm': True,
+        'slurm_account': 'nosofs',
+        'default_partition': None,
+    }
     STAMPEDE2 = {
         'source_filename': '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede',
         'processors_per_node': 68,
