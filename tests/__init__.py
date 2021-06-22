@@ -3,6 +3,7 @@ from os import PathLike
 from pathlib import Path
 import re
 
+from filelock import FileLock
 import pytest
 
 from coupledmodeldriver.utilities import extract_download
@@ -15,11 +16,12 @@ REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
 TPXO_FILENAME = INPUT_DIRECTORY / 'h_tpxo9.v1.nc'
 
 
-@pytest.fixture(scope='session', autouse=False)
+@pytest.fixture
 def tpxo_filename() -> Path:
-    if not TPXO_FILENAME.exists():
-        url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
-        extract_download(url, TPXO_FILENAME.parent, ['h_tpxo9.v1.nc'])
+    with FileLock(str(TPXO_FILENAME) + '.lock'):
+        if not TPXO_FILENAME.exists():
+            url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
+            extract_download(url, TPXO_FILENAME.parent, ['h_tpxo9.v1.nc'])
     return TPXO_FILENAME
 
 
