@@ -6,13 +6,20 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (ADCIRCRunConfiguration,
-                                         NEMSADCIRCRunConfiguration,
-                                         generate_adcirc_configuration)
+from coupledmodeldriver.generate import (
+    ADCIRCRunConfiguration,
+    generate_adcirc_configuration,
+    NEMSADCIRCRunConfiguration,
+)
+
 # noinspection PyUnresolvedReferences
-from tests import (INPUT_DIRECTORY, OUTPUT_DIRECTORY,
-                   REFERENCE_DIRECTORY, check_reference_directory,
-                   tpxo_filename)
+from tests import (
+    check_reference_directory,
+    INPUT_DIRECTORY,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+    tpxo_filename,
+)
 
 NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
