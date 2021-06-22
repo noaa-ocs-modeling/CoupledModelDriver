@@ -1,16 +1,11 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
 
 from pyproj import CRS
 import pytest
 
 from coupledmodeldriver.utilities import convert_to_json, convert_value, create_symlink
-
-DATA_DIRECTORY = Path(__file__).parent / 'data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
-REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
+from tests import INPUT_DIRECTORY, OUTPUT_DIRECTORY, REFERENCE_DIRECTORY
 
 
 class ValueTest:

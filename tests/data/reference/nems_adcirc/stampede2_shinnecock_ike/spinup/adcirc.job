@@ -5,8 +5,8 @@
 #SBATCH --mail-user=example@email.gov
 #SBATCH --error=ADCIRC_SPINUP.err.log
 #SBATCH --output=ADCIRC_SPINUP.out.log
-#SBATCH -n 1022
-#SBATCH -N 16
+#SBATCH -n 1020
+#SBATCH -N 15
 #SBATCH --time=06:00:00
 #SBATCH --partition=development
 

@@ -1,5 +1,5 @@
 {
-  "tidal_source": "HAMTIDE",
+  "tidal_source": "TPXO",
   "constituents": [
     "Q1",
     "O1",
@@ -8,7 +8,14 @@
     "N2",
     "M2",
     "S2",
-    "K2"
+    "K2",
+    "Mm",
+    "Mf",
+    "M4",
+    "MN4",
+    "MS4",
+    "2N2",
+    "S1"
   ],
-  "resource": null
+  "resource": "../../../input/h_tpxo9.v1.nc"
 }
