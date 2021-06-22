@@ -262,7 +262,7 @@ def generate_adcirc_configuration(
         else:
             run_nems = None
             run_processors = adcirc_processors
-            run_model_executable = run_configuration['adcirc']['adcprep_executable_path']
+            run_model_executable = run_configuration['adcirc']['adcirc_executable_path']
 
         run_adcprep_path = run_configuration['adcirc']['adcprep_executable_path']
         run_aswip_path = run_configuration['adcirc']['aswip_executable_path']

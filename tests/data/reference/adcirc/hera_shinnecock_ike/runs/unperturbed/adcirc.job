@@ -11,4 +11,4 @@
 
 set -e
 
-srun ../../adcprep
+srun ../../adcirc
