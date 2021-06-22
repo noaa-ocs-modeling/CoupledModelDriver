@@ -1,5 +1,5 @@
-# `config.rc` generated with NEMSpy 1.2.23.post23.dev0+519d25a
- atm_dir: ../../../input/shinnecock_ike/forcings
+# `config.rc` generated with NEMSpy 1.2.25.post2.dev0+66f2aef
+ atm_dir: ..\..\..\..\..\..\..\..\..\input\shinnecock\ike\forcings
  atm_nam: wind_atm_fin_ch_time_vec.nc
- wav_dir: ../../../input/shinnecock_ike/forcings
+ wav_dir: ..\..\..\..\..\..\..\..\..\input\shinnecock\ike\forcings
  wav_nam: ww3.Constant.20151214_sxy_ike_date.nc

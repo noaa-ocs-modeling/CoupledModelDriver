@@ -11,5 +11,5 @@
 
 set -e
 
-srun ../../../adcprep --np 600 --partmesh
-srun ../../../adcprep --np 600 --prepall
+srun ../../../../../../../adcprep --np 600 --partmesh
+srun ../../../../../../../adcprep --np 600 --prepall
