@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import json
 import os
 from os import PathLike
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Union
 
 from adcircpy.server import SlurmConfig
@@ -67,13 +67,13 @@ class ConfigurationJSON(ABC):
 
         for name, value in self.configuration.items():
             if isinstance(value, Path) and not value.is_absolute():
-                self[name] = move_path(value, relative)
+                self[name] = PurePosixPath(move_path(value, relative))
 
     def relative_to(self, path: PathLike, inplace: bool = False) -> 'ConfigurationJSON':
         instance = copy(self) if not inplace else self
         for name, value in instance.configuration.items():
             if isinstance(value, Path):
-                instance[name] = Path(os.path.relpath(value.absolute(), path))
+                instance[name] = PurePosixPath(os.path.relpath(value.resolve(), path))
         return instance
 
     def __contains__(self, key: str) -> bool:

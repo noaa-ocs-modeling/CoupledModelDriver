@@ -253,7 +253,8 @@ def generate_adcirc_configuration(
             run_directory.mkdir(parents=True, exist_ok=True)
         LOGGER.debug(f'writing run configuration to "{run_directory}"')
 
-        run_configuration = run_configuration.relative_to(run_directory)
+        run_configuration.move_paths(output_directory)
+        run_configuration.relative_to(run_directory, inplace=True)
 
         if use_nems:
             run_nems = run_configuration['nems'].nemspy_modeling_system
