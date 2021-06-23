@@ -120,6 +120,7 @@
     "smagorinsky": null,
     "smagorinsky_coefficient": null,
     "horizontal_mixing_coefficient": null,
-    "CFL": null
+    "CFL": null,
+    "ICS": null
   }
 }

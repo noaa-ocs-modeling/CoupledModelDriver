@@ -113,6 +113,7 @@ ADCIRCPY_ATTRIBUTES = [
     'smagorinsky_coefficient',
     'horizontal_mixing_coefficient',
     'CFL',
+    'ICS',
 ]
 OUTPUT_INTERVAL_DEFAULTS = {
     'surface_output_interval': timedelta(hours=1),
