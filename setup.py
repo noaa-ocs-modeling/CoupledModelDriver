@@ -8,7 +8,7 @@ import sys
 
 from setuptools import config, find_packages, setup
 
-BUILT_PACKAGES = {'fiona': ['gdal'], 'numpy': [], 'pyproj': ['proj']}
+BUILT_PACKAGES = {'fiona': ['gdal'], 'numpy': [], 'pyproj': []}
 is_conda = (Path(sys.prefix) / 'conda-meta').exists()
 
 if is_conda:
@@ -30,6 +30,7 @@ if os.name == 'nt':
                 import pipwin
             except:
                 subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
+                subprocess.check_call([sys.executable, '-m', 'pipwin', 'refresh'])
 
             failed_pipwin_packages = []
             for pipwin_package in pipwin_dependencies + [required_package]:
