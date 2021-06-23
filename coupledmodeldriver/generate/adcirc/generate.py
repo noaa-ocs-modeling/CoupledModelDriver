@@ -50,7 +50,7 @@ def generate_adcirc_configuration(
         os.makedirs(output_directory, exist_ok=True)
 
     output_directory = output_directory.resolve()
-    if not os.path.isabs(output_directory):
+    if not output_directory.is_absolute():
         output_directory = output_directory.absolute()
 
     use_nems = 'configure_nems.json' in [
@@ -158,11 +158,7 @@ def generate_adcirc_configuration(
             spinup_processors = adcirc_processors
             spinup_model_executable = spinup_configuration['adcirc']['adcirc_executable_path']
 
-        spinup_adcprep_path = Path(
-            os.path.relpath(
-                spinup_configuration['adcirc']['adcprep_executable_path'], spinup_directory
-            )
-        )
+        spinup_adcprep_path = spinup_configuration['adcirc']['adcprep_executable_path']
         spinup_aswip_path = spinup_configuration['adcirc']['aswip_executable_path']
         spinup_source_filename = spinup_configuration['adcirc']['source_filename']
         spinup_setup_script_filename = spinup_directory / 'setup.job'
