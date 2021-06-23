@@ -11,4 +11,4 @@
 
 set -e
 
-srun ../../../../../../adcirc
+srun ../../adcirc

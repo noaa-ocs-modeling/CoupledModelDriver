@@ -108,9 +108,7 @@ class AdcircSetupJob(AdcircJob):
             if isinstance(adcprep_path, Path):
                 adcprep_path = adcprep_path.as_posix()
 
-        if aswip_path is None:
-            aswip_path = 'aswip'
-        else:
+        if aswip_path is not None:
             if isinstance(aswip_path, Path):
                 aswip_path = aswip_path.as_posix()
 

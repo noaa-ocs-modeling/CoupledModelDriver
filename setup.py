@@ -80,9 +80,10 @@ setup(
     setup_requires=['dunamai', 'setuptools>=41.2'],
     install_requires=[
         'adcircpy>=1.0.35',
+        'filelock',
         'pyschism',
         'pyproj',
-        'nemspy>=0.6.16',
+        'nemspy>=0.6.17',
         'numpy',
         'requests',
     ],

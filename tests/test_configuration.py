@@ -16,6 +16,7 @@ from coupledmodeldriver.configure import (
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.schism.base import SCHISMJSON
+from tests import INPUT_DIRECTORY
 
 
 def test_update():
@@ -102,6 +103,8 @@ def test_adcirc():
         modeled_start_time=datetime(2012, 10, 22, 6),
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
         modeled_timestep=timedelta(seconds=2),
+        fort_13_path=None,
+        fort_14_path=INPUT_DIRECTORY / 'shinnecock' / 'mesh' / 'fort.14',
         tidal_spinup_duration=timedelta(days=12.5),
     )
 

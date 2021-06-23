@@ -1,3 +1,4 @@
+from copy import copy
 from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
@@ -152,7 +153,9 @@ class ADCIRCRunConfiguration(RunConfiguration):
         return self['adcirc'].adcircpy_driver
 
     def __copy__(self) -> 'ADCIRCRunConfiguration':
-        return self.__class__.from_configurations(self.configurations)
+        return self.__class__.from_configurations(
+            [copy(configuration) for configuration in self.configurations]
+        )
 
     @classmethod
     def from_configurations(
@@ -296,7 +299,9 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             self['adcirc'].add_forcing(forcing)
 
     def __copy__(self) -> 'NEMSADCIRCRunConfiguration':
-        return self.__class__.from_configurations(self.configurations)
+        return self.__class__.from_configurations(
+            [copy(configuration) for configuration in self.configurations]
+        )
 
     @classmethod
     def from_configurations(

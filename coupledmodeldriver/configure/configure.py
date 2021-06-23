@@ -13,6 +13,7 @@ from coupledmodeldriver.configure.forcings.base import (
     ForcingJSON,
     PYSCHISM_FORCING_CLASSES,
 )
+from coupledmodeldriver.utilities import LOGGER
 
 
 class RunConfiguration(ABC):
@@ -23,19 +24,19 @@ class RunConfiguration(ABC):
         self.__configurations = {}
         self.configurations = configurations
 
-    def perturb(self, relative_path: PathLike = None) -> {str: 'RunConfiguration'}:
+    def perturb(self, relative_to: PathLike = None) -> {str: 'RunConfiguration'}:
         perturbed_configurations = {}
         if 'modeldriver' in self:
             perturbations = self['modeldriver']['perturbations']
 
             for run, run_perturbations in perturbations.items():
-                instance = copy(self)
-                if relative_path is not None:
-                    instance.move_paths(relative_path)
+                instance = copy(self) if relative_to is None else self.relative_to(relative_to)
                 if run_perturbations is not None and len(run_perturbations) > 0:
                     for name, configuration_perturbations in run_perturbations.items():
                         if name in instance:
                             instance[name].update(configuration_perturbations)
+                        else:
+                            LOGGER.warning(f'configuration "{name}" not found to perturb')
                 perturbed_configurations[run] = instance
         else:
             perturbed_configurations = {}
@@ -65,9 +66,15 @@ class RunConfiguration(ABC):
             if isinstance(configuration, NEMSCapJSON)
         ]
 
-    def move_paths(self, relative_path: PathLike):
+    def move_paths(self, relative: PathLike):
         for configuration in self.configurations:
-            configuration.move_paths(relative_path)
+            configuration.move_paths(relative)
+
+    def relative_to(self, path: PathLike, inplace: bool = False) -> 'RunConfiguration':
+        instance = copy(self) if not inplace else self
+        for configuration in instance.configurations:
+            configuration.relative_to(path, inplace=True)
+        return instance
 
     def __contains__(self, configuration: Union[str, ConfigurationJSON]) -> bool:
         if isinstance(configuration, str):

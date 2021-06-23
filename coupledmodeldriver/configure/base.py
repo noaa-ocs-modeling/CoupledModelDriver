@@ -1,15 +1,16 @@
 from abc import ABC, abstractmethod
+from copy import copy
 from datetime import datetime, timedelta
 import json
 import os
 from os import PathLike
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, List, Union
 
 from adcircpy.server import SlurmConfig
 import nemspy
 from nemspy import ModelingSystem
-from nemspy.model.base import ModelEntry
+from nemspy.model.base import ModelEntry, ModelMeshEntry
 from pyschism.server import ServerConfig
 
 from coupledmodeldriver.platforms import Platform
@@ -60,13 +61,21 @@ class ConfigurationJSON(ABC):
             configuration = json.load(file)
         self.update(configuration)
 
-    def move_paths(self, relative_path: PathLike):
+    def move_paths(self, relative: PathLike):
         """
-        :param relative_path: path to which to move Path attributes
+        :param relative: path to which to move Path attributes
         """
 
         for name, value in self.configuration.items():
-            self[name] = anchor_relative_path(value, relative_path)
+            if isinstance(value, Path) and not value.is_absolute():
+                self[name] = PurePosixPath(move_path(value, relative))
+
+    def relative_to(self, path: PathLike, inplace: bool = False) -> 'ConfigurationJSON':
+        instance = copy(self) if not inplace else self
+        for name, value in instance.configuration.items():
+            if isinstance(value, Path):
+                instance[name] = PurePosixPath(os.path.relpath(value.resolve(), path))
+        return instance
 
     def __contains__(self, key: str) -> bool:
         return key in self.configuration
@@ -174,14 +183,12 @@ class ConfigurationJSON(ABC):
             filename.mkdir(parents=True, exist_ok=True)
 
         for key, value in self.configuration.items():
-            if isinstance(value, Path):
-                if not os.path.isabs(value):
-                    value = value.absolute()
-                    try:
-                        value = Path(os.path.relpath(value, filename.absolute().parent))
-                    except:
-                        pass
-                    self.configuration[key] = value
+            if isinstance(value, Path) and value.is_absolute():
+                try:
+                    value = Path(os.path.relpath(value, filename.absolute().parent))
+                except:
+                    pass
+                self.configuration[key] = value
 
         configuration = convert_to_json(self.configuration)
 
@@ -429,6 +436,19 @@ class NEMSJSON(ConfigurationJSON):
 
         return modeling_system
 
+    def move_paths(self, relative: PathLike):
+        super().move_paths(relative)
+        for model in self['models']:
+            if isinstance(model, ModelMeshEntry):
+                model.filename = move_path(model.filename, relative)
+
+    def relative_to(self, path: PathLike, inplace: bool = False) -> 'NEMSJSON':
+        instance = super().relative_to(path, inplace)
+        for model in instance['models']:
+            if isinstance(model, ModelMeshEntry):
+                model.filename = Path(os.path.relpath(model.filename, path))
+        return instance
+
     def to_nemspy(self) -> ModelingSystem:
         return self.nemspy_modeling_system
 
@@ -529,20 +549,26 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
         raise NotImplementedError()
 
 
-def anchor_relative_path(value: Path, relative: Union[PathLike, int]):
-    if isinstance(value, List) and not isinstance(value, str):
-        value = [anchor_relative_path(entry, relative) for entry in value]
-    elif isinstance(value, Path):
-        if isinstance(relative, int):
-            if relative <= 0:
-                relative = Path('.') / ('../' * (-relative))
-        elif not isinstance(relative, Path):
-            relative = Path(relative)
+def move_path(path: PathLike, move: Union[PathLike, int]) -> Path:
+    try:
+        move = int(move)
+        if move <= 0:
+            move = Path('.') / ('../' * (-move))
+    except:
+        if not isinstance(move, Path):
+            move = Path(move)
 
-        if not value.is_absolute():
-            if isinstance(relative, int):
-                value = Path(*value.parts[relative:])
-            elif isinstance(relative, Path):
-                value = relative / value
+    if isinstance(value, List) and not isinstance(value, str):
+        value = [move_path(entry, move) for entry in value]
+    else:
+        if not isinstance(path, Path):
+            path = Path(path)
+
+        if path.is_absolute():
+            value = path
+        elif isinstance(move, int):
+            value = Path(*path.parts[move:])
+        else:
+            value = move / path
 
     return value
