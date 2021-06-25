@@ -88,12 +88,7 @@ def generate_adcirc_configuration(
 
     do_spinup = spinup_duration is not None
 
-    setup_job_name = 'ADCIRC_SETUP'
-    spinup_job_name = 'ADCIRC_SPINUP'
-    if do_spinup:
-        run_job_name = 'ADCIRC_HOTSTART'
-    else:
-        run_job_name = 'ADCIRC_COLDSTART'
+    run_phase = 'HOTSTART_' if do_spinup else 'COLDSTART'
 
     slurm_account = platform.value['slurm_account']
 
@@ -135,6 +130,9 @@ def generate_adcirc_configuration(
         os.remove(local_fort15_filename)
 
     if do_spinup:
+        setup_job_name = 'ADCIRC_SETUP_SPINUP'
+        spinup_job_name = 'ADCIRC_COLDSTART_SPINUP'
+
         spinup_directory = output_directory / 'spinup'
         if not spinup_directory.exists():
             spinup_directory.mkdir(parents=True, exist_ok=True)
@@ -242,6 +240,9 @@ def generate_adcirc_configuration(
 
     LOGGER.info(f'generating {len(perturbations)} run configuration(s) in "{runs_directory}"')
     for run_name, run_configuration in perturbations.items():
+        setup_job_name = f'ADCIRC_SETUP_{run_name}'
+        run_job_name = f'ADCIRC_{run_phase}_{run_name}'
+
         run_adcircpy_driver = run_configuration.adcircpy_driver
 
         run_directory = runs_directory / run_name

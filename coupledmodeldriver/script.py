@@ -300,7 +300,7 @@ class EnsembleRunScript(Script):
 
         if self.platform.value['uses_slurm']:
             # slurm queue output https://slurm.schedmd.com/squeue.html
-            squeue_command = 'squeue -u $USER -o "%.8i %3C %4D %15j %16E %Z" --sort i'
+            squeue_command = 'squeue -u $USER -o "%.8i %3C %4D %16E %j" --sort i'
             echo_squeue_command = squeue_command.replace('"', r'\"')
             lines.extend(
                 [
