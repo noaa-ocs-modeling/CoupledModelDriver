@@ -97,7 +97,7 @@ def test_nems_adcirc_local_shinnecock_ike(tpxo_filename):
     )
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -185,7 +185,7 @@ def test_nems_adcirc_hera_shinnecock_ike(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -273,7 +273,7 @@ def test_nems_adcirc_stampede2_shinnecock_ike(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -332,7 +332,7 @@ def test_adcirc_local_shinnecock_ike(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -391,7 +391,7 @@ def test_adcirc_hera_shinnecock_ike(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -450,7 +450,7 @@ def test_adcirc_stampede2_shinnecock_ike(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -540,7 +540,7 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
@@ -601,7 +601,7 @@ def test_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
     configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
-    generate_adcirc_configuration(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
         test_directory=output_directory,
