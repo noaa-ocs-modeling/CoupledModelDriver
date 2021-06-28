@@ -258,8 +258,8 @@ The queue will have the following jobs added:
 usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME --modeled-duration
                          MODELED_DURATION --modeled-timestep MODELED_TIMESTEP [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE]
                          [--forcings FORCINGS] [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
-                         [--adcirc-processors ADCIRC_PROCESSORS] [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY]
-                         [--generate-script] [--skip-existing]
+                         [--aswip-executable ASWIP_EXECUTABLE] [--adcirc-processors ADCIRC_PROCESSORS] [--job-duration JOB_DURATION]
+                         [--output-directory OUTPUT_DIRECTORY] [--generate-script] [--skip-existing]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -281,6 +281,8 @@ optional arguments:
                         filename of compiled `adcirc` or `NEMS.x`
   --adcprep-executable ADCPREP_EXECUTABLE
                         filename of compiled `adcprep`
+  --aswip-executable ASWIP_EXECUTABLE
+                        filename of compiled `aswip`
   --adcirc-processors ADCIRC_PROCESSORS
                         numbers of processors to assign for ADCIRC
   --job-duration JOB_DURATION
@@ -300,7 +302,7 @@ modifying the JSON files.
 these files.
 
 ```
-usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--skip-existing]
+usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--relative-paths] [--skip-existing]
                        [--verbose]
 
 optional arguments:
@@ -309,6 +311,7 @@ optional arguments:
                         path containing JSON configuration files
   --output-directory OUTPUT_DIRECTORY
                         path to store generated configuration files
+  --relative-paths      use relative paths in output configuration
   --skip-existing       skip existing files
   --verbose             show more verbose log messages
 ```

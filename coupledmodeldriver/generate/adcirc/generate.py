@@ -24,6 +24,7 @@ class RunPhase(Enum):
 def generate_adcirc_configuration(
     configuration_directory: PathLike,
     output_directory: PathLike = None,
+    relative_paths: bool = False,
     overwrite: bool = False,
     verbose: bool = False,
 ):
@@ -32,6 +33,7 @@ def generate_adcirc_configuration(
 
     :param configuration_directory: path containing JSON configuration files
     :param output_directory: path to store generated configuration files
+    :param relative_paths: whether to write relative paths in generated configuration files
     :param overwrite: whether to overwrite existing files
     :param verbose: whether to show more verbose log messages
     """
@@ -159,6 +161,20 @@ def generate_adcirc_configuration(
         spinup_adcprep_path = spinup_configuration['adcirc']['adcprep_executable_path']
         spinup_aswip_path = spinup_configuration['adcirc']['aswip_executable_path']
         spinup_source_filename = spinup_configuration['adcirc']['source_filename']
+
+        spinup_model_executable = update_path_relative(
+            spinup_model_executable, relative_paths, spinup_directory
+        )
+        spinup_adcprep_path = update_path_relative(
+            spinup_adcprep_path, relative_paths, spinup_directory
+        )
+        spinup_aswip_path = update_path_relative(
+            spinup_aswip_path, relative_paths, spinup_directory
+        )
+        spinup_source_filename = update_path_relative(
+            spinup_source_filename, relative_paths, spinup_directory
+        )
+
         spinup_setup_script_filename = spinup_directory / 'setup.job'
         spinup_job_script_filename = spinup_directory / 'adcirc.job'
 
@@ -204,7 +220,7 @@ def generate_adcirc_configuration(
                 spinup_directory,
                 overwrite=overwrite,
                 include_version=True,
-                create_atm_namelist_rc=False,
+                create_atm_namelist_rc=True,
             )
             spinup_nems_filenames = (
                 f'"{filename.name}"' for filename in spinup_nems_filenames
@@ -265,6 +281,18 @@ def generate_adcirc_configuration(
         run_adcprep_path = run_configuration['adcirc']['adcprep_executable_path']
         run_aswip_path = run_configuration['adcirc']['aswip_executable_path']
         run_source_filename = run_configuration['adcirc']['source_filename']
+
+        run_model_executable = update_path_relative(
+            run_model_executable, relative_paths, spinup_directory
+        )
+        run_adcprep_path = update_path_relative(
+            run_adcprep_path, relative_paths, spinup_directory
+        )
+        run_aswip_path = update_path_relative(run_aswip_path, relative_paths, spinup_directory)
+        run_source_filename = update_path_relative(
+            run_source_filename, relative_paths, spinup_directory
+        )
+
         run_setup_script_filename = run_directory / 'setup.job'
         run_job_script_filename = run_directory / 'adcirc.job'
 
@@ -322,7 +350,7 @@ def generate_adcirc_configuration(
                 run_directory,
                 overwrite=overwrite,
                 include_version=True,
-                create_atm_namelist_rc=False,
+                create_atm_namelist_rc=True,
             )
             run_nems_filenames = (f'"{filename.name}"' for filename in run_nems_filenames)
             LOGGER.info(
@@ -357,3 +385,21 @@ def generate_adcirc_configuration(
         run_spinup=do_spinup,
     )
     run_job_script.write(ensemble_run_script_filename, overwrite=overwrite)
+
+
+def update_path_relative(
+    path: PathLike, relative: bool = False, relative_directory: PathLike = None
+) -> Path:
+    if path is not None:
+        if not isinstance(path, Path):
+            path = Path(path)
+        if relative:
+            if relative_directory is None:
+                relative_directory = Path.cwd()
+            if not isinstance(relative_directory, Path):
+                relative_directory = Path(relative_directory)
+            if path.is_absolute():
+                path = Path(os.path.relpath(path, relative_directory))
+        elif not path.is_absolute():
+            path = path.absolute()
+    return path
