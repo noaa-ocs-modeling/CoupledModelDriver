@@ -90,7 +90,7 @@ def generate_adcirc_configuration(
 
     do_spinup = spinup_duration is not None
 
-    run_phase = 'HOTSTART_' if do_spinup else 'COLDSTART'
+    run_phase = 'HOTSTART' if do_spinup else 'COLDSTART'
 
     slurm_account = platform.value['slurm_account']
 

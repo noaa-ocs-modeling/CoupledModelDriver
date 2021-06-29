@@ -1,10 +1,10 @@
 #!/bin/bash --login
-#SBATCH -J ADCIRC_HOTSTART__unperturbed
+#SBATCH -J ADCIRC_HOTSTART_unperturbed
 #SBATCH -A coastal
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=example@email.gov
-#SBATCH --error=ADCIRC_HOTSTART__unperturbed.err.log
-#SBATCH --output=ADCIRC_HOTSTART__unperturbed.out.log
+#SBATCH --error=ADCIRC_HOTSTART_unperturbed.err.log
+#SBATCH --output=ADCIRC_HOTSTART_unperturbed.out.log
 #SBATCH -n 1022
 #SBATCH -N 16
 #SBATCH --time=06:00:00
