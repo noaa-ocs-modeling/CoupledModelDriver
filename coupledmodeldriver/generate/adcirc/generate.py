@@ -393,13 +393,13 @@ def update_path_relative(
     if path is not None:
         if not isinstance(path, Path):
             path = Path(path)
+        if relative_directory is None:
+            relative_directory = Path.cwd()
         if relative:
-            if relative_directory is None:
-                relative_directory = Path.cwd()
             if not isinstance(relative_directory, Path):
                 relative_directory = Path(relative_directory)
             if path.is_absolute():
                 path = Path(os.path.relpath(path, relative_directory))
         elif not path.is_absolute():
-            path = path.absolute()
+            path = (relative_directory / path).resolve().absolute()
     return path
