@@ -321,6 +321,48 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         )
 
 
+class PaHMForcingJSON(WindForcingJSON, TimestepForcingJSON, NEMSCapJSON):
+    name = 'PaHM'
+    default_filename = f'configure_pahm.json'
+    default_nws = 17
+    default_modeled_timestep: timedelta
+    default_processors = 1
+
+    def __init__(
+        self,
+        nws: int = None,
+        modeled_timestep: timedelta = None,
+        processors: int = None,
+        nems_parameters: {str: str} = None,
+        **kwargs,
+    ):
+        WindForcingJSON.__init__(self, nws=nws, **kwargs)
+        NEMSCapJSON.__init__(
+            self, processors=processors, nems_parameters=nems_parameters, **kwargs
+        )
+        TimestepForcingJSON.__init__(self, modeled_timestep=modeled_timestep, **kwargs)
+
+    @property
+    def adcircpy_forcing(self) -> Forcing:
+        return ParametricWindForcing(
+            filename=self['resource'],
+            nws=self['nws'],
+            interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
+        )
+
+    @classmethod
+    def from_adcircpy(cls, forcing: ParametricWindForcing) -> 'PaHMForcingJSON':
+        return cls(
+            nws=forcing.NWS, modeled_timestep=forcing.interval,
+        )
+
+    @property
+    def nemspy_entry(self) -> ParametricWindEntry:
+        return ParametricWindEntry(
+            processors=self['processors'], **self['nems_parameters']
+        )
+
+
 class WaveForcingJSON(ForcingJSON, ABC):
     default_nrs: int
     field_types = {'nrs': int}
