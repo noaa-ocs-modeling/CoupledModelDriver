@@ -1,0 +1,23 @@
+{
+  "platform": "HERA",
+  "perturbations": {
+    "run_1": {
+      "adcirc": {
+        "ICS": 2
+      },
+      "tidalforcing": {
+        "constituents": "all"
+      }
+    },
+    "run_2": {
+      "adcirc": {
+        "ICS": 22
+      },
+      "tidalforcing": {
+        "tidal_source": "HAMTIDE",
+        "constituents": "all",
+        "resource": null
+      }
+    }
+  }
+}

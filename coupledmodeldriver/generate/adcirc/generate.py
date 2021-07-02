@@ -217,9 +217,7 @@ def generate_adcirc_configuration(
             LOGGER.debug(f'setting spinup to {spinup_duration}')
 
             spinup_nems_filenames = spinup_nems.write(
-                spinup_directory,
-                overwrite=overwrite,
-                include_version=True,
+                spinup_directory, overwrite=overwrite, include_version=True,
             )
             spinup_nems_filenames = (
                 f'"{filename.name}"' for filename in spinup_nems_filenames
@@ -345,9 +343,7 @@ def generate_adcirc_configuration(
 
         if use_nems:
             run_nems_filenames = run_nems.write(
-                run_directory,
-                overwrite=overwrite,
-                include_version=True,
+                run_directory, overwrite=overwrite, include_version=True,
             )
             run_nems_filenames = (f'"{filename.name}"' for filename in run_nems_filenames)
             LOGGER.info(
