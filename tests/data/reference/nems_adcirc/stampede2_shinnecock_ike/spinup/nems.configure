@@ -1,4 +1,4 @@
-# `nems.configure` generated with NEMSpy 1.3.3.post1.dev0+f48c03f
+# `nems.configure` generated with NEMSpy 1.0.0
 # EARTH #
 EARTH_component_list: OCN
 EARTH_attributes::
