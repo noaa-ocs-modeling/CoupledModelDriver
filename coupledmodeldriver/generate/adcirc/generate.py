@@ -259,7 +259,7 @@ def generate_adcirc_configuration(
     perturbations = base_configuration.perturb()
 
     LOGGER.info(f'generating {len(perturbations)} run configuration(s) in "{runs_directory}"')
-    asyncio.wait([
+    asyncio.run(asyncio.wait([
         write_run_directory(
             run_directory=runs_directory / run_name,
             run_name=run_name,
@@ -282,7 +282,7 @@ def generate_adcirc_configuration(
             do_spinup=do_spinup,
             spinup_directory=spinup_directory,
         ) for run_name, run_configuration in perturbations.items()
-    ])
+    ]))
 
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(f'writing cleanup script "{ensemble_cleanup_script_filename.name}"')
