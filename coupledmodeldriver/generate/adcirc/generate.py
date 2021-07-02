@@ -220,7 +220,6 @@ def generate_adcirc_configuration(
                 spinup_directory,
                 overwrite=overwrite,
                 include_version=True,
-                create_atm_namelist_rc=True,
             )
             spinup_nems_filenames = (
                 f'"{filename.name}"' for filename in spinup_nems_filenames
@@ -349,7 +348,6 @@ def generate_adcirc_configuration(
                 run_directory,
                 overwrite=overwrite,
                 include_version=True,
-                create_atm_namelist_rc=True,
             )
             run_nems_filenames = (f'"{filename.name}"' for filename in run_nems_filenames)
             LOGGER.info(
