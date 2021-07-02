@@ -12,5 +12,6 @@
 
 set -e
 
-ibrun ../../adcprep --np 1020 --partmesh
-ibrun ../../adcprep --np 1020 --prepall
+source ..\..\..\..\..\input\modulefiles\envmodules_intel.stampede
+ibrun ../../../../../input/bin/adcprep --np 1020 --partmesh
+ibrun ../../../../../input/bin/adcprep --np 1020 --prepall

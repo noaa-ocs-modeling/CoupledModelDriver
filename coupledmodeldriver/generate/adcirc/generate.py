@@ -266,7 +266,6 @@ def generate_adcirc_configuration(
             run_directory.mkdir(parents=True, exist_ok=True)
         LOGGER.debug(f'writing run configuration to "{run_directory}"')
 
-        run_configuration.move_paths(output_directory)
         run_configuration.relative_to(run_directory, inplace=True)
 
         if use_nems:
@@ -283,14 +282,14 @@ def generate_adcirc_configuration(
         run_source_filename = run_configuration['adcirc']['source_filename']
 
         run_model_executable = update_path_relative(
-            run_model_executable, relative_paths, spinup_directory
+            run_model_executable, relative_paths, run_directory
         )
         run_adcprep_path = update_path_relative(
-            run_adcprep_path, relative_paths, spinup_directory
+            run_adcprep_path, relative_paths, run_directory
         )
-        run_aswip_path = update_path_relative(run_aswip_path, relative_paths, spinup_directory)
+        run_aswip_path = update_path_relative(run_aswip_path, relative_paths, run_directory)
         run_source_filename = update_path_relative(
-            run_source_filename, relative_paths, spinup_directory
+            run_source_filename, relative_paths, run_directory
         )
 
         run_setup_script_filename = run_directory / 'setup.job'

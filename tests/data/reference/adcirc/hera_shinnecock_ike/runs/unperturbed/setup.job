@@ -11,5 +11,6 @@
 
 set -e
 
-srun ../../adcprep --np 600 --partmesh
-srun ../../adcprep --np 600 --prepall
+source ..\..\..\..\..\input\modulefiles\envmodules_intel.hera
+srun ../../../../../input/bin/adcprep --np 600 --partmesh
+srun ../../../../../input/bin/adcprep --np 600 --prepall

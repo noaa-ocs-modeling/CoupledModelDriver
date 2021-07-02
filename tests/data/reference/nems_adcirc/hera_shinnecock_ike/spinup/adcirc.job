@@ -11,4 +11,5 @@
 
 set -e
 
-srun adcirc
+source ..\..\..\..\input\modulefiles\envmodules_intel.hera
+srun ../../../../input/bin/NEMS.x

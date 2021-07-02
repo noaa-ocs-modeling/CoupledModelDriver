@@ -1,6 +1,6 @@
 {
-  "adcirc_executable_path": "adcirc",
-  "adcprep_executable_path": "adcprep",
+  "adcirc_executable_path": "../../../input/bin/NEMS.x",
+  "adcprep_executable_path": "../../../input/bin/adcprep",
   "aswip_executable_path": null,
   "modeled_start_time": "2008-08-23 00:00:00",
   "modeled_end_time": "2008-09-06 12:00:00",
@@ -9,7 +9,7 @@
   "fort_14_path": "../../../input/shinnecock/mesh/fort.14",
   "tidal_spinup_duration": 1080000.0,
   "tidal_spinup_timestep": 2.0,
-  "source_filename": null,
+  "source_filename": "../../../input/modulefiles/envmodules_intel.hera",
   "use_original_mesh": false,
   "output_surface": true,
   "surface_output_interval": 3600.0,

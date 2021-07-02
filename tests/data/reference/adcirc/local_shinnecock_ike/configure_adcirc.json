@@ -1,6 +1,6 @@
 {
-  "adcirc_executable_path": "adcirc",
-  "adcprep_executable_path": "adcprep",
+  "adcirc_executable_path": "../../../input/bin/padcirc",
+  "adcprep_executable_path": "../../../input/bin/adcprep",
   "aswip_executable_path": null,
   "modeled_start_time": "2008-08-23 00:00:00",
   "modeled_end_time": "2008-09-06 12:00:00",

@@ -12,4 +12,5 @@
 
 set -e
 
-ibrun adcirc
+source ..\..\..\..\input\modulefiles\envmodules_intel.stampede
+ibrun ../../../../input/bin/NEMS.x

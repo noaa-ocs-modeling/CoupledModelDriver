@@ -1,5 +1,5 @@
 {
-  "executable_path": null,
+  "executable_path": "../../../input/bin/NEMS.x",
   "modeled_start_time": "2008-08-23 00:00:00",
   "modeled_end_time": "2008-09-06 12:00:00",
   "interval": 3600.0,

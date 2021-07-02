@@ -6,20 +6,13 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (
-    ADCIRCRunConfiguration,
-    generate_adcirc_configuration,
-    NEMSADCIRCRunConfiguration,
-)
-
+from coupledmodeldriver.generate import (ADCIRCRunConfiguration,
+                                         NEMSADCIRCRunConfiguration,
+                                         generate_adcirc_configuration)
 # noinspection PyUnresolvedReferences
-from tests import (
-    check_reference_directory,
-    INPUT_DIRECTORY,
-    OUTPUT_DIRECTORY,
-    REFERENCE_DIRECTORY,
-    tpxo_filename,
-)
+from tests import (INPUT_DIRECTORY, OUTPUT_DIRECTORY,
+                   REFERENCE_DIRECTORY, check_reference_directory,
+                   tpxo_filename)
 
 NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
@@ -91,8 +84,8 @@ def test_nems_adcirc_local_shinnecock_ike(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        nems_executable=None,
-        adcprep_executable=None,
+        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         source_filename=None,
     )
 
@@ -177,9 +170,9 @@ def test_nems_adcirc_hera_shinnecock_ike(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        nems_executable=None,
-        adcprep_executable=None,
-        source_filename=None,
+        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
     configuration.relative_to(output_directory)
@@ -265,9 +258,9 @@ def test_nems_adcirc_stampede2_shinnecock_ike(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        nems_executable=None,
-        adcprep_executable=None,
-        source_filename=None,
+        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
     )
 
     configuration.relative_to(output_directory)
@@ -325,7 +318,8 @@ def test_adcirc_local_shinnecock_ike(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        adcprep_executable=None,
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         source_filename=None,
     )
 
@@ -384,8 +378,9 @@ def test_adcirc_hera_shinnecock_ike(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        adcprep_executable=None,
-        source_filename=None,
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
     configuration.relative_to(output_directory)
@@ -443,8 +438,9 @@ def test_adcirc_stampede2_shinnecock_ike(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        adcprep_executable=None,
-        source_filename=None,
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
     )
 
     configuration.relative_to(output_directory)
@@ -532,9 +528,9 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        nems_executable=None,
-        adcprep_executable=None,
-        source_filename=None,
+        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
     configuration.relative_to(output_directory)
@@ -594,8 +590,9 @@ def test_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
         slurm_partition=None,
         slurm_job_duration=job_duration,
         slurm_email_address=slurm_email_address,
-        adcprep_executable=None,
-        source_filename=None,
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
     configuration.relative_to(output_directory)
