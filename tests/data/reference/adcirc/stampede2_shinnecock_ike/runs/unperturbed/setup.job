@@ -12,6 +12,6 @@
 
 set -e
 
-source ..\..\..\..\..\input\modulefiles\envmodules_intel.stampede
+source ../../../../../input/modulefiles/envmodules_intel.stampede
 ibrun ../../../../../input/bin/adcprep --np 1020 --partmesh
 ibrun ../../../../../input/bin/adcprep --np 1020 --prepall

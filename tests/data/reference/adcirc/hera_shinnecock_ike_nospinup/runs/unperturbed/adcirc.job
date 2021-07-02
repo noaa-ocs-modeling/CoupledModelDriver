@@ -11,5 +11,5 @@
 
 set -e
 
-source ..\..\..\..\..\input\modulefiles\envmodules_intel.hera
+source ../../../../../input/modulefiles/envmodules_intel.hera
 srun ../../../../../input/bin/padcirc
