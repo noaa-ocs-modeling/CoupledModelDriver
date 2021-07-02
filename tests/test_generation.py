@@ -682,7 +682,7 @@ def test_nems_adcirc_hera_shinnecock_ike_perturbed(tpxo_filename):
         tidal_spinup_duration=tidal_spinup_duration,
         platform=platform,
         perturbations={
-            'run_1': {'adcirc': {'ICS': 2}, 'tidalforcing': {'constituents': 'all'},},
+            'run_1': {'adcirc': {'ICS': 2}, 'tidalforcing': {'constituents': 'all'}},
             'run_2': {
                 'adcirc': {'ICS': 22},
                 'tidalforcing': {
