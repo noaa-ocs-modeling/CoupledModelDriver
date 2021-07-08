@@ -204,6 +204,8 @@ def generate_adcirc_configuration(
     LOGGER.debug(f'writing cleanup script "{ensemble_cleanup_script_filename.name}"')
     cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
 
+    event_loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(event_loop)))
+
     LOGGER.info(f'writing ensemble run script "{ensemble_run_script_filename.name}"')
     run_job_script = EnsembleRunScript(
         platform=platform,
@@ -214,8 +216,6 @@ def generate_adcirc_configuration(
         run_spinup=do_spinup,
     )
     run_job_script.write(ensemble_run_script_filename, overwrite=overwrite)
-
-    event_loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(event_loop)))
 
 
 async def write_spinup_directory(
