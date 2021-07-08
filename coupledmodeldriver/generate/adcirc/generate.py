@@ -15,7 +15,11 @@ from coupledmodeldriver.generate.adcirc.configure import (
     ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
 )
-from coupledmodeldriver.generate.adcirc.script import AdcircRunJob, AdcircSetupJob
+from coupledmodeldriver.generate.adcirc.script import (
+    AdcircRunJob,
+    AdcircSetupJob,
+    AswipCommand,
+)
 from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
 from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
 
@@ -284,6 +288,13 @@ async def write_spinup_directory(
     spinup_setup_script_filename = spinup_directory / 'setup.job'
     spinup_job_script_filename = spinup_directory / 'adcirc.job'
 
+    if use_aswip:
+        aswip_command = AswipCommand(
+            path=spinup_aswip_path, nws=spinup_configuration['adcirc']['NWS']
+        )
+    else:
+        aswip_command = None
+
     spinup_setup_script = AdcircSetupJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
@@ -292,8 +303,7 @@ async def write_spinup_directory(
         slurm_partition=partition,
         slurm_run_name=setup_job_name,
         adcprep_path=spinup_adcprep_path,
-        aswip_path=spinup_aswip_path,
-        use_aswip=use_aswip,
+        aswip_command=aswip_command,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
         slurm_error_filename=f'{setup_job_name}.err.log',
@@ -425,6 +435,13 @@ async def write_run_directory(
             create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
     create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
 
+    if use_aswip:
+        aswip_command = AswipCommand(
+            path=run_aswip_path, nws=run_configuration['adcirc']['NWS']
+        )
+    else:
+        aswip_command = None
+
     run_setup_script = AdcircSetupJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
@@ -433,8 +450,7 @@ async def write_run_directory(
         slurm_partition=partition,
         slurm_run_name=setup_job_name,
         adcprep_path=run_adcprep_path,
-        aswip_path=run_aswip_path,
-        use_aswip=use_aswip,
+        aswip_command=aswip_command,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
         slurm_error_filename=f'{setup_job_name}.err.log',
