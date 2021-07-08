@@ -740,9 +740,7 @@ def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
         OUTPUT_DIRECTORY / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
     )
     reference_directory = (
-        REFERENCE_DIRECTORY
-        / 'nems_adcirc'
-        / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
+        REFERENCE_DIRECTORY / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
     )
 
     nems_connections = ['WAV -> OCN']
