@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from datetime import datetime, timedelta
 from enum import Enum
+import os
 from pathlib import Path
 
 from adcircpy import TidalSource
@@ -100,11 +101,16 @@ def main():
     argument_parser.add_argument(
         '--skip-existing', action='store_true', help='skip existing files',
     )
+    argument_parser.add_argument(
+        '--absolute-paths',
+        action='store_true',
+        help='write paths as absolute in configuration',
+    )
 
     arguments, extra_arguments = argument_parser.parse_known_args()
 
     platform = convert_value(arguments.platform, Platform)
-    mesh_directory = convert_value(arguments.mesh_directory, Path)
+    mesh_directory = convert_value(arguments.mesh_directory, Path).resolve().absolute()
 
     modeled_start_time = convert_value(arguments.modeled_start_time, datetime)
     modeled_duration = convert_value(arguments.modeled_duration, timedelta)
@@ -113,7 +119,7 @@ def main():
 
     adcirc_processors = convert_value(arguments.adcirc_processors, int)
 
-    modulefile = convert_value(arguments.modulefile, Path)
+    modulefile = convert_value(arguments.modulefile, Path).resolve().absolute()
 
     forcings = arguments.forcings
     if forcings is not None:
@@ -121,12 +127,20 @@ def main():
     else:
         forcings = []
 
-    adcirc_executable = convert_value(arguments.adcirc_executable, Path)
-    adcprep_executable = convert_value(arguments.adcprep_executable, Path)
-    aswip_executable = convert_value(arguments.aswip_executable, Path)
+    adcirc_executable = convert_value(arguments.adcirc_executable, Path).resolve().absolute()
+    adcprep_executable = convert_value(arguments.adcprep_executable, Path).resolve().absolute()
+    aswip_executable = convert_value(arguments.aswip_executable, Path).resolve().absolute()
 
     job_duration = convert_value(arguments.job_duration, timedelta)
-    output_directory = convert_value(arguments.output_directory, Path)
+    output_directory = convert_value(arguments.output_directory, Path).resolve().absolute()
+
+    if not arguments.absolute_paths:
+        mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
+        modulefile = Path(os.path.relpath(modulefile, output_directory))
+        adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
+        adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
+        aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
+        output_directory = Path('.')
 
     overwrite = not arguments.skip_existing
 

@@ -124,17 +124,20 @@ def generate_adcirc_configuration(
     else:
         LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
         adcircpy_driver = base_configuration.adcircpy_driver
-        adcircpy_driver.write(
-            output_directory,
-            overwrite=overwrite,
-            fort13=None,
-            fort14='fort.14',
-            fort15='fort.15',
-            fort22=None,
-            coldstart=None,
-            hotstart=None,
-            driver=None,
-        )
+        try:
+            adcircpy_driver.write(
+                output_directory,
+                overwrite=overwrite,
+                fort13=None,
+                fort14='fort.14',
+                fort15='fort.15',
+                fort22=None,
+                coldstart=None,
+                hotstart=None,
+                driver=None,
+            )
+        except Exception as error:
+            LOGGER.warning(error)
 
     if local_fort15_filename.exists():
         os.remove(local_fort15_filename)
@@ -341,19 +344,24 @@ async def write_spinup_directory(
         )
 
     LOGGER.debug(f'writing tidal spinup configuration to "{spinup_directory}"')
-    spinup_adcircpy_driver.write(
-        spinup_directory,
-        overwrite=overwrite,
-        fort13=None if use_original_mesh else 'fort.13',
-        fort14=None,
-        coldstart='fort.15',
-        hotstart=None,
-        driver=None,
-    )
-    if use_original_mesh:
-        if local_fort13_filename.exists():
-            create_symlink(local_fort13_filename, spinup_directory / 'fort.13', relative=True)
-    create_symlink(local_fort14_filename, spinup_directory / 'fort.14', relative=True)
+    try:
+        spinup_adcircpy_driver.write(
+            spinup_directory,
+            overwrite=overwrite,
+            fort13=None if use_original_mesh else 'fort.13',
+            fort14=None,
+            coldstart='fort.15',
+            hotstart=None,
+            driver=None,
+        )
+        if use_original_mesh:
+            if local_fort13_filename.exists():
+                create_symlink(
+                    local_fort13_filename, spinup_directory / 'fort.13', relative=True
+                )
+        create_symlink(local_fort14_filename, spinup_directory / 'fort.14', relative=True)
+    except Exception as error:
+        LOGGER.warning(error)
 
 
 async def write_run_directory(
@@ -421,20 +429,6 @@ async def write_run_directory(
     run_setup_script_filename = run_directory / 'setup.job'
     run_job_script_filename = run_directory / 'adcirc.job'
 
-    run_adcircpy_driver.write(
-        run_directory,
-        overwrite=overwrite,
-        fort13=None if use_original_mesh else 'fort.13',
-        fort14=None,
-        coldstart=None,
-        hotstart='fort.15',
-        driver=None,
-    )
-    if use_original_mesh:
-        if local_fort13_filename.exists():
-            create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
-    create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
-
     if use_aswip:
         aswip_command = AswipCommand(
             path=run_aswip_path, nws=run_configuration['besttrack']['nws'],
@@ -482,6 +476,23 @@ async def write_run_directory(
         )
         run_nems_filenames = (f'"{filename.name}"' for filename in run_nems_filenames)
         LOGGER.info(f'writing NEMS hotstart configuration: {", ".join(run_nems_filenames)}')
+
+    try:
+        run_adcircpy_driver.write(
+            run_directory,
+            overwrite=overwrite,
+            fort13=None if use_original_mesh else 'fort.13',
+            fort14=None,
+            coldstart=None,
+            hotstart='fort.15',
+            driver=None,
+        )
+        if use_original_mesh:
+            if local_fort13_filename.exists():
+                create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
+        create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
+    except Exception as error:
+        LOGGER.warning(error)
 
     if do_spinup:
         for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:
