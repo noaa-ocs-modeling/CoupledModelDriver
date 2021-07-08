@@ -188,7 +188,7 @@ class AswipCommand:
         else:
             rmax_approaches = None
 
-        return cls(path=path, nws=nws, isotachs=isotachs, rmax_approaches=rmax_approaches,)
+        return cls(path=path, nws=nws, isotachs=isotachs, rmax_approaches=rmax_approaches)
 
 
 class AdcircSetupJob(AdcircJob):
