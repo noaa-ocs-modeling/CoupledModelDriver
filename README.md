@@ -255,11 +255,11 @@ The queue will have the following jobs added:
 `initialize_adcirc` creates JSON configuration files according to the given parameters.
 
 ```
-usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME --modeled-duration
-                         MODELED_DURATION --modeled-timestep MODELED_TIMESTEP [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE]
-                         [--forcings FORCINGS] [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
-                         [--aswip-executable ASWIP_EXECUTABLE] [--adcirc-processors ADCIRC_PROCESSORS] [--job-duration JOB_DURATION]
-                         [--output-directory OUTPUT_DIRECTORY] [--generate-script] [--skip-existing]
+usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME --modeled-duration MODELED_DURATION
+                         --modeled-timestep MODELED_TIMESTEP [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE] [--forcings FORCINGS]
+                         [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE] [--aswip-executable ASWIP_EXECUTABLE]
+                         [--adcirc-processors ADCIRC_PROCESSORS] [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY] [--generate-script]
+                         [--skip-existing] [--absolute-paths]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -291,6 +291,7 @@ optional arguments:
                         directory to which to write configuration files (defaults to `.`)
   --generate-script     write shell script to load configuration
   --skip-existing       skip existing files
+  --absolute-paths      write paths as absolute in configuration
 ```
 
 ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly
@@ -302,8 +303,7 @@ modifying the JSON files.
 these files.
 
 ```
-usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--relative-paths] [--skip-existing]
-                       [--verbose]
+usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--relative-paths] [--skip-existing] [--verbose]
 
 optional arguments:
   -h, --help            show this help message and exit
