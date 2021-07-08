@@ -107,6 +107,7 @@ def test_nems_adcirc_local_shinnecock_ike(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -195,6 +196,7 @@ def test_nems_adcirc_hera_shinnecock_ike(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -283,6 +285,7 @@ def test_nems_adcirc_stampede2_shinnecock_ike(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -343,6 +346,7 @@ def test_adcirc_local_shinnecock_ike(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -403,6 +407,7 @@ def test_adcirc_hera_shinnecock_ike(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -463,6 +468,7 @@ def test_adcirc_stampede2_shinnecock_ike(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -553,6 +559,7 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -615,6 +622,7 @@ def test_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -715,6 +723,7 @@ def test_nems_adcirc_hera_shinnecock_ike_perturbed(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
@@ -740,9 +749,7 @@ def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
         OUTPUT_DIRECTORY / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
     )
     reference_directory = (
-        REFERENCE_DIRECTORY
-        / 'nems_adcirc'
-        / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
+        REFERENCE_DIRECTORY / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
     )
 
     nems_connections = ['WAV -> OCN']
@@ -800,6 +807,7 @@ def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
             'fort.15': [0],
             'config.rc': [0],
             'model_configure': [0],
+            'atm_namelist.rc': [0],
             'nems.configure': [0],
         },
     )
