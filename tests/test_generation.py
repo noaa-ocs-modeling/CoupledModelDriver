@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from adcircpy.forcing import BestTrackForcing
 from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.tides.tides import TidalSource
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
@@ -699,6 +700,91 @@ def test_nems_adcirc_hera_shinnecock_ike_perturbed(tpxo_filename):
         slurm_email_address=slurm_email_address,
         nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+    )
+
+    configuration.relative_to(output_directory)
+
+    configuration.write_directory(output_directory, overwrite=True)
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
+
+    check_reference_directory(
+        test_directory=output_directory,
+        reference_directory=reference_directory,
+        skip_lines={
+            'fort.15': [0],
+            'config.rc': [0],
+            'model_configure': [0],
+            'nems.configure': [0],
+        },
+    )
+
+
+def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
+    platform = Platform.HERA
+    mesh = 'shinnecock'
+    storm = 'ike'
+    adcirc_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2008, 9, 1, 6)
+    modeled_duration = timedelta(days=14)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = timedelta(days=12.5)
+    nems_interval = timedelta(hours=1)
+    job_duration = timedelta(hours=6)
+
+    input_directory = INPUT_DIRECTORY / mesh
+    mesh_directory = input_directory / 'mesh'
+    forcings_directory = input_directory / storm / 'forcings'
+
+    output_directory = (
+        OUTPUT_DIRECTORY / 'nems_adcirc' / f'{platform.name.lower()}_{mesh}_{storm}_aswip'
+    )
+    reference_directory = (
+        REFERENCE_DIRECTORY
+        / 'nems_adcirc'
+        / f'{platform.name.lower()}_{mesh}_{storm}_perturbed'
+    )
+
+    nems_connections = ['WAV -> OCN']
+    nems_mediations = None
+    nems_sequence = [
+        'WAV -> OCN',
+        'WAV',
+        'OCN',
+    ]
+
+    slurm_email_address = 'example@email.gov'
+
+    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing.use_all()
+    wind_forcing = BestTrackForcing(storm='ike2008', nws=20, interval_seconds=3600,)
+    wave_forcing = WaveWatch3DataForcing(
+        filename=forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc',
+        nrs=5,
+        interval_seconds=3600,
+    )
+    forcings = [tidal_forcing, wind_forcing, wave_forcing]
+
+    configuration = NEMSADCIRCRunConfiguration(
+        mesh_directory=mesh_directory,
+        modeled_start_time=modeled_start_time,
+        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_timestep=modeled_timestep,
+        nems_interval=nems_interval,
+        nems_connections=nems_connections,
+        nems_mediations=nems_mediations,
+        nems_sequence=nems_sequence,
+        tidal_spinup_duration=tidal_spinup_duration,
+        platform=platform,
+        perturbations=None,
+        forcings=forcings,
+        adcirc_processors=adcirc_processors,
+        slurm_partition=None,
+        slurm_job_duration=job_duration,
+        slurm_email_address=slurm_email_address,
+        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        aswip_executable=INPUT_DIRECTORY / 'bin' / 'aswip',
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 

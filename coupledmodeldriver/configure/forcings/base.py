@@ -247,7 +247,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     @classmethod
     def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
-            storm=forcing.storm_id,
+            storm_id=forcing.storm_id,
             nws=forcing.NWS,
             start_date=forcing.start_date,
             end_date=forcing.end_date,

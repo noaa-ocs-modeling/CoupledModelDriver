@@ -1,0 +1,21 @@
+#!/bin/bash --login
+#SBATCH -J ADCIRC_SETUP_SPINUP
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_SETUP_SPINUP.err.log
+#SBATCH --output=ADCIRC_SETUP_SPINUP.out.log
+#SBATCH -n 1
+#SBATCH -N 1
+#SBATCH --time=06:00:00
+
+set -e
+
+source ../../../../input/modulefiles/envmodules_intel.hera
+srun ../../../../input/bin/adcprep --np 600 --partmesh
+srun ../../../../input/bin/adcprep --np 600 --prepall
+
+## make sure ATCF format is correct for GAHM
+../../../../input/bin/aswip -n 20 -m 4 -z 2
+mv fort.22 fort.22.original
+mv NWS_20_fort.22 fort.22

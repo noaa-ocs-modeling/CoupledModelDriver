@@ -320,8 +320,8 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             ):
                 adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
                 adcircpy_forcing.start_date -= self['tidal_spinup_duration']
-            elif isinstance(adcircpy_forcing, BestTrackForcing):
-                adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
+            # elif isinstance(adcircpy_forcing, BestTrackForcing):
+            #     adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
 
             mesh.add_forcing(adcircpy_forcing)
 

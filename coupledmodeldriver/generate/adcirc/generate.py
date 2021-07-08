@@ -107,7 +107,7 @@ def generate_adcirc_configuration(
 
     if 'besttrack' in base_configuration:
         nws = base_configuration['besttrack']['nws']
-        use_aswip = nws == 20
+        use_aswip = nws in [8, 19, 20, 21]
         if use_aswip and base_configuration['adcirc']['aswip_executable_path'] is None:
             use_aswip = False
             LOGGER.warning(
@@ -290,7 +290,7 @@ async def write_spinup_directory(
 
     if use_aswip:
         aswip_command = AswipCommand(
-            path=spinup_aswip_path, nws=spinup_configuration['adcirc']['NWS']
+            path=spinup_aswip_path, nws=spinup_configuration['besttrack']['nws'],
         )
     else:
         aswip_command = None
@@ -437,7 +437,7 @@ async def write_run_directory(
 
     if use_aswip:
         aswip_command = AswipCommand(
-            path=run_aswip_path, nws=run_configuration['adcirc']['NWS']
+            path=run_aswip_path, nws=run_configuration['besttrack']['nws'],
         )
     else:
         aswip_command = None
