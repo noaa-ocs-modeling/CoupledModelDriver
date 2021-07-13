@@ -16,7 +16,7 @@ class Platform(Enum):
         'launcher': 'srun',
         'uses_slurm': True,
         'slurm_account': 'nosofs',
-        'default_partition': None,
+        'default_partition': 'orion',
     }
     STAMPEDE2 = {
         'source_filename': '/work/07531/zrb/stampede2/builds/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.stampede',
