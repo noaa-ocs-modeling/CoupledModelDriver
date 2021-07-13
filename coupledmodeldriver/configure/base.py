@@ -151,7 +151,10 @@ class ConfigurationJSON(ABC):
 
         with open(filename) as file:
             LOGGER.debug(f'reading file "{filename}"')
-            configuration = json.load(file)
+            try:
+                configuration = json.load(file)
+            except Exception as error:
+                raise SyntaxError(f'{error} in file "{filename}"')
 
         configuration = {
             key.lower(): convert_value(value, cls.field_types[key])
