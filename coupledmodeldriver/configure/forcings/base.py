@@ -268,14 +268,21 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         start_date: datetime = None,
         end_date: datetime = None,
     ):
-        return cls.from_adcircpy(
-            BestTrackForcing.from_fort22(
-                filename,
-                nws=nws,
-                interval_seconds=interval_seconds,
-                start_date=start_date,
-                end_date=end_date,
-            )
+        forcing = BestTrackForcing.from_fort22(
+            filename,
+            nws=nws,
+            interval_seconds=interval_seconds,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        return cls(
+            storm_id=forcing.storm_id,
+            nws=forcing.NWS,
+            interval=forcing.interval,
+            start_date=forcing.start_date,
+            end_date=forcing.end_date,
+            fort22_filename=filename,
         )
 
 
