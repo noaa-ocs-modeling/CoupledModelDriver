@@ -764,7 +764,7 @@ def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
 
     tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
     tidal_forcing.use_all()
-    wind_forcing = BestTrackForcing(storm='ike2008', nws=20, interval_seconds=3600,)
+    wind_forcing = BestTrackForcing(storm='ike2008', nws=20, interval_seconds=3600)
     wave_forcing = WaveWatch3DataForcing(
         filename=forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc',
         nrs=5,

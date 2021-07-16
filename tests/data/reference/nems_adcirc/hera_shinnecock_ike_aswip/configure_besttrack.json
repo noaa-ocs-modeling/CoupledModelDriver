@@ -1,12 +1,12 @@
 {
   "storm_id": "AL092008",
+  "interval": 3600.0,
   "start_date": "2008-09-01 06:00:00",
   "end_date": "2008-09-15 12:00:00",
   "fort22_filename": null,
   "nws": 20,
   "attributes": {
     "BLADj": null,
-    "_storm_id": null,
     "geofactor": null,
     "start_date": null,
     "end_date": null

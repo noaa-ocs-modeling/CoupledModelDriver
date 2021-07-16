@@ -170,7 +170,6 @@ class WindForcingJSON(ForcingJSON, ABC):
 
 BESTTRACK_ATTRIBUTES = [
     'BLADj',
-    '_storm_id',
     'geofactor',
     'start_date',
     'end_date',
@@ -184,6 +183,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     default_attributes = BESTTRACK_ATTRIBUTES
     field_types = {
         'storm_id': str,
+        'interval': timedelta,
         'start_date': datetime,
         'end_date': datetime,
         'fort22_filename': Path,
@@ -193,6 +193,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         self,
         storm_id: str = None,
         nws: int = None,
+        interval: timedelta = None,
         start_date: datetime = None,
         end_date: datetime = None,
         fort22_filename: PathLike = None,
@@ -210,6 +211,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
         self['storm_id'] = storm_id
+        self['interval'] = interval
         self['start_date'] = start_date
         self['end_date'] = end_date
         self['fort22_filename'] = fort22_filename
@@ -217,18 +219,21 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     @property
     def adcircpy_forcing(self) -> BestTrackForcing:
         if self['fort22_filename'] is not None:
-            forcing = BestTrackForcing.from_fort22(self['fort22_filename'], self['nws'])
+            forcing = BestTrackForcing.from_fort22(
+                self['fort22_filename'],
+                nws=self['nws'],
+                interval_seconds=self['interval'] / timedelta(seconds=1),
+                start_date=self['start_date'],
+                end_date=self['end_date'],
+            )
             if self['storm_id'] is not None and forcing.storm_id != self['storm_id']:
-                forcing._storm_id = self['storm_id']
+                forcing.storm_id = self['storm_id']
                 self['storm_id'] = forcing.storm_id
-            if ['start_date'] is not None:
-                forcing.start_date = self['start_date']
-            if ['end_date'] is not None:
-                forcing.end_date = self['end_date']
         else:
             forcing = BestTrackForcing(
                 storm=self['storm_id'],
                 nws=self['nws'],
+                interval_seconds=self['interval'] / timedelta(seconds=1),
                 start_date=self['start_date'],
                 end_date=self['end_date'],
             )
@@ -249,13 +254,36 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         return cls(
             storm_id=forcing.storm_id,
             nws=forcing.NWS,
+            interval=forcing.interval,
             start_date=forcing.start_date,
             end_date=forcing.end_date,
         )
 
     @classmethod
-    def from_fort22(cls, filename: PathLike, nws: int = None):
-        return cls.from_adcircpy(BestTrackForcing.from_fort22(filename, nws))
+    def from_fort22(
+        cls,
+        filename: PathLike,
+        nws: int = None,
+        interval_seconds: int = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+    ):
+        forcing = BestTrackForcing.from_fort22(
+            filename,
+            nws=nws,
+            interval_seconds=interval_seconds,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        return cls(
+            storm_id=forcing.storm_id,
+            nws=forcing.NWS,
+            interval=forcing.interval,
+            start_date=forcing.start_date,
+            end_date=forcing.end_date,
+            fort22_filename=filename,
+        )
 
 
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
