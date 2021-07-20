@@ -15,7 +15,8 @@ from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
 
-from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import AttributeJSON, \
+    ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
 
 ADCIRCPY_FORCINGS = {
@@ -222,7 +223,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             forcing = BestTrackForcing.from_fort22(
                 self['fort22_filename'],
                 nws=self['nws'],
-                interval_seconds=self['interval'] / timedelta(seconds=1),
+                interval_seconds=self['interval'],
                 start_date=self['start_date'],
                 end_date=self['end_date'],
             )
@@ -233,7 +234,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             forcing = BestTrackForcing(
                 storm=self['storm_id'],
                 nws=self['nws'],
-                interval_seconds=self['interval'] / timedelta(seconds=1),
+                interval_seconds=self['interval'],
                 start_date=self['start_date'],
                 end_date=self['end_date'],
             )
