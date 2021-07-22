@@ -333,10 +333,14 @@ def initialize_adcirc(
 ):
     if not absolute_paths:
         mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
-        modulefile = Path(os.path.relpath(modulefile, output_directory))
-        adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
-        adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
-        aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
+        if modulefile is not None:
+            modulefile = Path(os.path.relpath(modulefile, output_directory))
+        if adcirc_executable is not None:
+            adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
+        if adcprep_executable is not None:
+            adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
+        if aswip_executable is not None:
+            aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
         output_directory = Path('.')
 
     if nems_interval is not None:
