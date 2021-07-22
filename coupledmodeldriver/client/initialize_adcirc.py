@@ -45,7 +45,7 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def parse_arguments() -> {str: Any}:
+def parse_initialize_adcirc_arguments() -> {str: Any}:
     argument_parser = ArgumentParser()
 
     argument_parser.add_argument(
@@ -397,7 +397,7 @@ def get_argument(
 
 
 def main():
-    initialize_adcirc(**parse_arguments())
+    initialize_adcirc(**parse_initialize_adcirc_arguments())
 
 
 if __name__ == '__main__':
