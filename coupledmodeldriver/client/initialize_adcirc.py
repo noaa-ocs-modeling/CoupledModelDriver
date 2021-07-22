@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 import os
 from pathlib import Path
+from typing import Any
 
 from adcircpy import TidalSource
+import click
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
@@ -17,13 +19,14 @@ from coupledmodeldriver.configure import (
 from coupledmodeldriver.configure.base import NEMSCapJSON
 from coupledmodeldriver.configure.forcings.base import (
     FileForcingJSON,
+    ForcingJSON,
     TimestepForcingJSON,
     WaveForcingJSON,
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import (
-    ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
+    generate_adcirc_configuration,
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.utilities import convert_value
@@ -94,17 +97,15 @@ def main():
         help='directory to which to write configuration files (defaults to `.`)',
     )
     argument_parser.add_argument(
-        '--generate-script',
-        action='store_true',
-        help='write shell script to load configuration',
-    )
-    argument_parser.add_argument(
         '--skip-existing', action='store_true', help='skip existing files',
     )
     argument_parser.add_argument(
         '--absolute-paths',
         action='store_true',
         help='write paths as absolute in configuration',
+    )
+    argument_parser.add_argument(
+        '--verbose', action='store_true', help='show more verbose log messages'
     )
 
     arguments, extra_arguments = argument_parser.parse_known_args()
@@ -134,17 +135,7 @@ def main():
     job_duration = convert_value(arguments.job_duration, timedelta)
     output_directory = convert_value(arguments.output_directory, Path).resolve().absolute()
 
-    if not arguments.absolute_paths:
-        mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
-        modulefile = Path(os.path.relpath(modulefile, output_directory))
-        adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
-        adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
-        aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
-        output_directory = Path('.')
-
     overwrite = not arguments.skip_existing
-
-    generate_script = arguments.generate_script
 
     arguments = {}
     unrecognized_arguments = []
@@ -269,6 +260,61 @@ def main():
                 f'unrecognized forcing "{provided_name}"; must be from {FORCING_NAMES}'
             )
 
+    initialize_adcirc(
+        platform=platform,
+        mesh_directory=mesh_directory,
+        modeled_start_time=modeled_start_time,
+        modeled_duration=modeled_duration,
+        modeled_timestep=modeled_timestep,
+        nems_interval=nems_interval,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
+        modulefile=modulefile,
+        forcings=forcing_configurations,
+        adcirc_executable=adcirc_executable,
+        adcprep_executable=adcprep_executable,
+        aswip_executable=aswip_executable,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=arguments.absolute_paths,
+        overwrite=overwrite,
+        verbose=arguments.verbose,
+    )
+
+
+def initialize_adcirc(
+    platform: Platform,
+    mesh_directory: os.PathLike,
+    modeled_start_time: datetime,
+    modeled_duration: timedelta,
+    modeled_timestep: timedelta,
+    tidal_spinup_duration: timedelta = None,
+    perturbations: {str: {str: Any}} = None,
+    nems_interval: timedelta = None,
+    nems_connections: [str] = None,
+    nems_mediations: [str] = None,
+    nems_sequence: [str] = None,
+    modulefile: os.PathLike = None,
+    forcings: [ForcingJSON] = None,
+    adcirc_executable: os.PathLike = None,
+    adcprep_executable: os.PathLike = None,
+    aswip_executable: os.PathLike = None,
+    adcirc_processors: int = None,
+    job_duration: timedelta = None,
+    output_directory: os.PathLike = None,
+    absolute_paths: bool = True,
+    overwrite: bool = None,
+    verbose: bool = False,
+):
+    if not absolute_paths:
+        mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
+        modulefile = Path(os.path.relpath(modulefile, output_directory))
+        adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
+        adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
+        aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
+        output_directory = Path('.')
+
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
             mesh_directory=mesh_directory,
@@ -276,13 +322,13 @@ def main():
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
             nems_interval=nems_interval,
-            nems_connections=None,
-            nems_mediations=None,
-            nems_sequence=None,
+            nems_connections=nems_connections,
+            nems_mediations=nems_mediations,
+            nems_sequence=nems_sequence,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            perturbations=None,
-            forcings=forcing_configurations,
+            perturbations=perturbations,
+            forcings=forcings,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -300,8 +346,8 @@ def main():
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            perturbations=None,
-            forcings=forcing_configurations,
+            perturbations=perturbations,
+            forcings=forcings,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -316,9 +362,19 @@ def main():
         directory=output_directory, overwrite=overwrite,
     )
 
-    if generate_script:
-        generation_script = ADCIRCGenerationScript()
-        generation_script.write(filename=output_directory, overwrite=overwrite)
+    if click.confirm('generate configuration?', default=False):
+        starting_directory = Path.cwd()
+        if output_directory != starting_directory:
+            os.chdir(output_directory)
+        generate_adcirc_configuration(
+            configuration_directory=output_directory,
+            output_directory=output_directory,
+            relative_paths=not absolute_paths,
+            overwrite=True,
+            verbose=verbose,
+        )
+        if output_directory != starting_directory:
+            os.chdir(starting_directory)
 
 
 def get_argument(
