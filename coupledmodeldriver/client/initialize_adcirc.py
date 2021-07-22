@@ -124,7 +124,7 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
 
     extra_arguments = {
         extra_argument: convert_value(
-            arguments.get(extra_argument), extra_arguments[extra_argument]
+            arguments.__dict__[extra_argument], extra_arguments[extra_argument]
         )
         for extra_argument in extra_arguments
     }
@@ -139,7 +139,9 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
 
     adcirc_processors = convert_value(arguments.adcirc_processors, int)
 
-    modulefile = convert_value(arguments.modulefile, Path).resolve().absolute()
+    modulefile = convert_value(arguments.modulefile, Path)
+    if modulefile is not None:
+        modulefile = modulefile.resolve().absolute()
 
     forcings = arguments.forcings
     if forcings is not None:
