@@ -45,7 +45,7 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def main():
+def parse_arguments() -> {str: Any}:
     argument_parser = ArgumentParser()
 
     argument_parser.add_argument(
@@ -260,27 +260,27 @@ def main():
                 f'unrecognized forcing "{provided_name}"; must be from {FORCING_NAMES}'
             )
 
-    initialize_adcirc(
-        platform=platform,
-        mesh_directory=mesh_directory,
-        modeled_start_time=modeled_start_time,
-        modeled_duration=modeled_duration,
-        modeled_timestep=modeled_timestep,
-        nems_interval=nems_interval,
-        tidal_spinup_duration=tidal_spinup_duration,
-        perturbations=None,
-        modulefile=modulefile,
-        forcings=forcing_configurations,
-        adcirc_executable=adcirc_executable,
-        adcprep_executable=adcprep_executable,
-        aswip_executable=aswip_executable,
-        adcirc_processors=adcirc_processors,
-        job_duration=job_duration,
-        output_directory=output_directory,
-        absolute_paths=arguments.absolute_paths,
-        overwrite=overwrite,
-        verbose=arguments.verbose,
-    )
+    return {
+        'platform': platform,
+        'mesh_directory': mesh_directory,
+        'modeled_start_time': modeled_start_time,
+        'modeled_duration': modeled_duration,
+        'modeled_timestep': modeled_timestep,
+        'nems_interval': nems_interval,
+        'tidal_spinup_duration': tidal_spinup_duration,
+        'perturbations': None,
+        'modulefile': modulefile,
+        'forcings': forcing_configurations,
+        'adcirc_executable': adcirc_executable,
+        'adcprep_executable': adcprep_executable,
+        'aswip_executable': aswip_executable,
+        'adcirc_processors': adcirc_processors,
+        'job_duration': job_duration,
+        'output_directory': output_directory,
+        'absolute_paths': arguments.absolute_paths,
+        'overwrite': overwrite,
+        'verbose': arguments.verbose,
+    }
 
 
 def initialize_adcirc(
@@ -394,6 +394,10 @@ def get_argument(
         value = None
 
     return value
+
+
+def main():
+    initialize_adcirc(**parse_arguments())
 
 
 if __name__ == '__main__':
