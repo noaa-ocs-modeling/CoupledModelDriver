@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 import os
 from pathlib import Path
+from typing import Any, Mapping
 
 from adcircpy import TidalSource
+import click
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
@@ -17,13 +19,14 @@ from coupledmodeldriver.configure import (
 from coupledmodeldriver.configure.base import NEMSCapJSON
 from coupledmodeldriver.configure.forcings.base import (
     FileForcingJSON,
+    ForcingJSON,
     TimestepForcingJSON,
     WaveForcingJSON,
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import (
-    ADCIRCGenerationScript,
     ADCIRCRunConfiguration,
+    generate_adcirc_configuration,
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.utilities import convert_value
@@ -42,7 +45,16 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def main():
+def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {str: Any}:
+    if extra_arguments is None:
+        extra_arguments = {}
+    elif not isinstance(extra_arguments, Mapping):
+        extra_arguments = {extra_argument: None for extra_argument in extra_arguments}
+    extra_arguments = {
+        extra_argument.strip('-'): extra_arguments[extra_argument]
+        for extra_argument in extra_arguments
+    }
+
     argument_parser = ArgumentParser()
 
     argument_parser.add_argument(
@@ -94,11 +106,6 @@ def main():
         help='directory to which to write configuration files (defaults to `.`)',
     )
     argument_parser.add_argument(
-        '--generate-script',
-        action='store_true',
-        help='write shell script to load configuration',
-    )
-    argument_parser.add_argument(
         '--skip-existing', action='store_true', help='skip existing files',
     )
     argument_parser.add_argument(
@@ -106,8 +113,21 @@ def main():
         action='store_true',
         help='write paths as absolute in configuration',
     )
+    argument_parser.add_argument(
+        '--verbose', action='store_true', help='show more verbose log messages'
+    )
 
-    arguments, extra_arguments = argument_parser.parse_known_args()
+    for extra_argument in extra_arguments:
+        argument_parser.add_argument(f'--{extra_argument}')
+
+    arguments, unknown_arguments = argument_parser.parse_known_args()
+
+    extra_arguments = {
+        extra_argument: convert_value(
+            arguments.__dict__[extra_argument], extra_arguments[extra_argument]
+        )
+        for extra_argument in extra_arguments
+    }
 
     platform = convert_value(arguments.platform, Platform)
     mesh_directory = convert_value(arguments.mesh_directory, Path).resolve().absolute()
@@ -119,7 +139,9 @@ def main():
 
     adcirc_processors = convert_value(arguments.adcirc_processors, int)
 
-    modulefile = convert_value(arguments.modulefile, Path).resolve().absolute()
+    modulefile = convert_value(arguments.modulefile, Path)
+    if modulefile is not None:
+        modulefile = modulefile.resolve().absolute()
 
     forcings = arguments.forcings
     if forcings is not None:
@@ -134,29 +156,21 @@ def main():
     job_duration = convert_value(arguments.job_duration, timedelta)
     output_directory = convert_value(arguments.output_directory, Path).resolve().absolute()
 
-    if not arguments.absolute_paths:
-        mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
-        modulefile = Path(os.path.relpath(modulefile, output_directory))
-        adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
-        adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
-        aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
-        output_directory = Path('.')
-
+    absolute_paths = arguments.absolute_paths
     overwrite = not arguments.skip_existing
-
-    generate_script = arguments.generate_script
+    verbose = arguments.verbose
 
     arguments = {}
     unrecognized_arguments = []
-    for index in range(len(extra_arguments)):
-        argument = extra_arguments[index]
+    for index in range(len(unknown_arguments)):
+        argument = unknown_arguments[index]
         value = None
         if argument.startswith('-'):
             parsed_argument = argument.strip('-').strip()
-            if len(extra_arguments) > index + 1 and not extra_arguments[index + 1].startswith(
-                '-'
-            ):
-                value = extra_arguments[index + 1].strip()
+            if len(unknown_arguments) > index + 1 and not unknown_arguments[
+                index + 1
+            ].startswith('-'):
+                value = unknown_arguments[index + 1].strip()
             forcing = parsed_argument.split('-')[0]
             if forcing not in forcings:
                 if forcing.lower() in FORCING_NAMES:
@@ -168,7 +182,7 @@ def main():
     if len(unrecognized_arguments) > 0:
         argument_parser.error(f'unrecognized arguments: {" ".join(unrecognized_arguments)}')
 
-    extra_arguments = arguments
+    unknown_arguments = arguments
     del arguments
 
     tidal_spinup_duration = None
@@ -182,7 +196,7 @@ def main():
             if issubclass(forcing_configuration_class, TidalForcingJSON):
                 tidal_spinup_duration = get_argument(
                     argument=f'tidal-spinup-duration',
-                    arguments=extra_arguments,
+                    arguments=unknown_arguments,
                     required=True,
                     message=f'enter tidal spinup duration (`HH:MM:SS`): ',
                 )
@@ -195,7 +209,7 @@ def main():
                 )
                 tidal_source = get_argument(
                     argument=f'tidal-source',
-                    arguments=extra_arguments,
+                    arguments=unknown_arguments,
                     required=True,
                     message=f'enter tidal forcing source ({tidal_source_options}): ',
                 )
@@ -204,7 +218,7 @@ def main():
                 else:
                     tidal_source = DEFAULT_TIDAL_SOURCE
                 tidal_constituents = get_argument(
-                    argument='tidal-constituents', arguments=extra_arguments,
+                    argument='tidal-constituents', arguments=unknown_arguments,
                 )
                 if tidal_constituents is not None:
                     tidal_constituents = [
@@ -217,49 +231,49 @@ def main():
             if issubclass(forcing_configuration_class, BestTrackForcingJSON):
                 best_track_storm_id = get_argument(
                     argument='besttrack-storm-id',
-                    arguments=extra_arguments,
+                    arguments=unknown_arguments,
                     required=True,
                     message='enter storm ID for best track: ',
                 )
                 kwargs['storm_id'] = best_track_storm_id
                 best_track_start_date = get_argument(
-                    argument='besttrack-start-date', arguments=extra_arguments,
+                    argument='besttrack-start-date', arguments=unknown_arguments,
                 )
                 kwargs['start_date'] = best_track_start_date
                 best_track_end_date = get_argument(
-                    argument='besttrack-end-date', arguments=extra_arguments,
+                    argument='besttrack-end-date', arguments=unknown_arguments,
                 )
                 kwargs['end_date'] = best_track_end_date
 
             if issubclass(forcing_configuration_class, FileForcingJSON):
                 forcing_path = get_argument(
-                    argument=f'{provided_name}-path', arguments=extra_arguments,
+                    argument=f'{provided_name}-path', arguments=unknown_arguments,
                 )
                 kwargs['resource'] = forcing_path
             if issubclass(forcing_configuration_class, NEMSCapJSON):
                 nems_cap_processors = get_argument(
-                    argument=f'{provided_name}-processors', arguments=extra_arguments,
+                    argument=f'{provided_name}-processors', arguments=unknown_arguments,
                 )
                 kwargs['processors'] = nems_cap_processors
                 nems_cap_parameters = get_argument(
-                    argument=f'{provided_name}-nems-parameters', arguments=extra_arguments,
+                    argument=f'{provided_name}-nems-parameters', arguments=unknown_arguments,
                 )
                 kwargs['nems_parameters'] = nems_cap_parameters
             if issubclass(forcing_configuration_class, TimestepForcingJSON):
                 forcing_timestep = get_argument(
-                    argument=f'{provided_name}-modeled_timestep', arguments=extra_arguments,
+                    argument=f'{provided_name}-modeled_timestep', arguments=unknown_arguments,
                 )
                 if forcing_timestep is None:
                     forcing_timestep = modeled_timestep
                 kwargs['modeled_timestep'] = forcing_timestep
             if issubclass(forcing_configuration_class, WindForcingJSON):
                 forcing_nws = get_argument(
-                    argument=f'{provided_name}-nws', arguments=extra_arguments,
+                    argument=f'{provided_name}-nws', arguments=unknown_arguments,
                 )
                 kwargs['nws'] = forcing_nws
             if issubclass(forcing_configuration_class, WaveForcingJSON):
                 forcing_nrs = get_argument(
-                    argument=f'{provided_name}-nrs', arguments=extra_arguments,
+                    argument=f'{provided_name}-nrs', arguments=unknown_arguments,
                 )
                 kwargs['nrs'] = forcing_nrs
 
@@ -269,6 +283,62 @@ def main():
                 f'unrecognized forcing "{provided_name}"; must be from {FORCING_NAMES}'
             )
 
+    return {
+        'platform': platform,
+        'mesh_directory': mesh_directory,
+        'modeled_start_time': modeled_start_time,
+        'modeled_duration': modeled_duration,
+        'modeled_timestep': modeled_timestep,
+        'nems_interval': nems_interval,
+        'tidal_spinup_duration': tidal_spinup_duration,
+        'perturbations': None,
+        'modulefile': modulefile,
+        'forcings': forcing_configurations,
+        'adcirc_executable': adcirc_executable,
+        'adcprep_executable': adcprep_executable,
+        'aswip_executable': aswip_executable,
+        'adcirc_processors': adcirc_processors,
+        'job_duration': job_duration,
+        'output_directory': output_directory,
+        'absolute_paths': absolute_paths,
+        'overwrite': overwrite,
+        'verbose': verbose,
+        **{extra_argument: value for extra_argument, value in extra_arguments.items()},
+    }
+
+
+def initialize_adcirc(
+    platform: Platform,
+    mesh_directory: os.PathLike,
+    modeled_start_time: datetime,
+    modeled_duration: timedelta,
+    modeled_timestep: timedelta,
+    tidal_spinup_duration: timedelta = None,
+    perturbations: {str: {str: Any}} = None,
+    nems_interval: timedelta = None,
+    nems_connections: [str] = None,
+    nems_mediations: [str] = None,
+    nems_sequence: [str] = None,
+    modulefile: os.PathLike = None,
+    forcings: [ForcingJSON] = None,
+    adcirc_executable: os.PathLike = None,
+    adcprep_executable: os.PathLike = None,
+    aswip_executable: os.PathLike = None,
+    adcirc_processors: int = None,
+    job_duration: timedelta = None,
+    output_directory: os.PathLike = None,
+    absolute_paths: bool = True,
+    overwrite: bool = None,
+    verbose: bool = False,
+):
+    if not absolute_paths:
+        mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
+        modulefile = Path(os.path.relpath(modulefile, output_directory))
+        adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
+        adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
+        aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
+        output_directory = Path('.')
+
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
             mesh_directory=mesh_directory,
@@ -276,13 +346,13 @@ def main():
             modeled_end_time=modeled_start_time + modeled_duration,
             modeled_timestep=modeled_timestep,
             nems_interval=nems_interval,
-            nems_connections=None,
-            nems_mediations=None,
-            nems_sequence=None,
+            nems_connections=nems_connections,
+            nems_mediations=nems_mediations,
+            nems_sequence=nems_sequence,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            perturbations=None,
-            forcings=forcing_configurations,
+            perturbations=perturbations,
+            forcings=forcings,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -300,8 +370,8 @@ def main():
             modeled_timestep=modeled_timestep,
             tidal_spinup_duration=tidal_spinup_duration,
             platform=platform,
-            perturbations=None,
-            forcings=forcing_configurations,
+            perturbations=perturbations,
+            forcings=forcings,
             adcirc_processors=adcirc_processors,
             slurm_partition=None,
             slurm_job_duration=job_duration,
@@ -316,9 +386,19 @@ def main():
         directory=output_directory, overwrite=overwrite,
     )
 
-    if generate_script:
-        generation_script = ADCIRCGenerationScript()
-        generation_script.write(filename=output_directory, overwrite=overwrite)
+    if click.confirm('generate configuration?', default=False):
+        starting_directory = Path.cwd()
+        if output_directory != starting_directory:
+            os.chdir(output_directory)
+        generate_adcirc_configuration(
+            configuration_directory=output_directory,
+            output_directory=output_directory,
+            relative_paths=not absolute_paths,
+            overwrite=True,
+            verbose=verbose,
+        )
+        if output_directory != starting_directory:
+            os.chdir(starting_directory)
 
 
 def get_argument(
@@ -338,6 +418,10 @@ def get_argument(
         value = None
 
     return value
+
+
+def main():
+    initialize_adcirc(**parse_initialize_adcirc_arguments())
 
 
 if __name__ == '__main__':

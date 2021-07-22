@@ -423,6 +423,8 @@ class NEMSJSON(ConfigurationJSON):
 
         if len(self['sequence']) > 0:
             modeling_system.sequence = self['sequence']
+        else:
+            self['sequence'] = modeling_system.sequence
 
         return modeling_system
 
