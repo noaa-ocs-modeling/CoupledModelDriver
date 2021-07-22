@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from adcircpy import TidalSource
 import click
@@ -45,10 +45,15 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def parse_initialize_adcirc_arguments(extra_arguments: [str] = None) -> {str: Any}:
+def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {str: Any}:
     if extra_arguments is None:
-        extra_arguments = []
-    extra_arguments = [extra_argument.strip('-') for extra_argument in extra_arguments]
+        extra_arguments = {}
+    elif not isinstance(extra_arguments, Mapping):
+        extra_arguments = {extra_argument: None for extra_argument in extra_arguments}
+    extra_arguments = {
+        extra_argument.strip('-'): extra_arguments[extra_argument]
+        for extra_argument in extra_arguments
+    }
 
     argument_parser = ArgumentParser()
 
@@ -117,6 +122,13 @@ def parse_initialize_adcirc_arguments(extra_arguments: [str] = None) -> {str: An
 
     arguments, unknown_arguments = argument_parser.parse_known_args()
 
+    extra_arguments = {
+        extra_argument: convert_value(
+            arguments.get(extra_argument), extra_arguments[extra_argument]
+        )
+        for extra_argument in extra_arguments
+    }
+
     platform = convert_value(arguments.platform, Platform)
     mesh_directory = convert_value(arguments.mesh_directory, Path).resolve().absolute()
 
@@ -142,7 +154,9 @@ def parse_initialize_adcirc_arguments(extra_arguments: [str] = None) -> {str: An
     job_duration = convert_value(arguments.job_duration, timedelta)
     output_directory = convert_value(arguments.output_directory, Path).resolve().absolute()
 
+    absolute_paths = arguments.absolute_paths
     overwrite = not arguments.skip_existing
+    verbose = arguments.verbose
 
     arguments = {}
     unrecognized_arguments = []
@@ -284,13 +298,10 @@ def parse_initialize_adcirc_arguments(extra_arguments: [str] = None) -> {str: An
         'adcirc_processors': adcirc_processors,
         'job_duration': job_duration,
         'output_directory': output_directory,
-        'absolute_paths': arguments.absolute_paths,
+        'absolute_paths': absolute_paths,
         'overwrite': overwrite,
-        'verbose': arguments.verbose,
-        **{
-            extra_argument: arguments.get(f'--{extra_argument}')
-            for extra_argument in extra_arguments
-        },
+        'verbose': verbose,
+        **{extra_argument: value for extra_argument, value in extra_arguments.items()},
     }
 
 
