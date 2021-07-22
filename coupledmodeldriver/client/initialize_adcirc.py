@@ -45,7 +45,11 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def parse_initialize_adcirc_arguments() -> {str: Any}:
+def parse_initialize_adcirc_arguments(extra_arguments: [str] = None) -> {str: Any}:
+    if extra_arguments is None:
+        extra_arguments = []
+    extra_arguments = [extra_argument.strip('-') for extra_argument in extra_arguments]
+
     argument_parser = ArgumentParser()
 
     argument_parser.add_argument(
@@ -108,7 +112,10 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
         '--verbose', action='store_true', help='show more verbose log messages'
     )
 
-    arguments, extra_arguments = argument_parser.parse_known_args()
+    for extra_argument in extra_arguments:
+        argument_parser.add_argument(f'--{extra_argument}')
+
+    arguments, unknown_arguments = argument_parser.parse_known_args()
 
     platform = convert_value(arguments.platform, Platform)
     mesh_directory = convert_value(arguments.mesh_directory, Path).resolve().absolute()
@@ -139,15 +146,15 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
 
     arguments = {}
     unrecognized_arguments = []
-    for index in range(len(extra_arguments)):
-        argument = extra_arguments[index]
+    for index in range(len(unknown_arguments)):
+        argument = unknown_arguments[index]
         value = None
         if argument.startswith('-'):
             parsed_argument = argument.strip('-').strip()
-            if len(extra_arguments) > index + 1 and not extra_arguments[index + 1].startswith(
-                '-'
-            ):
-                value = extra_arguments[index + 1].strip()
+            if len(unknown_arguments) > index + 1 and not unknown_arguments[
+                index + 1
+            ].startswith('-'):
+                value = unknown_arguments[index + 1].strip()
             forcing = parsed_argument.split('-')[0]
             if forcing not in forcings:
                 if forcing.lower() in FORCING_NAMES:
@@ -159,7 +166,7 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
     if len(unrecognized_arguments) > 0:
         argument_parser.error(f'unrecognized arguments: {" ".join(unrecognized_arguments)}')
 
-    extra_arguments = arguments
+    unknown_arguments = arguments
     del arguments
 
     tidal_spinup_duration = None
@@ -173,7 +180,7 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
             if issubclass(forcing_configuration_class, TidalForcingJSON):
                 tidal_spinup_duration = get_argument(
                     argument=f'tidal-spinup-duration',
-                    arguments=extra_arguments,
+                    arguments=unknown_arguments,
                     required=True,
                     message=f'enter tidal spinup duration (`HH:MM:SS`): ',
                 )
@@ -186,7 +193,7 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
                 )
                 tidal_source = get_argument(
                     argument=f'tidal-source',
-                    arguments=extra_arguments,
+                    arguments=unknown_arguments,
                     required=True,
                     message=f'enter tidal forcing source ({tidal_source_options}): ',
                 )
@@ -195,7 +202,7 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
                 else:
                     tidal_source = DEFAULT_TIDAL_SOURCE
                 tidal_constituents = get_argument(
-                    argument='tidal-constituents', arguments=extra_arguments,
+                    argument='tidal-constituents', arguments=unknown_arguments,
                 )
                 if tidal_constituents is not None:
                     tidal_constituents = [
@@ -208,49 +215,49 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
             if issubclass(forcing_configuration_class, BestTrackForcingJSON):
                 best_track_storm_id = get_argument(
                     argument='besttrack-storm-id',
-                    arguments=extra_arguments,
+                    arguments=unknown_arguments,
                     required=True,
                     message='enter storm ID for best track: ',
                 )
                 kwargs['storm_id'] = best_track_storm_id
                 best_track_start_date = get_argument(
-                    argument='besttrack-start-date', arguments=extra_arguments,
+                    argument='besttrack-start-date', arguments=unknown_arguments,
                 )
                 kwargs['start_date'] = best_track_start_date
                 best_track_end_date = get_argument(
-                    argument='besttrack-end-date', arguments=extra_arguments,
+                    argument='besttrack-end-date', arguments=unknown_arguments,
                 )
                 kwargs['end_date'] = best_track_end_date
 
             if issubclass(forcing_configuration_class, FileForcingJSON):
                 forcing_path = get_argument(
-                    argument=f'{provided_name}-path', arguments=extra_arguments,
+                    argument=f'{provided_name}-path', arguments=unknown_arguments,
                 )
                 kwargs['resource'] = forcing_path
             if issubclass(forcing_configuration_class, NEMSCapJSON):
                 nems_cap_processors = get_argument(
-                    argument=f'{provided_name}-processors', arguments=extra_arguments,
+                    argument=f'{provided_name}-processors', arguments=unknown_arguments,
                 )
                 kwargs['processors'] = nems_cap_processors
                 nems_cap_parameters = get_argument(
-                    argument=f'{provided_name}-nems-parameters', arguments=extra_arguments,
+                    argument=f'{provided_name}-nems-parameters', arguments=unknown_arguments,
                 )
                 kwargs['nems_parameters'] = nems_cap_parameters
             if issubclass(forcing_configuration_class, TimestepForcingJSON):
                 forcing_timestep = get_argument(
-                    argument=f'{provided_name}-modeled_timestep', arguments=extra_arguments,
+                    argument=f'{provided_name}-modeled_timestep', arguments=unknown_arguments,
                 )
                 if forcing_timestep is None:
                     forcing_timestep = modeled_timestep
                 kwargs['modeled_timestep'] = forcing_timestep
             if issubclass(forcing_configuration_class, WindForcingJSON):
                 forcing_nws = get_argument(
-                    argument=f'{provided_name}-nws', arguments=extra_arguments,
+                    argument=f'{provided_name}-nws', arguments=unknown_arguments,
                 )
                 kwargs['nws'] = forcing_nws
             if issubclass(forcing_configuration_class, WaveForcingJSON):
                 forcing_nrs = get_argument(
-                    argument=f'{provided_name}-nrs', arguments=extra_arguments,
+                    argument=f'{provided_name}-nrs', arguments=unknown_arguments,
                 )
                 kwargs['nrs'] = forcing_nrs
 
@@ -280,6 +287,10 @@ def parse_initialize_adcirc_arguments() -> {str: Any}:
         'absolute_paths': arguments.absolute_paths,
         'overwrite': overwrite,
         'verbose': arguments.verbose,
+        **{
+            extra_argument: arguments.get(f'--{extra_argument}')
+            for extra_argument in extra_arguments
+        },
     }
 
 
