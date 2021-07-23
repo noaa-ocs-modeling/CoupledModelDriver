@@ -46,10 +46,10 @@ initialize_adcirc \
     --modeled-duration 14:06:00:00 \
     --modeled-timestep 00:00:02 \
     --nems-interval 01:00:00 \
-    --adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x \
+    --adcirc-executable /scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ALLBIN_INSTALL/NEMS-adcirc-atmesh-ww3data.x \
     --adcirc-processors 40
-    --adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep \
-    --modulefile /scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera \
+    --adcprep-executable /scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ADCIRC/ALLBIN_INSTALL/adcprep \
+    --modulefile /scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/modulefiles/envmodules_intel.hera \
     --forcings tidal,atmesh,ww3data \
     --tidal-source TPXO \
     --tidal-path /scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc \
@@ -101,9 +101,9 @@ NEMS_SEQUENCE = [
 # platform-specific parameters
 PLATFORM = Platform.HERA
 ADCIRC_PROCESSORS = 1 * PLATFORM.value['processors_per_node']
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/NEMS/exe/NEMS.x'
-ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/ADCIRC/work/adcprep'
-MODULEFILE = '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera'
+NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ALLBIN_INSTALL/NEMS-adcirc-atmesh-ww3data.x'
+ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ALLBIN_INSTALL/adcprep'
+MODULEFILE = '/scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/modulefiles/envmodules_intel.hera'
 SLURM_JOB_DURATION = timedelta(hours=6)
 
 if __name__ == '__main__':
@@ -155,13 +155,13 @@ configuration files:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
-┣ ✎ configure_modeldriver.json
-┣ ✎ configure_nems.json
-┣ ✎ configure_slurm.json
-┣ ✎ configure_adcirc.json
-┣ ✎ configure_tidal_forcing.json
-┣ ✎ configure_atmesh.json
-┗ ✎ configure_ww3data.json
+┣ 📜 configure_adcirc.json
+┣ 📜 configure_atmesh.json
+┣ 📜 configure_modeldriver.json
+┣ 📜 configure_nems.json
+┣ 📜 configure_slurm.json
+┣ 📜 configure_tidal_forcing.json
+┗ 📜 configure_ww3data.json
 ```
 
 These files contain relevant configuration values for an ADCIRC run. You will likely wish to change these values to alter the
@@ -180,49 +180,39 @@ The resulting configuration will have the following structure:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
-┣ ✎ configure_modeldriver.json
-┣ ✎ configure_nems.json
-┣ ✎ configure_slurm.json
-┣ ✎ configure_adcirc.json
-┣ ✎ configure_tidal_forcing.json
-┣ ✎ configure_atmesh.json
-┣ ✎ configure_ww3data.json
-┣ 📂 coldstart/
+┣ 📜 configure_adcirc.json
+┣ 📜 configure_atmesh.json
+┣ 📜 configure_modeldriver.json
+┣ 📜 configure_nems.json
+┣ 📜 configure_slurm.json
+┣ 📜 configure_tidal_forcing.json
+┣ 📜 configure_ww3data.json
+┣ 📂 spinup/
 ┃  ┣ 📜 fort.13
 ┃  ┣ 🔗 fort.14 -> ../fort.14
 ┃  ┣ 📜 fort.15
-┃  ┣ 🔗 nems.configure -> ../nems.configure.coldstart
-┃  ┣ 🔗 config.rc -> ../config.rc.coldstart
-┃  ┣ 🔗 model_configure -> ../model_configure.coldstart
-┃  ┣ 🔗 adcprep.job -> ../job_adcprep_hera.job
-┃  ┣ 🔗 adcirc.job -> ../job_adcirc_hera.job.coldstart
-┃  ┗ 🔗 setup.sh -> ../setup.sh.coldstart
+┃  ┣ 📜 nems.configure
+┃  ┣ 📜 model_configure
+┃  ┣ 🔗 atm_namelist.rc -> ./model_configure
+┃  ┣ 📜 config.rc
+┃  ┣ 📜 setup.job
+┃  ┗ 📜 adcirc.job
 ┣ 📂 runs/
-┃  ┗ 📂 run_1/
+┃  ┗ 📂 unperturbed/
 ┃    ┣ 📜 fort.13
 ┃    ┣ 🔗 fort.14 -> ../../fort.14
 ┃    ┣ 📜 fort.15
-┃    ┣ 🔗 fort.67.nc -> ../../coldstart/fort.67.nc
-┃    ┣ 🔗 nems.configure -> ../../nems.configure.hotstart
-┃    ┣ 🔗 config.rc -> ../../config.rc.hotstart
-┃    ┣ 🔗 model_configure -> ../../model_configure.hotstart
-┃    ┣ 🔗 adcprep.job -> ../../job_adcprep_hera.job
-┃    ┣ 🔗 adcirc.job -> ../../job_adcirc_hera.job.hotstart
-┃    ┗ 🔗 setup.sh -> ../../setup.sh.hotstart
+┃    ┣ 🔗 fort.67.nc -> ../../spinup/fort.67.nc
+┃    ┣ 🔗 fort.68.nc -> ../../spinup/fort.68.nc
+┃    ┣ 📜 nems.configure
+┃    ┣ 📜 model_configure
+┃    ┣ 🔗 atm_namelist.rc -> ./model_configure
+┃    ┣ 📜 config.rc
+┃    ┣ 📜 setup.job
+┃    ┗ 📜 adcirc.job
 ┣ 📜 fort.14
-┣ 📜 nems.configure.coldstart
-┣ 📜 nems.configure.hotstart
-┣ 📜 config.rc.coldstart
-┣ 📜 config.rc.hotstart
-┣ 📜 model_configure.coldstart
-┣ 📜 model_configure.hotstart
-┣ 📜 job_adcprep_hera.job
-┣ 📜 job_adcirc_hera.job.coldstart
-┣ 📜 job_adcirc_hera.job.hotstart
-┣ 📜 setup.sh.coldstart
-┣ 📜 setup.sh.hotstart
 ┣ 📜 cleanup.sh
-┗  ▶ run_hera.sh
+┗ 📜 run_hera.sh
 ```
 
 ### 3. run the model
@@ -230,17 +220,17 @@ The resulting configuration will have the following structure:
 Run the following to submit the model run to the Slurm job queue:
 
 ```bash
-sh run_hera.sh
+./run_hera.sh
 ``` 
 
 The queue will have the following jobs added:
 
 ```
-   JOBID CPU NODE WORK_DIR                                                              NAME
-18427286 1   1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/spinup              ADCIRC_MESH_PREP
-18427287 13  1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/spinup              ADCIRC_SPINUP
-18427288 1   1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/runs/unperturbed    ADCIRC_MESH_PREP
-18427289 13  1    ./hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/runs/unperturbed    ADCIRC_HOTSTART
+   JOBID CPU NODE DEPENDENCY       NODELIST(REA NAME
+20967647 1   1    (null)           (None)       ADCIRC_SETUP_SPINUP
+20967648 40  1    afterok:20967647 (Dependency) ADCIRC_COLDSTART_SPINUP
+20967649 1   1    (null)           (None)       ADCIRC_SETUP_unperturbed
+20967650 42  2    afterok:20967649 (Dependency) ADCIRC_HOTSTART_unperturbed
 ```
 
 ## Command-line interface
