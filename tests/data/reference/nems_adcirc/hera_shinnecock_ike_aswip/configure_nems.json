@@ -3,10 +3,6 @@
   "modeled_start_time": "2008-09-01 06:00:00",
   "modeled_end_time": "2008-09-15 06:00:00",
   "interval": 3600.0,
-  "models": [
-    "OCN_model:                      adcirc\nOCN_petlist_bounds:             1 600\nOCN_attributes::\n  Verbosity = off\n::",
-    "WAV_model:                      ww3data\nWAV_petlist_bounds:             0 0\nWAV_attributes::\n  Verbosity = off\n::"
-  ],
   "connections": [
     [
       "WAV -> OCN"

@@ -78,13 +78,12 @@ def test_nems():
         modeled_start_time=datetime(2012, 10, 22, 6),
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
         interval=timedelta(hours=1),
-        models=model_entries,
         connections=connections,
         mediations=mediations,
         sequence=sequence,
     )
 
-    modeling_system = configuration.nemspy_modeling_system
+    modeling_system = configuration.to_nemspy(model_entries)
 
     assert modeling_system.sequence == [
         'ATM -> OCN   :remapMethod=redist',

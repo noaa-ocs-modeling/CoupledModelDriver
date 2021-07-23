@@ -263,10 +263,11 @@ async def write_spinup_directory(
 
     spinup_adcircpy_driver = spinup_configuration.adcircpy_driver
 
-    spinup_configuration.relative_to(spinup_directory, inplace=True)
+    if relative_paths:
+        spinup_configuration.relative_to(spinup_directory, inplace=True)
 
     if use_nems:
-        spinup_nems = spinup_configuration['nems'].nemspy_modeling_system
+        spinup_nems = spinup_configuration.nemspy_modeling_system
         spinup_nems = ModelingSystem(
             spinup_nems.start_time - spinup_duration,
             spinup_nems.start_time,
@@ -415,10 +416,11 @@ async def write_run_directory(
 
     run_adcircpy_driver = run_configuration.adcircpy_driver
 
-    run_configuration.relative_to(run_directory, inplace=True)
+    if relative_paths:
+        run_configuration.relative_to(run_directory, inplace=True)
 
     if use_nems:
-        run_nems = run_configuration['nems'].nemspy_modeling_system
+        run_nems = run_configuration.nemspy_modeling_system
         run_processors = run_nems.processors
         run_model_executable = run_configuration['nems']['executable_path']
     else:

@@ -6,6 +6,7 @@ from typing import Any
 
 from adcircpy import AdcircMesh, AdcircRun
 from nemspy import ModelingSystem
+from nemspy.model.base import ModelEntry
 
 from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
@@ -273,7 +274,6 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             interval=nems_interval,
-            models=self.nemspy_entries,
             connections=nems_connections,
             mediations=nems_mediations,
             sequence=nems_sequence,
@@ -284,17 +284,23 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         for forcing in forcings:
             self.add_forcing(forcing)
 
-        self['slurm'].tasks = self['nems'].nemspy_modeling_system.processors
+        self['slurm'].tasks = self.nemspy_modeling_system.processors
+
+    @property
+    def nemspy_entries(self) -> [ModelEntry]:
+        return [
+            configuration.nemspy_entry
+            for configuration in self.configurations
+            if isinstance(configuration, NEMSCapJSON)
+        ]
 
     @property
     def nemspy_modeling_system(self) -> ModelingSystem:
-        return self['nems'].nemspy_modeling_system
+        return self['nems'].to_nemspy(self.nemspy_entries)
 
     def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
             forcing = self[self.add(forcing)]
-            if isinstance(forcing, NEMSCapJSON):
-                self['nems']['models'].append(forcing.nemspy_entry)
             self['adcirc'].add_forcing(forcing)
 
     def __copy__(self) -> 'NEMSADCIRCRunConfiguration':
@@ -338,6 +344,4 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
             supplementary = set()
         supplementary.update(NEMSADCIRCRunConfiguration.SUPPLEMENTARY)
 
-        instance = super().read_directory(directory, required, supplementary)
-        instance['nems']['models'] = instance.nemspy_entries
-        return instance
+        return super().read_directory(directory, required, supplementary)

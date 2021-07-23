@@ -4,9 +4,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Collection, Mapping, Union
 
-from nemspy.model.base import ModelEntry
-
-from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON
 from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
 from coupledmodeldriver.utilities import LOGGER
 
@@ -52,14 +50,6 @@ class RunConfiguration(ABC):
             }
         for name, configuration in configurations.items():
             self[name] = configuration
-
-    @property
-    def nemspy_entries(self) -> [ModelEntry]:
-        return [
-            configuration.nemspy_entry
-            for configuration in self.__configurations.values()
-            if isinstance(configuration, NEMSCapJSON)
-        ]
 
     def move_paths(self, relative: PathLike):
         for configuration in self.configurations:

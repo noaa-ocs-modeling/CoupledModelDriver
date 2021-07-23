@@ -8,18 +8,12 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Union
 
 from adcircpy.server import SlurmConfig
-import nemspy
 from nemspy import ModelingSystem
-from nemspy.model.base import ModelEntry, ModelMeshEntry
+from nemspy.model.base import ModelEntry
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import SlurmEmailType
 from coupledmodeldriver.utilities import convert_to_json, convert_value, LOGGER
-
-NEMS_MODEL_ENTRIES = [
-    *(cls for name, cls in nemspy.model.__dict__.items() if isinstance(cls, type)),
-    ModelEntry,
-]
 
 
 class ConfigurationJSON(ABC):
@@ -67,7 +61,7 @@ class ConfigurationJSON(ABC):
 
         for name, value in self.configuration.items():
             if isinstance(value, Path) and not value.is_absolute():
-                self[name] = PurePosixPath(move_path(value, relative))
+                self[name] = PurePosixPath(move_path(value, relative).resolve())
 
     def relative_to(self, path: PathLike, inplace: bool = False) -> 'ConfigurationJSON':
         instance = copy(self) if not inplace else self
@@ -371,154 +365,6 @@ class AttributeJSON(ConfigurationJSON):
         self['attributes'] = attributes
 
 
-class NEMSJSON(ConfigurationJSON):
-    name = 'NEMS'
-    default_filename = f'configure_nems.json'
-    field_types = {
-        'executable_path': Path,
-        'modeled_start_time': datetime,
-        'modeled_end_time': datetime,
-        'interval': timedelta,
-        'models': [ModelEntry],
-        'connections': [[str]],
-        'mediations': [str],
-        'sequence': [str],
-    }
-
-    def __init__(
-        self,
-        executable_path: PathLike,
-        modeled_start_time: datetime,
-        modeled_end_time: datetime,
-        interval: timedelta = None,
-        models: [ModelEntry] = None,
-        connections: [[str]] = None,
-        mediations: [[str]] = None,
-        sequence: [str] = None,
-        **kwargs,
-    ):
-        if 'fields' not in kwargs:
-            kwargs['fields'] = {}
-        kwargs['fields'].update(NEMSJSON.field_types)
-
-        ConfigurationJSON.__init__(self, **kwargs)
-
-        self['executable_path'] = executable_path
-        self['modeled_start_time'] = modeled_start_time
-        self['modeled_end_time'] = modeled_end_time
-        self['interval'] = interval
-        self['models'] = models
-        self['connections'] = connections
-        self['mediations'] = mediations
-        self['sequence'] = sequence
-
-    @property
-    def nemspy_modeling_system(self) -> ModelingSystem:
-        modeling_system = ModelingSystem(
-            start_time=self['modeled_start_time'],
-            end_time=self['modeled_end_time'],
-            interval=self['interval'],
-            **{model.model_type.value.lower(): model for model in self['models']},
-        )
-        for connection in self['connections']:
-            modeling_system.connect(*connection)
-        for mediation in self['mediations']:
-            modeling_system.mediate(*mediation)
-
-        if len(self['sequence']) > 0:
-            modeling_system.sequence = self['sequence']
-        else:
-            self['sequence'] = modeling_system.sequence
-
-        return modeling_system
-
-    def move_paths(self, relative: PathLike):
-        super().move_paths(relative)
-        for model in self['models']:
-            if isinstance(model, ModelMeshEntry):
-                model.filename = move_path(model.filename, relative)
-
-    def relative_to(self, path: PathLike, inplace: bool = False) -> 'NEMSJSON':
-        instance = super().relative_to(path, inplace)
-        for model in instance['models']:
-            if isinstance(model, ModelMeshEntry):
-                model.filename = Path(os.path.relpath(model.filename, path))
-        return instance
-
-    def to_nemspy(self) -> ModelingSystem:
-        return self.nemspy_modeling_system
-
-    @classmethod
-    def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
-        if executable_path is None:
-            executable_path = 'NEMS.x'
-        return cls(
-            executable_path=executable_path,
-            modeled_start_time=modeling_system.start_time,
-            modeled_end_time=modeling_system.end_time,
-            interval=modeling_system.interval,
-            models=modeling_system.models,
-            connections=modeling_system.connections,
-            sequence=modeling_system.sequence,
-        )
-
-    @classmethod
-    def from_string(cls, string: str) -> 'NEMSJSON':
-        configuration = json.loads(string)
-
-        if 'models' in configuration:
-            if configuration['models'] is not None:
-                for index, value in enumerate(configuration['models']):
-                    for model_entry_type in NEMS_MODEL_ENTRIES:
-                        try:
-                            value = model_entry_type.from_string(value)
-                            configuration['models'][index] = value
-                            break
-                        except:
-                            pass
-
-        configuration = {
-            key.lower(): convert_value(value, cls.field_types[key])
-            if key in cls.field_types
-            else convert_to_json(value)
-            for key, value in configuration.items()
-        }
-
-        return cls.from_dict(configuration)
-
-    @classmethod
-    def from_file(cls, filename: PathLike) -> 'NEMSJSON':
-        if not isinstance(filename, Path):
-            filename = Path(filename)
-
-        if filename.is_dir():
-            filename = filename / cls.default_filename
-
-        with open(filename) as file:
-            LOGGER.debug(f'reading file "{os.path.relpath(filename.resolve(), Path.cwd())}"')
-            configuration = json.load(file)
-
-        if 'models' in configuration:
-            if configuration['models'] is not None:
-                for index, value in enumerate(configuration['models']):
-                    for model_entry_type in NEMS_MODEL_ENTRIES:
-                        try:
-                            value = model_entry_type.from_string(value)
-                            configuration['models'][index] = value
-                            break
-                        except:
-                            pass
-
-        configuration = {
-            key.lower(): convert_value(value, cls.field_types[key])
-            if key in cls.field_types
-            else convert_to_json(value)
-            for key, value in configuration.items()
-        }
-
-        return cls.from_dict(configuration)
-
-
 class NEMSCapJSON(ConfigurationJSON, ABC):
     default_processors: int
     field_types = {
@@ -543,6 +389,81 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
     @abstractmethod
     def nemspy_entry(self) -> ModelEntry:
         raise NotImplementedError()
+
+
+class NEMSJSON(ConfigurationJSON):
+    name = 'NEMS'
+    default_filename = f'configure_nems.json'
+    field_types = {
+        'executable_path': Path,
+        'modeled_start_time': datetime,
+        'modeled_end_time': datetime,
+        'interval': timedelta,
+        'connections': [[str]],
+        'mediations': [str],
+        'sequence': [str],
+    }
+
+    def __init__(
+        self,
+        executable_path: PathLike,
+        modeled_start_time: datetime,
+        modeled_end_time: datetime,
+        interval: timedelta = None,
+        connections: [[str]] = None,
+        mediations: [[str]] = None,
+        sequence: [str] = None,
+        **kwargs,
+    ):
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(NEMSJSON.field_types)
+
+        ConfigurationJSON.__init__(self, **kwargs)
+
+        self['executable_path'] = executable_path
+        self['modeled_start_time'] = modeled_start_time
+        self['modeled_end_time'] = modeled_end_time
+        self['interval'] = interval
+        self['connections'] = connections
+        self['mediations'] = mediations
+        self['sequence'] = sequence
+
+    def to_nemspy(self, models: [NEMSCapJSON]) -> ModelingSystem:
+        models = [
+            model.nemspy_entry if isinstance(model, NEMSCapJSON) else model for model in models
+        ]
+        modeling_system = ModelingSystem(
+            start_time=self['modeled_start_time'],
+            end_time=self['modeled_end_time'],
+            interval=self['interval'],
+            **{model.model_type.value.lower(): model for model in models},
+        )
+        for connection in self['connections']:
+            modeling_system.connect(*connection)
+        for mediation in self['mediations']:
+            modeling_system.mediate(*mediation)
+
+        if len(self['sequence']) > 0:
+            modeling_system.sequence = self['sequence']
+        else:
+            self['sequence'] = modeling_system.sequence
+
+        return modeling_system
+
+    @classmethod
+    def from_nemspy(cls, modeling_system: ModelingSystem, executable_path: PathLike = None):
+        if executable_path is None:
+            executable_path = 'NEMS.x'
+        return cls(
+            executable_path=executable_path,
+            modeled_start_time=modeling_system.start_time,
+            modeled_end_time=modeling_system.end_time,
+            interval=modeling_system.interval,
+            models=modeling_system.models,
+            connections=modeling_system.connections,
+            sequence=modeling_system.sequence,
+        )
 
 
 def move_path(path: PathLike, move: Union[PathLike, int]) -> Path:
