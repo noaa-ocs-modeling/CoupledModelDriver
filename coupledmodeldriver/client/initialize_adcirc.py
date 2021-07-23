@@ -23,10 +23,7 @@ from coupledmodeldriver.configure.forcings.base import (
     WaveForcingJSON,
     WindForcingJSON,
 )
-from coupledmodeldriver.generate import (
-    ADCIRCRunConfiguration,
-    NEMSADCIRCRunConfiguration,
-)
+from coupledmodeldriver.generate import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration
 from coupledmodeldriver.utilities import convert_value
 
 

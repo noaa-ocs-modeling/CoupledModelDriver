@@ -150,7 +150,7 @@ class ConfigurationJSON(ABC):
             filename = filename / cls.default_filename
 
         with open(filename) as file:
-            LOGGER.debug(f'reading file "{filename}"')
+            LOGGER.debug(f'reading file "{os.path.relpath(filename.resolve(), Path.cwd())}"')
             try:
                 configuration = json.load(file)
             except Exception as error:
@@ -199,10 +199,14 @@ class ConfigurationJSON(ABC):
 
         if overwrite or not filename.exists():
             with open(filename.absolute(), 'w') as file:
-                LOGGER.debug(f'writing to file "{filename}"')
+                LOGGER.debug(
+                    f'writing to file "{os.path.relpath(filename.resolve(), Path.cwd())}"'
+                )
                 json.dump(configuration, file, indent=2)
         else:
-            LOGGER.debug(f'skipping existing file "{filename}"')
+            LOGGER.debug(
+                f'skipping existing file "{os.path.relpath(filename.resolve(), Path.cwd())}"'
+            )
 
 
 class SlurmJSON(ConfigurationJSON):
@@ -491,7 +495,7 @@ class NEMSJSON(ConfigurationJSON):
             filename = filename / cls.default_filename
 
         with open(filename) as file:
-            LOGGER.debug(f'reading file "{filename}"')
+            LOGGER.debug(f'reading file "{os.path.relpath(filename.resolve(), Path.cwd())}"')
             configuration = json.load(file)
 
         if 'models' in configuration:

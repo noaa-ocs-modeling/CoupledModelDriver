@@ -117,12 +117,16 @@ def generate_adcirc_configuration(
         use_aswip = False
 
     if use_original_mesh:
-        LOGGER.info(f'using original mesh from "{original_fort14_filename}"')
+        LOGGER.info(
+            f'using original mesh from "{os.path.relpath(original_fort14_filename.resolve(), Path.cwd())}"'
+        )
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, local_fort13_filename)
         create_symlink(original_fort14_filename, local_fort14_filename)
     else:
-        LOGGER.info(f'rewriting original mesh to "{local_fort14_filename}"')
+        LOGGER.info(
+            f'rewriting original mesh to "{os.path.relpath(local_fort14_filename.resolve(), Path.cwd())}"'
+        )
         adcircpy_driver = base_configuration.adcircpy_driver
         try:
             adcircpy_driver.write(
@@ -176,7 +180,9 @@ def generate_adcirc_configuration(
 
     perturbations = base_configuration.perturb()
 
-    LOGGER.info(f'generating {len(perturbations)} run configuration(s) in "{runs_directory}"')
+    LOGGER.info(
+        f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
+    )
     for run_name, run_configuration in perturbations.items():
         event_loop.create_task(
             write_run_directory(
@@ -204,12 +210,16 @@ def generate_adcirc_configuration(
         )
 
     cleanup_script = EnsembleCleanupScript()
-    LOGGER.debug(f'writing cleanup script "{ensemble_cleanup_script_filename.name}"')
+    LOGGER.debug(
+        f'writing cleanup script "{os.path.relpath(ensemble_cleanup_script_filename.resolve(), Path.cwd())}"'
+    )
     cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
 
     event_loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(event_loop)))
 
-    LOGGER.info(f'writing ensemble run script "{ensemble_run_script_filename.name}"')
+    LOGGER.info(
+        f'writing ensemble run script "{os.path.relpath(ensemble_run_script_filename.resolve(), Path.cwd())}"'
+    )
     run_job_script = EnsembleRunScript(
         platform=platform,
         commands=[
@@ -335,15 +345,16 @@ async def write_spinup_directory(
     if use_nems:
         LOGGER.debug(f'setting spinup to {spinup_duration}')
 
-        spinup_nems_filenames = spinup_nems.write(
+        spinup_nems.write(
             spinup_directory, overwrite=overwrite, include_version=True,
         )
-        spinup_nems_filenames = (f'"{filename.name}"' for filename in spinup_nems_filenames)
         LOGGER.info(
-            f'writing NEMS coldstart configuration: {", ".join(spinup_nems_filenames)}'
+            f'writing NEMS coldstart configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
         )
 
-    LOGGER.debug(f'writing tidal spinup configuration to "{spinup_directory}"')
+    LOGGER.debug(
+        f'writing tidal spinup configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
+    )
     try:
         spinup_adcircpy_driver.write(
             spinup_directory,
@@ -395,7 +406,9 @@ async def write_run_directory(
 
     if not run_directory.exists():
         run_directory.mkdir(parents=True, exist_ok=True)
-    LOGGER.debug(f'writing run configuration to "{run_directory}"')
+    LOGGER.debug(
+        f'writing run configuration to "{os.path.relpath(run_directory.resolve(), Path.cwd())}"'
+    )
 
     setup_job_name = f'ADCIRC_SETUP_{run_name}'
     run_job_name = f'ADCIRC_{run_phase}_{run_name}'
@@ -471,11 +484,12 @@ async def write_run_directory(
     run_job_script.write(run_job_script_filename, overwrite=overwrite)
 
     if use_nems:
-        run_nems_filenames = run_nems.write(
+        run_nems.write(
             run_directory, overwrite=overwrite, include_version=True,
         )
-        run_nems_filenames = (f'"{filename.name}"' for filename in run_nems_filenames)
-        LOGGER.info(f'writing NEMS hotstart configuration: {", ".join(run_nems_filenames)}')
+        LOGGER.info(
+            f'writing NEMS hotstart configuration to "{os.path.relpath(run_directory.resolve(), Path.cwd())}"'
+        )
 
     try:
         run_adcircpy_driver.write(

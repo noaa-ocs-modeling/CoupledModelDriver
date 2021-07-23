@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 from os import PathLike
 from pathlib import Path
 from typing import Any
@@ -305,7 +306,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
-        LOGGER.info(f'opening mesh "{self["fort_14_path"].resolve()}"')
+        LOGGER.info(
+            f'opening mesh "{os.path.relpath(self["fort_14_path"].resolve(), Path.cwd())}"'
+        )
         mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
@@ -326,7 +329,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             mesh.add_forcing(adcircpy_forcing)
 
         if self['fort_13_path'] is not None:
-            LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
+            LOGGER.info(
+                f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+            )
             if self['fort_13_path'].exists():
                 mesh.import_nodal_attributes(self['fort_13_path'])
                 for attribute_name in mesh.get_nodal_attribute_names():
@@ -358,7 +363,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         )
 
         if self['stations_file_path'] is not None:
-            LOGGER.info(f'importing stations from "{self["stations_file_path"]}"')
+            LOGGER.info(
+                f'importing stations from "{os.path.relpath(self["stations_file_path"].resolve(), Path.cwd())}"'
+            )
             driver.import_stations(self['stations_file_path'])
 
         if self['modeled_timestep'] is not None:
