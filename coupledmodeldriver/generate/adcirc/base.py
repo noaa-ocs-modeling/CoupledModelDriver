@@ -340,7 +340,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
                     )
             else:
                 LOGGER.warning(
-                    f'mesh values (nodal attributes) not found at "{self["fort_13_path"]}"'
+                    f'mesh values (nodal attributes) not found at "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
                 )
 
         if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
