@@ -81,7 +81,6 @@ setup(
     setup_requires=['dunamai', 'setuptools>=41.2'],
     install_requires=[
         'adcircpy>=1.0.39',
-        'click',
         'filelock',
         'nemspy>=1.0.1',
         'numpy',

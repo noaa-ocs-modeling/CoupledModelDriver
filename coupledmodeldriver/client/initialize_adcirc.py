@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from adcircpy import TidalSource
-import click
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
@@ -26,7 +25,6 @@ from coupledmodeldriver.configure.forcings.base import (
 )
 from coupledmodeldriver.generate import (
     ADCIRCRunConfiguration,
-    generate_adcirc_configuration,
     NEMSADCIRCRunConfiguration,
 )
 from coupledmodeldriver.utilities import convert_value
@@ -389,20 +387,6 @@ def initialize_adcirc(
     configuration.write_directory(
         directory=output_directory, overwrite=overwrite,
     )
-
-    if click.confirm('generate configuration?', default=False):
-        starting_directory = Path.cwd()
-        if output_directory != starting_directory:
-            os.chdir(output_directory)
-        generate_adcirc_configuration(
-            configuration_directory=output_directory,
-            output_directory=output_directory,
-            relative_paths=not absolute_paths,
-            overwrite=True,
-            verbose=verbose,
-        )
-        if output_directory != starting_directory:
-            os.chdir(starting_directory)
 
 
 def get_argument(
