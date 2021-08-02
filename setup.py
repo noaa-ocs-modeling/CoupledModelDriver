@@ -1,4 +1,3 @@
-import importlib
 import logging
 import os
 from pathlib import Path
@@ -50,9 +49,7 @@ if (Path(sys.prefix) / 'conda-meta').exists() and len(missing_dependencies) > 0:
     missing_dependencies = missing_packages(DEPENDENCIES)
 
 if os.name == 'nt' and len(missing_dependencies) > 0:
-    try:
-        import pipwin
-    except:
+    if 'pipwin' not in installed_packages():
         subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
     subprocess.check_call([sys.executable, '-m', 'pipwin', 'refresh'])
 
@@ -60,9 +57,7 @@ if os.name == 'nt' and len(missing_dependencies) > 0:
         failed_pipwin_packages = []
         for _ in range(1 + len(subdependencies)):
             for package_name in [dependency] + subdependencies:
-                try:
-                    importlib.import_module(package_name)
-                except:
+                if package_name in missing_packages(DEPENDENCIES):
                     try:
                         subprocess.check_call(
                             [sys.executable, '-m', 'pipwin', 'install', package_name.lower()]
@@ -80,14 +75,13 @@ if os.name == 'nt' and len(missing_dependencies) > 0:
     missing_dependencies = missing_packages(DEPENDENCIES)
 
 try:
-    try:
-        from dunamai import Version
-    except ImportError:
+    if 'dunamai' not in installed_packages():
         import subprocess
         import sys
 
         subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
-        from dunamai import Version
+
+    from dunamai import Version
 
     version = Version.from_any_vcs().serialize()
 except RuntimeError as error:
