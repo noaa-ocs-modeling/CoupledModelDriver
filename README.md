@@ -76,7 +76,6 @@ optional arguments:
                         directory to which to write configuration files (defaults to `.`)
   --skip-existing       skip existing files
   --absolute-paths      write paths as absolute in configuration
-  --verbose             show more verbose log messages
 ```
 
 ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly

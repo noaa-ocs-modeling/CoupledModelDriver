@@ -108,9 +108,6 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
         action='store_true',
         help='write paths as absolute in configuration',
     )
-    argument_parser.add_argument(
-        '--verbose', action='store_true', help='show more verbose log messages'
-    )
 
     for extra_argument in extra_arguments:
         argument_parser.add_argument(f'--{extra_argument}')
@@ -153,7 +150,6 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
 
     absolute_paths = arguments.absolute_paths
     overwrite = not arguments.skip_existing
-    verbose = arguments.verbose
 
     arguments = {}
     unrecognized_arguments = []
@@ -297,7 +293,6 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
         'output_directory': output_directory,
         'absolute_paths': absolute_paths,
         'overwrite': overwrite,
-        'verbose': verbose,
         **{extra_argument: value for extra_argument, value in extra_arguments.items()},
     }
 
@@ -324,7 +319,6 @@ def initialize_adcirc(
     output_directory: os.PathLike = None,
     absolute_paths: bool = True,
     overwrite: bool = None,
-    verbose: bool = False,
 ):
     if not absolute_paths:
         mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
