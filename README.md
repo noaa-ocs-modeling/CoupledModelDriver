@@ -28,10 +28,9 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
     - Slurm
         - Hera
         - Stampede2
+        - Orion
 
 ## Usage
-
-Example scripts can be found in the `examples` folder
 
 ### 1. generate JSON configuration files
 
