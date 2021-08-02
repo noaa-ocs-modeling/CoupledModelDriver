@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from datetime import datetime, timedelta
 from enum import Enum
+import logging
 import os
 from pathlib import Path
 from typing import Any, Mapping
@@ -24,7 +25,7 @@ from coupledmodeldriver.configure.forcings.base import (
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration
-from coupledmodeldriver.utilities import convert_value
+from coupledmodeldriver.utilities import convert_value, get_logger
 
 
 class ForcingConfigurations(Enum):
@@ -108,6 +109,9 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
         action='store_true',
         help='write paths as absolute in configuration',
     )
+    argument_parser.add_argument(
+        '--verbose', action='store_true', help='show more verbose log messages'
+    )
 
     for extra_argument in extra_arguments:
         argument_parser.add_argument(f'--{extra_argument}')
@@ -150,6 +154,7 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
 
     absolute_paths = arguments.absolute_paths
     overwrite = not arguments.skip_existing
+    verbose = arguments.verbose
 
     arguments = {}
     unrecognized_arguments = []
@@ -293,6 +298,7 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
         'output_directory': output_directory,
         'absolute_paths': absolute_paths,
         'overwrite': overwrite,
+        'verbose': verbose,
         **{extra_argument: value for extra_argument, value in extra_arguments.items()},
     }
 
@@ -319,7 +325,12 @@ def initialize_adcirc(
     output_directory: os.PathLike = None,
     absolute_paths: bool = True,
     overwrite: bool = None,
+    verbose: bool = False,
 ):
+    logger = get_logger(
+        'initialize_adcirc', console_level=logging.INFO if verbose else logging.DEBUG
+    )
+
     if not absolute_paths:
         mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
         if modulefile is not None:
@@ -331,6 +342,14 @@ def initialize_adcirc(
         if aswip_executable is not None:
             aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
         output_directory = Path(os.path.relpath(output_directory, Path.cwd()))
+
+    components = ['ADCIRC']
+    if nems_interval is not None:
+        components.insert(0, 'NEMS')
+    if len(forcings) > 0:
+        components += [forcing.name for forcing in forcings]
+
+    logger.info(f'writing {"+".join(components)} configuration to "{output_directory}"')
 
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
@@ -374,6 +393,9 @@ def initialize_adcirc(
             aswip_executable=aswip_executable,
             source_filename=modulefile,
         )
+
+    for configuration_json in configuration:
+        logger.debug(repr(configuration_json))
 
     configuration.write_directory(
         directory=output_directory, overwrite=overwrite,
