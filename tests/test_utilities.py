@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
+import os
 
 from pyproj import CRS
 import pytest
@@ -119,78 +120,121 @@ def test_convert_value():
 
     assert none_1 is None
 
-    assert (
-        crs_1
-        == 'GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
-    )
-    assert crs_2 == 4326
-    assert crs_3 == {
-        '$schema': 'https://proj.org/schemas/v0.2/projjson.schema.json',
-        'type': 'GeographicCRS',
-        'name': 'WGS 84',
-        'datum_ensemble': {
-            'accuracy': '2.0',
-            'name': 'World Geodetic System 1984 ensemble',
-            'ellipsoid': {
-                'name': 'WGS 84',
-                'semi_major_axis': 6378137,
-                'inverse_flattening': 298.257223563,
+    if os.name == 'nt':
+        reference_crs_wkt = 'GEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+        reference_crs_json = {
+            '$schema': 'https://proj.org/schemas/v0.2/projjson.schema.json',
+            'area': 'World.',
+            'bbox': {
+                'east_longitude': 180,
+                'north_latitude': 90,
+                'south_latitude': -90,
+                'west_longitude': -180,
             },
-            'id': {'authority': 'EPSG', 'code': 6326,},
-            'members': [
-                {
-                    'id': {'authority': 'EPSG', 'code': 1166,},
-                    'name': 'World Geodetic System 1984 (Transit)',
+            'coordinate_system': {
+                'axis': [
+                    {
+                        'abbreviation': 'Lat',
+                        'direction': 'north',
+                        'name': 'Geodetic latitude',
+                        'unit': 'degree',
+                    },
+                    {
+                        'abbreviation': 'Lon',
+                        'direction': 'east',
+                        'name': 'Geodetic longitude',
+                        'unit': 'degree',
+                    },
+                ],
+                'subtype': 'ellipsoidal',
+            },
+            'datum': {
+                'ellipsoid': {
+                    'inverse_flattening': 298.257223563,
+                    'name': 'WGS 84',
+                    'semi_major_axis': 6378137,
                 },
-                {
-                    'id': {'authority': 'EPSG', 'code': 1152,},
-                    'name': 'World Geodetic System 1984 (G730)',
+                'name': 'World Geodetic System 1984',
+                'type': 'GeodeticReferenceFrame',
+            },
+            'id': {'authority': 'EPSG', 'code': 4326},
+            'name': 'WGS 84',
+            'scope': 'Horizontal component of 3D system.',
+            'type': 'GeographicCRS',
+        }
+    else:
+        reference_crs_wkt = 'GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]'
+        reference_crs_json = {
+            '$schema': 'https://proj.org/schemas/v0.2/projjson.schema.json',
+            'type': 'GeographicCRS',
+            'name': 'WGS 84',
+            'datum_ensemble': {
+                'accuracy': '2.0',
+                'name': 'World Geodetic System 1984 ensemble',
+                'ellipsoid': {
+                    'name': 'WGS 84',
+                    'semi_major_axis': 6378137,
+                    'inverse_flattening': 298.257223563,
                 },
-                {
-                    'id': {'authority': 'EPSG', 'code': 1153,},
-                    'name': 'World Geodetic System 1984 (G873)',
-                },
-                {
-                    'id': {'authority': 'EPSG', 'code': 1154,},
-                    'name': 'World Geodetic System 1984 (G1150)',
-                },
-                {
-                    'id': {'authority': 'EPSG', 'code': 1155,},
-                    'name': 'World Geodetic System 1984 (G1674)',
-                },
-                {
-                    'id': {'authority': 'EPSG', 'code': 1156,},
-                    'name': 'World Geodetic System 1984 (G1762)',
-                },
-            ],
-        },
-        'coordinate_system': {
-            'subtype': 'ellipsoidal',
-            'axis': [
-                {
-                    'name': 'Geodetic latitude',
-                    'abbreviation': 'Lat',
-                    'direction': 'north',
-                    'unit': 'degree',
-                },
-                {
-                    'name': 'Geodetic longitude',
-                    'abbreviation': 'Lon',
-                    'direction': 'east',
-                    'unit': 'degree',
-                },
-            ],
-        },
-        'scope': 'Horizontal component of 3D system.',
-        'area': 'World.',
-        'bbox': {
-            'south_latitude': -90,
-            'west_longitude': -180,
-            'north_latitude': 90,
-            'east_longitude': 180,
-        },
-        'id': {'authority': 'EPSG', 'code': 4326,},
-    }
+                'id': {'authority': 'EPSG', 'code': 6326,},
+                'members': [
+                    {
+                        'id': {'authority': 'EPSG', 'code': 1166,},
+                        'name': 'World Geodetic System 1984 (Transit)',
+                    },
+                    {
+                        'id': {'authority': 'EPSG', 'code': 1152,},
+                        'name': 'World Geodetic System 1984 (G730)',
+                    },
+                    {
+                        'id': {'authority': 'EPSG', 'code': 1153,},
+                        'name': 'World Geodetic System 1984 (G873)',
+                    },
+                    {
+                        'id': {'authority': 'EPSG', 'code': 1154,},
+                        'name': 'World Geodetic System 1984 (G1150)',
+                    },
+                    {
+                        'id': {'authority': 'EPSG', 'code': 1155,},
+                        'name': 'World Geodetic System 1984 (G1674)',
+                    },
+                    {
+                        'id': {'authority': 'EPSG', 'code': 1156,},
+                        'name': 'World Geodetic System 1984 (G1762)',
+                    },
+                ],
+            },
+            'coordinate_system': {
+                'subtype': 'ellipsoidal',
+                'axis': [
+                    {
+                        'name': 'Geodetic latitude',
+                        'abbreviation': 'Lat',
+                        'direction': 'north',
+                        'unit': 'degree',
+                    },
+                    {
+                        'name': 'Geodetic longitude',
+                        'abbreviation': 'Lon',
+                        'direction': 'east',
+                        'unit': 'degree',
+                    },
+                ],
+            },
+            'scope': 'Horizontal component of 3D system.',
+            'area': 'World.',
+            'bbox': {
+                'south_latitude': -90,
+                'west_longitude': -180,
+                'north_latitude': 90,
+                'east_longitude': 180,
+            },
+            'id': {'authority': 'EPSG', 'code': 4326,},
+        }
+
+    assert crs_1 == reference_crs_wkt
+    assert crs_2 == 4326
+    assert crs_3 == reference_crs_json
 
 
 def test_convert_values_to_json():
