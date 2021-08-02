@@ -26,7 +26,7 @@ NEMS_PATH = 'NEMS.x'
 ADCPREP_PATH = 'adcprep'
 
 
-def test_nems_adcirc_local_shinnecock_ike(tpxo_filename):
+def test_nems_adcirc_local_shinnecock_ike():
     platform = Platform.LOCAL
     mesh = 'shinnecock'
     storm = 'ike'
@@ -61,7 +61,7 @@ def test_nems_adcirc_local_shinnecock_ike(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -113,7 +113,7 @@ def test_nems_adcirc_local_shinnecock_ike(tpxo_filename):
     )
 
 
-def test_nems_adcirc_hera_shinnecock_ike(tpxo_filename):
+def test_nems_adcirc_hera_shinnecock_ike():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -148,7 +148,7 @@ def test_nems_adcirc_hera_shinnecock_ike(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -202,7 +202,7 @@ def test_nems_adcirc_hera_shinnecock_ike(tpxo_filename):
     )
 
 
-def test_nems_adcirc_stampede2_shinnecock_ike(tpxo_filename):
+def test_nems_adcirc_stampede2_shinnecock_ike():
     platform = Platform.STAMPEDE2
     mesh = 'shinnecock'
     storm = 'ike'
@@ -237,7 +237,7 @@ def test_nems_adcirc_stampede2_shinnecock_ike(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -291,7 +291,7 @@ def test_nems_adcirc_stampede2_shinnecock_ike(tpxo_filename):
     )
 
 
-def test_adcirc_local_shinnecock_ike(tpxo_filename):
+def test_adcirc_local_shinnecock_ike():
     platform = Platform.LOCAL
     mesh = 'shinnecock'
     storm = 'ike'
@@ -312,7 +312,7 @@ def test_adcirc_local_shinnecock_ike(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
@@ -352,7 +352,7 @@ def test_adcirc_local_shinnecock_ike(tpxo_filename):
     )
 
 
-def test_adcirc_hera_shinnecock_ike(tpxo_filename):
+def test_adcirc_hera_shinnecock_ike():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -373,7 +373,7 @@ def test_adcirc_hera_shinnecock_ike(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
@@ -413,7 +413,7 @@ def test_adcirc_hera_shinnecock_ike(tpxo_filename):
     )
 
 
-def test_adcirc_stampede2_shinnecock_ike(tpxo_filename):
+def test_adcirc_stampede2_shinnecock_ike():
     platform = Platform.STAMPEDE2
     mesh = 'shinnecock'
     storm = 'ike'
@@ -434,7 +434,7 @@ def test_adcirc_stampede2_shinnecock_ike(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
@@ -474,7 +474,7 @@ def test_adcirc_stampede2_shinnecock_ike(tpxo_filename):
     )
 
 
-def test_nems_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
+def test_nems_adcirc_hera_shinnecock_ike_nospinup():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -511,7 +511,7 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -565,7 +565,7 @@ def test_nems_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
     )
 
 
-def test_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
+def test_adcirc_hera_shinnecock_ike_nospinup():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -588,7 +588,7 @@ def test_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
@@ -628,7 +628,7 @@ def test_adcirc_hera_shinnecock_ike_nospinup(tpxo_filename):
     )
 
 
-def test_nems_adcirc_hera_shinnecock_ike_perturbed(tpxo_filename):
+def test_nems_adcirc_hera_shinnecock_ike_perturbed():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -665,7 +665,7 @@ def test_nems_adcirc_hera_shinnecock_ike_perturbed(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
@@ -729,7 +729,7 @@ def test_nems_adcirc_hera_shinnecock_ike_perturbed(tpxo_filename):
     )
 
 
-def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
+def test_nems_adcirc_hera_shinnecock_ike_aswip():
     platform = Platform.HERA
     mesh = 'shinnecock'
     storm = 'ike'
@@ -762,7 +762,7 @@ def test_nems_adcirc_hera_shinnecock_ike_aswip(tpxo_filename):
 
     slurm_email_address = 'example@email.gov'
 
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=tpxo_filename)
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = BestTrackForcing(storm='ike2008', nws=20, interval_seconds=3600)
     wave_forcing = WaveWatch3DataForcing(

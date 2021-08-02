@@ -56,10 +56,13 @@ def check_reference_directory(
                 for file_mask, line_indices in skip_lines.items():
                     if file_mask in str(test_filename) or re.match(
                         file_mask, str(test_filename)
-                    ):
-                        lines_to_skip.update(
-                            line_index % len(test_lines) for line_index in line_indices
-                        )
+                    ) and len(test_lines) > 0:
+                        try:
+                            lines_to_skip.update(
+                                line_index % len(test_lines) for line_index in line_indices
+                            )
+                        except ZeroDivisionError:
+                            continue
 
                 for line_index in sorted(lines_to_skip, reverse=True):
                     del test_lines[line_index], reference_lines[line_index]
