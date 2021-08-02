@@ -330,7 +330,7 @@ def initialize_adcirc(
             adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
         if aswip_executable is not None:
             aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
-        output_directory = Path('.')
+        output_directory = Path(os.path.relpath(output_directory, Path.cwd()))
 
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
