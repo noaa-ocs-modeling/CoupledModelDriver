@@ -34,7 +34,55 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
 
 ### 1. generate JSON configuration files
 
-The following command creates a configuration for coupling `(ATMESH + WW3DATA) -> ADCIRC` over a small Shinnecock Inlet mesh:
+`initialize_adcirc` creates JSON configuration files according to the given parameters:
+
+```
+usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME
+                         --modeled-duration MODELED_DURATION --modeled-timestep MODELED_TIMESTEP
+                         [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE] [--forcings FORCINGS]
+                         [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
+                         [--aswip-executable ASWIP_EXECUTABLE] [--adcirc-processors ADCIRC_PROCESSORS]
+                         [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY] [--skip-existing]
+                         [--absolute-paths] [--verbose]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --platform PLATFORM   HPC platform for which to configure
+  --mesh-directory MESH_DIRECTORY
+                        path to input mesh (`fort.13`, `fort.14`)
+  --modeled-start-time MODELED_START_TIME
+                        start time within the modeled system
+  --modeled-duration MODELED_DURATION
+                        end time within the modeled system
+  --modeled-timestep MODELED_TIMESTEP
+                        time interval within the modeled system
+  --nems-interval NEMS_INTERVAL
+                        main loop interval of NEMS run
+  --modulefile MODULEFILE
+                        path to module file to `source`
+  --forcings FORCINGS   comma-separated list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi',
+                        'ww3data']
+  --adcirc-executable ADCIRC_EXECUTABLE
+                        filename of compiled `adcirc` or `NEMS.x`
+  --adcprep-executable ADCPREP_EXECUTABLE
+                        filename of compiled `adcprep`
+  --aswip-executable ASWIP_EXECUTABLE
+                        filename of compiled `aswip`
+  --adcirc-processors ADCIRC_PROCESSORS
+                        numbers of processors to assign for ADCIRC
+  --job-duration JOB_DURATION
+                        wall clock time for job
+  --output-directory OUTPUT_DIRECTORY
+                        directory to which to write configuration files (defaults to `.`)
+  --skip-existing       skip existing files
+  --absolute-paths      write paths as absolute in configuration
+  --verbose             show more verbose log messages
+```
+
+ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly
+modifying the JSON files.
+
+The following command creates JSON files for coupling `(ATMESH + WW3DATA) -> ADCIRC` over a small Shinnecock Inlet mesh:
 
 ```bash
 initialize_adcirc \
@@ -168,7 +216,22 @@ resulting run, before generating the actual model configuration.
 
 ### 2. generate model configuration files
 
-Run the following command to read the JSON configuration and generate the ADCIRC run configuration:
+`generate_adcirc` reads a set of JSON configuration files and generates an ADCIRC run configuration from the options read from
+these files:
+
+```
+usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--relative-paths] [--skip-existing] [--verbose]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --configuration-directory CONFIGURATION_DIRECTORY
+                        path containing JSON configuration files
+  --output-directory OUTPUT_DIRECTORY
+                        path to store generated configuration files
+  --relative-paths      use relative paths in output configuration
+  --skip-existing       skip existing files
+  --verbose             show more verbose log messages
+```
 
 ```bash
 cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
@@ -231,81 +294,3 @@ The queue will have the following jobs added:
 20967649 1   1    (null)           (None)       ADCIRC_SETUP_unperturbed
 20967650 42  2    afterok:20967649 (Dependency) ADCIRC_HOTSTART_unperturbed
 ```
-
-## Command-line interface
-
-`coupledmodeldriver` exposes the following CLI commands:
-
-- `initialize_adcirc`
-- `generate_adcirc`
-
-### Initialize ADCIRC configuration (`initialize_adcirc`)
-
-`initialize_adcirc` creates JSON configuration files according to the given parameters.
-
-```
-usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME
-                         --modeled-duration MODELED_DURATION --modeled-timestep MODELED_TIMESTEP
-                         [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE] [--forcings FORCINGS]
-                         [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
-                         [--aswip-executable ASWIP_EXECUTABLE] [--adcirc-processors ADCIRC_PROCESSORS]
-                         [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY] [--skip-existing]
-                         [--absolute-paths] [--verbose]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --platform PLATFORM   HPC platform for which to configure
-  --mesh-directory MESH_DIRECTORY
-                        path to input mesh (`fort.13`, `fort.14`)
-  --modeled-start-time MODELED_START_TIME
-                        start time within the modeled system
-  --modeled-duration MODELED_DURATION
-                        end time within the modeled system
-  --modeled-timestep MODELED_TIMESTEP
-                        time interval within the modeled system
-  --nems-interval NEMS_INTERVAL
-                        main loop interval of NEMS run
-  --modulefile MODULEFILE
-                        path to module file to `source`
-  --forcings FORCINGS   comma-separated list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi',
-                        'ww3data']
-  --adcirc-executable ADCIRC_EXECUTABLE
-                        filename of compiled `adcirc` or `NEMS.x`
-  --adcprep-executable ADCPREP_EXECUTABLE
-                        filename of compiled `adcprep`
-  --aswip-executable ASWIP_EXECUTABLE
-                        filename of compiled `aswip`
-  --adcirc-processors ADCIRC_PROCESSORS
-                        numbers of processors to assign for ADCIRC
-  --job-duration JOB_DURATION
-                        wall clock time for job
-  --output-directory OUTPUT_DIRECTORY
-                        directory to which to write configuration files (defaults to `.`)
-  --skip-existing       skip existing files
-  --absolute-paths      write paths as absolute in configuration
-  --verbose             show more verbose log messages
-```
-
-ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly
-modifying the JSON files.
-
-### Generate ADCIRC configuration (`generate_adcirc`)
-
-`generate_adcirc` reads a set of JSON configuration files and generates an ADCIRC run configuration from the options read from
-these files.
-
-```
-usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--relative-paths] [--skip-existing] [--verbose]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --configuration-directory CONFIGURATION_DIRECTORY
-                        path containing JSON configuration files
-  --output-directory OUTPUT_DIRECTORY
-                        path to store generated configuration files
-  --relative-paths      use relative paths in output configuration
-  --skip-existing       skip existing files
-  --verbose             show more verbose log messages
-```
-
-After this configuration is generated, the model can be started by executing the `run_<platform>.sh` script.
