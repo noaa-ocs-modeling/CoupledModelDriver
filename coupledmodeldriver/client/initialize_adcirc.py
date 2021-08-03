@@ -384,7 +384,7 @@ def initialize_adcirc(
 
     logger.info(f'writing {"+".join(components)} configuration to "{output_directory}"')
 
-    for configuration_json in configuration:
+    for configuration_json in configuration.configurations:
         logger.debug(repr(configuration_json))
 
     configuration.write_directory(
