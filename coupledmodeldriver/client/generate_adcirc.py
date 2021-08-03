@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import os
 from pathlib import Path
 
 from coupledmodeldriver.generate import generate_adcirc_configuration
@@ -38,6 +39,10 @@ def main():
 
     if output_directory is None:
         output_directory = configuration_directory
+
+    if configuration_directory.absolute().resolve() != Path.cwd():
+        output_directory = Path(os.path.relpath(output_directory, configuration_directory))
+        os.chdir(configuration_directory)
 
     generate_adcirc_configuration(
         configuration_directory=configuration_directory,
