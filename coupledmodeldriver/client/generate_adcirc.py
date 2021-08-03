@@ -37,13 +37,6 @@ def main():
     overwrite = not arguments.skip_existing
     verbose = arguments.verbose
 
-    if output_directory is None:
-        output_directory = configuration_directory
-
-    if configuration_directory.absolute().resolve() != Path.cwd():
-        output_directory = Path(os.path.relpath(output_directory, configuration_directory))
-        os.chdir(configuration_directory)
-
     generate_adcirc_configuration(
         configuration_directory=configuration_directory,
         output_directory=output_directory,

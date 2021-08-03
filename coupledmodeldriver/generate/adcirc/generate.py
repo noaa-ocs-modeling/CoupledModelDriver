@@ -20,8 +20,10 @@ from coupledmodeldriver.generate.adcirc.script import (
     AdcircSetupJob,
     AswipCommand,
 )
-from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
-from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
+from coupledmodeldriver.script import EnsembleCleanupScript, \
+    EnsembleRunScript, SlurmEmailType
+from coupledmodeldriver.utilities import LOGGER, create_symlink, \
+    get_logger
 
 
 class RunPhase(Enum):
@@ -56,12 +58,19 @@ def generate_adcirc_configuration(
     elif not isinstance(output_directory, Path):
         output_directory = Path(output_directory)
 
-    if not output_directory.exists():
-        os.makedirs(output_directory, exist_ok=True)
-
     output_directory = output_directory.resolve()
     if not output_directory.is_absolute():
         output_directory = output_directory.absolute()
+
+    if not output_directory.exists():
+        os.makedirs(output_directory, exist_ok=True)
+
+    if configuration_directory.absolute().resolve() != Path.cwd():
+        starting_directory = Path.cwd()
+        os.chdir(configuration_directory)
+        configuration_directory = Path.cwd()
+    else:
+        starting_directory = None
 
     use_nems = 'configure_nems.json' in [
         filename.name.lower() for filename in configuration_directory.iterdir()
@@ -229,6 +238,9 @@ def generate_adcirc_configuration(
         run_spinup=do_spinup,
     )
     run_job_script.write(ensemble_run_script_filename, overwrite=overwrite)
+
+    if starting_directory is not None:
+        os.chdir(starting_directory)
 
 
 async def write_spinup_directory(
