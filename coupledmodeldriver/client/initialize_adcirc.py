@@ -331,26 +331,6 @@ def initialize_adcirc(
         'initialize_adcirc', console_level=logging.DEBUG if verbose else logging.INFO
     )
 
-    if not absolute_paths:
-        mesh_directory = Path(os.path.relpath(mesh_directory, output_directory))
-        if modulefile is not None:
-            modulefile = Path(os.path.relpath(modulefile, output_directory))
-        if adcirc_executable is not None:
-            adcirc_executable = Path(os.path.relpath(adcirc_executable, output_directory))
-        if adcprep_executable is not None:
-            adcprep_executable = Path(os.path.relpath(adcprep_executable, output_directory))
-        if aswip_executable is not None:
-            aswip_executable = Path(os.path.relpath(aswip_executable, output_directory))
-        output_directory = Path(os.path.relpath(output_directory, Path.cwd()))
-
-    components = ['ADCIRC']
-    if nems_interval is not None:
-        components.insert(0, 'NEMS')
-    if len(forcings) > 0:
-        components += [forcing.name for forcing in forcings]
-
-    logger.info(f'writing {"+".join(components)} configuration to "{output_directory}"')
-
     if nems_interval is not None:
         configuration = NEMSADCIRCRunConfiguration(
             mesh_directory=mesh_directory,
@@ -393,6 +373,16 @@ def initialize_adcirc(
             aswip_executable=aswip_executable,
             source_filename=modulefile,
         )
+
+    if not absolute_paths:
+        output_directory = Path(os.path.relpath(output_directory, Path.cwd()))
+        configuration.relative_to(output_directory, inplace=True)
+
+    components = [
+        configuration_json.name for configuration_json in configuration.configurations
+    ]
+
+    logger.info(f'writing {"+".join(components)} configuration to "{output_directory}"')
 
     for configuration_json in configuration:
         logger.debug(repr(configuration_json))

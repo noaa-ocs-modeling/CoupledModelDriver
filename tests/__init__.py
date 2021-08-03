@@ -54,9 +54,11 @@ def check_reference_directory(
 
                 lines_to_skip = set()
                 for file_mask, line_indices in skip_lines.items():
-                    if file_mask in str(test_filename) or re.match(
-                        file_mask, str(test_filename)
-                    ) and len(test_lines) > 0:
+                    if (
+                        file_mask in str(test_filename)
+                        or re.match(file_mask, str(test_filename))
+                        and len(test_lines) > 0
+                    ):
                         try:
                             lines_to_skip.update(
                                 line_index % len(test_lines) for line_index in line_indices
