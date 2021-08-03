@@ -328,7 +328,7 @@ def initialize_adcirc(
     verbose: bool = False,
 ):
     logger = get_logger(
-        'initialize_adcirc', console_level=logging.INFO if verbose else logging.DEBUG
+        'initialize_adcirc', console_level=logging.DEBUG if verbose else logging.INFO
     )
 
     if not absolute_paths:
