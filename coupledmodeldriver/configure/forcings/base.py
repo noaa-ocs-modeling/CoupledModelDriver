@@ -86,8 +86,8 @@ class FileForcingJSON(ForcingJSON, ABC):
 
 
 class TidalForcingJSON(FileForcingJSON):
-    name = 'TidalForcing'
-    default_filename = f'configure_tidalforcing.json'
+    name = 'TIDAL'
+    default_filename = f'configure_tidal.json'
     field_types = {'tidal_source': TidalSource, 'constituents': [str]}
 
     def __init__(
