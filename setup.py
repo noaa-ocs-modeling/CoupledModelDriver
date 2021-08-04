@@ -11,7 +11,7 @@ from setuptools import config, find_packages, setup
 DEPENDENCIES = {
     'adcircpy>=1.0.39': ['gdal', 'fiona'],
     'filelock': [],
-    'nemspy>=1.0.2': [],
+    'nemspy>=1.0.3': [],
     'numpy': [],
     'pyproj': [],
     'requests': [],
