@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 #SBATCH -J ADCIRC_SETUP_unperturbed
 #SBATCH -A coastal
 #SBATCH --mail-type=ALL

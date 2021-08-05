@@ -1,3 +1,4 @@
+#!/bin/bash
 echo deleting previous ADCIRC output
 sh cleanup.sh
 DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -11,5 +12,5 @@ for hotstart in ${DIRECTORY}/runs/*/; do
 done
 
 # display job queue with dependencies
-squeue -u $USER -o "%.8i %3C %4D %16E %12R %j" --sort i
-echo squeue -u $USER -o \"%.8i %3C %4D %16E %12R %j\" --sort i
+squeue -u $USER -o "%.8i %3C %4D %16E %12R %8M %j" --sort i
+echo squeue -u $USER -o \"%.8i %3C %4D %16E %12R %8M %j\" --sort i
