@@ -12,14 +12,11 @@ from coupledmodeldriver.generate import (
     generate_adcirc_configuration,
     NEMSADCIRCRunConfiguration,
 )
-
-# noinspection PyUnresolvedReferences
 from tests import (
     check_reference_directory,
     INPUT_DIRECTORY,
     OUTPUT_DIRECTORY,
     REFERENCE_DIRECTORY,
-    tpxo_filename,
 )
 
 NEMS_PATH = 'NEMS.x'
