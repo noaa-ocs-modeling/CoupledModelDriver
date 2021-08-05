@@ -20,10 +20,8 @@ from coupledmodeldriver.generate.adcirc.script import (
     AdcircSetupJob,
     AswipCommand,
 )
-from coupledmodeldriver.script import EnsembleCleanupScript, \
-    EnsembleRunScript, SlurmEmailType
-from coupledmodeldriver.utilities import LOGGER, create_symlink, \
-    get_logger
+from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
+from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
 
 
 class RunPhase(Enum):

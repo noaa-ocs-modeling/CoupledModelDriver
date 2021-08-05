@@ -28,7 +28,7 @@ class SlurmEmailType(Enum):
 
 
 class Script:
-    shebang = '#!/bin/bash --login'
+    shebang = '#!/bin/bash'
 
     def __init__(self, commands: [str]):
         if commands is None:
@@ -38,7 +38,14 @@ class Script:
         self.commands = commands
 
     def __str__(self) -> str:
-        return '\n'.join([self.shebang, *(str(command) for command in self.commands)])
+        lines = []
+
+        if self.shebang is not None:
+            lines.append(self.shebang)
+
+        lines.extend(self.commands)
+
+        return '\n'.join(lines)
 
     def write(self, filename: PathLike, overwrite: bool = False):
         """
@@ -205,9 +212,10 @@ class JobScript(Script):
         return '\n'.join(lines)
 
     def __str__(self) -> str:
-        lines = [
-            self.shebang,
-        ]
+        lines = []
+
+        if self.shebang is not None:
+            lines.append(self.shebang)
 
         if self.platform.value['uses_slurm']:
             lines.extend([self.slurm_header, '', 'set -e', ''])
@@ -246,11 +254,18 @@ class EnsembleRunScript(Script):
         super().__init__(commands)
 
     def __str__(self) -> str:
-        lines = [
-            *(str(command) for command in self.commands),
-            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
-            '',
-        ]
+        lines = []
+
+        if self.shebang is not None:
+            lines.append(self.shebang)
+
+        lines.extend(
+            [
+                *(str(command) for command in self.commands),
+                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
+                '',
+            ]
+        )
 
         spinup_lines = []
         if self.run_spinup:
@@ -333,25 +348,32 @@ class EnsembleCleanupScript(Script):
         super().__init__(commands)
 
     def __str__(self):
-        lines = [
-            *(str(command) for command in self.commands),
-            'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
-            '',
-            '# clean spinup files',
-            'pushd ${DIRECTORY}/spinup >/dev/null 2>&1',
-            'rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.6* fort.80',
-            'popd >/dev/null 2>&1',
-            '',
-            '# clean run configurations',
-            bash_for_loop(
-                'for hotstart in ${DIRECTORY}/runs/*/',
-                [
-                    'pushd ${hotstart} >/dev/null 2>&1',
-                    'rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.63 fort.64 fort.80',
-                    'popd >/dev/null 2>&1',
-                ],
-            ),
-        ]
+        lines = []
+
+        if self.shebang is not None:
+            lines.append(self.shebang)
+
+        lines.extend(
+            [
+                *(str(command) for command in self.commands),
+                'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
+                '',
+                '# clean spinup files',
+                'pushd ${DIRECTORY}/spinup >/dev/null 2>&1',
+                'rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.6* fort.80',
+                'popd >/dev/null 2>&1',
+                '',
+                '# clean run configurations',
+                bash_for_loop(
+                    'for hotstart in ${DIRECTORY}/runs/*/',
+                    [
+                        'pushd ${hotstart} >/dev/null 2>&1',
+                        'rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.63 fort.64 fort.80',
+                        'popd >/dev/null 2>&1',
+                    ],
+                ),
+            ]
+        )
 
         return '\n'.join(lines)
 
