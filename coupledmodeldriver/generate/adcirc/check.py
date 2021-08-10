@@ -7,10 +7,11 @@ from typing import Dict, Union
 
 
 class CompletionStatus(Enum):
-    COMPLETED = 'completed'
-    RUNNING = 'running'
-    ERROR = 'error'
+    NOT_STARTED = 'not_started'
     FAILED = 'failed'
+    ERROR = 'error'
+    RUNNING = 'running'
+    COMPLETED = 'completed'
 
 
 def tail(file, lines: int = 20) -> [str]:
@@ -54,6 +55,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
             f'not an ADCIRC run directory - file(s) not found: {", ".join(nonexistant_files)}'
         )
 
+    not_started = {}
     failures = {}
     errors = {}
     running = {}
@@ -65,7 +67,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     output_netcdf_pattern = directory / 'fort.*.nc'
 
     if not adcirc_output_log_filename.exists():
-        failures[
+        not_started[
             adcirc_output_log_filename.name
         ] = f'ADCIRC output file `fort.16` was not found at {adcirc_output_log_filename}'
 
@@ -87,15 +89,15 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) == 0:
-        failures[
+        not_started[
             esmf_log_pattern.name
-        ] = f'no ESMF logfiles found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
+        ] = f'no ESMF log files found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
     else:
         for filename in esmf_log_filenames:
             with open(filename) as log_file:
                 lines = list(log_file.readlines())
                 if len(lines) == 0:
-                    failures[filename.name].extend(lines)
+                    failures[filename.name] = 'empty ESMF log file'
 
     for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
         if filename.exists():
@@ -112,10 +114,12 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
                         filename.name
                     ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
         else:
-            failures[filename.name] = f'output file not found {filename}'
+            not_started[filename.name] = f'output file not found {filename}'
 
     issues = {}
 
+    if len(not_started) > 0:
+        issues['not_started'] = not_started
     if len(failures) > 0:
         issues['failures'] = failures
     if len(errors) > 0:
@@ -130,10 +134,12 @@ def check_adcirc_completion(directory: PathLike = None) -> CompletionStatus:
     errors = collect_adcirc_errors(directory)
 
     if len(errors) > 0:
-        if 'errors' in errors:
-            completion_status = CompletionStatus.ERROR
+        if 'not_started' in errors:
+            completion_status = CompletionStatus.NOT_STARTED
         elif 'failures' in errors:
             completion_status = CompletionStatus.FAILED
+        elif 'errors' in errors:
+            completion_status = CompletionStatus.ERROR
         elif 'running' in errors:
             completion_status = CompletionStatus.RUNNING
         else:
