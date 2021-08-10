@@ -37,12 +37,12 @@ def check_adcirc_completion(directory: PathLike = None):
 
     errors = {'directory': directory.name}
 
-    slurm_error_log_filenames = glob(str(directory / 'ADCIRC_*_*.err.log'))
-    slurm_out_log_filenames = glob(str(directory / 'ADCIRC_*_*.out.log'))
-    esmf_log_filenames = glob(str(directory / 'PET*.ESMF_LogFile'))
-    output_netcdf_filenames = glob(str(directory / 'fort.*.nc'))
+    slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
+    slurm_out_log_pattern = directory / 'ADCIRC_*_*.out.log'
+    esmf_log_pattern = directory / 'PET*.ESMF_LogFile'
+    output_netcdf_pattern = directory / 'fort.*.nc'
 
-    for log_filename in slurm_error_log_filenames:
+    for log_filename in glob(str(slurm_error_log_pattern)):
         with open(log_filename) as log_file:
             lines = list(log_file.readlines())
             if len(lines) > 0:
@@ -52,7 +52,7 @@ def check_adcirc_completion(directory: PathLike = None):
                     errors['slurm_error'][log_filename.name] = []
                 errors['slurm_error'][log_filename.name].extend(lines)
 
-    for log_filename in slurm_out_log_filenames:
+    for log_filename in glob(str(slurm_out_log_pattern)):
         with open(log_filename, 'rb') as log_file:
             lines = tail(log_file, lines=3)
             if 'End Epilogue' not in lines[-1]:
@@ -62,6 +62,7 @@ def check_adcirc_completion(directory: PathLike = None):
                     errors['slurm_output'][log_filename.name] = []
                 errors['slurm_output'][log_filename.name].extend(lines)
 
+    esmf_log_filenames = glob(str(esmf_log_pattern))
     if len(esmf_log_filenames) > 0:
         for log_filename in esmf_log_filenames:
             with open(log_filename) as log_file:
@@ -74,9 +75,11 @@ def check_adcirc_completion(directory: PathLike = None):
                     errors['esmf_output'][log_filename.name].extend(lines)
     else:
         if 'esmf_output' not in errors:
-            errors['esmf_output'] = 'no ESMF logfiles found (`PET*.ESMF_LogFile`)'
+            errors[
+                'esmf_output'
+            ] = f'no ESMF logfiles found with pattern "{esmf_log_pattern}"'
 
-    for netcdf_filename in output_netcdf_filenames:
+    for netcdf_filename in glob(str(output_netcdf_pattern)):
         netcdf_filename = Path(netcdf_filename)
 
         if netcdf_filename.name == 'fort.63.nc':
