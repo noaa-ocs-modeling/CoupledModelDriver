@@ -94,9 +94,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
                 if filename.name not in running:
                     running[filename.name] = []
 
-                running[
-                    filename.name
-                ] = f'job is still running (no `Epilogue`)'
+                running[filename.name] = f'job is still running (no `Epilogue`)'
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) == 0:
