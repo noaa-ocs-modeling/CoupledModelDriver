@@ -38,10 +38,10 @@ def check_adcirc_completion(directory: PathLike = None):
 
     errors = {'directory': directory}
 
-    slurm_error_log_filenames = glob(directory / 'ADCIRC_*_*.err.log')
-    slurm_out_log_filenames = glob(directory / 'ADCIRC_*_*.out.log')
-    esmf_log_filenames = glob(directory / 'PET*.ESMF_LogFile')
-    output_netcdf_filenames = glob(directory / 'fort.*.nc')
+    slurm_error_log_filenames = glob(str(directory / 'ADCIRC_*_*.err.log'))
+    slurm_out_log_filenames = glob(str(directory / 'ADCIRC_*_*.out.log'))
+    esmf_log_filenames = glob(str(directory / 'PET*.ESMF_LogFile'))
+    output_netcdf_filenames = glob(str(directory / 'fort.*.nc'))
 
     for log_filename in slurm_error_log_filenames:
         with open(log_filename) as log_file:
