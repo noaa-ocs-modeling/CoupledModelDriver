@@ -122,6 +122,9 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     if len(running) > 0:
         issues['running'] = running
 
+    if len(issues) == 0:
+        issues = CompletionStatus.COMPLETED
+
     return issues
 
 

@@ -8,6 +8,7 @@ from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.adcirc.check import (
     check_adcirc_completion,
     collect_adcirc_errors,
+    CompletionStatus,
 )
 from coupledmodeldriver.utilities import convert_value
 
@@ -65,7 +66,11 @@ def check_completion(
             if verbose:
                 completion = collect_adcirc_errors(directory=directory)
             else:
-                completion = check_adcirc_completion(directory=directory).value
+                completion = check_adcirc_completion(directory=directory)
+
+            if isinstance(completion, CompletionStatus):
+                completion = completion.value
+
             completion_status[directory.name] = completion
 
     return completion_status
