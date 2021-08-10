@@ -129,20 +129,21 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
 
 def check_adcirc_completion(directory: PathLike = None) -> CompletionStatus:
-    errors = collect_adcirc_errors(directory)
+    completion_status = collect_adcirc_errors(directory)
 
-    if len(errors) > 0:
-        if 'not_started' in errors:
-            completion_status = CompletionStatus.NOT_STARTED
-        elif 'failures' in errors:
-            completion_status = CompletionStatus.FAILED
-        elif 'errors' in errors:
-            completion_status = CompletionStatus.ERROR
-        elif 'running' in errors:
-            completion_status = CompletionStatus.RUNNING
+    if not isinstance(completion_status, CompletionStatus):
+        if len(completion_status) > 0:
+            if 'not_started' in completion_status:
+                completion_status = CompletionStatus.NOT_STARTED
+            elif 'failures' in completion_status:
+                completion_status = CompletionStatus.FAILED
+            elif 'errors' in completion_status:
+                completion_status = CompletionStatus.ERROR
+            elif 'running' in completion_status:
+                completion_status = CompletionStatus.RUNNING
+            else:
+                completion_status = CompletionStatus.COMPLETED
         else:
             completion_status = CompletionStatus.COMPLETED
-    else:
-        completion_status = CompletionStatus.COMPLETED
 
     return completion_status
