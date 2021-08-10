@@ -74,39 +74,55 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
             adcirc_output_log_filename.name
         ] = f'ADCIRC output file `fort.16` was not found at {adcirc_output_log_filename}'
 
-    for filename in [Path(filename) for filename in glob(str(slurm_error_log_pattern))]:
-        with open(filename) as log_file:
-            lines = list(log_file.readlines())
-            if len(lines) > 0:
-                if filename.name not in errors:
-                    errors[filename.name] = []
-                errors[filename.name].extend(lines)
+    slurm_error_log_filenames = [
+        Path(filename) for filename in glob(str(slurm_error_log_pattern))
+    ]
+    if len(slurm_error_log_filenames) > 0:
+        for filename in slurm_error_log_filenames:
+            with open(filename) as log_file:
+                lines = list(log_file.readlines())
+                if len(lines) > 0:
+                    if filename.name not in errors:
+                        errors[filename.name] = []
+                    errors[filename.name].extend(lines)
+    else:
+        not_started[
+            slurm_error_log_pattern.name
+        ] = f'no Slurm error log files found with pattern `{os.path.relpath(slurm_error_log_pattern, directory)}`'
 
-    for filename in [Path(filename) for filename in glob(str(slurm_out_log_pattern))]:
-        with open(filename, 'rb') as log_file:
-            lines = tail(log_file, lines=30)
-            percentages = re.findall('[0-9|.]+% COMPLETE', '\n'.join(lines))
+    slurm_output_log_filenames = [
+        Path(filename) for filename in glob(str(slurm_out_log_pattern))
+    ]
+    if len(slurm_output_log_filenames) > 0:
+        for filename in slurm_output_log_filenames:
+            with open(filename, 'rb') as log_file:
+                lines = tail(log_file, lines=30)
+                percentages = re.findall('[0-9|.]+% COMPLETE', '\n'.join(lines))
 
-            if len(percentages) > 0:
-                completion_percentage = float(percentages[-1].split('%')[0])
+                if len(percentages) > 0:
+                    completion_percentage = float(percentages[-1].split('%')[0])
 
-            if len(lines) == 0 or 'End Epilogue' not in lines[-1]:
-                if filename.name not in running:
-                    running[filename.name] = []
+                if len(lines) == 0 or 'End Epilogue' not in lines[-1]:
+                    if filename.name not in running:
+                        running[filename.name] = []
 
-                running[filename.name] = f'job is still running (no `Epilogue`)'
+                    running[filename.name] = f'job is still running (no `Epilogue`)'
+    else:
+        not_started[
+            slurm_out_log_pattern.name
+        ] = f'no Slurm output log files found with pattern `{os.path.relpath(slurm_out_log_pattern, directory)}`'
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
-    if len(esmf_log_filenames) == 0:
-        not_started[
-            esmf_log_pattern.name
-        ] = f'no ESMF log files found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
-    else:
+    if len(esmf_log_filenames) > 0:
         for filename in esmf_log_filenames:
             with open(filename) as log_file:
                 lines = list(log_file.readlines())
                 if len(lines) == 0:
                     failures[filename.name] = 'empty ESMF log file'
+    else:
+        not_started[
+            esmf_log_pattern.name
+        ] = f'no ESMF log files found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
 
     for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
         if filename.exists():
