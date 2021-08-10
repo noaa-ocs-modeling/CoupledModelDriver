@@ -1,4 +1,5 @@
 from glob import glob
+import os
 from os import PathLike
 from pathlib import Path
 
@@ -35,64 +36,79 @@ def check_adcirc_completion(directory: PathLike = None):
     elif not isinstance(directory, Path):
         directory = Path(directory)
 
+    required_files = ['fort.14', 'fort.15']
+    nonexistant_files = [
+        filename for filename in required_files if not (directory / filename).exists()
+    ]
+    if len(nonexistant_files) > 0:
+        raise FileNotFoundError(
+            f'not an ADCIRC run directory - file(s) not found: {", ".join(nonexistant_files)}'
+        )
+
     errors = {}
 
+    adcirc_output_log_filename = directory / 'fort.16'
     slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
     slurm_out_log_pattern = directory / 'ADCIRC_*_*.out.log'
     esmf_log_pattern = directory / 'PET*.ESMF_LogFile'
     output_netcdf_pattern = directory / 'fort.*.nc'
 
-    for log_filename in glob(str(slurm_error_log_pattern)):
-        with open(log_filename) as log_file:
+    if not adcirc_output_log_filename.exists():
+        errors['adcirc_output'] = 'could not find ADCIRC output file `fort.16`'
+
+    for filename in glob(str(slurm_error_log_pattern)):
+        with open(filename) as log_file:
             lines = list(log_file.readlines())
             if len(lines) > 0:
                 if 'slurm_error' not in errors:
                     errors['slurm_error'] = {}
-                if log_filename.name not in errors['slurm_error']:
-                    errors['slurm_error'][log_filename.name] = []
-                errors['slurm_error'][log_filename.name].extend(lines)
+                if filename.name not in errors['slurm_error']:
+                    errors['slurm_error'][filename.name] = []
+                errors['slurm_error'][filename.name].extend(lines)
 
-    for log_filename in glob(str(slurm_out_log_pattern)):
-        with open(log_filename, 'rb') as log_file:
+    for filename in glob(str(slurm_out_log_pattern)):
+        with open(filename, 'rb') as log_file:
             lines = tail(log_file, lines=3)
             if 'End Epilogue' not in lines[-1]:
                 if 'slurm_output' not in errors:
                     errors['slurm_output'] = {}
-                if log_filename.name not in errors['slurm_output']:
-                    errors['slurm_output'][log_filename.name] = []
-                errors['slurm_output'][log_filename.name].extend(lines)
+                if filename.name not in errors['slurm_output']:
+                    errors['slurm_output'][filename.name] = []
+                errors['slurm_output'][filename.name].extend(lines)
 
     esmf_log_filenames = glob(str(esmf_log_pattern))
     if len(esmf_log_filenames) > 0:
-        for log_filename in esmf_log_filenames:
-            with open(log_filename) as log_file:
+        for filename in esmf_log_filenames:
+            with open(filename) as log_file:
                 lines = list(log_file.readlines())
                 if len(lines) == 0:
                     if 'esmf_output' not in errors:
                         errors['esmf_output'] = {}
-                    if log_filename.name not in errors['esmf_output']:
-                        errors['esmf_output'][log_filename.name] = []
-                    errors['esmf_output'][log_filename.name].extend(lines)
+                    errors['esmf_output'][
+                        filename.name
+                    ] = 'job is still running (no `Epilogue`)'
     else:
         if 'esmf_output' not in errors:
-            errors['esmf_output'] = f'no ESMF logfiles found with pattern `{esmf_log_pattern}`'
+            errors[
+                'esmf_output'
+            ] = f'no ESMF logfiles found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
 
-    for netcdf_filename in glob(str(output_netcdf_pattern)):
-        netcdf_filename = Path(netcdf_filename)
+    for filename in glob(str(output_netcdf_pattern)):
+        filename = Path(filename)
 
-        if netcdf_filename.name == 'fort.63.nc':
+        if filename.name == 'fort.63.nc':
             minimum_file_size = 140884
-        elif netcdf_filename.name == 'fort.64.nc':
+        elif filename.name == 'fort.64.nc':
             minimum_file_size = 140888
         else:
             minimum_file_size = 140884
 
-        if netcdf_filename.stat().st_size <= minimum_file_size:
+        if filename.stat().st_size <= minimum_file_size:
             if 'netcdf_output' not in errors:
                 errors['netcdf_output'] = {}
-            if netcdf_filename.name not in errors['netcdf_output']:
+            if filename.name not in errors['netcdf_output']:
                 errors['netcdf_output'][
-                    netcdf_filename.name
-                ] = f'empty file (size {netcdf_filename.stat().st_size} is not greater than {minimum_file_size})'
+                    filename.name
+                ] = f'empty file (size {filename.stat().st_size} is not greater than {minimum_file_size})'
 
     return errors
