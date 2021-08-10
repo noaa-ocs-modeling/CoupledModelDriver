@@ -17,6 +17,9 @@ def parse_check_completion_arguments():
         '--directory', help='directory containing model run configuration'
     )
     argument_parser.add_argument('--model', help='model that is running, one of: `ADCIRC`')
+    argument_parser.add_argument(
+        '--verbose', action='store_true', help='list all errors and problems with runs'
+    )
 
     arguments = argument_parser.parse_args()
 
@@ -27,10 +30,13 @@ def parse_check_completion_arguments():
     return {
         'directory': convert_value(arguments.directory, Path),
         'model': model,
+        'verbose': arguments.verbose,
     }
 
 
-def check_completion(directory: PathLike = None, model: ModelJSON = None):
+def check_completion(
+    directory: PathLike = None, model: ModelJSON = None, verbose: bool = False
+):
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
@@ -49,7 +55,10 @@ def check_completion(directory: PathLike = None, model: ModelJSON = None):
             completion_status['runs'].update(check_completion(directory=run_directory))
     else:
         if model == ADCIRCJSON:
-            completion_status[directory.name] = check_adcirc_completion(directory=directory)
+            completion = check_adcirc_completion(directory=directory)
+            if not verbose:
+                completion = len(completion) == 0
+            completion_status[directory.name] = completion
 
     return completion_status
 
