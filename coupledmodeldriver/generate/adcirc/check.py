@@ -105,7 +105,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
             if filename.stat().st_size <= minimum_file_size:
                 if filename.name not in failures:
-                    failures[
+                    running[
                         filename.name
                     ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
         else:
