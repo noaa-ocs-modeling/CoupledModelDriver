@@ -75,9 +75,7 @@ def check_adcirc_completion(directory: PathLike = None):
                     errors['esmf_output'][log_filename.name].extend(lines)
     else:
         if 'esmf_output' not in errors:
-            errors[
-                'esmf_output'
-            ] = f'no ESMF logfiles found with pattern "{esmf_log_pattern}"'
+            errors['esmf_output'] = f'no ESMF logfiles found with pattern "{esmf_log_pattern}"'
 
     for netcdf_filename in glob(str(output_netcdf_pattern)):
         netcdf_filename = Path(netcdf_filename)
