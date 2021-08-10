@@ -101,12 +101,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
         if filename.exists():
-            if filename.name == 'fort.63.nc':
-                minimum_file_size = 140884
-            elif filename.name == 'fort.64.nc':
-                minimum_file_size = 140888
-            else:
-                minimum_file_size = 140884
+            minimum_file_size = 43081
 
             if filename.stat().st_size <= minimum_file_size:
                 if filename.name not in failures:
