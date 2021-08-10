@@ -5,7 +5,10 @@ from pathlib import Path
 
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
-from coupledmodeldriver.generate.adcirc.check import check_adcirc_completion
+from coupledmodeldriver.generate.adcirc.check import (
+    check_adcirc_completion,
+    collect_adcirc_errors,
+)
 from coupledmodeldriver.utilities import convert_value
 
 MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
@@ -59,9 +62,10 @@ def check_completion(
             )
     else:
         if model == ADCIRCJSON:
-            completion = check_adcirc_completion(directory=directory)
-            if not verbose:
-                completion = len(completion) == 0
+            if verbose:
+                completion = collect_adcirc_errors(directory=directory)
+            else:
+                completion = check_adcirc_completion(directory=directory).value
             completion_status[directory.name] = completion
 
     return completion_status

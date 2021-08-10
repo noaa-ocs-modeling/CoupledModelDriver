@@ -1,7 +1,16 @@
+from enum import Enum
 from glob import glob
 import os
 from os import PathLike
 from pathlib import Path
+from typing import Dict, Union
+
+
+class CompletionStatus(Enum):
+    COMPLETED = 'completed'
+    RUNNING = 'running'
+    ERROR = 'error'
+    FAILED = 'failed'
 
 
 def tail(file, lines: int = 20) -> [str]:
@@ -30,7 +39,7 @@ def tail(file, lines: int = 20) -> [str]:
     return [line.decode() for line in all_read_text.splitlines()[-total_lines_wanted:]]
 
 
-def check_adcirc_completion(directory: PathLike = None):
+def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[str, str]]}:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
@@ -45,7 +54,9 @@ def check_adcirc_completion(directory: PathLike = None):
             f'not an ADCIRC run directory - file(s) not found: {", ".join(nonexistant_files)}'
         )
 
+    failures = {}
     errors = {}
+    running = {}
 
     adcirc_output_log_filename = directory / 'fort.16'
     slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
@@ -54,44 +65,37 @@ def check_adcirc_completion(directory: PathLike = None):
     output_netcdf_pattern = directory / 'fort.*.nc'
 
     if not adcirc_output_log_filename.exists():
-        errors['adcirc_output'] = 'could not find ADCIRC output file `fort.16`'
+        failures[
+            adcirc_output_log_filename.name
+        ] = f'ADCIRC output file `fort.16` was not found at {adcirc_output_log_filename}'
 
     for filename in [Path(filename) for filename in glob(str(slurm_error_log_pattern))]:
         with open(filename) as log_file:
             lines = list(log_file.readlines())
             if len(lines) > 0:
-                if 'slurm_error' not in errors:
-                    errors['slurm_error'] = {}
-                if filename.name not in errors['slurm_error']:
-                    errors['slurm_error'][filename.name] = []
-                errors['slurm_error'][filename.name].extend(lines)
+                if filename.name not in errors:
+                    errors[filename.name] = []
+                errors[filename.name].extend(lines)
 
     for filename in [Path(filename) for filename in glob(str(slurm_out_log_pattern))]:
         with open(filename, 'rb') as log_file:
             lines = tail(log_file, lines=3)
             if 'End Epilogue' not in lines[-1]:
-                if 'slurm_output' not in errors:
-                    errors['slurm_output'] = {}
-                if filename.name not in errors['slurm_output']:
-                    errors['slurm_output'][filename.name] = []
-                errors['slurm_output'][filename.name].extend(lines)
+                if filename.name not in running:
+                    running[filename.name] = []
+                running[filename.name] = 'job is still running (no `Epilogue`)'
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
-    if len(esmf_log_filenames) > 0:
+    if len(esmf_log_filenames) == 0:
+        failures[
+            esmf_log_pattern.name
+        ] = f'no ESMF logfiles found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
+    else:
         for filename in esmf_log_filenames:
             with open(filename) as log_file:
                 lines = list(log_file.readlines())
                 if len(lines) == 0:
-                    if 'esmf_output' not in errors:
-                        errors['esmf_output'] = {}
-                    errors['esmf_output'][
-                        filename.name
-                    ] = 'job is still running (no `Epilogue`)'
-    else:
-        if 'esmf_output' not in errors:
-            errors[
-                'esmf_output'
-            ] = f'no ESMF logfiles found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
+                    failures[filename.name].extend(lines)
 
     for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
         if filename.name == 'fort.63.nc':
@@ -102,11 +106,36 @@ def check_adcirc_completion(directory: PathLike = None):
             minimum_file_size = 140884
 
         if filename.stat().st_size <= minimum_file_size:
-            if 'netcdf_output' not in errors:
-                errors['netcdf_output'] = {}
-            if filename.name not in errors['netcdf_output']:
-                errors['netcdf_output'][
+            if filename.name not in failures:
+                failures[
                     filename.name
-                ] = f'empty file (size {filename.stat().st_size} is not greater than {minimum_file_size})'
+                ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
 
-    return errors
+    issues = {}
+
+    if len(failures) > 0:
+        issues['failures'] = failures
+    if len(errors) > 0:
+        issues['errors'] = errors
+    if len(running) > 0:
+        issues['running'] = running
+
+    return issues
+
+
+def check_adcirc_completion(directory: PathLike = None) -> CompletionStatus:
+    errors = collect_adcirc_errors(directory)
+
+    if len(errors) > 0:
+        if 'errors' in errors:
+            completion_status = CompletionStatus.ERROR
+        elif 'failures' in errors:
+            completion_status = CompletionStatus.FAILED
+        elif 'running' in errors:
+            completion_status = CompletionStatus.RUNNING
+        else:
+            completion_status = CompletionStatus.COMPLETED
+    else:
+        completion_status = CompletionStatus.COMPLETED
+
+    return completion_status
