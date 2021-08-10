@@ -67,6 +67,8 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     esmf_log_pattern = directory / 'PET*.ESMF_LogFile'
     output_netcdf_pattern = directory / 'fort.*.nc'
 
+    completion_percentage = 0
+
     if not adcirc_output_log_filename.exists():
         not_started[
             adcirc_output_log_filename.name
@@ -92,6 +94,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
                 percentages = re.findall('[0-9|.]+% COMPLETE', '\n'.join(lines))
                 if len(percentages) > 0:
                     message += f' - {percentages[-1]}'
+                    completion_percentage = float(percentages[-1].split('%')[0])
 
                 running[filename.name] = message
 
@@ -119,28 +122,29 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
         else:
             not_started[filename.name] = f'output file not found {filename}'
 
-    issues = {}
+    completion = {}
 
     if len(not_started) > 0:
-        issues['not_started'] = not_started
+        completion['not_started'] = not_started
     if len(failures) > 0:
-        issues['failures'] = failures
+        completion['failures'] = failures
     if len(errors) > 0:
-        issues['errors'] = errors
+        completion['errors'] = errors
     if len(running) > 0:
-        issues['running'] = running
+        completion['running'] = running
 
-    if len(issues) == 0:
-        issues = CompletionStatus.COMPLETED
+    completion['completion_percentage'] = completion_percentage
 
-    return issues
+    return completion
 
 
-def check_adcirc_completion(directory: PathLike = None) -> CompletionStatus:
+def check_adcirc_completion(directory: PathLike = None) -> (CompletionStatus, float):
     completion_status = collect_adcirc_errors(directory)
 
+    completion_percentage = completion_status['completion_percentage']
+
     if not isinstance(completion_status, CompletionStatus):
-        if len(completion_status) > 0:
+        if len(completion_status) > 1:
             if 'not_started' in completion_status:
                 completion_status = CompletionStatus.NOT_STARTED
             elif 'failures' in completion_status:
@@ -154,4 +158,4 @@ def check_adcirc_completion(directory: PathLike = None) -> CompletionStatus:
         else:
             completion_status = CompletionStatus.COMPLETED
 
-    return completion_status
+    return completion_status, completion_percentage

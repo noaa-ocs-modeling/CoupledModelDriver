@@ -65,11 +65,12 @@ def check_completion(
         if model == ADCIRCJSON:
             if verbose:
                 completion = collect_adcirc_errors(directory=directory)
+                percentage = completion['completion_percentage']
             else:
-                completion = check_adcirc_completion(directory=directory)
+                completion, percentage = check_adcirc_completion(directory=directory)
 
             if isinstance(completion, CompletionStatus):
-                completion = completion.value
+                completion = f'{completion.value} - {percentage}% COMPLETE'
 
             completion_status[directory.name] = completion
 
