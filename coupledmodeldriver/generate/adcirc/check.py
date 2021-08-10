@@ -98,18 +98,21 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
                     failures[filename.name].extend(lines)
 
     for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
-        if filename.name == 'fort.63.nc':
-            minimum_file_size = 140884
-        elif filename.name == 'fort.64.nc':
-            minimum_file_size = 140888
-        else:
-            minimum_file_size = 140884
+        if filename.exists():
+            if filename.name == 'fort.63.nc':
+                minimum_file_size = 140884
+            elif filename.name == 'fort.64.nc':
+                minimum_file_size = 140888
+            else:
+                minimum_file_size = 140884
 
-        if filename.stat().st_size <= minimum_file_size:
-            if filename.name not in failures:
-                failures[
-                    filename.name
-                ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
+            if filename.stat().st_size <= minimum_file_size:
+                if filename.name not in failures:
+                    failures[
+                        filename.name
+                    ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
+        else:
+            failures[filename.name] = f'output file not found {filename}'
 
     issues = {}
 
