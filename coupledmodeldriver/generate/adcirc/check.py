@@ -35,7 +35,7 @@ def check_adcirc_completion(directory: PathLike = None):
     elif not isinstance(directory, Path):
         directory = Path(directory)
 
-    errors = {'directory': directory.name}
+    errors = {}
 
     slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
     slurm_out_log_pattern = directory / 'ADCIRC_*_*.out.log'
