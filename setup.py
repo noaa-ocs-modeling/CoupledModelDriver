@@ -165,6 +165,7 @@ setup(
         'console_scripts': [
             'initialize_adcirc=coupledmodeldriver.client.initialize_adcirc:main',
             'generate_adcirc=coupledmodeldriver.client.generate_adcirc:main',
+            'check_completion=coupledmodeldriver.client.check_completion:main',
         ],
     },
 )
