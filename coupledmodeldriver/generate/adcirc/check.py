@@ -96,7 +96,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
                 running[
                     filename.name
-                ] = f'job is still running (no `Epilogue`) - {completion_percentage}% COMPLETE'
+                ] = f'job is still running (no `Epilogue`)'
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) == 0:
@@ -122,7 +122,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
         else:
             not_started[filename.name] = f'output file not found {filename}'
 
-    completion = {}
+    completion = {'completion_percentage': completion_percentage}
 
     if len(not_started) > 0:
         completion['not_started'] = not_started
@@ -132,8 +132,6 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
         completion['errors'] = errors
     if len(running) > 0:
         completion['running'] = running
-
-    completion['completion_percentage'] = completion_percentage
 
     return completion
 
