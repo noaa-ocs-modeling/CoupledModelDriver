@@ -48,11 +48,15 @@ def check_completion(
     completion_status = {}
     directories = [member.name for member in directory.iterdir()]
     if 'spinup' in directories:
-        completion_status.update(check_completion(directory=directory / 'spinup'))
+        completion_status.update(
+            check_completion(directory=directory / 'spinup', model=model, verbose=verbose)
+        )
     if 'runs' in directories:
         completion_status['runs'] = {}
         for run_directory in (directory / 'runs').iterdir():
-            completion_status['runs'].update(check_completion(directory=run_directory))
+            completion_status['runs'].update(
+                check_completion(directory=run_directory, model=model, verbose=verbose)
+            )
     else:
         if model == ADCIRCJSON:
             completion = check_adcirc_completion(directory=directory)
