@@ -3,6 +3,7 @@ from glob import glob
 import os
 from os import PathLike
 from pathlib import Path
+import re
 from typing import Dict, Union
 
 
@@ -81,11 +82,18 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     for filename in [Path(filename) for filename in glob(str(slurm_out_log_pattern))]:
         with open(filename, 'rb') as log_file:
-            lines = tail(log_file, lines=2)
+            lines = tail(log_file, lines=30)
             if len(lines) == 0 or 'End Epilogue' not in lines[-1]:
                 if filename.name not in running:
                     running[filename.name] = []
-                running[filename.name] = f'job is still running (no `Epilogue`) - {lines}'
+
+                message = 'job is still running (no `Epilogue`)'
+
+                percentages = re.findall('[0-9|.]+% COMPLETE', '\n'.join(lines))
+                if len(percentages) > 0:
+                    message += f' - {percentages[-1]}'
+
+                running[filename.name] = message
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) == 0:
