@@ -52,7 +52,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     ]
     if len(nonexistant_files) > 0:
         raise FileNotFoundError(
-            f'not an ADCIRC run directory - file(s) not found: {", ".join(nonexistant_files)}'
+            f'file(s) not found: {", ".join(nonexistant_files)} - not an ADCIRC run directory: {directory}'
         )
 
     not_started = {}
