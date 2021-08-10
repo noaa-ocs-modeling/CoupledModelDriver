@@ -56,7 +56,7 @@ def check_adcirc_completion(directory: PathLike = None):
     if not adcirc_output_log_filename.exists():
         errors['adcirc_output'] = 'could not find ADCIRC output file `fort.16`'
 
-    for filename in glob(str(slurm_error_log_pattern)):
+    for filename in [Path(filename) for filename in glob(str(slurm_error_log_pattern))]:
         with open(filename) as log_file:
             lines = list(log_file.readlines())
             if len(lines) > 0:
@@ -66,7 +66,7 @@ def check_adcirc_completion(directory: PathLike = None):
                     errors['slurm_error'][filename.name] = []
                 errors['slurm_error'][filename.name].extend(lines)
 
-    for filename in glob(str(slurm_out_log_pattern)):
+    for filename in [Path(filename) for filename in glob(str(slurm_out_log_pattern))]:
         with open(filename, 'rb') as log_file:
             lines = tail(log_file, lines=3)
             if 'End Epilogue' not in lines[-1]:
@@ -76,7 +76,7 @@ def check_adcirc_completion(directory: PathLike = None):
                     errors['slurm_output'][filename.name] = []
                 errors['slurm_output'][filename.name].extend(lines)
 
-    esmf_log_filenames = glob(str(esmf_log_pattern))
+    esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) > 0:
         for filename in esmf_log_filenames:
             with open(filename) as log_file:
@@ -93,9 +93,7 @@ def check_adcirc_completion(directory: PathLike = None):
                 'esmf_output'
             ] = f'no ESMF logfiles found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
 
-    for filename in glob(str(output_netcdf_pattern)):
-        filename = Path(filename)
-
+    for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
         if filename.name == 'fort.63.nc':
             minimum_file_size = 140884
         elif filename.name == 'fort.64.nc':
