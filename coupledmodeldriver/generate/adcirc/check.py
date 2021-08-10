@@ -92,7 +92,8 @@ def check_adcirc_completion(directory: PathLike = None):
                 errors['netcdf_output'] = {}
             if netcdf_filename.name not in errors['netcdf_output']:
                 errors['netcdf_output'][
-                    netcdf_filename.name] = f'empty file (size {netcdf_filename.stat().st_size} is not greater than {minimum_file_size})'
+                    netcdf_filename.name
+                ] = f'empty file (size {netcdf_filename.stat().st_size} is not greater than {minimum_file_size})'
 
     if len(errors) > 0:
         print(json.dumps(errors, indent=4))

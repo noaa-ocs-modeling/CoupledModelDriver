@@ -5,8 +5,7 @@ from pathlib import Path
 
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
-from coupledmodeldriver.generate.adcirc.check import \
-    check_adcirc_completion
+from coupledmodeldriver.generate.adcirc.check import check_adcirc_completion
 from coupledmodeldriver.utilities import convert_value
 
 MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
@@ -17,9 +16,7 @@ def parse_check_completion_arguments():
     argument_parser.add_argument(
         '--directory', help='directory containing model run configuration'
     )
-    argument_parser.add_argument(
-        '--model', help='model that is running, one of: `ADCIRC`'
-    )
+    argument_parser.add_argument('--model', help='model that is running, one of: `ADCIRC`')
 
     arguments = argument_parser.parse_args()
 
