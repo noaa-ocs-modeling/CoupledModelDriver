@@ -81,11 +81,11 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     for filename in [Path(filename) for filename in glob(str(slurm_out_log_pattern))]:
         with open(filename, 'rb') as log_file:
-            lines = tail(log_file, lines=3)
-            if 'End Epilogue' not in lines[-1]:
+            lines = tail(log_file, lines=2)
+            if len(lines) == 0 or 'End Epilogue' not in lines[-1]:
                 if filename.name not in running:
                     running[filename.name] = []
-                running[filename.name] = 'job is still running (no `Epilogue`)'
+                running[filename.name] = f'job is still running (no `Epilogue`) - {lines}'
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) == 0:
