@@ -1,5 +1,4 @@
 from glob import glob
-import json
 from os import PathLike
 from pathlib import Path
 
@@ -36,7 +35,7 @@ def check_adcirc_completion(directory: PathLike = None):
     elif not isinstance(directory, Path):
         directory = Path(directory)
 
-    errors = {'directory': directory}
+    errors = {'directory': directory.name}
 
     slurm_error_log_filenames = glob(str(directory / 'ADCIRC_*_*.err.log'))
     slurm_out_log_filenames = glob(str(directory / 'ADCIRC_*_*.out.log'))
@@ -95,10 +94,4 @@ def check_adcirc_completion(directory: PathLike = None):
                     netcdf_filename.name
                 ] = f'empty file (size {netcdf_filename.stat().st_size} is not greater than {minimum_file_size})'
 
-    if len(errors) > 0:
-        print(json.dumps(errors, indent=4))
-        completed = False
-    else:
-        completed = True
-
-    return completed
+    return errors
