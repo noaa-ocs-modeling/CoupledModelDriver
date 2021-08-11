@@ -19,7 +19,10 @@ MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
 def parse_check_completion_arguments():
     argument_parser = ArgumentParser()
     argument_parser.add_argument(
-        '--directory', nargs='+', help='directory containing model run configuration'
+        'directory',
+        nargs='*',
+        default=Path.cwd(),
+        help='directory containing model run configuration',
     )
     argument_parser.add_argument('--model', help='model that is running, one of: `ADCIRC`')
     argument_parser.add_argument(
