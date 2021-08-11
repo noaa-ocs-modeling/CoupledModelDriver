@@ -9,6 +9,7 @@ from typing import Dict, Union
 
 class CompletionStatus(Enum):
     NOT_STARTED = 'not_started'
+    IN_SETUP = 'in_setup'
     FAILED = 'failed'
     ERROR = 'error'
     RUNNING = 'running'
@@ -41,7 +42,7 @@ def tail(file, lines: int = 20) -> [str]:
     return [line.decode() for line in all_read_text.splitlines()[-total_lines_wanted:]]
 
 
-def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[str, str]]}:
+def is_adcirc_run_directory(directory: PathLike = None) -> bool:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
@@ -51,10 +52,18 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     nonexistant_files = [
         filename for filename in required_files if not (directory / filename).exists()
     ]
-    if len(nonexistant_files) > 0:
-        raise FileNotFoundError(
-            f'file(s) not found: {", ".join(nonexistant_files)} - not an ADCIRC run directory: {directory}'
-        )
+
+    return len(nonexistant_files) == 0
+
+
+def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[str, str]]}:
+    if directory is None:
+        directory = Path.cwd()
+    elif not isinstance(directory, Path):
+        directory = Path(directory)
+
+    if not is_adcirc_run_directory(directory):
+        raise FileNotFoundError(f'not an ADCIRC run directory: {directory}')
 
     not_started = {}
     failures = {}

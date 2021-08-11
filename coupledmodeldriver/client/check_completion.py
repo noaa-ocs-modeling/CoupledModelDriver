@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import json
 from os import PathLike
 from pathlib import Path
+from typing import Collection
 
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
@@ -18,7 +19,7 @@ MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
 def parse_check_completion_arguments():
     argument_parser = ArgumentParser()
     argument_parser.add_argument(
-        '--directory', help='directory containing model run configuration'
+        '--directory', nargs='+', help='directory containing model run configuration'
     )
     argument_parser.add_argument('--model', help='model that is running, one of: `ADCIRC`')
     argument_parser.add_argument(
@@ -32,7 +33,7 @@ def parse_check_completion_arguments():
         model = MODELS[model.lower()]
 
     return {
-        'directory': convert_value(arguments.directory, Path),
+        'directory': convert_value(arguments.directory, [Path]),
         'model': model,
         'verbose': arguments.verbose,
     }
@@ -43,36 +44,43 @@ def check_completion(
 ):
     if directory is None:
         directory = Path.cwd()
-    elif not isinstance(directory, Path):
+    elif not isinstance(directory, Path) and (
+        not isinstance(directory, Collection) or isinstance(directory, str)
+    ):
         directory = Path(directory)
 
     if model is None:
         model = ADCIRCJSON
 
     completion_status = {}
-    directories = [member.name for member in directory.iterdir()]
-    if 'spinup' in directories:
-        completion_status.update(
-            check_completion(directory=directory / 'spinup', model=model, verbose=verbose)
-        )
-    if 'runs' in directories:
-        completion_status['runs'] = {}
-        for run_directory in (directory / 'runs').iterdir():
-            completion_status['runs'].update(
-                check_completion(directory=run_directory, model=model, verbose=verbose)
+
+    if isinstance(directory, Collection):
+        for subdirectory in directory:
+            completion_status[subdirectory.name] = check_completion(subdirectory)
+    elif isinstance(directory, Path):
+        subdirectories = [member.name for member in directory.iterdir()]
+        if 'spinup' in subdirectories:
+            completion_status.update(
+                check_completion(directory=directory / 'spinup', model=model, verbose=verbose)
             )
-    else:
-        if model == ADCIRCJSON:
-            if verbose:
-                completion = collect_adcirc_errors(directory=directory)
-                percentage = completion['completion_percentage']
-            else:
-                completion, percentage = check_adcirc_completion(directory=directory)
+        if 'runs' in subdirectories:
+            completion_status['runs'] = {}
+            for run_directory in (directory / 'runs').iterdir():
+                completion_status['runs'].update(
+                    check_completion(directory=run_directory, model=model, verbose=verbose)
+                )
+        else:
+            if model == ADCIRCJSON:
+                if verbose:
+                    completion = collect_adcirc_errors(directory=directory)
+                    percentage = completion['completion_percentage']
+                else:
+                    completion, percentage = check_adcirc_completion(directory=directory)
 
-            if isinstance(completion, CompletionStatus):
-                completion = f'{completion.value} - {percentage}% COMPLETE'
+                if isinstance(completion, CompletionStatus):
+                    completion = f'{completion.value} - {percentage}% COMPLETE'
 
-            completion_status[directory.name] = completion
+                completion_status[directory.name] = completion
 
     return completion_status
 
