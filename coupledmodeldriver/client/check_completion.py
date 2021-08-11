@@ -35,8 +35,12 @@ def parse_check_completion_arguments():
     if model is not None:
         model = MODELS[model.lower()]
 
+    directory = convert_value(arguments.directory, [Path])
+    if len(directory) == 1:
+        directory = directory[0]
+
     return {
-        'directory': convert_value(arguments.directory, [Path]),
+        'directory': directory,
         'model': model,
         'verbose': arguments.verbose,
     }
@@ -59,7 +63,9 @@ def check_completion(
 
     if isinstance(directory, Collection):
         for subdirectory in directory:
-            completion_status[subdirectory.name] = check_completion(subdirectory)
+            completion_status[subdirectory.name] = check_completion(
+                directory=subdirectory, model=model, verbose=verbose
+            )
     elif isinstance(directory, Path):
         subdirectories = [member.name for member in directory.iterdir()]
         if 'spinup' in subdirectories:
