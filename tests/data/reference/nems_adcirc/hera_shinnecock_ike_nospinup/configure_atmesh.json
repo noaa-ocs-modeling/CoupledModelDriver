@@ -3,5 +3,5 @@
   "resource": "../../../input/shinnecock/ike/forcings/wind_atm_fin_ch_time_vec.nc",
   "processors": 1,
   "nems_parameters": {},
-  "modeled_timestep": 3600.0
+  "interval": 3600.0
 }

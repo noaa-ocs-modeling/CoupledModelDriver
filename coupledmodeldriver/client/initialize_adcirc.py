@@ -256,12 +256,12 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
                 )
                 kwargs['nems_parameters'] = nems_cap_parameters
             if issubclass(forcing_configuration_class, TimestepForcingJSON):
-                forcing_timestep = get_argument(
-                    argument=f'{provided_name}-modeled_timestep', arguments=unknown_arguments,
+                forcing_interval = get_argument(
+                    argument=f'{provided_name}-interval', arguments=unknown_arguments,
                 )
-                if forcing_timestep is None:
-                    forcing_timestep = modeled_timestep
-                kwargs['modeled_timestep'] = forcing_timestep
+                if forcing_interval is None:
+                    forcing_interval = nems_interval
+                kwargs['interval'] = forcing_interval
             if issubclass(forcing_configuration_class, WindForcingJSON):
                 forcing_nws = get_argument(
                     argument=f'{provided_name}-nws', arguments=unknown_arguments,

@@ -166,12 +166,12 @@ def test_atmesh():
     configuration = ATMESHForcingJSON(
         resource='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
         nws=17,
-        modeled_timestep=timedelta(hours=1),
+        interval=timedelta(hours=1),
     )
 
     assert configuration.configuration == {
         'nws': 17,
-        'modeled_timestep': timedelta(hours=1),
+        'interval': timedelta(hours=1),
         'resource': Path('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
         'processors': 1,
         'nems_parameters': {},
@@ -180,12 +180,12 @@ def test_atmesh():
 
 def test_ww3data():
     configuration = WW3DATAForcingJSON(
-        resource='ww3.HWRF.NOV2018.2012_sxy.nc', nrs=5, modeled_timestep=timedelta(hours=1),
+        resource='ww3.HWRF.NOV2018.2012_sxy.nc', nrs=5, interval=timedelta(hours=1),
     )
 
     assert configuration.configuration == {
         'nrs': 5,
-        'modeled_timestep': timedelta(hours=1),
+        'interval': timedelta(hours=1),
         'resource': Path('ww3.HWRF.NOV2018.2012_sxy.nc'),
         'processors': 1,
         'nems_parameters': {},

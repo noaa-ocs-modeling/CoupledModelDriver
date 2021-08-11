@@ -52,19 +52,19 @@ class ForcingJSON(ConfigurationJSON, ABC):
 
 
 class TimestepForcingJSON(ForcingJSON, ABC):
-    default_modeled_timestep: timedelta
-    field_types = {'modeled_timestep': timedelta}
+    default_interval: timedelta
+    field_types = {'interval': timedelta}
 
-    def __init__(self, modeled_timestep: timedelta = None, **kwargs):
-        if modeled_timestep is None:
-            modeled_timestep = self.default_modeled_timestep
+    def __init__(self, interval: timedelta = None, **kwargs):
+        if interval is None:
+            interval = self.default_interval
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(TimestepForcingJSON.field_types)
 
         ForcingJSON.__init__(self, **kwargs)
 
-        self['modeled_timestep'] = modeled_timestep
+        self['interval'] = interval
 
 
 class FileForcingJSON(ForcingJSON, ABC):
@@ -290,33 +290,33 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
     name = 'OWI'
     default_filename = f'configure_owi.json'
     default_nws = 12
-    default_modeled_timestep = timedelta(hours=1)
+    default_interval = timedelta(hours=1)
 
-    def __init__(self, modeled_timestep: timedelta = None, **kwargs):
+    def __init__(self, interval: timedelta = None, **kwargs):
         WindForcingJSON.__init__(self, nws=None, **kwargs)
-        TimestepForcingJSON.__init__(self, modeled_timestep=modeled_timestep, **kwargs)
+        TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
     def adcircpy_forcing(self) -> OwiForcing:
-        return OwiForcing(interval_seconds=self['modeled_timestep'] / timedelta(seconds=1))
+        return OwiForcing(interval_seconds=self['interval'] / timedelta(seconds=1))
 
     @classmethod
     def from_adcircpy(cls, forcing: OwiForcing) -> 'OWIForcingJSON':
-        return cls(modeled_timestep=timedelta(seconds=forcing.interval))
+        return cls(interval=timedelta(seconds=forcing.interval))
 
 
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
     name = 'ATMESH'
     default_filename = f'configure_atmesh.json'
     default_nws = 17
-    default_modeled_timestep: timedelta
+    default_interval = timedelta(hours=1)
     default_processors = 1
 
     def __init__(
         self,
         resource: PathLike,
         nws: int = None,
-        modeled_timestep: timedelta = None,
+        interval: timedelta = None,
         processors: int = None,
         nems_parameters: {str: str} = None,
         **kwargs,
@@ -326,21 +326,19 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         NEMSCapJSON.__init__(
             self, processors=processors, nems_parameters=nems_parameters, **kwargs
         )
-        TimestepForcingJSON.__init__(self, modeled_timestep=modeled_timestep, **kwargs)
+        TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
     def adcircpy_forcing(self) -> Forcing:
         return AtmosphericMeshForcing(
             filename=self['resource'],
             nws=self['nws'],
-            interval_seconds=self['modeled_timestep'] / timedelta(seconds=1),
+            interval_seconds=self['interval'] / timedelta(seconds=1),
         )
 
     @classmethod
     def from_adcircpy(cls, forcing: AtmosphericMeshForcing) -> 'ATMESHForcingJSON':
-        return cls(
-            resource=forcing.filename, nws=forcing.NWS, modeled_timestep=forcing.interval,
-        )
+        return cls(resource=forcing.filename, nws=forcing.NWS, interval=forcing.interval)
 
     @property
     def nemspy_entry(self) -> AtmosphericMeshEntry:
@@ -369,14 +367,14 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
     name = 'WW3DATA'
     default_filename = f'configure_ww3data.json'
     default_nrs = 5
-    default_modeled_timestep = timedelta(hours=1)
+    default_interval = timedelta(hours=1)
     default_processors = 1
 
     def __init__(
         self,
         resource: PathLike,
         nrs: int = None,
-        modeled_timestep: timedelta = None,
+        interval: timedelta = None,
         processors: int = None,
         nems_parameters: {str: str} = None,
         **kwargs,
@@ -386,21 +384,17 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         NEMSCapJSON.__init__(
             self, processors=processors, nems_parameters=nems_parameters, **kwargs
         )
-        TimestepForcingJSON.__init__(self, modeled_timestep=modeled_timestep, **kwargs)
+        TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
     def adcircpy_forcing(self) -> Forcing:
         return WaveWatch3DataForcing(
-            filename=self['resource'],
-            nrs=self['nrs'],
-            interval_seconds=self['modeled_timestep'],
+            filename=self['resource'], nrs=self['nrs'], interval_seconds=self['interval'],
         )
 
     @classmethod
     def from_adcircpy(cls, forcing: WaveWatch3DataForcing) -> 'WW3DATAForcingJSON':
-        return cls(
-            resource=forcing.filename, nrs=forcing.NRS, modeled_timestep=forcing.interval,
-        )
+        return cls(resource=forcing.filename, nrs=forcing.NRS, interval=forcing.interval)
 
     @property
     def nemspy_entry(self) -> WaveWatch3MeshEntry:
