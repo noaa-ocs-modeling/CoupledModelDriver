@@ -87,7 +87,7 @@ def check_completion(
                     completion, percentage = check_adcirc_completion(directory=directory)
 
                 if isinstance(completion, CompletionStatus):
-                    completion = f'{completion.value} - {percentage}% COMPLETE'
+                    completion = f'{completion.value} - {percentage}%'
 
                 completion_status[directory.name] = completion
 
