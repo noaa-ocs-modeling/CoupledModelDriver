@@ -360,30 +360,25 @@ async def write_spinup_directory(
             spinup_directory, overwrite=overwrite, include_version=True,
         )
         LOGGER.info(
-            f'writing NEMS coldstart configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
+            f'writing NEMS tidal spinup configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
         )
 
     LOGGER.debug(
-        f'writing tidal spinup configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
+        f'writing ADCIRC tidal spinup configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
     )
-    try:
-        spinup_adcircpy_driver.write(
-            spinup_directory,
-            overwrite=overwrite,
-            fort13=None if use_original_mesh else 'fort.13',
-            fort14=None,
-            coldstart='fort.15',
-            hotstart=None,
-            driver=None,
-        )
-        if use_original_mesh:
-            if local_fort13_filename.exists():
-                create_symlink(
-                    local_fort13_filename, spinup_directory / 'fort.13', relative=True
-                )
-        create_symlink(local_fort14_filename, spinup_directory / 'fort.14', relative=True)
-    except Exception as error:
-        LOGGER.warning(error)
+    spinup_adcircpy_driver.write(
+        spinup_directory,
+        overwrite=overwrite,
+        fort13=None if use_original_mesh else 'fort.13',
+        fort14=None,
+        coldstart='fort.15',
+        hotstart=None,
+        driver=None,
+    )
+    if use_original_mesh:
+        if local_fort13_filename.exists():
+            create_symlink(local_fort13_filename, spinup_directory / 'fort.13', relative=True)
+    create_symlink(local_fort14_filename, spinup_directory / 'fort.14', relative=True)
 
 
 async def write_run_directory(
@@ -500,25 +495,25 @@ async def write_run_directory(
             run_directory, overwrite=overwrite, include_version=True,
         )
         LOGGER.info(
-            f'writing NEMS hotstart configuration to "{os.path.relpath(run_directory.resolve(), Path.cwd())}"'
+            f'writing NEMS run configuration to "{os.path.relpath(run_directory.resolve(), Path.cwd())}"'
         )
 
-    try:
-        run_adcircpy_driver.write(
-            run_directory,
-            overwrite=overwrite,
-            fort13=None if use_original_mesh else 'fort.13',
-            fort14=None,
-            coldstart=None,
-            hotstart='fort.15',
-            driver=None,
-        )
-        if use_original_mesh:
-            if local_fort13_filename.exists():
-                create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
-        create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
-    except Exception as error:
-        LOGGER.warning(error)
+    LOGGER.debug(
+        f'writing ADCIRC run configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
+    )
+    run_adcircpy_driver.write(
+        run_directory,
+        overwrite=overwrite,
+        fort13=None if use_original_mesh else 'fort.13',
+        fort14=None,
+        coldstart=None,
+        hotstart='fort.15',
+        driver=None,
+    )
+    if use_original_mesh:
+        if local_fort13_filename.exists():
+            create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
+    create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
 
     if do_spinup:
         for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:
