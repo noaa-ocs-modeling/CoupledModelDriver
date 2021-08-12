@@ -353,13 +353,16 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
     @property
     def base_mesh(self) -> AdcircMesh:
+        if self.__base_mesh is None:
+            LOGGER.info(f'opening mesh "{self["fort_14_path"]}"')
+            self.__base_mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
         return self.__base_mesh
 
     @base_mesh.setter
     def base_mesh(self, base_mesh: Union[AdcircMesh, PathLike]):
         if not isinstance(base_mesh, AdcircMesh):
-            LOGGER.info(f'opening mesh "{base_mesh}"')
-            base_mesh = AdcircMesh.open(base_mesh, crs=4326)
+            self['fort_14_path'] = base_mesh
+            base_mesh = self.base_mesh
         self.__base_mesh = base_mesh
 
     @property
