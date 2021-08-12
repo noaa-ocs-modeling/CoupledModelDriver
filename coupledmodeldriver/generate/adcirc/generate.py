@@ -362,12 +362,12 @@ def write_spinup_directory(
             directory, overwrite=overwrite, include_version=True,
         )
         LOGGER.info(
-            f'writing NEMS tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
+            f'writing NEMS+ADCIRC tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
         )
-
-    LOGGER.debug(
-        f'writing ADCIRC tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
-    )
+    else:
+        LOGGER.debug(
+            f'writing ADCIRC tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
+        )
     adcircpy_driver.write(
         directory,
         overwrite=overwrite,
@@ -491,12 +491,12 @@ def write_run_directory(
             directory, overwrite=overwrite, include_version=True,
         )
         LOGGER.info(
-            f'writing NEMS run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
+            f'writing NEMS+ADCIRC run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
         )
-
-    LOGGER.debug(
-        f'writing ADCIRC run configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
-    )
+    else:
+        LOGGER.debug(
+            f'writing ADCIRC run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
+        )
     adcircpy_driver.write(
         directory,
         overwrite=overwrite,
