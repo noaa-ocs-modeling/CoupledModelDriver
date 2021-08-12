@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
 from datetime import timedelta
 from enum import Enum
@@ -154,29 +155,30 @@ def generate_adcirc_configuration(
         os.remove(local_fort15_filename)
 
     event_loop = asyncio.get_event_loop()
+    process_pool = ProcessPoolExecutor()
 
     if do_spinup:
         spinup_directory = output_directory / 'spinup'
-        event_loop.create_task(
-            write_spinup_directory(
-                spinup_directory=spinup_directory,
-                spinup_configuration=copy(base_configuration),
-                spinup_duration=spinup_duration,
-                relative_paths=relative_paths,
-                overwrite=overwrite,
-                use_original_mesh=use_original_mesh,
-                local_fort13_filename=local_fort13_filename,
-                local_fort14_filename=local_fort14_filename,
-                platform=platform,
-                adcirc_processors=adcirc_processors,
-                slurm_account=slurm_account,
-                job_duration=job_duration,
-                partition=partition,
-                use_aswip=use_aswip,
-                email_type=email_type,
-                email_address=email_address,
-                use_nems=use_nems,
-            )
+        event_loop.run_in_executor(
+            process_pool,
+            write_spinup_directory,
+            spinup_directory,
+            copy(base_configuration),
+            spinup_duration,
+            relative_paths,
+            overwrite,
+            use_original_mesh,
+            local_fort13_filename,
+            local_fort14_filename,
+            platform,
+            adcirc_processors,
+            slurm_account,
+            job_duration,
+            partition,
+            use_aswip,
+            email_type,
+            email_address,
+            use_nems,
         )
     else:
         spinup_directory = None
@@ -191,29 +193,29 @@ def generate_adcirc_configuration(
         f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
     )
     for run_name, run_configuration in perturbations.items():
-        event_loop.create_task(
-            write_run_directory(
-                run_directory=runs_directory / run_name,
-                run_name=run_name,
-                run_phase=run_phase,
-                run_configuration=run_configuration,
-                relative_paths=relative_paths,
-                overwrite=overwrite,
-                use_original_mesh=use_original_mesh,
-                local_fort13_filename=local_fort13_filename,
-                local_fort14_filename=local_fort14_filename,
-                platform=platform,
-                adcirc_processors=adcirc_processors,
-                slurm_account=slurm_account,
-                job_duration=job_duration,
-                partition=partition,
-                use_aswip=use_aswip,
-                email_type=email_type,
-                email_address=email_address,
-                use_nems=use_nems,
-                do_spinup=do_spinup,
-                spinup_directory=spinup_directory,
-            )
+        event_loop.run_in_executor(
+            process_pool,
+            write_run_directory,
+            runs_directory / run_name,
+            run_name,
+            run_phase,
+            run_configuration,
+            relative_paths,
+            overwrite,
+            use_original_mesh,
+            local_fort13_filename,
+            local_fort14_filename,
+            platform,
+            adcirc_processors,
+            slurm_account,
+            job_duration,
+            partition,
+            use_aswip,
+            email_type,
+            email_address,
+            use_nems,
+            do_spinup,
+            spinup_directory,
         )
 
     cleanup_script = EnsembleCleanupScript()
@@ -241,7 +243,7 @@ def generate_adcirc_configuration(
         os.chdir(starting_directory)
 
 
-async def write_spinup_directory(
+def write_spinup_directory(
     spinup_directory: PathLike,
     spinup_configuration: RunConfiguration,
     spinup_duration: timedelta,
@@ -381,7 +383,7 @@ async def write_spinup_directory(
     create_symlink(local_fort14_filename, spinup_directory / 'fort.14', relative=True)
 
 
-async def write_run_directory(
+def write_run_directory(
     run_directory: PathLike,
     run_name: str,
     run_phase: str,
