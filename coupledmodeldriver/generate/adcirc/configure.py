@@ -135,8 +135,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
     def perturb(self, relative_to: PathLike = None) -> {str: 'ADCIRCRunConfiguration'}:
         perturbed_configurations = super().perturb(relative_to=relative_to)
 
-        for perturbed_configuration in perturbed_configurations:
-            perturbed_configuration['adcirc'].base_mesh = self['adcirc'].base_mesh
+        for name, perturbed_configuration in perturbed_configurations.items():
+            perturbed_configurations[name] = perturbed_configuration['adcirc'].base_mesh = self['adcirc'].base_mesh
 
         return perturbed_configurations
 
