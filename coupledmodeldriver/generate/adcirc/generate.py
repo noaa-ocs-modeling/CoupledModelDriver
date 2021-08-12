@@ -234,7 +234,7 @@ def generate_adcirc_configuration(
     )
     cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
 
-    event_loop.run_until_complete(asyncio.gather(*futures))
+    event_loop.run_until_complete(asyncio.gather(*futures, return_exceptions=False))
 
     LOGGER.info(
         f'writing ensemble run script "{os.path.relpath(ensemble_run_script_filename.resolve(), Path.cwd())}"'
@@ -317,7 +317,7 @@ def write_spinup_directory(
     job_script_filename = directory / 'adcirc.job'
 
     if use_aswip:
-        aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'],)
+        aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'])
     else:
         aswip_command = None
 
