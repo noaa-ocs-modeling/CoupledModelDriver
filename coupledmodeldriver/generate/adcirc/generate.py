@@ -8,11 +8,11 @@ import logging
 import os
 from os import PathLike
 from pathlib import Path
+from typing import Union
 
 from nemspy import ModelingSystem
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.generate.adcirc.configure import (
     ADCIRCRunConfiguration,
     NEMSADCIRCRunConfiguration,
@@ -22,10 +22,8 @@ from coupledmodeldriver.generate.adcirc.script import (
     AdcircSetupJob,
     AswipCommand,
 )
-from coupledmodeldriver.script import EnsembleCleanupScript, \
-    EnsembleRunScript, SlurmEmailType
-from coupledmodeldriver.utilities import LOGGER, create_symlink, \
-    get_logger
+from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
+from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
 
 
 class RunPhase(Enum):
@@ -256,9 +254,9 @@ def generate_adcirc_configuration(
 
 
 def write_spinup_directory(
-    spinup_directory: PathLike,
-    spinup_configuration: RunConfiguration,
-    spinup_duration: timedelta,
+    directory: PathLike,
+    configuration: Union[ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration],
+    duration: timedelta,
     local_fort14_filename: PathLike,
     local_fort13_filename: PathLike = None,
     relative_paths: bool = False,
@@ -274,114 +272,104 @@ def write_spinup_directory(
     email_address: str = None,
     use_nems: bool = False,
 ):
-    if not isinstance(spinup_directory, Path):
-        spinup_directory = Path(spinup_directory)
+    if not isinstance(directory, Path):
+        directory = Path(directory)
     if not isinstance(local_fort13_filename, Path):
         local_fort13_filename = Path(local_fort13_filename)
 
-    if not spinup_directory.exists():
-        spinup_directory.mkdir(parents=True, exist_ok=True)
+    if not directory.exists():
+        directory.mkdir(parents=True, exist_ok=True)
 
     setup_job_name = 'ADCIRC_SETUP_SPINUP'
-    spinup_job_name = 'ADCIRC_COLDSTART_SPINUP'
+    job_name = 'ADCIRC_COLDSTART_SPINUP'
 
-    spinup_adcircpy_driver = spinup_configuration.adcircpy_driver
+    adcircpy_driver = configuration.adcircpy_driver
 
     if relative_paths:
-        spinup_configuration.relative_to(spinup_directory, inplace=True)
+        configuration.relative_to(directory, inplace=True)
 
     if use_nems:
-        spinup_nems = spinup_configuration.nemspy_modeling_system
-        spinup_nems = ModelingSystem(
-            spinup_nems.start_time - spinup_duration,
-            spinup_nems.start_time,
-            spinup_nems.interval,
-            ocn=deepcopy(spinup_nems['OCN']),
-            **spinup_nems.attributes,
+        nems = configuration.nemspy_modeling_system
+        nems = ModelingSystem(
+            nems.start_time - duration,
+            nems.start_time,
+            nems.interval,
+            ocn=deepcopy(nems['OCN']),
+            **nems.attributes,
         )
-        spinup_processors = spinup_nems.processors
-        spinup_model_executable = spinup_configuration['nems']['executable_path']
+        processors = nems.processors
+        model_executable = configuration['nems']['executable_path']
     else:
-        spinup_nems = None
-        spinup_processors = adcirc_processors
-        spinup_model_executable = spinup_configuration['adcirc']['adcirc_executable_path']
+        nems = None
+        processors = adcirc_processors
+        model_executable = configuration['adcirc']['adcirc_executable_path']
 
-    spinup_adcprep_path = spinup_configuration['adcirc']['adcprep_executable_path']
-    spinup_aswip_path = spinup_configuration['adcirc']['aswip_executable_path']
-    spinup_source_filename = spinup_configuration['adcirc']['source_filename']
+    adcprep_path = configuration['adcirc']['adcprep_executable_path']
+    aswip_path = configuration['adcirc']['aswip_executable_path']
+    source_filename = configuration['adcirc']['source_filename']
 
-    spinup_model_executable = update_path_relative(
-        spinup_model_executable, relative_paths, spinup_directory
-    )
-    spinup_adcprep_path = update_path_relative(
-        spinup_adcprep_path, relative_paths, spinup_directory
-    )
-    spinup_aswip_path = update_path_relative(
-        spinup_aswip_path, relative_paths, spinup_directory
-    )
-    spinup_source_filename = update_path_relative(
-        spinup_source_filename, relative_paths, spinup_directory
-    )
+    model_executable = update_path_relative(model_executable, relative_paths, directory)
+    adcprep_path = update_path_relative(adcprep_path, relative_paths, directory)
+    aswip_path = update_path_relative(aswip_path, relative_paths, directory)
+    source_filename = update_path_relative(source_filename, relative_paths, directory)
 
-    spinup_setup_script_filename = spinup_directory / 'setup.job'
-    spinup_job_script_filename = spinup_directory / 'adcirc.job'
+    setup_script_filename = directory / 'setup.job'
+    job_script_filename = directory / 'adcirc.job'
 
     if use_aswip:
-        aswip_command = AswipCommand(
-            path=spinup_aswip_path, nws=spinup_configuration['besttrack']['nws'],
-        )
+        aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'],)
     else:
         aswip_command = None
 
-    spinup_setup_script = AdcircSetupJob(
+    setup_script = AdcircSetupJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
         slurm_partition=partition,
         slurm_run_name=setup_job_name,
-        adcprep_path=spinup_adcprep_path,
+        adcprep_path=adcprep_path,
         aswip_command=aswip_command,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
         slurm_error_filename=f'{setup_job_name}.err.log',
         slurm_log_filename=f'{setup_job_name}.out.log',
-        source_filename=spinup_source_filename,
+        source_filename=source_filename,
     )
 
-    spinup_job_script = AdcircRunJob(
+    job_script = AdcircRunJob(
         platform=platform,
-        slurm_tasks=spinup_processors,
+        slurm_tasks=processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
-        slurm_run_name=spinup_job_name,
-        executable=spinup_model_executable,
+        slurm_run_name=job_name,
+        executable=model_executable,
         slurm_partition=partition,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
-        slurm_error_filename=f'{spinup_job_name}.err.log',
-        slurm_log_filename=f'{spinup_job_name}.out.log',
-        source_filename=spinup_source_filename,
+        slurm_error_filename=f'{job_name}.err.log',
+        slurm_log_filename=f'{job_name}.out.log',
+        source_filename=source_filename,
     )
 
-    spinup_setup_script.write(spinup_setup_script_filename, overwrite=overwrite)
-    spinup_job_script.write(spinup_job_script_filename, overwrite=overwrite)
+    setup_script.write(setup_script_filename, overwrite=overwrite)
+    job_script.write(job_script_filename, overwrite=overwrite)
 
     if use_nems:
-        LOGGER.debug(f'setting spinup to {spinup_duration}')
+        LOGGER.debug(f'setting spinup to {duration}')
 
-        spinup_nems.write(
-            spinup_directory, overwrite=overwrite, include_version=True,
+        nems.write(
+            directory, overwrite=overwrite, include_version=True,
         )
         LOGGER.info(
-            f'writing NEMS tidal spinup configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
+            f'writing NEMS tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
         )
 
     LOGGER.debug(
-        f'writing ADCIRC tidal spinup configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
+        f'writing ADCIRC tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
     )
-    spinup_adcircpy_driver.write(
-        spinup_directory,
+    adcircpy_driver.write(
+        directory,
         overwrite=overwrite,
         fort13=None if use_original_mesh else 'fort.13',
         fort14=None,
@@ -391,15 +379,15 @@ def write_spinup_directory(
     )
     if use_original_mesh:
         if local_fort13_filename.exists():
-            create_symlink(local_fort13_filename, spinup_directory / 'fort.13', relative=True)
-    create_symlink(local_fort14_filename, spinup_directory / 'fort.14', relative=True)
+            create_symlink(local_fort13_filename, directory / 'fort.13', relative=True)
+    create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
 
 
 def write_run_directory(
-    run_directory: PathLike,
-    run_name: str,
-    run_phase: str,
-    run_configuration: RunConfiguration,
+    directory: PathLike,
+    name: str,
+    phase: str,
+    configuration: Union[ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration],
     local_fort14_filename: PathLike,
     local_fort13_filename: PathLike = None,
     relative_paths: bool = False,
@@ -417,106 +405,100 @@ def write_run_directory(
     do_spinup: bool = False,
     spinup_directory: PathLike = None,
 ):
-    if not isinstance(run_directory, Path):
-        run_directory = Path(run_directory)
+    if not isinstance(directory, Path):
+        directory = Path(directory)
     if spinup_directory is not None and not isinstance(spinup_directory, Path):
         spinup_directory = Path(spinup_directory)
     if not isinstance(local_fort13_filename, Path):
         local_fort13_filename = Path(local_fort13_filename)
 
-    if not run_directory.exists():
-        run_directory.mkdir(parents=True, exist_ok=True)
+    if not directory.exists():
+        directory.mkdir(parents=True, exist_ok=True)
     LOGGER.debug(
-        f'writing run configuration to "{os.path.relpath(run_directory.resolve(), Path.cwd())}"'
+        f'writing run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
     )
 
-    setup_job_name = f'ADCIRC_SETUP_{run_name}'
-    run_job_name = f'ADCIRC_{run_phase}_{run_name}'
+    setup_job_name = f'ADCIRC_SETUP_{name}'
+    job_name = f'ADCIRC_{phase}_{name}'
 
-    run_adcircpy_driver = run_configuration.adcircpy_driver
+    adcircpy_driver = configuration.adcircpy_driver
 
     if relative_paths:
-        run_configuration.relative_to(run_directory, inplace=True)
+        configuration.relative_to(directory, inplace=True)
 
     if use_nems:
-        run_nems = run_configuration.nemspy_modeling_system
-        run_processors = run_nems.processors
-        run_model_executable = run_configuration['nems']['executable_path']
+        nems = configuration.nemspy_modeling_system
+        processors = nems.processors
+        model_executable = configuration['nems']['executable_path']
     else:
-        run_nems = None
-        run_processors = adcirc_processors
-        run_model_executable = run_configuration['adcirc']['adcirc_executable_path']
+        nems = None
+        processors = adcirc_processors
+        model_executable = configuration['adcirc']['adcirc_executable_path']
 
-    run_adcprep_path = run_configuration['adcirc']['adcprep_executable_path']
-    run_aswip_path = run_configuration['adcirc']['aswip_executable_path']
-    run_source_filename = run_configuration['adcirc']['source_filename']
+    adcprep_path = configuration['adcirc']['adcprep_executable_path']
+    aswip_path = configuration['adcirc']['aswip_executable_path']
+    source_filename = configuration['adcirc']['source_filename']
 
-    run_model_executable = update_path_relative(
-        run_model_executable, relative_paths, run_directory
-    )
-    run_adcprep_path = update_path_relative(run_adcprep_path, relative_paths, run_directory)
-    run_aswip_path = update_path_relative(run_aswip_path, relative_paths, run_directory)
-    run_source_filename = update_path_relative(
-        run_source_filename, relative_paths, run_directory
-    )
+    model_executable = update_path_relative(model_executable, relative_paths, directory)
+    adcprep_path = update_path_relative(adcprep_path, relative_paths, directory)
+    aswip_path = update_path_relative(aswip_path, relative_paths, directory)
+    source_filename = update_path_relative(source_filename, relative_paths, directory)
 
-    run_setup_script_filename = run_directory / 'setup.job'
-    run_job_script_filename = run_directory / 'adcirc.job'
+    setup_script_filename = directory / 'setup.job'
+    job_script_filename = directory / 'adcirc.job'
 
     if use_aswip:
-        aswip_command = AswipCommand(
-            path=run_aswip_path, nws=run_configuration['besttrack']['nws'],
-        )
+        aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'],)
     else:
         aswip_command = None
 
-    run_setup_script = AdcircSetupJob(
+    setup_script = AdcircSetupJob(
         platform=platform,
         adcirc_mesh_partitions=adcirc_processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
         slurm_partition=partition,
         slurm_run_name=setup_job_name,
-        adcprep_path=run_adcprep_path,
+        adcprep_path=adcprep_path,
         aswip_command=aswip_command,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
         slurm_error_filename=f'{setup_job_name}.err.log',
         slurm_log_filename=f'{setup_job_name}.out.log',
-        source_filename=run_source_filename,
+        source_filename=source_filename,
     )
 
-    run_job_script = AdcircRunJob(
+    job_script = AdcircRunJob(
         platform=platform,
-        slurm_tasks=run_processors,
+        slurm_tasks=processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
-        slurm_run_name=run_job_name,
-        executable=run_model_executable,
+        slurm_run_name=job_name,
+        executable=model_executable,
         slurm_partition=partition,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
-        slurm_error_filename=f'{run_job_name}.err.log',
-        slurm_log_filename=f'{run_job_name}.out.log',
-        source_filename=run_source_filename,
+        slurm_error_filename=f'{job_name}.err.log',
+        slurm_log_filename=f'{job_name}.out.log',
+        source_filename=source_filename,
     )
 
-    run_setup_script.write(run_setup_script_filename, overwrite=overwrite)
-    run_job_script.write(run_job_script_filename, overwrite=overwrite)
+    setup_script.write(setup_script_filename, overwrite=overwrite)
+    job_script.write(job_script_filename, overwrite=overwrite)
 
     if use_nems:
-        run_nems.write(
-            run_directory, overwrite=overwrite, include_version=True,
+        nems.write(
+            directory, overwrite=overwrite, include_version=True,
         )
         LOGGER.info(
-            f'writing NEMS run configuration to "{os.path.relpath(run_directory.resolve(), Path.cwd())}"'
+            f'writing NEMS run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
         )
 
     LOGGER.debug(
         f'writing ADCIRC run configuration to "{os.path.relpath(spinup_directory.resolve(), Path.cwd())}"'
     )
-    run_adcircpy_driver.write(
-        run_directory,
+    adcircpy_driver.write(
+        directory,
         overwrite=overwrite,
         fort13=None if use_original_mesh else 'fort.13',
         fort14=None,
@@ -526,15 +508,15 @@ def write_run_directory(
     )
     if use_original_mesh:
         if local_fort13_filename.exists():
-            create_symlink(local_fort13_filename, run_directory / 'fort.13', relative=True)
-    create_symlink(local_fort14_filename, run_directory / 'fort.14', relative=True)
+            create_symlink(local_fort13_filename, directory / 'fort.13', relative=True)
+    create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
 
     if do_spinup:
         for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:
             try:
                 create_symlink(
                     spinup_directory / hotstart_filename,
-                    run_directory / hotstart_filename,
+                    directory / hotstart_filename,
                     relative=True,
                 )
             except:

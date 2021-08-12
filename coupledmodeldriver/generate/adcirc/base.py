@@ -1,8 +1,9 @@
+from copy import deepcopy
 from datetime import datetime, timedelta
 import os
 from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.forcing import BestTrackForcing
@@ -216,6 +217,8 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         :param attributes: attributes to set in `adcircpy.AdcircRun` object
         """
 
+        self.__base_mesh = None
+
         if tidal_spinup_timestep is None:
             tidal_spinup_timestep = modeled_timestep
 
@@ -306,10 +309,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
-        LOGGER.info(
-            f'opening mesh "{os.path.relpath(self["fort_14_path"].resolve(), Path.cwd())}"'
-        )
-        mesh = AdcircMesh.open(self['fort_14_path'], crs=4326)
+        if self.base_mesh is None:
+            self.base_mesh = self['fort_14_path']
+        mesh = deepcopy(self.base_mesh)
 
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for adcircpy_forcing in self.adcircpy_forcings:
@@ -348,6 +350,17 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             mesh.generate_tau0()
 
         return mesh
+
+    @property
+    def base_mesh(self) -> AdcircMesh:
+        return self.__base_mesh
+
+    @base_mesh.setter
+    def base_mesh(self, base_mesh: Union[AdcircMesh, PathLike]):
+        if not isinstance(base_mesh, AdcircMesh):
+            LOGGER.info(f'opening mesh "{base_mesh}"')
+            base_mesh = AdcircMesh.open(base_mesh, crs=4326)
+        self.__base_mesh = base_mesh
 
     @property
     def adcircpy_driver(self) -> AdcircRun:

@@ -83,6 +83,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param source_filename: path to module file to `source`
         """
 
+        self.__adcircpy_mesh = None
+
         if not isinstance(mesh_directory, Path):
             mesh_directory = Path(mesh_directory)
 
@@ -129,6 +131,14 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
         for forcing in forcings:
             self.add_forcing(forcing)
+
+    def perturb(self, relative_to: PathLike = None) -> {str: 'ADCIRCRunConfiguration'}:
+        perturbed_configurations = super().perturb(relative_to=relative_to)
+
+        for perturbed_configuration in perturbed_configurations:
+            perturbed_configuration['adcirc'].adcircpy_mesh = self['adcirc'].base_mesh
+
+        return perturbed_configurations
 
     def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
