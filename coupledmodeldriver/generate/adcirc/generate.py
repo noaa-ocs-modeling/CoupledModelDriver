@@ -3,6 +3,7 @@ from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
 from datetime import timedelta
 from enum import Enum
+from functools import partial
 import logging
 import os
 from os import PathLike
@@ -21,8 +22,10 @@ from coupledmodeldriver.generate.adcirc.script import (
     AdcircSetupJob,
     AswipCommand,
 )
-from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
-from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
+from coupledmodeldriver.script import EnsembleCleanupScript, \
+    EnsembleRunScript, SlurmEmailType
+from coupledmodeldriver.utilities import LOGGER, create_symlink, \
+    get_logger
 
 
 class RunPhase(Enum):
@@ -163,24 +166,26 @@ def generate_adcirc_configuration(
         futures.append(
             event_loop.run_in_executor(
                 process_pool,
-                write_spinup_directory,
-                spinup_directory,
-                copy(base_configuration),
-                spinup_duration,
-                relative_paths,
-                overwrite,
-                use_original_mesh,
-                local_fort13_filename,
-                local_fort14_filename,
-                platform,
-                adcirc_processors,
-                slurm_account,
-                job_duration,
-                partition,
-                use_aswip,
-                email_type,
-                email_address,
-                use_nems,
+                partial(
+                    write_spinup_directory,
+                    spinup_directory=spinup_directory,
+                    spinup_configuration=copy(base_configuration),
+                    spinup_duration=spinup_duration,
+                    relative_paths=relative_paths,
+                    overwrite=overwrite,
+                    use_original_mesh=use_original_mesh,
+                    local_fort13_filename=local_fort13_filename,
+                    local_fort14_filename=local_fort14_filename,
+                    platform=platform,
+                    adcirc_processors=adcirc_processors,
+                    slurm_account=slurm_account,
+                    job_duration=job_duration,
+                    partition=partition,
+                    use_aswip=use_aswip,
+                    email_type=email_type,
+                    email_address=email_address,
+                    use_nems=use_nems,
+                ),
             )
         )
     else:
@@ -199,27 +204,29 @@ def generate_adcirc_configuration(
         futures.append(
             event_loop.run_in_executor(
                 process_pool,
-                write_run_directory,
-                runs_directory / run_name,
-                run_name,
-                run_phase,
-                run_configuration,
-                relative_paths,
-                overwrite,
-                use_original_mesh,
-                local_fort13_filename,
-                local_fort14_filename,
-                platform,
-                adcirc_processors,
-                slurm_account,
-                job_duration,
-                partition,
-                use_aswip,
-                email_type,
-                email_address,
-                use_nems,
-                do_spinup,
-                spinup_directory,
+                partial(
+                    write_run_directory,
+                    run_directory=runs_directory / run_name,
+                    run_name=run_name,
+                    run_phase=run_phase,
+                    run_configuration=run_configuration,
+                    relative_paths=relative_paths,
+                    overwrite=overwrite,
+                    use_original_mesh=use_original_mesh,
+                    local_fort13_filename=local_fort13_filename,
+                    local_fort14_filename=local_fort14_filename,
+                    platform=platform,
+                    adcirc_processors=adcirc_processors,
+                    slurm_account=slurm_account,
+                    job_duration=job_duration,
+                    partition=partition,
+                    use_aswip=use_aswip,
+                    email_type=email_type,
+                    email_address=email_address,
+                    use_nems=use_nems,
+                    do_spinup=do_spinup,
+                    spinup_directory=spinup_directory,
+                ),
             )
         )
 
