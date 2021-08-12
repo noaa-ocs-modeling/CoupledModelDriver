@@ -125,8 +125,6 @@ def generate_adcirc_configuration(
     else:
         use_aswip = False
 
-    base_mesh = None
-
     if use_original_mesh:
         LOGGER.info(
             f'using original mesh from "{os.path.relpath(original_fort14_filename.resolve(), Path.cwd())}"'
@@ -153,7 +151,6 @@ def generate_adcirc_configuration(
             )
         except Exception as error:
             LOGGER.warning(error)
-        base_mesh = base_configuration['adcirc'].base_mesh
 
     if local_fort15_filename.exists():
         os.remove(local_fort15_filename)
@@ -170,7 +167,7 @@ def generate_adcirc_configuration(
                 partial(
                     write_spinup_directory,
                     directory=spinup_directory,
-                    configuration=base_configuration,
+                    configuration=copy(base_configuration),
                     duration=spinup_duration,
                     relative_paths=relative_paths,
                     overwrite=overwrite,

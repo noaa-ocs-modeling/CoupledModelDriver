@@ -487,3 +487,8 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     @property
     def nemspy_entry(self) -> ADCIRCEntry:
         return ADCIRCEntry(processors=self['processors'], **self['nems_parameters'])
+
+    def __copy__(self) -> 'ADCIRCJSON':
+        instance = super().__copy__()
+        instance.base_mesh = self.base_mesh
+        return instance
