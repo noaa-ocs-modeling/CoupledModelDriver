@@ -105,7 +105,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     if len(slurm_output_log_filenames) > 0:
         for filename in slurm_output_log_filenames:
             with open(filename, 'rb') as log_file:
-                lines = tail(log_file, lines=30)
+                lines = tail(log_file, lines=100)
                 percentages = re.findall('[0-9|.]+% COMPLETE', '\n'.join(lines))
 
                 if len(percentages) > 0:
