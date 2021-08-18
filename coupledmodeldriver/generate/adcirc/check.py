@@ -6,10 +6,6 @@ from pathlib import Path
 import re
 from typing import Dict, Union
 
-from coupledmodeldriver.utilities import get_logger
-
-LOGGER = get_logger('check')
-
 
 class CompletionStatus(Enum):
     NOT_CONFIGURATION = 'not_configuration'
