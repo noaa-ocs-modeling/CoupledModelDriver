@@ -1,3 +1,4 @@
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
 from datetime import timedelta
@@ -160,55 +161,63 @@ def generate_adcirc_configuration(
     )
 
     with ProcessPoolExecutor() as process_pool:
+        futures = []
+
         if do_spinup:
             spinup_directory = output_directory / 'spinup'
-            process_pool.submit(
-                write_spinup_directory,
-                directory=spinup_directory,
-                configuration=copy(base_configuration),
-                duration=spinup_duration,
-                relative_paths=relative_paths,
-                overwrite=overwrite,
-                use_original_mesh=use_original_mesh,
-                local_fort13_filename=local_fort13_filename,
-                local_fort14_filename=local_fort14_filename,
-                platform=platform,
-                adcirc_processors=adcirc_processors,
-                slurm_account=slurm_account,
-                job_duration=job_duration,
-                partition=partition,
-                use_aswip=use_aswip,
-                email_type=email_type,
-                email_address=email_address,
-                use_nems=use_nems,
+            futures.append(
+                process_pool.submit(
+                    write_spinup_directory,
+                    directory=spinup_directory,
+                    configuration=copy(base_configuration),
+                    duration=spinup_duration,
+                    relative_paths=relative_paths,
+                    overwrite=overwrite,
+                    use_original_mesh=use_original_mesh,
+                    local_fort13_filename=local_fort13_filename,
+                    local_fort14_filename=local_fort14_filename,
+                    platform=platform,
+                    adcirc_processors=adcirc_processors,
+                    slurm_account=slurm_account,
+                    job_duration=job_duration,
+                    partition=partition,
+                    use_aswip=use_aswip,
+                    email_type=email_type,
+                    email_address=email_address,
+                    use_nems=use_nems,
+                )
             )
         else:
             spinup_directory = None
 
         for run_name, run_configuration in perturbations.items():
-            process_pool.submit(
-                write_run_directory,
-                directory=runs_directory / run_name,
-                name=run_name,
-                phase=run_phase,
-                configuration=run_configuration,
-                relative_paths=relative_paths,
-                overwrite=overwrite,
-                use_original_mesh=use_original_mesh,
-                local_fort13_filename=local_fort13_filename,
-                local_fort14_filename=local_fort14_filename,
-                platform=platform,
-                adcirc_processors=adcirc_processors,
-                slurm_account=slurm_account,
-                job_duration=job_duration,
-                partition=partition,
-                use_aswip=use_aswip,
-                email_type=email_type,
-                email_address=email_address,
-                use_nems=use_nems,
-                do_spinup=do_spinup,
-                spinup_directory=spinup_directory,
+            futures.append(
+                process_pool.submit(
+                    write_run_directory,
+                    directory=runs_directory / run_name,
+                    name=run_name,
+                    phase=run_phase,
+                    configuration=run_configuration,
+                    relative_paths=relative_paths,
+                    overwrite=overwrite,
+                    use_original_mesh=use_original_mesh,
+                    local_fort13_filename=local_fort13_filename,
+                    local_fort14_filename=local_fort14_filename,
+                    platform=platform,
+                    adcirc_processors=adcirc_processors,
+                    slurm_account=slurm_account,
+                    job_duration=job_duration,
+                    partition=partition,
+                    use_aswip=use_aswip,
+                    email_type=email_type,
+                    email_address=email_address,
+                    use_nems=use_nems,
+                    do_spinup=do_spinup,
+                    spinup_directory=spinup_directory,
+                )
             )
+
+        concurrent.futures.wait(futures)
 
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(
