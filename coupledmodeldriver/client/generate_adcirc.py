@@ -25,6 +25,11 @@ def parse_generate_adcirc_arguments():
         '--skip-existing', action='store_true', help='skip existing files',
     )
     argument_parser.add_argument(
+        '--serial',
+        action='store_true',
+        help='generate configurations serially (not concurrently)',
+    )
+    argument_parser.add_argument(
         '--verbose', action='store_true', help='show more verbose log messages'
     )
 
@@ -35,6 +40,7 @@ def parse_generate_adcirc_arguments():
         'output_directory': convert_value(arguments.output_directory, Path),
         'relative_paths': arguments.relative_paths,
         'overwrite': not arguments.skip_existing,
+        'parallel': not arguments.serial,
         'verbose': arguments.verbose,
     }
 
