@@ -101,7 +101,6 @@ def generate_adcirc_configuration(
 
     local_fort13_filename = output_directory / 'fort.13'
     local_fort14_filename = output_directory / 'fort.14'
-    local_fort15_filename = output_directory / 'fort.15'
 
     do_spinup = spinup_duration is not None
 
@@ -149,9 +148,6 @@ def generate_adcirc_configuration(
             )
         except Exception as error:
             LOGGER.warning(error)
-
-    if local_fort15_filename.exists():
-        os.remove(local_fort15_filename)
 
     runs_directory = output_directory / 'runs'
     if not runs_directory.exists():
