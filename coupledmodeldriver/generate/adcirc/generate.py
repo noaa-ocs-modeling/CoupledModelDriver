@@ -217,7 +217,8 @@ def generate_adcirc_configuration(
                 )
             )
 
-        concurrent.futures.wait(futures)
+        for completed_future in concurrent.futures.as_completed(futures):
+            LOGGER.info(f'wrote configuration to "{completed_future.result()}"')
 
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(
@@ -260,7 +261,7 @@ def write_spinup_directory(
     email_type: SlurmEmailType = None,
     email_address: str = None,
     use_nems: bool = False,
-):
+) -> Path:
     if not isinstance(directory, Path):
         directory = Path(directory)
     if not isinstance(local_fort13_filename, Path):
@@ -371,6 +372,8 @@ def write_spinup_directory(
             create_symlink(local_fort13_filename, directory / 'fort.13', relative=True)
     create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
 
+    return directory
+
 
 def write_run_directory(
     directory: PathLike,
@@ -393,7 +396,7 @@ def write_run_directory(
     use_nems: bool = False,
     do_spinup: bool = False,
     spinup_directory: PathLike = None,
-):
+) -> Path:
     if not isinstance(directory, Path):
         directory = Path(directory)
     if spinup_directory is not None and not isinstance(spinup_directory, Path):
@@ -513,6 +516,8 @@ def write_run_directory(
                     f'unable to link `{hotstart_filename}` from coldstart to hotstart; '
                     'you must manually link or copy this file after coldstart completes'
                 )
+
+    return directory
 
 
 def update_path_relative(
