@@ -1,4 +1,4 @@
-from copy import copy, deepcopy
+from copy import deepcopy
 from datetime import datetime, timedelta
 import os
 from os import PathLike
@@ -312,26 +312,10 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     def adcircpy_mesh(self) -> AdcircMesh:
         if self.__adcircpy_mesh is None:
             self.__adcircpy_mesh = self['fort_14_path']
+
         if not isinstance(self.__adcircpy_mesh, AdcircMesh):
             LOGGER.info(f'opening mesh "{self.__adcircpy_mesh}"')
             mesh = AdcircMesh.open(self.__adcircpy_mesh, crs=4326)
-
-            LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
-            for adcircpy_forcing in self.adcircpy_forcings:
-                if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
-                    adcircpy_forcing.start_date = self['modeled_start_time']
-                    adcircpy_forcing.end_date = self['modeled_end_time']
-
-                if (
-                    isinstance(adcircpy_forcing, Tides)
-                    and self['tidal_spinup_duration'] is not None
-                ):
-                    adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
-                    adcircpy_forcing.start_date -= self['tidal_spinup_duration']
-                # elif isinstance(adcircpy_forcing, BestTrackForcing):
-                #     adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
-
-                mesh.add_forcing(adcircpy_forcing)
 
             if self['fort_13_path'] is not None:
                 LOGGER.info(
@@ -351,10 +335,27 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
                 LOGGER.debug(f'generating tau0 in mesh')
                 mesh.generate_tau0()
-
-            self.__adcircpy_mesh = mesh
         else:
             mesh = self.__adcircpy_mesh
+
+        LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
+        for adcircpy_forcing in self.adcircpy_forcings:
+            if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
+                adcircpy_forcing.start_date = self['modeled_start_time']
+                adcircpy_forcing.end_date = self['modeled_end_time']
+
+            if (
+                isinstance(adcircpy_forcing, Tides)
+                and self['tidal_spinup_duration'] is not None
+            ):
+                adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
+                adcircpy_forcing.start_date -= self['tidal_spinup_duration']
+            # elif isinstance(adcircpy_forcing, BestTrackForcing):
+            #     adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
+
+            mesh.add_forcing(adcircpy_forcing)
+
+        self.__adcircpy_mesh = mesh
 
         return mesh
 
@@ -363,15 +364,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         if isinstance(adcircpy_mesh, AdcircMesh):
             try:
                 adcircpy_mesh = deepcopy(adcircpy_mesh)
-                LOGGER.debug(
-                    f'deep copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)'
-                )
-            except:
-                try:
-                    adcircpy_mesh = copy(adcircpy_mesh)
-                    LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
-                except Exception as error:
-                    LOGGER.warning(f'unable to copy mesh object: {error}')
+                LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
+            except Exception as error:
+                LOGGER.warning(f'unable to copy mesh object: {error}')
 
         self.__adcircpy_mesh = adcircpy_mesh
 

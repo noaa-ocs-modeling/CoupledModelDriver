@@ -6,6 +6,10 @@ from pathlib import Path
 import re
 from typing import Dict, Union
 
+from coupledmodeldriver.utilities import get_logger
+
+LOGGER = get_logger('check')
+
 
 class CompletionStatus(Enum):
     NOT_STARTED = 'not_started'
@@ -52,6 +56,9 @@ def is_adcirc_run_directory(directory: PathLike = None) -> bool:
     nonexistant_files = [
         filename for filename in required_files if not (directory / filename).exists()
     ]
+
+    if len(nonexistant_files) > 0:
+        LOGGER.info(f'could not find {len(nonexistant_files)} files: {nonexistant_files}')
 
     return len(nonexistant_files) == 0
 

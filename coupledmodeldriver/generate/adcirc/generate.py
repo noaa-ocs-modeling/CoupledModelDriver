@@ -201,8 +201,8 @@ def generate_adcirc_configuration(
             'use_nems': use_nems,
         }
 
-        if parallel:
-            futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs,))
+        if process_pool is not None:
+            futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
         else:
             write_spinup_directory(**spinup_kwargs)
     else:
@@ -232,12 +232,12 @@ def generate_adcirc_configuration(
             'spinup_directory': spinup_directory,
         }
 
-        if parallel:
-            futures.append(process_pool.submit(write_run_directory, **run_kwargs,))
+        if process_pool is not None:
+            futures.append(process_pool.submit(write_run_directory, **run_kwargs))
         else:
             write_run_directory(**run_kwargs)
 
-    if parallel:
+    if len(futures) > 0:
         for completed_future in concurrent.futures.as_completed(futures):
             LOGGER.info(f'wrote configuration to "{completed_future.result()}"')
 
@@ -461,7 +461,7 @@ def write_run_directory(
     job_script_filename = directory / 'adcirc.job'
 
     if use_aswip:
-        aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'],)
+        aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'])
     else:
         aswip_command = None
 
