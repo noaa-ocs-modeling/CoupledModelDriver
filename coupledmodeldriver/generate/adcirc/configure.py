@@ -136,7 +136,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         perturbed_configurations = super().perturb(relative_to=relative_to)
 
         for perturbed_configuration in perturbed_configurations.values():
-            perturbed_configuration['adcirc'].base_mesh = self['adcirc'].base_mesh
+            perturbed_configuration['adcirc'].adcircpy_mesh = self['adcirc'].adcircpy_mesh
 
         return perturbed_configurations
 
