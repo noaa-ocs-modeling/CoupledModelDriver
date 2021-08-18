@@ -366,11 +366,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
                 LOGGER.debug(
                     f'deep copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)'
                 )
-            except NotImplementedError:
+            except:
                 try:
                     adcircpy_mesh = copy(adcircpy_mesh)
                     LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
-                except NotImplementedError as error:
+                except Exception as error:
                     LOGGER.warning(f'unable to copy mesh object: {error}')
 
         self.__adcircpy_mesh = adcircpy_mesh
