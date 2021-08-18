@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy, deepcopy
 from datetime import datetime, timedelta
 import os
 from os import PathLike
@@ -361,8 +361,18 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     @adcircpy_mesh.setter
     def adcircpy_mesh(self, adcircpy_mesh: Union[AdcircMesh, PathLike]):
         if isinstance(adcircpy_mesh, AdcircMesh):
-            LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
-            adcircpy_mesh = deepcopy(adcircpy_mesh)
+            try:
+                adcircpy_mesh = deepcopy(adcircpy_mesh)
+                LOGGER.debug(
+                    f'deep copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)'
+                )
+            except NotImplementedError:
+                try:
+                    adcircpy_mesh = copy(adcircpy_mesh)
+                    LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
+                except NotImplementedError as error:
+                    LOGGER.warning(f'unable to copy mesh object: {error}')
+
         self.__adcircpy_mesh = adcircpy_mesh
 
     @property
