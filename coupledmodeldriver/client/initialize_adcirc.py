@@ -115,7 +115,7 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
 
     for extra_argument, extra_argument_type in extra_arguments.items():
         kwargs = {}
-        if issubclass(extra_argument_type, bool):
+        if extra_argument_type is bool:
             kwargs['action'] = 'store_true'
         argument_parser.add_argument(f'--{extra_argument}', **kwargs)
 
