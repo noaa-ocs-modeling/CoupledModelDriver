@@ -70,7 +70,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
         directory = Path(directory)
 
     if not is_adcirc_run_directory(directory):
-        raise FileNotFoundError(f'not an ADCIRC run directory: {directory}')
+        LOGGER.warning(f'not an ADCIRC run directory: "{directory}"')
 
     not_started = {}
     failures = {}
