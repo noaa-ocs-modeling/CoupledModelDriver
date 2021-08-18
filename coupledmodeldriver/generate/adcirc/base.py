@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import os
 from os import PathLike
 from pathlib import Path
+import sys
 from typing import Any, Union
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
@@ -360,6 +361,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     @adcircpy_mesh.setter
     def adcircpy_mesh(self, adcircpy_mesh: Union[AdcircMesh, PathLike]):
         if isinstance(adcircpy_mesh, AdcircMesh):
+            LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
             adcircpy_mesh = deepcopy(adcircpy_mesh)
         self.__adcircpy_mesh = adcircpy_mesh
 
