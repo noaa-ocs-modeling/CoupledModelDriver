@@ -12,6 +12,7 @@ LOGGER = get_logger('check')
 
 
 class CompletionStatus(Enum):
+    NOT_CONFIGURATION = 'not_configuration'
     NOT_STARTED = 'not_started'
     IN_SETUP = 'in_setup'
     FAILED = 'failed'
@@ -57,9 +58,6 @@ def is_adcirc_run_directory(directory: PathLike = None) -> bool:
         filename for filename in required_files if not (directory / filename).exists()
     ]
 
-    if len(nonexistant_files) > 0:
-        LOGGER.info(f'could not find {len(nonexistant_files)} files: {nonexistant_files}')
-
     return len(nonexistant_files) == 0
 
 
@@ -69,13 +67,14 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     elif not isinstance(directory, Path):
         directory = Path(directory)
 
-    if not is_adcirc_run_directory(directory):
-        LOGGER.warning(f'not an ADCIRC run directory: "{directory}"')
-
+    not_configuration = {}
     not_started = {}
     failures = {}
     errors = {}
     running = {}
+
+    if not is_adcirc_run_directory(directory):
+        not_configuration['none'] = f'not an ADCIRC run directory'
 
     adcirc_output_log_filename = directory / 'fort.16'
     slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
@@ -154,6 +153,8 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     completion = {'completion_percentage': completion_percentage}
 
+    if len(not_configuration) > 0:
+        completion['not_configuration'] = not_configuration
     if len(not_started) > 0:
         completion['not_started'] = not_started
     if len(failures) > 0:
@@ -173,7 +174,9 @@ def check_adcirc_completion(directory: PathLike = None) -> (CompletionStatus, fl
 
     if not isinstance(completion_status, CompletionStatus):
         if len(completion_status) > 1:
-            if 'not_started' in completion_status:
+            if 'not_configuration' in completion_status:
+                completion_status = CompletionStatus.NOT_CONFIGURATION
+            elif 'not_started' in completion_status:
                 completion_status = CompletionStatus.NOT_STARTED
             elif 'failures' in completion_status:
                 completion_status = CompletionStatus.FAILED
