@@ -113,8 +113,11 @@ def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {s
         '--verbose', action='store_true', help='show more verbose log messages'
     )
 
-    for extra_argument in extra_arguments:
-        argument_parser.add_argument(f'--{extra_argument}')
+    for extra_argument, extra_argument_type in extra_arguments.items():
+        kwargs = {}
+        if issubclass(extra_argument_type, bool):
+            kwargs['action'] = 'store_true'
+        argument_parser.add_argument(f'--{extra_argument}', **kwargs)
 
     arguments, unknown_arguments = argument_parser.parse_known_args()
 
