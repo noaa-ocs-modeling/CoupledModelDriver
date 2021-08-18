@@ -104,6 +104,7 @@ def generate_adcirc_configuration(
 
     local_fort13_filename = output_directory / 'fort.13'
     local_fort14_filename = output_directory / 'fort.14'
+    local_fort15_filename = output_directory / 'fort.15'
 
     do_spinup = spinup_duration is not None
 
@@ -141,7 +142,7 @@ def generate_adcirc_configuration(
             adcircpy_driver.write(
                 output_directory,
                 overwrite=overwrite,
-                fort13=None,
+                fort13='fort.13' if original_fort13_filename.exists() else None,
                 fort14='fort.14',
                 fort15='fort.15',
                 fort22=None,
@@ -151,6 +152,14 @@ def generate_adcirc_configuration(
             )
         except Exception as error:
             LOGGER.warning(error)
+
+    if local_fort15_filename.exists():
+        os.remove(local_fort15_filename)
+
+    if local_fort13_filename.exists():
+        base_configuration['adcirc']['fort_13_path'] = local_fort13_filename
+    if local_fort14_filename.exists():
+        base_configuration['adcirc']['fort_14_path'] = local_fort14_filename
 
     runs_directory = output_directory / 'runs'
     if not runs_directory.exists():
