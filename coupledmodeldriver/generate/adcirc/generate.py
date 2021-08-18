@@ -1,9 +1,8 @@
-import asyncio
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
 from datetime import timedelta
 from enum import Enum
-from functools import partial
 import logging
 import os
 from os import PathLike
@@ -155,35 +154,31 @@ def generate_adcirc_configuration(
     if local_fort15_filename.exists():
         os.remove(local_fort15_filename)
 
-    event_loop = asyncio.get_event_loop()
     process_pool = ProcessPoolExecutor()
     futures = []
 
     if do_spinup:
         spinup_directory = output_directory / 'spinup'
         futures.append(
-            event_loop.run_in_executor(
-                process_pool,
-                partial(
-                    write_spinup_directory,
-                    directory=spinup_directory,
-                    configuration=copy(base_configuration),
-                    duration=spinup_duration,
-                    relative_paths=relative_paths,
-                    overwrite=overwrite,
-                    use_original_mesh=use_original_mesh,
-                    local_fort13_filename=local_fort13_filename,
-                    local_fort14_filename=local_fort14_filename,
-                    platform=platform,
-                    adcirc_processors=adcirc_processors,
-                    slurm_account=slurm_account,
-                    job_duration=job_duration,
-                    partition=partition,
-                    use_aswip=use_aswip,
-                    email_type=email_type,
-                    email_address=email_address,
-                    use_nems=use_nems,
-                ),
+            process_pool.submit(
+                write_spinup_directory,
+                directory=spinup_directory,
+                configuration=copy(base_configuration),
+                duration=spinup_duration,
+                relative_paths=relative_paths,
+                overwrite=overwrite,
+                use_original_mesh=use_original_mesh,
+                local_fort13_filename=local_fort13_filename,
+                local_fort14_filename=local_fort14_filename,
+                platform=platform,
+                adcirc_processors=adcirc_processors,
+                slurm_account=slurm_account,
+                job_duration=job_duration,
+                partition=partition,
+                use_aswip=use_aswip,
+                email_type=email_type,
+                email_address=email_address,
+                use_nems=use_nems,
             )
         )
     else:
@@ -200,31 +195,28 @@ def generate_adcirc_configuration(
     )
     for run_name, run_configuration in perturbations.items():
         futures.append(
-            event_loop.run_in_executor(
-                process_pool,
-                partial(
-                    write_run_directory,
-                    directory=runs_directory / run_name,
-                    name=run_name,
-                    phase=run_phase,
-                    configuration=run_configuration,
-                    relative_paths=relative_paths,
-                    overwrite=overwrite,
-                    use_original_mesh=use_original_mesh,
-                    local_fort13_filename=local_fort13_filename,
-                    local_fort14_filename=local_fort14_filename,
-                    platform=platform,
-                    adcirc_processors=adcirc_processors,
-                    slurm_account=slurm_account,
-                    job_duration=job_duration,
-                    partition=partition,
-                    use_aswip=use_aswip,
-                    email_type=email_type,
-                    email_address=email_address,
-                    use_nems=use_nems,
-                    do_spinup=do_spinup,
-                    spinup_directory=spinup_directory,
-                ),
+            process_pool.submit(
+                write_run_directory,
+                directory=runs_directory / run_name,
+                name=run_name,
+                phase=run_phase,
+                configuration=run_configuration,
+                relative_paths=relative_paths,
+                overwrite=overwrite,
+                use_original_mesh=use_original_mesh,
+                local_fort13_filename=local_fort13_filename,
+                local_fort14_filename=local_fort14_filename,
+                platform=platform,
+                adcirc_processors=adcirc_processors,
+                slurm_account=slurm_account,
+                job_duration=job_duration,
+                partition=partition,
+                use_aswip=use_aswip,
+                email_type=email_type,
+                email_address=email_address,
+                use_nems=use_nems,
+                do_spinup=do_spinup,
+                spinup_directory=spinup_directory,
             )
         )
 
@@ -234,7 +226,7 @@ def generate_adcirc_configuration(
     )
     cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
 
-    event_loop.run_until_complete(asyncio.gather(*futures, return_exceptions=False))
+    concurrent.futures.wait(futures)
 
     LOGGER.info(
         f'writing ensemble run script "{os.path.relpath(ensemble_run_script_filename.resolve(), Path.cwd())}"'
