@@ -1,4 +1,3 @@
-import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
 from datetime import timedelta
@@ -154,12 +153,19 @@ def generate_adcirc_configuration(
     if local_fort15_filename.exists():
         os.remove(local_fort15_filename)
 
-    process_pool = ProcessPoolExecutor()
-    futures = []
+    runs_directory = output_directory / 'runs'
+    if not runs_directory.exists():
+        runs_directory.mkdir(parents=True, exist_ok=True)
 
-    if do_spinup:
-        spinup_directory = output_directory / 'spinup'
-        futures.append(
+    perturbations = base_configuration.perturb()
+
+    LOGGER.info(
+        f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
+    )
+
+    with ProcessPoolExecutor() as process_pool:
+        if do_spinup:
+            spinup_directory = output_directory / 'spinup'
             process_pool.submit(
                 write_spinup_directory,
                 directory=spinup_directory,
@@ -180,21 +186,10 @@ def generate_adcirc_configuration(
                 email_address=email_address,
                 use_nems=use_nems,
             )
-        )
-    else:
-        spinup_directory = None
+        else:
+            spinup_directory = None
 
-    runs_directory = output_directory / 'runs'
-    if not runs_directory.exists():
-        runs_directory.mkdir(parents=True, exist_ok=True)
-
-    perturbations = base_configuration.perturb()
-
-    LOGGER.info(
-        f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
-    )
-    for run_name, run_configuration in perturbations.items():
-        futures.append(
+        for run_name, run_configuration in perturbations.items():
             process_pool.submit(
                 write_run_directory,
                 directory=runs_directory / run_name,
@@ -218,15 +213,12 @@ def generate_adcirc_configuration(
                 do_spinup=do_spinup,
                 spinup_directory=spinup_directory,
             )
-        )
 
     cleanup_script = EnsembleCleanupScript()
     LOGGER.debug(
         f'writing cleanup script "{os.path.relpath(ensemble_cleanup_script_filename.resolve(), Path.cwd())}"'
     )
     cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
-
-    concurrent.futures.wait(futures)
 
     LOGGER.info(
         f'writing ensemble run script "{os.path.relpath(ensemble_run_script_filename.resolve(), Path.cwd())}"'
