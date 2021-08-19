@@ -18,9 +18,6 @@ from tests import (
     REFERENCE_DIRECTORY,
 )
 
-NEMS_PATH = 'NEMS.x'
-ADCPREP_PATH = 'adcprep'
-
 
 def test_hera_adcirc():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc'
