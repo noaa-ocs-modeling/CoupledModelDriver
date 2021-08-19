@@ -319,6 +319,21 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         else:
             mesh = self.__base_mesh
 
+        if self['fort_13_path'] is not None:
+            LOGGER.info(
+                f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+            )
+            if self['fort_13_path'].exists():
+                mesh.import_nodal_attributes(self['fort_13_path'])
+                for attribute_name in mesh.get_nodal_attribute_names():
+                    mesh.set_nodal_attribute_state(
+                        attribute_name, coldstart=True, hotstart=True
+                    )
+            else:
+                LOGGER.warning(
+                    f'mesh values (nodal attributes) not found at "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+                )
+
         LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
         for adcircpy_forcing in self.adcircpy_forcings:
             if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
@@ -335,21 +350,6 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             #     adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
 
             mesh.add_forcing(adcircpy_forcing)
-
-        if self['fort_13_path'] is not None:
-            LOGGER.info(
-                f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
-            )
-            if self['fort_13_path'].exists():
-                mesh.import_nodal_attributes(self['fort_13_path'])
-                for attribute_name in mesh.get_nodal_attribute_names():
-                    mesh.set_nodal_attribute_state(
-                        attribute_name, coldstart=True, hotstart=True
-                    )
-            else:
-                LOGGER.warning(
-                    f'mesh values (nodal attributes) not found at "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
-                )
 
         if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
             LOGGER.debug(f'generating tau0 in mesh')
