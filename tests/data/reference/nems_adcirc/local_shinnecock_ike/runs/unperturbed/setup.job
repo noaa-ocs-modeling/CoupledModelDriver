@@ -1,3 +1,0 @@
-#!/bin/bash
-../../../../../input/bin/adcprep --np 11 --partmesh
-../../../../../input/bin/adcprep --np 11 --prepall

@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -J ADCIRC_HOTSTART_run_2
+#SBATCH -A coastal
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=example@email.gov
+#SBATCH --error=ADCIRC_HOTSTART_run_2.err.log
+#SBATCH --output=ADCIRC_HOTSTART_run_2.out.log
+#SBATCH -n 602
+#SBATCH -N 16
+#SBATCH --time=06:00:00
+
+set -e
+
+source ../../../../input/modulefiles/envmodules_intel.hera
+srun ../../../../input/bin/NEMS.x

@@ -1,0 +1,56 @@
+created on 2021-08-19 12:38                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
+1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
+1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
+100                                                             ! NSCREEN                             - UNIT 6 OUTPUT OPTION PARAMETER
+0                                                               ! IHOT                                - HOT START PARAMETER
+2                                                               ! ICS                                 - COORDINATE SYSTEM SELECTION PARAMETER
+511113                                                          ! IM                                  - MODEL SELECTION PARAMETER
+2                                                               ! NOLIBF                              - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, '2' was used
+2                                                               ! NOLIFA                              - FINITE AMPLITUDE TERM SELECTION PARAMETER
+1                                                               ! NOLICA                              - SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER
+1                                                               ! NOLICAT                             - TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER
+1                                                               ! NWP                                 - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0
+primitive_weighting_in_continuity_equation
+1                                                               ! NCOR                                - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER
+1                                                               ! NTIP                                - TIDAL POTENTIAL OPTION PARAMETER
+0                                                               ! NWS                                 - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER
+1                                                               ! NRAMP                               - RAMP FUNCTION OPTION
+9.81                                                            ! G                                   - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS
+-3                                                              ! TAU0                                - WEIGHTING FACTOR IN GWCE; original, 0.005
+2.000000                                                        ! DTDP                                - TIME STEP (IN SECONDS)
+0                                                               ! STATIM                              - STARTING TIME (IN DAYS)
+0                                                               ! REFTIM                              - REFERENCE TIME (IN DAYS)
+14.5                                                            ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
+0                                                               ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
+0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
+0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN    
+-72.4759 40.7602                                                ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
+0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA            
+-0.2                                                            ! smagorinsky coefficient             - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1
+0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1
+0                                                               ! NTIF                                - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300
+0
+110                                                             ! ANGINN                              - INNER ANGLE THRESHOLD
+0 0 0 0                                                         ! NOUTE TOUTSE TOUTFE NSPOOLE         - ELEV STATION OUTPUT INFO (UNIT 61)
+0                                                               ! NSTAE                               - TOTAL NUMBER OF ELEVATION RECORDING STATIONS
+0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV         - VELOCITY STATION OUTPUT INFO (UNIT 62)
+0                                                               ! NSTAV                               - TOTAL NUMBER OF VELOCITY RECORDING STATIONS
+-5 0.000000 14.500000 1800                                      ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE     - GLOBAL ELEVATION OUTPUT INFO (UNIT 63)
+-5 0.000000 14.500000 1800                                      ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV     - GLOBAL VELOCITY OUTPUT INFO (UNIT 64)
+0                                                               ! NFREQ                              
+0 0 0 0                                                         ! THAS THAF NHAINC FMV                - HARMONIC ANALYSIS PARAMETERS
+0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV             - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54
+0 0                                                             ! NHSTAR NHSINC                       - HOT START FILE GENERATION PARAMETERS
+1 0 1E-08 25                                                    ! ITITER ISLDIA CONVCR ITMAX          - ALGEBRAIC SOLUTION PARAMETERS
+                                                                ! NCPROJ                              - PROJECT TITLE
+                                                                ! NCINST                              - PROJECT INSTITUTION
+                                                                ! NCSOUR                              - PROJECT SOURCE
+                                                                ! NCHIST                              - PROJECT HISTORY
+                                                                ! NCREF                               - PROJECT REFERENCES
+                                                                ! NCCOM                               - PROJECT COMMENTS
+                                                                ! NCHOST                              - PROJECT HOST
+                                                                ! NCONV                               - CONVENTIONS
+                                                                ! NCCONT                              - CONTACT INFORMATION
+2008-08-23 00:00                                                ! NCDATE                              - forcing start date
+&metControl WindDragLimit=0.0025, DragLawString=default, outputWindDrag=F, invertedBarometerOnElevationBoundary=T \

@@ -1,7 +1,0 @@
-{
-  "nrs": 5,
-  "resource": "../../../input/shinnecock/ike/forcings/ww3.Constant.20151214_sxy_ike_date.nc",
-  "processors": 1,
-  "nems_parameters": {},
-  "interval": 3600.0
-}
