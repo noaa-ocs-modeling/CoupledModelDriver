@@ -361,7 +361,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     def adcircpy_mesh(self, adcircpy_mesh: Union[AdcircMesh, PathLike]):
         if isinstance(adcircpy_mesh, AdcircMesh):
             try:
-                adcircpy_mesh = deepcopy(adcircpy_mesh)
+                adcircpy_mesh = adcircpy_mesh.copy()
                 LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
             except Exception as error:
                 LOGGER.warning(f'unable to copy mesh object: {error}')
