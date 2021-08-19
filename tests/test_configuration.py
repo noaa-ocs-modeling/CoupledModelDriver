@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveWatch3MeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
+    WaveWatch3MeshEntry
 import pytest
 
 from coupledmodeldriver import Platform
@@ -100,7 +101,7 @@ def test_adcirc():
         modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
         modeled_timestep=timedelta(seconds=2),
         fort_13_path=None,
-        fort_14_path=INPUT_DIRECTORY / 'shinnecock' / 'mesh' / 'fort.14',
+        fort_14_path=INPUT_DIRECTORY / 'meshes' / 'shinnecock' / 'fort.14',
         tidal_spinup_duration=timedelta(days=12.5),
     )
 
