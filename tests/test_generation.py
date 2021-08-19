@@ -55,8 +55,6 @@ def test_hera_adcirc():
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
-    configuration.relative_to(output_directory)
-
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
@@ -138,8 +136,6 @@ def test_hera_adcirc_nems_atmesh_ww3data():
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
-    configuration.relative_to(output_directory)
-
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
@@ -195,8 +191,6 @@ def test_hera_adcirc_tidal():
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
-
-    configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
@@ -275,8 +269,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data():
         aswip_executable=None,
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
-
-    configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
@@ -357,8 +349,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_aswip():
         aswip_executable=INPUT_DIRECTORY / 'bin' / 'aswip',
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
-
-    configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
@@ -442,8 +432,6 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data():
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
-
-    configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
@@ -542,8 +530,6 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed():
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
     )
 
-    configuration.relative_to(output_directory)
-
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
@@ -599,8 +585,6 @@ def test_local_adcirc_tidal():
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         source_filename=None,
     )
-
-    configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
@@ -741,8 +725,6 @@ def test_stampede2_adcirc_tidal():
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
     )
 
-    configuration.relative_to(output_directory)
-
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
@@ -827,8 +809,6 @@ def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
     )
-
-    configuration.relative_to(output_directory)
 
     configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
