@@ -316,8 +316,9 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         if not isinstance(self.__base_mesh, AdcircMesh):
             LOGGER.info(f'opening mesh "{self.__base_mesh}"')
             mesh = AdcircMesh.open(self.__base_mesh, crs=4326)
+            self.__base_mesh = mesh.copy()
         else:
-            mesh = self.__base_mesh
+            mesh = self.__base_mesh.copy()
 
         if self['fort_13_path'] is not None:
             LOGGER.info(
