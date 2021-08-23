@@ -285,6 +285,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             interval=forcing.interval,
             start_date=forcing.start_date,
             end_date=forcing.end_date,
+            fort22_filename=forcing.filename,
             dataframe=forcing.dataframe,
         )
 
