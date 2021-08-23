@@ -202,7 +202,7 @@ def generate_adcirc_configuration(
             'use_nems': use_nems,
         }
 
-        if parallel:
+        if process_pool is not None:
             futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
         else:
             spinup_directory = write_spinup_directory(**spinup_kwargs)
@@ -236,13 +236,13 @@ def generate_adcirc_configuration(
             'spinup_directory': spinup_directory,
         }
 
-        if parallel is not None:
+        if process_pool is not None is not None:
             futures.append(process_pool.submit(write_run_directory, **run_kwargs))
         else:
             write_run_directory(**run_kwargs)
             LOGGER.info(f'wrote configuration to "{run_directory}"')
 
-    if parallel:
+    if len(futures) > 0:
         for completed_future in concurrent.futures.as_completed(futures):
             LOGGER.info(f'wrote configuration to "{completed_future.result()}"')
 
