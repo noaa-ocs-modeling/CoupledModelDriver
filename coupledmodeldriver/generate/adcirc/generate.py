@@ -165,12 +165,6 @@ def generate_adcirc_configuration(
     if not runs_directory.exists():
         runs_directory.mkdir(parents=True, exist_ok=True)
 
-    perturbations = base_configuration.perturb()
-
-    LOGGER.info(
-        f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
-    )
-
     if parallel:
         process_pool = ProcessPoolExecutor()
         LOGGER.info(f'leveraging {os.cpu_count()} processor(s)')
@@ -209,6 +203,12 @@ def generate_adcirc_configuration(
             LOGGER.info(f'wrote configuration to "{spinup_directory}"')
     else:
         spinup_directory = None
+
+    perturbations = base_configuration.perturb()
+
+    LOGGER.info(
+        f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
+    )
 
     for run_name, run_configuration in perturbations.items():
         run_directory = runs_directory / run_name
