@@ -1,0 +1,14 @@
+# `model_configure` generated with NEMSpy 1.0.3
+total_member:            1
+print_esmf:              .true.
+namelist:                atm_namelist.rc
+PE_MEMBER01:             601
+start_year:              2008
+start_month:             9
+start_day:               1
+start_hour:              6
+start_minute:            0
+start_second:            0
+nhours_fcst:             336
+RUN_CONTINUE:            .false.
+ENS_SPS:                 .false.

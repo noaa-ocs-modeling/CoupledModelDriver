@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, \
-    WaveWatch3MeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveWatch3MeshEntry
 import pytest
 
 from coupledmodeldriver import Platform

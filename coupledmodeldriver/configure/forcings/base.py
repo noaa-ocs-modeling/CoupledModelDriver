@@ -14,6 +14,7 @@ from adcircpy.forcing.winds import BestTrackForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
 from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
+from pandas import DataFrame
 
 from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
 from coupledmodeldriver.utilities import LOGGER
@@ -197,11 +198,12 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         start_date: datetime = None,
         end_date: datetime = None,
         fort22_filename: PathLike = None,
+        dataframe: DataFrame = None,
         attributes: {str: Any} = None,
         **kwargs,
     ):
-        if storm_id is None and fort22_filename is None:
-            raise TypeError("function missing required argument 'storm_id'")
+        if storm_id is None and fort22_filename is None and dataframe is None:
+            LOGGER.warning("no 'storm_id' given")
 
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
@@ -216,6 +218,15 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         self['end_date'] = end_date
         self['fort22_filename'] = fort22_filename
 
+        self.__dataframe = dataframe
+
+        if self.__dataframe is not None:
+            forcing = self.adcircpy_forcing
+            self['storm_id'] = forcing.storm_id
+            self['interval'] = forcing.interval
+            self['start_date'] = forcing.start_date
+            self['end_date'] = forcing.end_date
+
     @property
     def adcircpy_forcing(self) -> BestTrackForcing:
         if self['fort22_filename'] is not None:
@@ -229,7 +240,15 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             if self['storm_id'] is not None and forcing.storm_id != self['storm_id']:
                 forcing.storm_id = self['storm_id']
                 self['storm_id'] = forcing.storm_id
-        else:
+        elif self.__dataframe is not None:
+            forcing = BestTrackForcing(
+                storm=self.__dataframe,
+                nws=self['nws'],
+                interval_seconds=self['interval'],
+                start_date=self['start_date'],
+                end_date=self['end_date'],
+            )
+        elif self['storm_id'] is not None:
             forcing = BestTrackForcing(
                 storm=self['storm_id'],
                 nws=self['nws'],
@@ -237,6 +256,15 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 start_date=self['start_date'],
                 end_date=self['end_date'],
             )
+        else:
+            raise ValueError(
+                f'could not create `{BestTrackForcing.__name__}` object from given information'
+            )
+
+        if self['storm_id'] is None:
+            self[
+                'storm_id'
+            ] = f'{forcing.basin}{forcing.storm_number}{forcing.start_date.year}'
 
         for name, value in self['attributes'].items():
             if value is not None:
@@ -257,6 +285,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             interval=forcing.interval,
             start_date=forcing.start_date,
             end_date=forcing.end_date,
+            dataframe=forcing.dataframe,
         )
 
     @classmethod
@@ -284,6 +313,12 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             end_date=forcing.end_date,
             fort22_filename=filename,
         )
+
+    def __copy__(self) -> 'BestTrackForcingJSON':
+        instance = super().__copy__()
+        instance.__class__ = self.__class__
+        instance.__dataframe = self.__dataframe
+        return instance
 
 
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):

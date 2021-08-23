@@ -1,0 +1,3 @@
+# `config.rc` generated with NEMSpy 1.0.3
+ wav_dir: ../../../../input/forcings/ike
+ wav_nam: ww3.Constant.20151214_sxy_ike_date.nc
