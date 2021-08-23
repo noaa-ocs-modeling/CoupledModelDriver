@@ -1,4 +1,3 @@
-from copy import deepcopy
 from datetime import datetime, timedelta
 import os
 from os import PathLike
@@ -369,6 +368,14 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         self.__base_mesh = adcircpy_mesh
 
     @property
+    def base_mesh(self) -> AdcircMesh:
+        return self.__base_mesh
+
+    @base_mesh.setter
+    def base_mesh(self, base_mesh: AdcircMesh):
+        self.__base_mesh = base_mesh
+
+    @property
     def adcircpy_driver(self) -> AdcircRun:
         # instantiate AdcircRun object.
         driver = AdcircRun(
@@ -496,5 +503,5 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
     def __copy__(self) -> 'ADCIRCJSON':
         instance = super().__copy__()
-        instance.adcircpy_mesh = self.adcircpy_mesh
+        instance.base_mesh = self.base_mesh
         return instance
