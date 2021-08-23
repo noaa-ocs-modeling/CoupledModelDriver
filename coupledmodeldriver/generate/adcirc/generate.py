@@ -173,6 +173,7 @@ def generate_adcirc_configuration(
 
     if parallel:
         process_pool = ProcessPoolExecutor()
+        LOGGER.info(f'leveraging {os.cpu_count()} processor(s)')
     else:
         process_pool = None
 
@@ -201,16 +202,19 @@ def generate_adcirc_configuration(
             'use_nems': use_nems,
         }
 
-        if process_pool is not None:
+        if parallel:
             futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
         else:
-            write_spinup_directory(**spinup_kwargs)
+            spinup_directory = write_spinup_directory(**spinup_kwargs)
+            LOGGER.info(f'wrote configuration to "{spinup_directory}"')
     else:
         spinup_directory = None
 
     for run_name, run_configuration in perturbations.items():
+        run_directory = runs_directory / run_name
+
         run_kwargs = {
-            'directory': runs_directory / run_name,
+            'directory': run_directory,
             'name': run_name,
             'phase': run_phase,
             'configuration': run_configuration,
@@ -232,12 +236,13 @@ def generate_adcirc_configuration(
             'spinup_directory': spinup_directory,
         }
 
-        if process_pool is not None:
+        if parallel is not None:
             futures.append(process_pool.submit(write_run_directory, **run_kwargs))
         else:
             write_run_directory(**run_kwargs)
+            LOGGER.info(f'wrote configuration to "{run_directory}"')
 
-    if len(futures) > 0:
+    if parallel:
         for completed_future in concurrent.futures.as_completed(futures):
             LOGGER.info(f'wrote configuration to "{completed_future.result()}"')
 
