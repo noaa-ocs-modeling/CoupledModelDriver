@@ -197,6 +197,7 @@ def generate_adcirc_configuration(
         }
 
         if parallel:
+            LOGGER.info(f'writing to "{spinup_directory}"')
             futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
         else:
             spinup_directory = write_spinup_directory(**spinup_kwargs)
@@ -237,6 +238,7 @@ def generate_adcirc_configuration(
         }
 
         if parallel is not None:
+            LOGGER.info(f'writing to "{run_directory}"')
             futures.append(process_pool.submit(write_run_directory, **run_kwargs))
         else:
             write_run_directory(**run_kwargs)
