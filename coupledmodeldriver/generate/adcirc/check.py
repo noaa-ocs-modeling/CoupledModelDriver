@@ -8,7 +8,7 @@ from typing import Dict, Union
 
 
 class CompletionStatus(Enum):
-    NOT_CONFIGURATION = 'not_configuration'
+    NOT_CONFIGURED = 'not_configured'
     NOT_STARTED = 'not_started'
     IN_SETUP = 'in_setup'
     FAILED = 'failed'
@@ -63,14 +63,14 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     elif not isinstance(directory, Path):
         directory = Path(directory)
 
-    not_configuration = {}
+    not_configured = {}
     not_started = {}
     failures = {}
     errors = {}
     running = {}
 
     if not is_adcirc_run_directory(directory):
-        not_configuration['none'] = f'not an ADCIRC run directory'
+        not_configured['none'] = f'not an ADCIRC run directory'
 
     adcirc_output_log_filename = directory / 'fort.16'
     slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
@@ -149,8 +149,8 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     completion = {'completion_percentage': completion_percentage}
 
-    if len(not_configuration) > 0:
-        completion['not_configuration'] = not_configuration
+    if len(not_configured) > 0:
+        completion['not_configured'] = not_configured
     if len(not_started) > 0:
         completion['not_started'] = not_started
     if len(failures) > 0:
@@ -170,8 +170,8 @@ def check_adcirc_completion(directory: PathLike = None) -> (CompletionStatus, fl
 
     if not isinstance(completion_status, CompletionStatus):
         if len(completion_status) > 1:
-            if 'not_configuration' in completion_status:
-                completion_status = CompletionStatus.NOT_CONFIGURATION
+            if 'not_configured' in completion_status:
+                completion_status = CompletionStatus.NOT_CONFIGURED
             elif 'not_started' in completion_status:
                 completion_status = CompletionStatus.NOT_STARTED
             elif 'failures' in completion_status:
