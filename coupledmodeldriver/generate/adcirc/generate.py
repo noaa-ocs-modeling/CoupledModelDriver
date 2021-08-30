@@ -1,7 +1,7 @@
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 import logging
 import os
@@ -48,6 +48,8 @@ def generate_adcirc_configuration(
     :param parallel: generate configuations concurrently
     :param verbose: whether to show more verbose log messages
     """
+
+    start_time = datetime.now()
 
     get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
 
@@ -267,6 +269,8 @@ def generate_adcirc_configuration(
 
     if starting_directory is not None:
         os.chdir(starting_directory)
+
+    LOGGER.info(f'finished in {datetime.now() - start_time}')
 
 
 def write_spinup_directory(
