@@ -105,6 +105,7 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
         Path(filename) for filename in glob(str(slurm_out_log_pattern))
     ]
     if len(slurm_output_log_filenames) > 0:
+        error_pattern = re.compile('error', re.IGNORECASE)
         for filename in slurm_output_log_filenames:
             with open(filename, 'rb') as log_file:
                 lines = tail(log_file, lines=100)
@@ -112,6 +113,12 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
                 if len(percentages) > 0:
                     completion_percentage = float(percentages[-1].split('%')[0])
+
+                for line in lines:
+                    if re.match(error_pattern, line):
+                        if filename.name not in errors:
+                            errors[filename.name] = []
+                        errors[filename.name].append(line)
 
                 if len(lines) == 0 or 'End Epilogue' not in lines[-1]:
                     if filename.name not in running:
@@ -125,11 +132,18 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) > 0:
+        error_pattern = re.compile('error', re.IGNORECASE)
         for filename in esmf_log_filenames:
             with open(filename) as log_file:
                 lines = list(log_file.readlines())
                 if len(lines) == 0:
                     failures[filename.name] = 'empty ESMF log file'
+                else:
+                    for line in lines:
+                        if re.match(error_pattern, line):
+                            if filename.name not in errors:
+                                errors[filename.name] = []
+                            errors[filename.name].append(line)
     else:
         not_started[
             esmf_log_pattern.name
