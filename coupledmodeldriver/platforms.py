@@ -34,3 +34,11 @@ class Platform(Enum):
         'slurm_account': None,
         'default_partition': None,
     }
+    SLURM = {
+        'source_filename': None,
+        'processors_per_node': 36,
+        'launcher': 'srun',
+        'uses_slurm': True,
+        'slurm_account': None,
+        'default_partition': None,
+    }
