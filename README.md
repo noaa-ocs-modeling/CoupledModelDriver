@@ -30,6 +30,11 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
         - Stampede2
         - Orion
 
+## Organization / Responsibility
+- Zachary Burnett (**lead**) - zachary.burnett@noaa.gov
+- William Pringle - wpringle@anl.gov
+- Saeed Moghimi - saeed.moghimi@noaa.gov
+
 ## Usage
 
 ### 1. generate JSON configuration files
