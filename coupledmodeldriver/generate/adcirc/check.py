@@ -1,4 +1,6 @@
+from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
+from functools import partial
 from glob import glob
 import os
 from os import PathLike
@@ -20,32 +22,6 @@ class CompletionStatus(Enum):
     ERROR = 'error'
     RUNNING = 'running'
     COMPLETED = 'completed'
-
-
-def tail(file, lines: int = 20) -> [str]:
-    """ https://stackoverflow.com/a/136368 """
-
-    total_lines_wanted = lines
-
-    block_size = 1024
-    file.seek(0, 2)
-    block_end_byte = file.tell()
-    lines_to_go = total_lines_wanted
-    block_number = -1
-    blocks = []
-    while lines_to_go > 0 and block_end_byte > 0:
-        if block_end_byte - block_size > 0:
-            file.seek(block_number * block_size, 2)
-            blocks.append(file.read(block_size))
-        else:
-            file.seek(0, 0)
-            blocks.append(file.read(block_end_byte))
-        lines_found = blocks[-1].count(b'\n')
-        lines_to_go -= lines_found
-        block_end_byte -= block_size
-        block_number -= 1
-    all_read_text = b''.join(reversed(blocks))
-    return [line.decode() for line in all_read_text.splitlines()[-total_lines_wanted:]]
 
 
 def is_adcirc_run_directory(directory: PathLike = None) -> bool:
@@ -111,24 +87,34 @@ def collect_adcirc_errors(directory: PathLike = None) -> {str: Union[str, Dict[s
     ]
     if len(slurm_output_log_filenames) > 0:
         error_pattern = re.compile('error', re.IGNORECASE)
+        percentage_pattern = re.compile('[0-9|.]+% COMPLETE')
         for filename in slurm_output_log_filenames:
-            with open(filename, 'rb') as log_file:
-                lines = tail(log_file, lines=100)
-                percentages = re.findall('[0-9|.]+% COMPLETE', '\n'.join(lines))
 
-                if len(percentages) > 0:
-                    completion_percentage = float(percentages[-1].split('%')[0])
+            with FileReadBackwards(filename) as log_file:
+                ended = False
+                log_file_errors = []
+                for line in log_file:
+                    if completion_percentage == 0:
+                        percentages = re.findall(percentage_pattern, line)
+                        if len(percentages) > 0:
+                            completion_percentage = float(percentages[0].split('%')[0])
 
-                for line in lines:
+                    if not ended and 'End Epilogue' in line:
+                        ended = True
+
                     if re.match(error_pattern, line):
-                        if filename.name not in errors:
-                            errors[filename.name] = []
-                        errors[filename.name].append(line)
+                        log_file_errors.append(line)
 
-                if len(lines) == 0 or 'End Epilogue' not in lines[-1]:
+                if len(log_file_errors) > 0:
+                    log_file_errors = list(reversed(log_file_errors))
+                    if filename.name in errors:
+                        errors[filename.name].extend(log_file_errors)
+                    else:
+                        errors[filename.name] = log_file_errors
+
+                if not ended:
                     if filename.name not in running:
                         running[filename.name] = []
-
                     running[filename.name] = f'job is still running (no `Epilogue`)'
     else:
         not_started[
