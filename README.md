@@ -89,7 +89,7 @@ modifying the JSON files.
 
 The following command creates JSON files for coupling `(ATMESH + WW3DATA) -> ADCIRC` over a small Shinnecock Inlet mesh:
 
-```bash
+```shell
 initialize_adcirc \
     --platform HERA \
     --mesh-directory /scratch2/COASTAL/coastal/save/shared/models/meshes/shinnecock/v1.0 \
@@ -238,7 +238,7 @@ optional arguments:
   --verbose             show more verbose log messages
 ```
 
-```bash
+```shell
 cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
 generate_adcirc
 ```
@@ -286,7 +286,7 @@ The resulting configuration will have the following structure:
 
 Run the following to submit the model run to the Slurm job queue:
 
-```bash
+```shell
 ./run_hera.sh
 ``` 
 
@@ -298,4 +298,23 @@ The queue will have the following jobs added:
 20967648 40  1    afterok:20967647 (Dependency) ADCIRC_COLDSTART_SPINUP
 20967649 1   1    (null)           (None)       ADCIRC_SETUP_unperturbed
 20967650 42  2    afterok:20967649 (Dependency) ADCIRC_HOTSTART_unperturbed
+```
+
+### 4. track model progress
+`check_completion` checks the completion status of a running model directory.
+
+```
+usage: check_completion [-h] [--model MODEL] [--verbose] [directory ...]
+
+positional arguments:
+  directory      directory containing model run configuration
+
+optional arguments:
+  -h, --help     show this help message and exit
+  --model MODEL  model that is running, one of: `ADCIRC`
+  --verbose      list all errors and problems with runs
+```
+
+```shell
+check_completion hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
 ```
