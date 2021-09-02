@@ -91,15 +91,6 @@ def check_adcirc_completion(
         percentage_pattern = re.compile('[0-9|.]+% COMPLETE')
         for filename in slurm_output_log_filenames:
             with FileReadBackwards(filename) as log_file:
-                if len(log_file) == 0:
-                    if verbose:
-                        if filename.name not in not_started:
-                            not_started[filename.name] = []
-                        not_started[filename.name].append(f'empty file "{filename}"')
-                        break
-                    else:
-                        return CompletionStatus.NOT_STARTED, completion_percentage
-
                 ended = False
                 log_file_errors = []
                 for line in log_file:
