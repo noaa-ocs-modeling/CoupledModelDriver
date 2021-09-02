@@ -225,8 +225,7 @@ def check_completion(
                 for subdirectory in directory
             }
             for completed_future in concurrent.futures.as_completed(futures):
-                subdirectory_completion_status, subdirectory = completed_future.result()
-                completion_status[subdirectory] = subdirectory_completion_status
+                completion_status[futures[completed_future]] = completed_future.result()
     elif isinstance(directory, Path):
         subdirectories = [member.name for member in directory.iterdir()]
         if 'spinup' in subdirectories:
