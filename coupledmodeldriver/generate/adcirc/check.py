@@ -90,8 +90,16 @@ def check_adcirc_completion(
         error_pattern = re.compile('error', re.IGNORECASE)
         percentage_pattern = re.compile('[0-9|.]+% COMPLETE')
         for filename in slurm_output_log_filenames:
-
             with FileReadBackwards(filename) as log_file:
+                if len(log_file) == 0:
+                    if verbose:
+                        if filename.name not in not_started:
+                            not_started[filename.name] = []
+                        not_started[filename.name].append(f'empty file "{filename}"')
+                        break
+                    else:
+                        return CompletionStatus.NOT_STARTED, completion_percentage
+
                 ended = False
                 log_file_errors = []
                 for line in log_file:
@@ -116,7 +124,10 @@ def check_adcirc_completion(
                     else:
                         errors[filename.name] = log_file_errors
 
-                if not ended:
+                if ended:
+                    if not verbose:
+                        return CompletionStatus.COMPLETED, completion_percentage
+                else:
                     if filename.name not in running:
                         running[filename.name] = []
                     running[filename.name] = f'job is still running (no `Epilogue`)'
@@ -146,7 +157,7 @@ def check_adcirc_completion(
                             else:
                                 return CompletionStatus.ERROR, completion_percentage
     else:
-        running[
+        not_started[
             esmf_log_pattern.name
         ] = f'no ESMF log files found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
 
@@ -156,40 +167,40 @@ def check_adcirc_completion(
 
             if filename.stat().st_size <= minimum_file_size:
                 if filename.name not in failures:
-                    running[
+                    not_started[
                         filename.name
                     ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
         else:
-            running[filename.name] = f'output file not found {filename}'
+            not_started[filename.name] = f'output file not found {filename}'
 
     completion = {}
-
     if len(not_configured) > 0:
-        completion['not_configured'] = not_configured
-    if len(not_started) > 0:
-        completion['not_started'] = not_started
-    if len(failures) > 0:
-        completion['failures'] = failures
-    if len(errors) > 0:
-        completion['errors'] = errors
-    if len(running) > 0:
-        completion['running'] = running
-
-    if not verbose:
-        if len(completion) > 1:
-            if 'not_configured' in completion:
-                completion = CompletionStatus.NOT_CONFIGURED
-            elif 'not_started' in completion:
-                completion = CompletionStatus.NOT_STARTED
-            elif 'failures' in completion:
-                completion = CompletionStatus.FAILED
-            elif 'errors' in completion:
-                completion = CompletionStatus.ERROR
-            elif 'running' in completion:
-                completion = CompletionStatus.RUNNING
-            else:
-                completion = CompletionStatus.COMPLETED
+        if verbose:
+            completion['not_configured'] = not_configured
         else:
-            completion = CompletionStatus.COMPLETED
+            return CompletionStatus.NOT_CONFIGURED, completion_percentage
+    if len(not_started) > 0:
+        if verbose:
+            completion['not_started'] = not_started
+        else:
+            return CompletionStatus.NOT_STARTED, completion_percentage
+    if len(failures) > 0:
+        if verbose:
+            completion['failures'] = failures
+        else:
+            return CompletionStatus.FAILED, completion_percentage
+    if len(errors) > 0:
+        if verbose:
+            completion['errors'] = errors
+        else:
+            return CompletionStatus.ERROR, completion_percentage
+    if len(running) > 0:
+        if verbose:
+            completion['running'] = running
+        else:
+            return CompletionStatus.RUNNING, completion_percentage
+
+    if not verbose and len(completion) == 0:
+        return CompletionStatus.COMPLETED, completion_percentage
 
     return completion, completion_percentage
