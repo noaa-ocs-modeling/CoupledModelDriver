@@ -40,7 +40,7 @@ def is_adcirc_run_directory(directory: PathLike = None) -> bool:
 
 def check_adcirc_completion(
     directory: PathLike = None, verbose: bool = False
-) -> (Union[{str: Union[str, Dict[str, str]]}, CompletionStatus], float):
+) -> (Union[Dict[str: Union[str, Dict[str, str]]], CompletionStatus], float):
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
