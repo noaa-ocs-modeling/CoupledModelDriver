@@ -1,17 +1,11 @@
-import concurrent.futures
-from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
 from glob import glob
 import os
 from os import PathLike
 from pathlib import Path
 import re
-from typing import Iterable
 
 from file_read_backwards import FileReadBackwards
-
-from coupledmodeldriver.configure import ModelJSON
-from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 
 
 class CompletionStatus(Enum):
@@ -168,7 +162,7 @@ def check_adcirc_completion(
         else:
             running[filename.name] = f'output file not found {filename}'
 
-    completion = {'completion_percentage': completion_percentage}
+    completion = {}
 
     if len(not_configured) > 0:
         completion['not_configured'] = not_configured
@@ -199,52 +193,3 @@ def check_adcirc_completion(
             completion = CompletionStatus.COMPLETED
 
     return completion, completion_percentage
-
-
-def check_completion(
-    directory: PathLike = None, model: ModelJSON = None, verbose: bool = False
-):
-    if directory is None:
-        directory = Path.cwd()
-    elif not isinstance(directory, Path) and (
-        not isinstance(directory, Iterable) or isinstance(directory, str)
-    ):
-        directory = Path(directory)
-
-    if model is None:
-        model = ADCIRCJSON
-
-    completion_status = {}
-
-    if isinstance(directory, Iterable):
-        with ProcessPoolExecutor() as process_pool:
-            futures = {
-                process_pool.submit(
-                    check_completion, directory=subdirectory, model=model, verbose=verbose
-                ): subdirectory
-                for subdirectory in directory
-            }
-            for completed_future in concurrent.futures.as_completed(futures):
-                completion_status[futures[completed_future].name] = completed_future.result()
-    elif isinstance(directory, Path):
-        subdirectories = [member.name for member in directory.iterdir()]
-        if 'spinup' in subdirectories:
-            completion_status.update(
-                check_completion(directory=directory / 'spinup', model=model, verbose=verbose)
-            )
-        if 'runs' in subdirectories:
-            completion_status['runs'] = check_completion(
-                directory=(directory / 'runs').iterdir(), model=model, verbose=verbose
-            )
-        else:
-            if model == ADCIRCJSON:
-                completion, percentage = check_adcirc_completion(
-                    directory=directory, verbose=verbose
-                )
-
-                if isinstance(completion, CompletionStatus):
-                    completion = f'{completion.value} - {percentage}%'
-
-                completion_status[directory.name] = completion
-
-    return completion_status
