@@ -4,7 +4,12 @@ import os
 from os import PathLike
 from pathlib import Path
 import re
-from typing import Dict, Union
+from typing import Dict, Iterable, Union
+
+from file_read_backwards import FileReadBackwards
+
+from coupledmodeldriver.configure import ModelJSON
+from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 
 
 class CompletionStatus(Enum):
@@ -200,3 +205,50 @@ def check_adcirc_completion(directory: PathLike = None) -> (CompletionStatus, fl
             completion_status = CompletionStatus.COMPLETED
 
     return completion_status, completion_percentage
+
+
+def check_completion(
+    directory: PathLike = None, model: ModelJSON = None, verbose: bool = False
+):
+    if directory is None:
+        directory = Path.cwd()
+    elif not isinstance(directory, Path) and (
+        not isinstance(directory, Iterable) or isinstance(directory, str)
+    ):
+        directory = Path(directory)
+
+    if model is None:
+        model = ADCIRCJSON
+
+    completion_status = {}
+
+    if isinstance(directory, Iterable):
+        with ProcessPoolExecutor() as process_pool:
+            for subdirectory_completion_status in process_pool.map(
+                partial(check_completion, model=model, verbose=verbose), directory
+            ):
+                completion_status.update(subdirectory_completion_status)
+    elif isinstance(directory, Path):
+        subdirectories = [member.name for member in directory.iterdir()]
+        if 'spinup' in subdirectories:
+            completion_status.update(
+                check_completion(directory=directory / 'spinup', model=model, verbose=verbose)
+            )
+        if 'runs' in subdirectories:
+            completion_status['runs'] = check_completion(
+                directory=(directory / 'runs').iterdir(), model=model, verbose=verbose
+            )
+        else:
+            if model == ADCIRCJSON:
+                if verbose:
+                    completion = collect_adcirc_errors(directory=directory)
+                    percentage = completion['completion_percentage']
+                else:
+                    completion, percentage = check_adcirc_completion(directory=directory)
+
+                if isinstance(completion, CompletionStatus):
+                    completion = f'{completion.value} - {percentage}%'
+
+                completion_status[directory.name] = completion
+
+    return completion_status
