@@ -1,12 +1,12 @@
+import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
-from functools import partial
 from glob import glob
 import os
 from os import PathLike
 from pathlib import Path
 import re
-from typing import Dict, Iterable, Union
+from typing import Iterable
 
 from file_read_backwards import FileReadBackwards
 
@@ -218,10 +218,15 @@ def check_completion(
 
     if isinstance(directory, Iterable):
         with ProcessPoolExecutor() as process_pool:
-            for subdirectory_completion_status in process_pool.map(
-                partial(check_completion, model=model, verbose=verbose), directory
-            ):
-                completion_status.update(subdirectory_completion_status)
+            futures = {
+                process_pool.submit(
+                    check_completion, directory=subdirectory, model=model, verbose=verbose
+                ): subdirectory
+                for subdirectory in directory
+            }
+            for completed_future in concurrent.futures.as_completed(futures):
+                subdirectory_completion_status, subdirectory = completed_future.result()
+                completion_status[subdirectory] = subdirectory_completion_status
     elif isinstance(directory, Path):
         subdirectories = [member.name for member in directory.iterdir()]
         if 'spinup' in subdirectories:
