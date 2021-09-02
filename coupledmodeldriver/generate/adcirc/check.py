@@ -115,10 +115,7 @@ def check_adcirc_completion(
                     else:
                         errors[filename.name] = log_file_errors
 
-                if ended:
-                    if not verbose:
-                        return CompletionStatus.COMPLETED, completion_percentage
-                else:
+                if not ended:
                     if filename.name not in running:
                         running[filename.name] = []
                     running[filename.name] = f'job is still running (no `Epilogue`)'
@@ -190,7 +187,6 @@ def check_adcirc_completion(
             completion['running'] = running
         else:
             return CompletionStatus.RUNNING, completion_percentage
-
     if not verbose and len(completion) == 0:
         return CompletionStatus.COMPLETED, completion_percentage
 
