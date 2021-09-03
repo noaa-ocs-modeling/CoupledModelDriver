@@ -50,7 +50,7 @@ def check_adcirc_completion(
 
     if not is_adcirc_run_directory(directory):
         if verbose:
-            not_configured['none'] = f'not an ADCIRC run directory'
+            not_configured['none'] = f'ADCIRC configuration files not found'
         else:
             return CompletionStatus.NOT_CONFIGURED, completion_percentage
 
@@ -100,7 +100,7 @@ def check_adcirc_completion(
         if verbose:
             not_started[
                 slurm_out_log_pattern.name
-            ] = f'no Slurm output log files found with pattern `{os.path.relpath(slurm_out_log_pattern, directory)}`'
+            ] = f'Slurm output log files `{slurm_out_log_pattern.name}` not found'
         else:
             return CompletionStatus.NOT_STARTED, completion_percentage
 
@@ -123,7 +123,7 @@ def check_adcirc_completion(
         if verbose:
             failures[
                 adcirc_output_log_filename.name
-            ] = f'ADCIRC output file `fort.16` was not found at {adcirc_output_log_filename}'
+            ] = f'ADCIRC output file `{adcirc_output_log_filename.name}` not found'
         else:
             return CompletionStatus.FAILED, completion_percentage
 
@@ -147,7 +147,7 @@ def check_adcirc_completion(
     else:
         not_started[
             esmf_log_pattern.name
-        ] = f'no ESMF log files found with pattern `{os.path.relpath(esmf_log_pattern, directory)}`'
+        ] = f'ESMF log files `{esmf_log_pattern.name}` not found'
 
     for filename in [Path(filename) for filename in glob(str(output_netcdf_pattern))]:
         if filename.exists():
@@ -157,9 +157,9 @@ def check_adcirc_completion(
                 if filename.name not in failures:
                     not_started[
                         filename.name
-                    ] = f'empty file (size {filename.stat().st_size} not greater than {minimum_file_size})'
+                    ] = f'file size ({filename.stat().st_size}) does not exceed the minimum file size ({minimum_file_size})'
         else:
-            not_started[filename.name] = f'output file not found {filename}'
+            not_started[filename.name] = f'output file `{filename.name}` not found'
 
     completion = {}
     if len(not_configured) > 0:
