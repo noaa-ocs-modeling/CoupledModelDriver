@@ -31,6 +31,7 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
         - Orion
 
 ## Organization / Responsibility
+
 - Zachary Burnett (**lead**) - zachary.burnett@noaa.gov
 - William Pringle - wpringle@anl.gov
 - Saeed Moghimi - saeed.moghimi@noaa.gov
@@ -301,6 +302,7 @@ The queue will have the following jobs added:
 ```
 
 ### 4. track model progress
+
 `check_completion` checks the completion status of a running model directory.
 
 ```
