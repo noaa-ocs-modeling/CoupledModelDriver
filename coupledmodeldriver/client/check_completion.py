@@ -4,13 +4,12 @@ from functools import partial
 import json
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Any, Iterable, Mapping
 
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.adcirc.check import (
     check_adcirc_completion,
-    CompletionStatus,
     is_adcirc_run_directory,
 )
 from coupledmodeldriver.utilities import convert_value
@@ -67,7 +66,7 @@ def is_model_directory(directory: PathLike, model: ModelJSON = None) -> bool:
 
 def check_model_directory(
     directory: PathLike, verbose: bool = False, model: ModelJSON = None
-) -> ({str: {str, str}}, float):
+) -> {str: Any}:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
@@ -84,7 +83,7 @@ def check_model_directory(
 
 def check_completion(
     directory: PathLike = None, verbose: bool = False, model: ModelJSON = None
-):
+) -> {str: Any}:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path) and (
@@ -106,14 +105,17 @@ def check_completion(
                 completion_status.update(subdirectory_completion_status)
     elif isinstance(directory, Path):
         if is_model_directory(directory, model=model):
-            completion, percentage = check_model_directory(
-                directory=directory, verbose=verbose
-            )
-            if isinstance(completion, CompletionStatus):
-                completion = f'{completion.value} - {percentage}%'
-            else:
-                completion['progress'] = f'{percentage}%'
-
+            completion = check_model_directory(directory=directory, verbose=verbose)
+            for key in [
+                key
+                for key, value in completion.items()
+                if isinstance(value, Mapping) and len(value) == 0
+            ]:
+                del completion[key]
+            completion['status'] = completion['status'].name.lower()
+            completion['progress'] = f'{completion["progress"]}%'
+            if not verbose:
+                completion = f'{completion["status"]} - {completion["progress"]}'
             completion_status[directory.name] = completion
         else:
             subdirectory_completion_statuses = check_completion(
