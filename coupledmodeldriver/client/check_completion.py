@@ -123,21 +123,20 @@ def check_completion(
             if len(subdirectory_completion_statuses) > 0:
                 completion_status[directory.name] = subdirectory_completion_statuses
 
-    if not verbose:
+    if (
+        isinstance(completion_status, Mapping)
+        and len(completion_status) > 0
+        and isinstance(directory, Path)
+    ):
+        directory_completion_status = completion_status[directory.name]
         if (
-            isinstance(completion_status, Mapping)
-            and len(completion_status) > 0
-            and isinstance(directory, Path)
+            isinstance(directory_completion_status, Mapping)
+            and len(directory_completion_status) > 0
         ):
-            directory_completion_status = completion_status[directory.name]
-            if (
-                isinstance(directory_completion_status, Mapping)
-                and len(directory_completion_status) > 0
-            ):
-                # collapse statuses if all statuses in the directory are the same
-                statuses = list(directory_completion_status.values())
-                if all(status == statuses[0] for status in statuses):
-                    completion_status[directory.name] = statuses[0]
+            # collapse statuses if all statuses in the directory are the same
+            statuses = list(directory_completion_status.values())
+            if all(status == statuses[0] for status in statuses):
+                completion_status[directory.name] = statuses[0]
 
     return completion_status
 
