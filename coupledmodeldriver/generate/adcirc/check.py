@@ -56,7 +56,7 @@ def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -
             error_pattern = re.compile('error', re.IGNORECASE)
             percentage_pattern = re.compile('[0-9|.]+% COMPLETE')
             for filename in slurm_output_log_filenames:
-                if verbose or status.value < CompletionStatus.ERROR:
+                if verbose or status.value < CompletionStatus.ERROR.value:
                     with FileReadBackwards(filename) as log_file:
                         ended = False
                         log_file_errors = []
@@ -103,7 +103,7 @@ def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -
         ]
         if len(slurm_error_log_filenames) > 0:
             for filename in slurm_error_log_filenames:
-                if verbose or status.value < CompletionStatus.ERROR:
+                if verbose or status.value < CompletionStatus.ERROR.value:
                     with open(filename) as log_file:
                         lines = list(log_file.readlines())
                         if len(lines) > 0:
