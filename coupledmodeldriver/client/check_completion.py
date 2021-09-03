@@ -96,7 +96,6 @@ def check_completion(
         model = ADCIRCJSON
 
     completion_status = {}
-
     if isinstance(directory, Iterable):
         with ProcessPoolExecutor() as process_pool:
             subdirectory_completion_statuses = process_pool.map(
@@ -113,7 +112,7 @@ def check_completion(
             if isinstance(completion, CompletionStatus):
                 completion = f'{completion.value} - {percentage}%'
             else:
-                completion['completion_percentage'] = percentage
+                completion['progress'] = f'{percentage}%'
 
             completion_status[directory.name] = completion
         else:
