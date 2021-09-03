@@ -54,34 +54,11 @@ def check_adcirc_completion(
         else:
             return CompletionStatus.NOT_CONFIGURED, completion_percentage
 
-    adcirc_output_log_filename = directory / 'fort.16'
-    slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
     slurm_out_log_pattern = directory / 'ADCIRC_*_*.out.log'
+    slurm_error_log_pattern = directory / 'ADCIRC_*_*.err.log'
+    adcirc_output_log_filename = directory / 'fort.16'
     esmf_log_pattern = directory / 'PET*.ESMF_LogFile'
     output_netcdf_pattern = directory / 'fort.*.nc'
-
-    if not adcirc_output_log_filename.exists():
-        if verbose:
-            not_started[
-                adcirc_output_log_filename.name
-            ] = f'ADCIRC output file `fort.16` was not found at {adcirc_output_log_filename}'
-        else:
-            return CompletionStatus.NOT_STARTED, completion_percentage
-
-    slurm_error_log_filenames = [
-        Path(filename) for filename in glob(str(slurm_error_log_pattern))
-    ]
-    if len(slurm_error_log_filenames) > 0:
-        for filename in slurm_error_log_filenames:
-            with open(filename) as log_file:
-                lines = list(log_file.readlines())
-                if len(lines) > 0:
-                    if verbose:
-                        if filename.name not in errors:
-                            errors[filename.name] = []
-                        errors[filename.name].extend(lines)
-                    else:
-                        return CompletionStatus.ERROR, completion_percentage
 
     slurm_output_log_filenames = [
         Path(filename) for filename in glob(str(slurm_out_log_pattern))
@@ -126,6 +103,29 @@ def check_adcirc_completion(
             ] = f'no Slurm output log files found with pattern `{os.path.relpath(slurm_out_log_pattern, directory)}`'
         else:
             return CompletionStatus.NOT_STARTED, completion_percentage
+
+    slurm_error_log_filenames = [
+        Path(filename) for filename in glob(str(slurm_error_log_pattern))
+    ]
+    if len(slurm_error_log_filenames) > 0:
+        for filename in slurm_error_log_filenames:
+            with open(filename) as log_file:
+                lines = list(log_file.readlines())
+                if len(lines) > 0:
+                    if verbose:
+                        if filename.name not in errors:
+                            errors[filename.name] = []
+                        errors[filename.name].extend(lines)
+                    else:
+                        return CompletionStatus.ERROR, completion_percentage
+
+    if not adcirc_output_log_filename.exists():
+        if verbose:
+            failures[
+                adcirc_output_log_filename.name
+            ] = f'ADCIRC output file `fort.16` was not found at {adcirc_output_log_filename}'
+        else:
+            return CompletionStatus.FAILED, completion_percentage
 
     esmf_log_filenames = [Path(filename) for filename in glob(str(esmf_log_pattern))]
     if len(esmf_log_filenames) > 0:
