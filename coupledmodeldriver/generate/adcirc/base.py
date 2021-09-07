@@ -7,6 +7,8 @@ from typing import Any, Union
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.forcing import BestTrackForcing
 from adcircpy.forcing.base import Forcing
+from adcircpy.mesh.fort13 import NodalAttributes
+from adcircpy.mesh.mesh import ModelForcings
 from adcircpy.server import SlurmConfig
 from nemspy.model import ADCIRCEntry
 
@@ -360,7 +362,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     def base_mesh(self) -> AdcircMesh:
         if self.__base_mesh is None:
             if self.__mesh is not None:
-                self.__base_mesh = self.__mesh
+                mesh = self.__mesh
+                if isinstance(mesh, AdcircMesh):
+                    mesh.forcings = ModelForcings(mesh)
+                    mesh.nodal_attributes = NodalAttributes(mesh)
+                self.__base_mesh = mesh
             else:
                 self.__base_mesh = self['fort_14_path']
         if not isinstance(self.__base_mesh, AdcircMesh):
