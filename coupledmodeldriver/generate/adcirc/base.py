@@ -320,9 +320,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
             if self['fort_13_path'] is not None:
                 if self['fort_13_path'].exists():
-                    LOGGER.info(
-                        f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
-                    )
+                    LOGGER.info(f'reading attributes from "{self["fort_13_path"]}"')
                     mesh.import_nodal_attributes(self['fort_13_path'])
                     for attribute_name in mesh.get_nodal_attribute_names():
                         mesh.set_nodal_attribute_state(
@@ -330,7 +328,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
                         )
                 else:
                     LOGGER.warning(
-                        f'mesh values (nodal attributes) not found at "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+                        f'mesh values (nodal attributes) not found at "{self["fort_13_path"]}"'
                     )
 
             LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
@@ -395,9 +393,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         )
 
         if self['stations_file_path'] is not None:
-            LOGGER.info(
-                f'importing stations from "{os.path.relpath(self["stations_file_path"].resolve(), Path.cwd())}"'
-            )
+            LOGGER.info(f'importing stations from "{self["stations_file_path"]}"')
             driver.import_stations(self['stations_file_path'])
 
         if self['modeled_timestep'] is not None:
