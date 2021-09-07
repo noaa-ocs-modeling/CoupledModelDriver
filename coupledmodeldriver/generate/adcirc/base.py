@@ -315,10 +315,10 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             mesh = self.base_mesh.copy()
 
             if self['fort_13_path'] is not None:
-                LOGGER.info(
-                    f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
-                )
                 if self['fort_13_path'].exists():
+                    LOGGER.info(
+                        f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+                    )
                     mesh.import_nodal_attributes(self['fort_13_path'])
                     for attribute_name in mesh.get_nodal_attribute_names():
                         mesh.set_nodal_attribute_state(
