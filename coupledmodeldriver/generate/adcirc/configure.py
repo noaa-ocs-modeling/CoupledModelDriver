@@ -132,15 +132,6 @@ class ADCIRCRunConfiguration(RunConfiguration):
         for forcing in forcings:
             self.add_forcing(forcing)
 
-    def perturb(self, relative_to: PathLike = None) -> {str: 'ADCIRCRunConfiguration'}:
-        perturbations = super().perturb(relative_to=relative_to)
-
-        for run_name, perturbation in perturbations.items():
-            if self.adcircpy_mesh == perturbation.adcircpy_mesh:
-                perturbation.adcircpy_mesh = self.adcircpy_mesh
-
-        return perturbations
-
     def add_forcing(self, forcing: ForcingJSON):
         if forcing not in self:
             forcing = self[self.add(forcing)]
