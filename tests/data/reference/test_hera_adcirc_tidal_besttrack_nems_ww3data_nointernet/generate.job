@@ -11,4 +11,4 @@ set -e
 
 rm **/*.log
 generate_adcirc
-echo "use `./run_hera.sh` to start model"
+echo "use ./run_hera.sh to start model"

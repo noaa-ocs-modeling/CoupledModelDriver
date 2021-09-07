@@ -282,7 +282,7 @@ class EnsembleGenerationJob(JobScript):
         )
 
         self.commands.extend(
-            ['rm **/*.log', 'generate_adcirc', 'echo "use `./run_hera.sh` to start model"']
+            ['rm **/*.log', 'generate_adcirc', 'echo "use ./run_hera.sh to start model"']
         )
 
 
