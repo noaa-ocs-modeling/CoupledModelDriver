@@ -364,6 +364,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             if self.__mesh is not None:
                 mesh = self.__mesh
                 if isinstance(mesh, AdcircMesh):
+                    # deconstruct mesh into a base mesh that can be pickled
                     mesh.forcings = ModelForcings(mesh)
                     mesh.nodal_attributes = NodalAttributes(mesh)
                 self.__base_mesh = mesh
