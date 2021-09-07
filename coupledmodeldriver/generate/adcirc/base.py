@@ -314,6 +314,10 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         if self.__mesh is None:
             mesh = self.base_mesh.copy()
 
+            # reconstruct mesh from base
+            mesh.forcings = ModelForcings(mesh)
+            mesh.nodal_attributes = NodalAttributes(mesh)
+
             if self['fort_13_path'] is not None:
                 if self['fort_13_path'].exists():
                     LOGGER.info(
@@ -362,17 +366,15 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     def base_mesh(self) -> AdcircMesh:
         if self.__base_mesh is None:
             if self.__mesh is not None:
-                mesh = self.__mesh
-                if isinstance(mesh, AdcircMesh):
-                    # deconstruct mesh into a base mesh that can be pickled
-                    mesh.forcings = ModelForcings(mesh)
-                    mesh.nodal_attributes = NodalAttributes(mesh)
-                self.__base_mesh = mesh
+                self.__base_mesh = self.__mesh
             else:
                 self.__base_mesh = self['fort_14_path']
         if not isinstance(self.__base_mesh, AdcircMesh):
             LOGGER.info(f'opening mesh "{self.__base_mesh}"')
             self.__base_mesh = AdcircMesh.open(self.__base_mesh, crs=4326)
+        # deconstruct mesh into a base mesh that can be pickled
+        self.__base_mesh.forcings = None
+        self.__base_mesh.nodal_attributes = None
         return self.__base_mesh
 
     @base_mesh.setter
