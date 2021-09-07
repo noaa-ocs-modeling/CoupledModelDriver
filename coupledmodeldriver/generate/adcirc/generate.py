@@ -192,8 +192,8 @@ def generate_adcirc_configuration(
             'duration': spinup_duration,
             'local_fort13_filename': local_fort13_filename,
             'local_fort14_filename': local_fort14_filename,
-            'link_mesh': spinup_configuration.adcircpy_mesh
-            == base_configuration.adcircpy_mesh,
+            'link_mesh': use_original_mesh
+            or spinup_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh,
             'relative_paths': relative_paths,
             'overwrite': overwrite,
             'platform': platform,
@@ -225,7 +225,8 @@ def generate_adcirc_configuration(
             'configuration': run_configuration,
             'local_fort13_filename': local_fort13_filename,
             'local_fort14_filename': local_fort14_filename,
-            'link_mesh': run_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh,
+            'link_mesh': use_original_mesh
+            or run_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh,
             'relative_paths': relative_paths,
             'overwrite': overwrite,
             'platform': platform,
