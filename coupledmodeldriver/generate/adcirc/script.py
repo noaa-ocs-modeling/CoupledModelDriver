@@ -11,10 +11,10 @@ class AdcircJob(JobScript):
         self,
         platform: Platform,
         commands: [str],
-        slurm_tasks: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
-        slurm_run_name: str,
+        slurm_run_name: str = None,
+        slurm_tasks: int = None,
+        slurm_duration: timedelta = None,
+        slurm_account: str = None,
         source_filename: PathLike = None,
         **kwargs,
     ):
@@ -22,12 +22,12 @@ class AdcircJob(JobScript):
             slurm_run_name = 'ADCIRC_JOB'
 
         super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
+            platform=platform,
+            commands=commands,
+            slurm_run_name=slurm_run_name,
+            slurm_tasks=slurm_tasks,
+            slurm_duration=slurm_duration,
+            slurm_account=slurm_account,
             **kwargs,
         )
 
@@ -45,21 +45,21 @@ class AdcircRunJob(AdcircJob):
     def __init__(
         self,
         platform: Platform,
-        slurm_tasks: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
-        slurm_run_name: str,
+        slurm_run_name: str = None,
+        slurm_tasks: int = None,
+        slurm_duration: timedelta = None,
+        slurm_account: str = None,
         executable: PathLike = None,
         commands: [str] = None,
         **kwargs,
     ):
         super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
+            platform=platform,
+            commands=commands,
+            slurm_run_name=slurm_run_name,
+            slurm_tasks=slurm_tasks,
+            slurm_duration=slurm_duration,
+            slurm_account=slurm_account,
             **kwargs,
         )
 
@@ -198,22 +198,25 @@ class AdcircSetupJob(AdcircJob):
         self,
         platform: Platform,
         adcirc_mesh_partitions: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
         slurm_run_name: str,
+        slurm_tasks: int = None,
+        slurm_duration: timedelta = None,
+        slurm_account: str = None,
         adcprep_path: PathLike = None,
         aswip_command: str = None,
-        slurm_tasks: int = 1,
         commands: [str] = None,
         **kwargs,
     ):
+        if slurm_tasks is None:
+            slurm_tasks = 1
+
         super().__init__(
-            platform,
-            commands,
-            slurm_tasks,
-            slurm_account,
-            slurm_duration,
-            slurm_run_name,
+            platform=platform,
+            commands=commands,
+            slurm_run_name=slurm_run_name,
+            slurm_tasks=slurm_tasks,
+            slurm_duration=slurm_duration,
+            slurm_account=slurm_account,
             **kwargs,
         )
 

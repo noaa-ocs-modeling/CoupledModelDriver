@@ -71,10 +71,10 @@ class JobScript(Script):
         self,
         platform: Platform,
         commands: [str],
-        slurm_tasks: int,
-        slurm_account: str,
-        slurm_duration: timedelta,
         slurm_run_name: str = None,
+        slurm_tasks: int = None,
+        slurm_duration: timedelta = None,
+        slurm_account: str = None,
         slurm_email_type: SlurmEmailType = None,
         slurm_email_address: str = None,
         slurm_error_filename: PathLike = None,
@@ -90,10 +90,10 @@ class JobScript(Script):
 
         :param platform: HPC to run script on
         :param commands: shell commands to run in script
-        :param slurm_tasks: number of total tasks for Slurm to run
-        :param slurm_account: Slurm account name
-        :param slurm_duration: duration to run job in job manager
         :param slurm_run_name: Slurm run name
+        :param slurm_tasks: number of total tasks for Slurm to run
+        :param slurm_duration: duration to run job in job manager
+        :param slurm_account: Slurm account name
         :param slurm_email_type: email type
         :param slurm_email_address: email address
         :param slurm_error_filename: file path to error log file
@@ -110,6 +110,18 @@ class JobScript(Script):
         if isinstance(modules, Sequence) and len(modules) == 0:
             modules = None
 
+        if slurm_run_name is None:
+            slurm_run_name = uuid.uuid4().hex
+
+        if slurm_tasks is None:
+            slurm_tasks = platform.value['processors_per_node']
+
+        if slurm_duration is None:
+            slurm_duration = timedelta(hours=1)
+
+        if slurm_account is None:
+            slurm_account = platform.value['slurm_account']
+
         if slurm_partition is None:
             slurm_partition = platform.value['default_partition']
 
@@ -120,9 +132,7 @@ class JobScript(Script):
         self.slurm_duration = slurm_duration
 
         self.__slurm_run_directory = None
-        self.slurm_run_name = (
-            slurm_run_name if slurm_run_name is not None else uuid.uuid4().hex
-        )
+        self.slurm_run_name = slurm_run_name
         self.slurm_email_type = slurm_email_type
         self.slurm_email_address = slurm_email_address
 
@@ -245,6 +255,35 @@ class JobScript(Script):
 
         if self.write_slurm_directory:
             self.__slurm_run_directory = None
+
+
+class EnsembleGenerationJob(JobScript):
+    def __init__(
+        self,
+        platform: Platform,
+        slurm_run_name: str = None,
+        slurm_tasks: int = None,
+        slurm_duration: timedelta = None,
+        slurm_account: str = None,
+        commands: [str] = None,
+        **kwargs,
+    ):
+        if slurm_run_name is None:
+            slurm_run_name = 'ADCIRC_GENERATE_CONFIGURATION'
+
+        super().__init__(
+            platform=platform,
+            commands=commands,
+            slurm_run_name=slurm_run_name,
+            slurm_tasks=slurm_tasks,
+            slurm_duration=slurm_duration,
+            slurm_account=slurm_account,
+            **kwargs,
+        )
+
+        self.commands.extend(
+            ['rm **/*.log', 'generate_adcirc', 'echo use `./run_hera.sh` to start model']
+        )
 
 
 class EnsembleRunScript(Script):
