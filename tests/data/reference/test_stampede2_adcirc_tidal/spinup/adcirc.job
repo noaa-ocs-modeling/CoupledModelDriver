@@ -1,8 +1,6 @@
 #!/bin/bash
 #SBATCH -J ADCIRC_COLDSTART_SPINUP
 #SBATCH -A coastal
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=example@email.gov
 #SBATCH --error=ADCIRC_COLDSTART_SPINUP.err.log
 #SBATCH --output=ADCIRC_COLDSTART_SPINUP.out.log
 #SBATCH -n 1020

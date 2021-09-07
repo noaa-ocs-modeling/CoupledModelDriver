@@ -7,11 +7,8 @@ from adcircpy.forcing.winds.best_track import BestTrackForcing
 import pytest
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import (
-    ADCIRCRunConfiguration,
-    generate_adcirc_configuration,
-    NEMSADCIRCRunConfiguration,
-)
+from coupledmodeldriver.client.initialize_adcirc import initialize_adcirc
+from coupledmodeldriver.generate import generate_adcirc_configuration
 from tests import (
     check_reference_directory,
     INPUT_DIRECTORY,
@@ -35,27 +32,30 @@ def test_hera_adcirc():
 
     mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
 
-    slurm_email_address = 'example@email.gov'
-
-    configuration = ADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
         perturbations=None,
+        nems_interval=None,
+        nems_connections=None,
+        nems_mediations=None,
+        nems_sequence=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=None,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
         adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -99,8 +99,6 @@ def test_hera_adcirc_nems_atmesh_ww3data():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     wind_forcing = AtmosphericMeshForcing(
         filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
         nws=17,
@@ -113,29 +111,30 @@ def test_hera_adcirc_nems_atmesh_ww3data():
     )
     forcings = [wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -166,31 +165,34 @@ def test_hera_adcirc_tidal():
 
     mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
-    configuration = ADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
         perturbations=None,
+        nems_interval=None,
+        nems_connections=None,
+        nems_mediations=None,
+        nems_sequence=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
         adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -232,8 +234,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = BestTrackForcing(storm='ike2008', nws=8, interval_seconds=3600)
@@ -244,30 +244,30 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         aswip_executable=None,
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -314,8 +314,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = BestTrackForcing.from_fort22(
@@ -328,30 +326,30 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
         aswip_executable=None,
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -395,8 +393,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_aswip():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = BestTrackForcing(storm='ike2008', nws=20, interval_seconds=3600)
@@ -407,30 +403,30 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_aswip():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        aswip_executable=INPUT_DIRECTORY / 'bin' / 'aswip',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -474,8 +470,6 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
@@ -490,29 +484,30 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -560,8 +555,6 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
@@ -576,17 +569,13 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
-        nems_interval=nems_interval,
-        nems_connections=nems_connections,
-        nems_mediations=nems_mediations,
-        nems_sequence=nems_sequence,
         tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
         perturbations={
             'run_1': {'adcirc': {'ICS': 2}, 'tidalforcing': {'constituents': 'all'}},
             'run_2': {
@@ -598,17 +587,22 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed():
                 },
             },
         },
+        nems_interval=nems_interval,
+        nems_connections=nems_connections,
+        nems_mediations=nems_mediations,
+        nems_sequence=nems_sequence,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -639,31 +633,34 @@ def test_local_adcirc_tidal():
 
     mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
-    configuration = ADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
         perturbations=None,
+        nems_interval=None,
+        nems_connections=None,
+        nems_mediations=None,
+        nems_sequence=None,
+        modulefile=None,
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
         adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=None,
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -707,8 +704,6 @@ def test_local_adcirc_tidal_nems_atmesh_ww3data():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
@@ -723,29 +718,30 @@ def test_local_adcirc_tidal_nems_atmesh_ww3data():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=None,
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=None,
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -776,31 +772,35 @@ def test_stampede2_adcirc_tidal():
 
     mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     forcings = [tidal_forcing]
 
-    configuration = ADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
         tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
         perturbations=None,
+        nems_interval=None,
+        nems_connections=None,
+        nems_mediations=None,
+        nems_sequence=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
         adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
 
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
@@ -846,8 +846,6 @@ def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
         'OCN',
     ]
 
-    slurm_email_address = 'example@email.gov'
-
     tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
     tidal_forcing.use_all()
     wind_forcing = AtmosphericMeshForcing(
@@ -862,29 +860,30 @@ def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
     )
     forcings = [tidal_forcing, wind_forcing, wave_forcing]
 
-    configuration = NEMSADCIRCRunConfiguration(
+    initialize_adcirc(
+        platform=platform,
         mesh_directory=mesh_directory,
         modeled_start_time=modeled_start_time,
-        modeled_end_time=modeled_start_time + modeled_duration,
+        modeled_duration=modeled_duration,
         modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
         nems_interval=nems_interval,
         nems_connections=nems_connections,
         nems_mediations=nems_mediations,
         nems_sequence=nems_sequence,
-        tidal_spinup_duration=tidal_spinup_duration,
-        platform=platform,
-        perturbations=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
         forcings=forcings,
-        adcirc_processors=adcirc_processors,
-        slurm_partition=None,
-        slurm_job_duration=job_duration,
-        slurm_email_address=slurm_email_address,
-        nems_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
         adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
-        source_filename=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.stampede',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
     )
-
-    configuration.write_directory(output_directory, overwrite=True)
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(

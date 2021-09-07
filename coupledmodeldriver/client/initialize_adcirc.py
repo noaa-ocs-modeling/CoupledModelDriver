@@ -396,7 +396,7 @@ def initialize_adcirc(
     )
 
     generation_job_script = EnsembleGenerationJob(platform=platform)
-    generation_job_script.write(filename=output_directory / 'generate.job')
+    generation_job_script.write(filename=output_directory / 'generate.job', overwrite=True)
 
 
 def get_argument(
