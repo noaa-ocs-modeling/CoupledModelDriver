@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import os
 from os import PathLike
 from pathlib import Path
-import sys
 from typing import Any, Union
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
@@ -217,6 +216,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         :param attributes: attributes to set in `adcircpy.AdcircRun` object
         """
 
+        self.__mesh = None
         self.__base_mesh = None
 
         if tidal_spinup_timestep is None:
@@ -309,70 +309,67 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
     @property
     def adcircpy_mesh(self) -> AdcircMesh:
-        if self.__base_mesh is None:
-            self.__base_mesh = self['fort_14_path']
+        if self.__mesh is None:
+            mesh = self.base_mesh.copy()
 
-        if not isinstance(self.__base_mesh, AdcircMesh):
-            LOGGER.info(f'opening mesh "{self.__base_mesh}"')
-            self.__base_mesh = AdcircMesh.open(self.__base_mesh, crs=4326)
-
-        mesh = self.__base_mesh.copy()
-
-        if self['fort_13_path'] is not None:
-            LOGGER.info(
-                f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
-            )
-            if self['fort_13_path'].exists():
-                mesh.import_nodal_attributes(self['fort_13_path'])
-                for attribute_name in mesh.get_nodal_attribute_names():
-                    mesh.set_nodal_attribute_state(
-                        attribute_name, coldstart=True, hotstart=True
-                    )
-            else:
-                LOGGER.warning(
-                    f'mesh values (nodal attributes) not found at "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+            if self['fort_13_path'] is not None:
+                LOGGER.info(
+                    f'reading attributes from "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
                 )
+                if self['fort_13_path'].exists():
+                    mesh.import_nodal_attributes(self['fort_13_path'])
+                    for attribute_name in mesh.get_nodal_attribute_names():
+                        mesh.set_nodal_attribute_state(
+                            attribute_name, coldstart=True, hotstart=True
+                        )
+                else:
+                    LOGGER.warning(
+                        f'mesh values (nodal attributes) not found at "{os.path.relpath(self["fort_13_path"].resolve(), Path.cwd())}"'
+                    )
 
-        LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
-        for adcircpy_forcing in self.adcircpy_forcings:
-            if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
-                adcircpy_forcing.start_date = self['modeled_start_time']
-                adcircpy_forcing.end_date = self['modeled_end_time']
+            LOGGER.debug(f'adding {len(self.forcings)} forcing(s) to mesh')
+            for adcircpy_forcing in self.adcircpy_forcings:
+                if isinstance(adcircpy_forcing, (Tides, BestTrackForcing)):
+                    adcircpy_forcing.start_date = self['modeled_start_time']
+                    adcircpy_forcing.end_date = self['modeled_end_time']
 
-            if (
-                isinstance(adcircpy_forcing, Tides)
-                and self['tidal_spinup_duration'] is not None
-            ):
-                adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
-                adcircpy_forcing.start_date -= self['tidal_spinup_duration']
-            # elif isinstance(adcircpy_forcing, BestTrackForcing):
-            #     adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
+                if (
+                    isinstance(adcircpy_forcing, Tides)
+                    and self['tidal_spinup_duration'] is not None
+                ):
+                    adcircpy_forcing.spinup_time = self['tidal_spinup_duration']
+                    adcircpy_forcing.start_date -= self['tidal_spinup_duration']
+                # elif isinstance(adcircpy_forcing, BestTrackForcing):
+                #     adcircpy_forcing.clip_to_bbox(mesh.get_bbox(output_type='bbox'), mesh.crs)
 
-            mesh.add_forcing(adcircpy_forcing)
+                mesh.add_forcing(adcircpy_forcing)
 
-        if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
-            LOGGER.debug(f'generating tau0 in mesh')
-            mesh.generate_tau0()
+            if not mesh.has_nodal_attribute('primitive_weighting_in_continuity_equation'):
+                LOGGER.debug(f'generating tau0 in mesh')
+                mesh.generate_tau0()
 
-        return mesh
+            self.__mesh = mesh
+
+        return self.__mesh
 
     @adcircpy_mesh.setter
     def adcircpy_mesh(self, adcircpy_mesh: Union[AdcircMesh, PathLike]):
-        if isinstance(adcircpy_mesh, AdcircMesh):
-            try:
-                adcircpy_mesh = adcircpy_mesh.copy()
-                LOGGER.debug(f'copying mesh object ({sys.getsizeof(adcircpy_mesh)} bytes)')
-            except Exception as error:
-                LOGGER.warning(f'unable to copy mesh object: {error}')
-
-        self.__base_mesh = adcircpy_mesh
+        self.__mesh = adcircpy_mesh
 
     @property
     def base_mesh(self) -> AdcircMesh:
+        if self.__base_mesh is None:
+            if self.__mesh is not None:
+                self.__base_mesh = self.__mesh
+            else:
+                self.__base_mesh = self['fort_14_path']
+        if not isinstance(self.__base_mesh, AdcircMesh):
+            LOGGER.info(f'opening mesh "{self.__base_mesh}"')
+            self.__base_mesh = AdcircMesh.open(self.__base_mesh, crs=4326)
         return self.__base_mesh
 
     @base_mesh.setter
-    def base_mesh(self, base_mesh: AdcircMesh):
+    def base_mesh(self, base_mesh: Union[AdcircMesh, PathLike]):
         self.__base_mesh = base_mesh
 
     @property
@@ -501,7 +498,12 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     def nemspy_entry(self) -> ADCIRCEntry:
         return ADCIRCEntry(processors=self['processors'], **self['nems_parameters'])
 
+    def __setitem__(self, key: str, value: Any):
+        super().__setitem__(key, value)
+        self.__mesh = None
+
     def __copy__(self) -> 'ADCIRCJSON':
         instance = super().__copy__()
         instance.base_mesh = self.base_mesh
+        instance.forcings = self.forcings
         return instance
