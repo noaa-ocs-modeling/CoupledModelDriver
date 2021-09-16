@@ -136,10 +136,6 @@ def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -
                                 if filename.name not in completion[CompletionStatus.ERROR]:
                                     completion[CompletionStatus.ERROR][filename.name] = []
                                 completion[CompletionStatus.ERROR][filename.name].append(line)
-        else:
-            completion[CompletionStatus.NOT_STARTED][
-                esmf_log_pattern.name
-            ] = f'ESMF log files `{esmf_log_pattern.name}` not found'
 
     if verbose or status.value < CompletionStatus.NOT_STARTED.value:
         output_netcdf_pattern = directory / 'fort.*.nc'
