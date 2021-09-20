@@ -372,14 +372,8 @@ def write_spinup_directory(
         source_filename=source_filename,
     )
 
-    try:
-        setup_script.write(setup_script_filename, overwrite=overwrite)
-    except FileExistsError:
-        pass
-    try:
-        job_script.write(job_script_filename, overwrite=overwrite)
-    except FileExistsError:
-        pass
+    setup_script.write(setup_script_filename, overwrite=overwrite)
+    job_script.write(job_script_filename, overwrite=overwrite)
 
     if use_nems:
         LOGGER.debug(f'setting spinup to {duration}')
@@ -512,14 +506,8 @@ def write_run_directory(
         source_filename=source_filename,
     )
 
-    try:
-        setup_script.write(setup_script_filename, overwrite=overwrite)
-    except FileExistsError:
-        pass
-    try:
-        job_script.write(job_script_filename, overwrite=overwrite)
-    except FileExistsError:
-        pass
+    setup_script.write(setup_script_filename, overwrite=overwrite)
+    job_script.write(job_script_filename, overwrite=overwrite)
 
     if use_nems:
         nems.write(
