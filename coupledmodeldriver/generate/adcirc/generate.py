@@ -117,17 +117,6 @@ def generate_adcirc_configuration(
     ensemble_run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
 
-    if 'besttrack' in base_configuration:
-        nws = base_configuration['besttrack']['nws']
-        use_aswip = nws in [8, 19, 20, 21]
-        if use_aswip and base_configuration['adcirc']['aswip_executable_path'] is None:
-            use_aswip = False
-            LOGGER.warning(
-                f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
-            )
-    else:
-        use_aswip = False
-
     if use_original_mesh:
         LOGGER.info(
             f'using original mesh from "{os.path.relpath(original_fort14_filename.resolve(), Path.cwd())}"'
@@ -198,10 +187,8 @@ def generate_adcirc_configuration(
             'slurm_account': slurm_account,
             'job_duration': job_duration,
             'partition': partition,
-            'use_aswip': use_aswip,
             'email_type': email_type,
             'email_address': email_address,
-            'use_nems': use_nems,
         }
 
         if parallel:
@@ -230,10 +217,8 @@ def generate_adcirc_configuration(
             'slurm_account': slurm_account,
             'job_duration': job_duration,
             'partition': partition,
-            'use_aswip': use_aswip,
             'email_type': email_type,
             'email_address': email_address,
-            'use_nems': use_nems,
             'do_spinup': do_spinup,
             'spinup_directory': spinup_directory,
         }
@@ -287,10 +272,8 @@ def write_spinup_directory(
     slurm_account: str = None,
     job_duration: timedelta = None,
     partition: str = None,
-    use_aswip: bool = False,
     email_type: SlurmEmailType = None,
     email_address: str = None,
-    use_nems: bool = False,
 ) -> Path:
     if not isinstance(directory, Path):
         directory = Path(directory)
@@ -300,6 +283,36 @@ def write_spinup_directory(
     if not directory.exists():
         directory.mkdir(parents=True, exist_ok=True)
 
+    if 'besttrack' in configuration:
+        nws = configuration['besttrack']['nws']
+        use_aswip = nws in [8, 19, 20, 21]
+        if use_aswip and configuration['adcirc']['aswip_executable_path'] is None:
+            use_aswip = False
+            LOGGER.debug(
+                f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
+            )
+    else:
+        use_aswip = False
+
+    if not overwrite:
+        files_to_write = [
+            'fort.13',
+            'fort.14',
+            'fort.15',
+            'setup.job',
+            'adcirc.job',
+        ]
+        if 'nems' in configuration:
+            files_to_write.extend(
+                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
+            )
+        if use_aswip:
+            files_to_write.append('fort.22')
+        existing_files = [filename.name for filename in directory.iterdir()]
+        if all([filename in existing_files for filename in files_to_write]):
+            LOGGER.warning(f'skipping directory')
+            return directory
+
     setup_job_name = 'ADCIRC_SETUP_SPINUP'
     job_name = 'ADCIRC_COLDSTART_SPINUP'
 
@@ -308,7 +321,7 @@ def write_spinup_directory(
     if relative_paths:
         configuration.relative_to(directory, inplace=True)
 
-    if use_nems:
+    if 'nems' in configuration:
         nems = configuration.nemspy_modeling_system
         nems = ModelingSystem(
             nems.start_time - duration,
@@ -375,7 +388,7 @@ def write_spinup_directory(
     setup_script.write(setup_script_filename, overwrite=overwrite)
     job_script.write(job_script_filename, overwrite=overwrite)
 
-    if use_nems:
+    if 'nems' in configuration:
         LOGGER.debug(f'setting spinup to {duration}')
 
         nems.write(
@@ -421,10 +434,8 @@ def write_run_directory(
     slurm_account: str = None,
     job_duration: timedelta = None,
     partition: str = None,
-    use_aswip: bool = False,
     email_type: SlurmEmailType = None,
     email_address: str = None,
-    use_nems: bool = False,
     do_spinup: bool = False,
     spinup_directory: PathLike = None,
 ) -> Path:
@@ -441,6 +452,36 @@ def write_run_directory(
         f'writing run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
     )
 
+    if 'besttrack' in configuration:
+        nws = configuration['besttrack']['nws']
+        use_aswip = nws in [8, 19, 20, 21]
+        if use_aswip and configuration['adcirc']['aswip_executable_path'] is None:
+            use_aswip = False
+            LOGGER.debug(
+                f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
+            )
+    else:
+        use_aswip = False
+
+    if not overwrite:
+        files_to_write = [
+            'fort.13',
+            'fort.14',
+            'fort.15',
+            'setup.job',
+            'adcirc.job',
+        ]
+        if 'nems' in configuration:
+            files_to_write.extend(
+                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
+            )
+        if use_aswip:
+            files_to_write.append('fort.22')
+        existing_files = [filename.name for filename in directory.iterdir()]
+        if all([filename in existing_files for filename in files_to_write]):
+            LOGGER.warning(f'skipping directory')
+            return directory
+
     setup_job_name = f'ADCIRC_SETUP_{name}'
     job_name = f'ADCIRC_{phase}_{name}'
 
@@ -449,7 +490,7 @@ def write_run_directory(
     if relative_paths:
         configuration.relative_to(directory, inplace=True)
 
-    if use_nems:
+    if 'nems' in configuration:
         nems = configuration.nemspy_modeling_system
         processors = nems.processors
         model_executable = configuration['nems']['executable_path']
@@ -509,7 +550,7 @@ def write_run_directory(
     setup_script.write(setup_script_filename, overwrite=overwrite)
     job_script.write(job_script_filename, overwrite=overwrite)
 
-    if use_nems:
+    if 'nems' in configuration:
         nems.write(
             directory, overwrite=overwrite, include_version=True,
         )
