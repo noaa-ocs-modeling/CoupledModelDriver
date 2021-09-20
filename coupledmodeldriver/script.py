@@ -9,7 +9,9 @@ import uuid
 import numpy
 
 from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.utilities import make_executable
+from coupledmodeldriver.utilities import get_logger, make_executable
+
+LOGGER = get_logger('cplmdldrv.script')
 
 
 class SlurmEmailType(Enum):
@@ -63,7 +65,7 @@ class Script:
             with open(filename, 'w') as file:
                 file.write(output)
         else:
-            raise FileExistsError(f'file exists at {filename}')
+            LOGGER.warning(f'skipping existing file "{filename}"')
 
 
 class JobScript(Script):
