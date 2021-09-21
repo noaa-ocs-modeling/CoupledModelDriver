@@ -91,6 +91,7 @@ def generate_adcirc_configuration(
     platform = base_configuration['modeldriver']['platform']
 
     job_duration = base_configuration['slurm']['job_duration']
+    slurm_account = base_configuration['slurm']['account']
     partition = base_configuration['slurm']['partition']
     email_type = base_configuration['slurm']['email_type']
     email_address = base_configuration['slurm']['email_address']
@@ -112,7 +113,8 @@ def generate_adcirc_configuration(
 
     run_phase = 'HOTSTART' if do_spinup else 'COLDSTART'
 
-    slurm_account = platform.value['slurm_account']
+    if slurm_account is None:
+        slurm_account = platform.value['slurm_account']
 
     ensemble_run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
     ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
