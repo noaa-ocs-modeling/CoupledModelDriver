@@ -1,4 +1,3 @@
-from difflib import Differ
 from os import PathLike
 from pathlib import Path
 import re
@@ -47,11 +46,6 @@ def check_reference_directory(
                 test_lines = list(test_file.readlines())
                 reference_lines = list(reference_file.readlines())
 
-                diff = '\n'.join(Differ().compare(test_lines, reference_lines))
-                message = f'"{test_filename}" != "{reference_filename}"\n{diff}'
-
-                assert len(test_lines) == len(reference_lines), message
-
                 lines_to_skip = set()
                 for file_mask, line_indices in skip_lines.items():
                     if (
@@ -69,4 +63,6 @@ def check_reference_directory(
                 for line_index in sorted(lines_to_skip, reverse=True):
                     del test_lines[line_index], reference_lines[line_index]
 
-                assert '\n'.join(test_lines) == '\n'.join(reference_lines), message
+                assert (
+                    test_lines == reference_lines
+                ), f'"{test_filename}" != "{reference_filename}"'
