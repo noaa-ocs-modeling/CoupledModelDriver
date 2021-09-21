@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import json
 from os import PathLike
@@ -12,7 +11,7 @@ from coupledmodeldriver.generate.adcirc.check import (
     check_adcirc_completion,
     is_adcirc_run_directory,
 )
-from coupledmodeldriver.utilities import convert_value
+from coupledmodeldriver.utilities import convert_value, ProcessPoolExecutorStackTraced
 
 MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
 
@@ -96,7 +95,7 @@ def check_completion(
 
     completion_status = {}
     if isinstance(directory, Iterable):
-        with ProcessPoolExecutor() as process_pool:
+        with ProcessPoolExecutorStackTraced() as process_pool:
             subdirectory_completion_statuses = process_pool.map(
                 partial(check_completion, model=model, verbose=verbose),
                 (subdirectory for subdirectory in directory if Path(subdirectory).is_dir()),

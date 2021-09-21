@@ -1,5 +1,4 @@
 import concurrent.futures
-from concurrent.futures import ProcessPoolExecutor
 from copy import copy, deepcopy
 from datetime import datetime, timedelta
 from enum import Enum
@@ -22,7 +21,12 @@ from coupledmodeldriver.generate.adcirc.script import (
     AswipCommand,
 )
 from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
-from coupledmodeldriver.utilities import create_symlink, get_logger, LOGGER
+from coupledmodeldriver.utilities import (
+    create_symlink,
+    get_logger,
+    LOGGER,
+    ProcessPoolExecutorStackTraced,
+)
 
 
 class RunPhase(Enum):
@@ -165,7 +169,7 @@ def generate_adcirc_configuration(
     )
 
     if parallel:
-        process_pool = ProcessPoolExecutor()
+        process_pool = ProcessPoolExecutorStackTraced()
         LOGGER.info(f'leveraging {os.cpu_count()} processor(s)')
     else:
         process_pool = None

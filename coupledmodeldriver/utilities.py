@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timedelta
 from enum import Enum, EnumMeta
 import json
@@ -8,6 +9,7 @@ from pathlib import Path
 import shutil
 import sys
 import tarfile
+import traceback
 from typing import Any, Collection, Iterable, Mapping, Union
 
 from dateutil.parser import parse as parse_date
@@ -315,3 +317,24 @@ def extract_download(
             local_file.extractall(directory)
 
     os.remove(temporary_filename)
+
+
+class ProcessPoolExecutorStackTraced(ProcessPoolExecutor):
+    def submit(self, fn, *args, **kwargs):
+        """Submits the wrapped function instead of `fn`"""
+
+        return super(ProcessPoolExecutorStackTraced, self).submit(
+            self._function_wrapper, fn, *args, **kwargs,
+        )
+
+    @staticmethod
+    def _function_wrapper(fn, *args, **kwargs):
+        """
+        Wraps `fn` in order to preserve the traceback of any kind of raised exception
+        """
+
+        try:
+            return fn(*args, **kwargs)
+        except Exception:
+            # Creates an exception of the same type with the traceback as message
+            raise sys.exc_info()[0](traceback.format_exc())
