@@ -152,6 +152,9 @@ def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -
                     filename.name
                 ] = f'output file `{filename.name}` not found'
 
+    if progress > 0 and status == CompletionStatus.NOT_STARTED:
+        status = CompletionStatus.RUNNING
+
     for entry in CompletionStatus:
         if len(completion[entry]) > 0 and entry.value > status.value:
             status = entry
