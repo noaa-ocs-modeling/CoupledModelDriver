@@ -173,15 +173,17 @@ def generate_adcirc_configuration(
     if do_spinup:
         spinup_directory = output_directory / 'spinup'
 
+        spinup_configuration = copy(base_configuration)
+
         spinup_kwargs = {
             'directory': spinup_directory,
-            'configuration': copy(base_configuration),
+            'configuration': spinup_configuration,
             'duration': spinup_duration,
-            'relative_paths': relative_paths,
-            'overwrite': overwrite,
-            'use_original_mesh': use_original_mesh,
             'local_fort13_filename': local_fort13_filename,
             'local_fort14_filename': local_fort14_filename,
+            'link_mesh': True,
+            'relative_paths': relative_paths,
+            'overwrite': overwrite,
             'platform': platform,
             'adcirc_processors': adcirc_processors,
             'slurm_account': slurm_account,
@@ -202,16 +204,21 @@ def generate_adcirc_configuration(
     for run_name, run_configuration in perturbations.items():
         run_directory = runs_directory / run_name
 
+        link_mesh = (
+            use_original_mesh
+            or run_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh
+        )
+
         run_kwargs = {
             'directory': run_directory,
             'name': run_name,
             'phase': run_phase,
             'configuration': run_configuration,
-            'relative_paths': relative_paths,
-            'overwrite': overwrite,
-            'use_original_mesh': use_original_mesh,
             'local_fort13_filename': local_fort13_filename,
             'local_fort14_filename': local_fort14_filename,
+            'link_mesh': link_mesh,
+            'relative_paths': relative_paths,
+            'overwrite': overwrite,
             'platform': platform,
             'adcirc_processors': adcirc_processors,
             'slurm_account': slurm_account,
@@ -224,6 +231,8 @@ def generate_adcirc_configuration(
         }
 
         if parallel:
+            # destroy stored copy of adcircpy mesh, because it cannot be pickled across processes
+            run_configuration.adcircpy_mesh = None
             futures.append(process_pool.submit(write_run_directory, **run_kwargs))
         else:
             write_run_directory(**run_kwargs)
@@ -264,9 +273,9 @@ def write_spinup_directory(
     duration: timedelta,
     local_fort14_filename: PathLike,
     local_fort13_filename: PathLike = None,
+    link_mesh: bool = False,
     relative_paths: bool = False,
     overwrite: bool = False,
-    use_original_mesh: bool = False,
     platform: Platform = None,
     adcirc_processors: int = None,
     slurm_account: str = None,
@@ -277,7 +286,7 @@ def write_spinup_directory(
 ) -> Path:
     if not isinstance(directory, Path):
         directory = Path(directory)
-    if not isinstance(local_fort13_filename, Path):
+    if local_fort13_filename is not None and not isinstance(local_fort13_filename, Path):
         local_fort13_filename = Path(local_fort13_filename)
 
     if not directory.exists():
@@ -404,17 +413,17 @@ def write_spinup_directory(
     adcircpy_driver.write(
         directory,
         overwrite=overwrite,
-        fort13=None if use_original_mesh else 'fort.13',
-        fort14=None,
+        fort13=None if link_mesh else 'fort.13',
+        fort14=None if link_mesh else 'fort.14',
         fort22='fort.22' if 'besttrack' in configuration else None,
         coldstart='fort.15',
         hotstart=None,
         driver=None,
     )
-    if use_original_mesh:
-        if local_fort13_filename.exists():
+    if link_mesh:
+        if local_fort13_filename is not None and local_fort13_filename.exists():
             create_symlink(local_fort13_filename, directory / 'fort.13', relative=True)
-    create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
+        create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
 
     return directory
 
@@ -426,9 +435,9 @@ def write_run_directory(
     configuration: Union[ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration],
     local_fort14_filename: PathLike,
     local_fort13_filename: PathLike = None,
+    link_mesh: bool = False,
     relative_paths: bool = False,
     overwrite: bool = False,
-    use_original_mesh: bool = False,
     platform: Platform = None,
     adcirc_processors: int = None,
     slurm_account: str = None,
@@ -443,7 +452,7 @@ def write_run_directory(
         directory = Path(directory)
     if spinup_directory is not None and not isinstance(spinup_directory, Path):
         spinup_directory = Path(spinup_directory)
-    if not isinstance(local_fort13_filename, Path):
+    if local_fort13_filename is not None and not isinstance(local_fort13_filename, Path):
         local_fort13_filename = Path(local_fort13_filename)
 
     if not directory.exists():
@@ -564,17 +573,17 @@ def write_run_directory(
     adcircpy_driver.write(
         directory,
         overwrite=overwrite,
-        fort13=None if use_original_mesh else 'fort.13',
-        fort14=None,
+        fort13=None if link_mesh else 'fort.13',
+        fort14=None if link_mesh else 'fort.14',
         fort22='fort.22' if 'besttrack' in configuration else None,
         coldstart=None,
         hotstart='fort.15',
         driver=None,
     )
-    if use_original_mesh:
-        if local_fort13_filename.exists():
+    if link_mesh:
+        if local_fort13_filename is not None and local_fort13_filename.exists():
             create_symlink(local_fort13_filename, directory / 'fort.13', relative=True)
-    create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
+        create_symlink(local_fort14_filename, directory / 'fort.14', relative=True)
 
     if do_spinup:
         for hotstart_filename in ['fort.67.nc', 'fort.68.nc']:

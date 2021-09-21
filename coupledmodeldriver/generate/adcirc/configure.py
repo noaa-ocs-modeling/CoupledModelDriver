@@ -152,9 +152,17 @@ class ADCIRCRunConfiguration(RunConfiguration):
     def adcircpy_mesh(self) -> AdcircMesh:
         return self['adcirc'].adcircpy_mesh
 
+    @adcircpy_mesh.setter
+    def adcircpy_mesh(self, adcircpy_mesh: AdcircMesh):
+        self['adcirc'].adcircpy_mesh = adcircpy_mesh
+
     @property
     def adcircpy_driver(self) -> AdcircRun:
         return self['adcirc'].adcircpy_driver
+
+    @adcircpy_driver.setter
+    def adcircpy_driver(self, adcircpy_driver: AdcircRun):
+        self['adcirc'].adcircpy_driver = adcircpy_driver
 
     def __copy__(self) -> 'ADCIRCRunConfiguration':
         return self.__class__.from_configurations(
@@ -304,11 +312,6 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         if forcing not in self:
             forcing = self[self.add(forcing)]
             self['adcirc'].add_forcing(forcing)
-
-    def __copy__(self) -> 'NEMSADCIRCRunConfiguration':
-        return self.__class__.from_configurations(
-            [copy(configuration) for configuration in self.configurations]
-        )
 
     @classmethod
     def from_configurations(
