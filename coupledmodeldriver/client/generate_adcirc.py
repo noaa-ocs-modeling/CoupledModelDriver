@@ -22,12 +22,10 @@ def parse_generate_adcirc_arguments():
         help='use relative paths in output configuration',
     )
     argument_parser.add_argument(
-        '--skip-existing', action='store_true', help='skip existing files',
+        '--overwrite', action='store_true', help='overwrite existing files',
     )
     argument_parser.add_argument(
-        '--serial',
-        action='store_true',
-        help='generate configurations serially (not concurrently)',
+        '--parallel', action='store_true', help='generate configurations concurrently',
     )
     argument_parser.add_argument(
         '--verbose', action='store_true', help='show more verbose log messages'
@@ -39,8 +37,8 @@ def parse_generate_adcirc_arguments():
         'configuration_directory': convert_value(arguments.configuration_directory, Path),
         'output_directory': convert_value(arguments.output_directory, Path),
         'relative_paths': arguments.relative_paths,
-        'overwrite': not arguments.skip_existing,
-        'parallel': not arguments.serial,
+        'overwrite': arguments.overwrite,
+        'parallel': arguments.parallel,
         'verbose': arguments.verbose,
     }
 
