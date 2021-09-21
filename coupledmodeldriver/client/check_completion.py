@@ -131,7 +131,8 @@ def check_completion(
 
     if not verbose:
         for key, value in completion_status.items():
-            completion_status[key] = f'{value["status"]} - {value["progress"]}'
+            if isinstance(value, Mapping) and 'status' in value and 'progress' in value:
+                completion_status[key] = f'{value["status"]} - {value["progress"]}'
 
     if (
         isinstance(completion_status, Mapping)
