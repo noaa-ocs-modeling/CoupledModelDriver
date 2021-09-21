@@ -127,6 +127,7 @@ def check_completion(
             sorted(
                 completion_status.items(),
                 key=lambda item: item[1]['progress'] if verbose else item[1].split(' - ')[-1],
+                reverse=True,
             )
         )
     except:
