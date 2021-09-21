@@ -114,8 +114,6 @@ def check_completion(
                 del completion[key]
             completion['status'] = completion['status'].name.lower()
             completion['progress'] = f'{completion["progress"]}%'
-            if not verbose:
-                completion = f'{completion["status"]} - {completion["progress"]}'
             completion_status[directory.name] = completion
         else:
             subdirectory_completion_statuses = check_completion(
@@ -123,6 +121,17 @@ def check_completion(
             )
             if len(subdirectory_completion_statuses) > 0:
                 completion_status[directory.name] = subdirectory_completion_statuses
+
+    try:
+        completion_status = dict(
+            sorted(completion_status.items(), key=lambda item: item[1]['progress'])
+        )
+    except KeyError:
+        pass
+
+    if not verbose:
+        for key, value in completion_status.items():
+            completion_status[key] = f'{value["status"]} - {value["progress"]}'
 
     if (
         isinstance(completion_status, Mapping)
