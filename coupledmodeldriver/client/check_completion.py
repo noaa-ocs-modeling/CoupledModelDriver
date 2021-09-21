@@ -124,7 +124,10 @@ def check_completion(
 
     try:
         completion_status = dict(
-            sorted(completion_status.items(), key=lambda item: item[1]['progress'])
+            sorted(
+                completion_status.items(),
+                key=lambda item: item[1]['progress'] if verbose else item[1].split(' - ')[-1],
+            )
         )
     except:
         pass
