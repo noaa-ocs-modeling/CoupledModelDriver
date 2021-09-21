@@ -126,7 +126,7 @@ def check_completion(
         completion_status = dict(
             sorted(completion_status.items(), key=lambda item: item[1]['progress'])
         )
-    except KeyError:
+    except:
         pass
 
     if not verbose:
