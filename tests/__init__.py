@@ -1,3 +1,4 @@
+import os
 from os import PathLike
 from pathlib import Path
 import re
@@ -63,6 +64,7 @@ def check_reference_directory(
                 for line_index in sorted(lines_to_skip, reverse=True):
                     del test_lines[line_index], reference_lines[line_index]
 
-                assert (
-                    test_lines == reference_lines
-                ), f'"{test_filename}" != "{reference_filename}"'
+                cwd = Path.cwd()
+                assert '\n'.join(test_lines) == '\n'.join(
+                    reference_lines
+                ), f'"{os.path.relpath(test_filename, cwd)}" != "{os.path.relpath(reference_filename, cwd)}"'
