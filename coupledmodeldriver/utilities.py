@@ -78,11 +78,15 @@ def get_logger(
             logger.removeHandler(existing_file_handler)
         logger.addHandler(file_handler)
 
-    if log_format is None:
-        log_format = '[%(asctime)s] %(name)-9s %(levelname)-8s: %(message)s'
-    log_formatter = logging.Formatter(log_format)
+    log_formatter = logging.Formatter(
+        log_format
+        if log_format is not None
+        else '[%(asctime)s] %(name)-9s %(levelname)-8s: %(message)s'
+    )
     for handler in logger.handlers:
-        if handler.formatter is None:
+        if log_format is not None:
+            handler.setFormatter(log_formatter)
+        elif handler.formatter is None:
             handler.setFormatter(log_formatter)
 
     return logger
