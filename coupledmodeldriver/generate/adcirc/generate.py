@@ -263,6 +263,8 @@ def generate_adcirc_configuration(
         commands=[
             'echo deleting previous ADCIRC output',
             f'sh {ensemble_cleanup_script_filename.name}',
+            'echo deleting previous ADCIRC logs',
+            'rm spinup/*.log runs/*/*.log',
         ],
         run_spinup=do_spinup,
     )
