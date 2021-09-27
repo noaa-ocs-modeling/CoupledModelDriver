@@ -82,7 +82,8 @@ def get_logger(
         log_format = '[%(asctime)s] %(name)-9s %(levelname)-8s: %(message)s'
     log_formatter = logging.Formatter(log_format)
     for handler in logger.handlers:
-        handler.setFormatter(log_formatter)
+        if handler.formatter is None:
+            handler.setFormatter(log_formatter)
 
     return logger
 

@@ -55,7 +55,8 @@ def generate_adcirc_configuration(
 
     start_time = datetime.now()
 
-    get_logger(LOGGER.name, console_level=logging.DEBUG if verbose else logging.INFO)
+    if verbose:
+        get_logger(LOGGER.name, console_level=logging.DEBUG)
 
     if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
