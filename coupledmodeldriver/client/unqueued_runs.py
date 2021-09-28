@@ -69,8 +69,15 @@ def get_unqueued_runs(directories: [os.PathLike], model: ModelJSON = None, **kwa
     unqueued_runs = {}
     for run_name, run_directory in runs.items():
         if run_name not in jobs:
-            if 'not_started' not in check_completion(run_directory, model=model)['status']:
-                unqueued_runs[run_name] = run_directory
+            unqueued_runs[run_name] = run_directory
+
+    completion_status = check_completion(unqueued_runs.values(), model=model, verbose=False)
+
+    unqueued_runs = {
+        run_name
+        for run_name, run_directory in unqueued_runs.items()
+        if 'not_started' in completion_status[run_directory.name]
+    }
 
     return unqueued_runs
 
