@@ -143,8 +143,7 @@ def check_completion(
                         ).upper()
                     ].value,
                     item[0],
-                ),
-                reverse=True,
+                )
             )
         )
     except KeyError:
