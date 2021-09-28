@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from functools import partial
 import json
-import logging
 from os import PathLike
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -143,9 +142,11 @@ def check_completion(
                             else item[1].split(' - ')[0]
                         ).upper()
                     ].value,
-                    item[0].split('_')[-1],
+                    float(item[0].split('_')[-1])
+                    if '_' in item[0] and item[0].split('_').isdecimal()
+                    else None,
                     item[0],
-                )
+                ),
             )
         )
     except KeyError:
