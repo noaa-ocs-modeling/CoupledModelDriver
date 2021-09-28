@@ -143,7 +143,7 @@ def check_completion(
                             else item[1].split(' - ')[0]
                         ).upper()
                     ].value,
-                    item[0],
+                    item[0].split('_')[-1],
                 )
             )
         )
