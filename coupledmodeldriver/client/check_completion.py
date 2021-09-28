@@ -144,7 +144,7 @@ def check_completion(
                     ].value,
                     float(item[0].split('_')[-1])
                     if '_' in item[0] and item[0].split('_')[-1].isdecimal()
-                    else None,
+                    else -1,
                     item[0],
                 ),
             )
