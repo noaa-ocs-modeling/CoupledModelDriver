@@ -128,7 +128,7 @@ def check_completion(
             sorted(
                 completion_status.items(),
                 key=lambda item: (
-                    float(
+                    -float(
                         (
                             item[1]['progress']
                             if isinstance(item[1], Mapping)
