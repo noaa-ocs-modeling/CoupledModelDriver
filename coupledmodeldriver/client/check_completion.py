@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from functools import partial
 import json
+import logging
 from os import PathLike
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -133,8 +134,8 @@ def check_completion(
                 reverse=True,
             )
         )
-    except:
-        pass
+    except Exception as error:
+        logging.exception(error)
 
     if not verbose:
         for key, value in completion_status.items():
