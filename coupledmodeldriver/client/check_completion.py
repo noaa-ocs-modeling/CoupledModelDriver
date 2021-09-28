@@ -124,7 +124,7 @@ def check_completion(
                 completion_status[directory.name] = subdirectory_completion_statuses
 
     try:
-        # sort by progress percentage (reversed), then completion status, then alphabetically, in that order
+        # sort by progress percentage (reversed), then completion status, then by run number, then alphabetically
         completion_status = dict(
             sorted(
                 completion_status.items(),
@@ -144,6 +144,7 @@ def check_completion(
                         ).upper()
                     ].value,
                     item[0].split('_')[-1],
+                    item[0],
                 )
             )
         )
