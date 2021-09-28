@@ -9,6 +9,7 @@ from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.adcirc.check import (
     check_adcirc_completion,
+    CompletionStatus,
     is_adcirc_run_directory,
 )
 from coupledmodeldriver.utilities import convert_value, ProcessPoolExecutorStackTraced
@@ -122,14 +123,33 @@ def check_completion(
                 completion_status[directory.name] = subdirectory_completion_statuses
 
     try:
+        # sort by progress percentage (reversed), then completion status, then by run number, then alphabetically
         completion_status = dict(
             sorted(
                 completion_status.items(),
-                key=lambda item: item[1]['progress'] if verbose else item[1].split(' - ')[-1],
-                reverse=True,
+                key=lambda item: (
+                    -float(
+                        (
+                            item[1]['progress']
+                            if isinstance(item[1], Mapping)
+                            else item[1].split(' - ')[1]
+                        )[:-1]
+                    ),
+                    CompletionStatus[
+                        (
+                            item[1]['status']
+                            if isinstance(item[1], Mapping)
+                            else item[1].split(' - ')[0]
+                        ).upper()
+                    ].value,
+                    float(item[0].split('_')[-1])
+                    if '_' in item[0] and item[0].split('_')[-1].isdecimal()
+                    else -1,
+                    item[0],
+                ),
             )
         )
-    except:
+    except KeyError:
         pass
 
     if not verbose:
