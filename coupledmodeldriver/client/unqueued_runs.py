@@ -34,7 +34,7 @@ def parse_missing_jobs_arguments() -> {str: Any}:
         model = MODELS[model.lower()]
 
     return {
-        'directories': arguments.directories,
+        'directories': arguments.directory,
         'model': model,
         'submit': arguments.submit,
         'dependency': arguments.dependency,
