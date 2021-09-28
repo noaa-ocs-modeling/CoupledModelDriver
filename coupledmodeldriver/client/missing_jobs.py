@@ -62,8 +62,10 @@ if __name__ == '__main__':
         if run_name not in jobs:
             if 'not_started' not in check_completion(run_directory, model=model)['status']:
                 LOGGER.info(f'missing unstarted run "{run_name}"')
-                starting_directory = Path.cwd()
-                os.chdir(run_directory)
-                command = "sbatch --dependency=afterok:$(sbatch setup.job | awk '{print $NF}') adcirc.job"
-                os.system(command)
-                os.chdir(starting_directory)
+                if submit:
+                    LOGGER.info(f'submitting run "{run_name}"')
+                    starting_directory = Path.cwd()
+                    os.chdir(run_directory)
+                    command = "sbatch --dependency=afterok:$(sbatch setup.job | awk '{print $NF}') adcirc.job"
+                    os.system(command)
+                    os.chdir(starting_directory)
