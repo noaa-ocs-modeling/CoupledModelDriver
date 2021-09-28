@@ -56,7 +56,9 @@ def get_run_directories(directories: [os.PathLike], model: ModelJSON = None) -> 
     return run_directories
 
 
-def get_unqueued_runs(directories: [os.PathLike], model: ModelJSON = None, **kwargs):
+def get_unqueued_runs(
+    directories: [os.PathLike], model: ModelJSON = None, **kwargs
+) -> {str: Path}:
     runs = {
         directory.name: directory
         for directory in get_run_directories(directories, model=model)
@@ -74,7 +76,7 @@ def get_unqueued_runs(directories: [os.PathLike], model: ModelJSON = None, **kwa
     completion_status = check_completion(unqueued_runs.values(), model=model, verbose=False)
 
     unqueued_runs = {
-        run_name
+        run_name: run_directory
         for run_name, run_directory in unqueued_runs.items()
         if 'not_started' in completion_status[run_directory.name]
     }
