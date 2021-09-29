@@ -9,9 +9,7 @@ import uuid
 import numpy
 
 from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.utilities import get_logger, make_executable
-
-LOGGER = get_logger('cplmdldrv.script')
+from coupledmodeldriver.utilities import LOGGER, make_executable
 
 
 class SlurmEmailType(Enum):

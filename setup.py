@@ -167,6 +167,7 @@ setup(
             'initialize_adcirc=coupledmodeldriver.client.initialize_adcirc:main',
             'generate_adcirc=coupledmodeldriver.client.generate_adcirc:main',
             'check_completion=coupledmodeldriver.client.check_completion:main',
+            'unqueued_runs=coupledmodeldriver.client.unqueued_runs:main',
         ],
     },
 )
