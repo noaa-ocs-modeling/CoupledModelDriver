@@ -164,6 +164,38 @@ class ADCIRCRunConfiguration(RunConfiguration):
     def adcircpy_driver(self, adcircpy_driver: AdcircRun):
         self['adcirc'].adcircpy_driver = adcircpy_driver
 
+    @property
+    def use_aswip(self) -> bool:
+        if 'besttrack' in self:
+            nws = self['besttrack']['nws']
+            use_aswip = nws in [8, 19, 20, 21]
+            if use_aswip and self['adcirc']['aswip_executable_path'] is None:
+                use_aswip = False
+                LOGGER.debug(
+                    f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
+                )
+        else:
+            use_aswip = False
+
+        return use_aswip
+
+    def files_exist(self, directory: PathLike) -> bool:
+        files_to_write = [
+            'fort.13',
+            'fort.14',
+            'fort.15',
+            'setup.job',
+            'adcirc.job',
+        ]
+        if 'nems' in self:
+            files_to_write.extend(
+                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
+            )
+        if self.use_aswip:
+            files_to_write.append('fort.22')
+        existing_files = [filename.name for filename in directory.iterdir()]
+        return all([filename in existing_files for filename in files_to_write])
+
     def __copy__(self) -> 'ADCIRCRunConfiguration':
         return self.__class__.from_configurations(
             [copy(configuration) for configuration in self.configurations]

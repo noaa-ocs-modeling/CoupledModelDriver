@@ -177,68 +177,70 @@ def generate_adcirc_configuration(
 
         spinup_configuration = copy(base_configuration)
 
-        spinup_kwargs = {
-            'directory': spinup_directory,
-            'configuration': spinup_configuration,
-            'duration': spinup_duration,
-            'local_fort13_filename': local_fort13_filename,
-            'local_fort14_filename': local_fort14_filename,
-            'link_mesh': True,
-            'relative_paths': relative_paths,
-            'overwrite': overwrite,
-            'platform': platform,
-            'adcirc_processors': adcirc_processors,
-            'slurm_account': slurm_account,
-            'job_duration': job_duration,
-            'partition': partition,
-            'email_type': email_type,
-            'email_address': email_address,
-        }
+        if not spinup_configuration.files_exist(spinup_directory):
+            spinup_kwargs = {
+                'directory': spinup_directory,
+                'configuration': spinup_configuration,
+                'duration': spinup_duration,
+                'local_fort13_filename': local_fort13_filename,
+                'local_fort14_filename': local_fort14_filename,
+                'link_mesh': True,
+                'relative_paths': relative_paths,
+                'overwrite': overwrite,
+                'platform': platform,
+                'adcirc_processors': adcirc_processors,
+                'slurm_account': slurm_account,
+                'job_duration': job_duration,
+                'partition': partition,
+                'email_type': email_type,
+                'email_address': email_address,
+            }
 
-        if parallel:
-            futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
-        else:
-            spinup_directory = write_spinup_directory(**spinup_kwargs)
-            LOGGER.info(f'wrote configuration to "{spinup_directory}"')
+            if parallel:
+                futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
+            else:
+                spinup_directory = write_spinup_directory(**spinup_kwargs)
+                LOGGER.info(f'wrote configuration to "{spinup_directory}"')
     else:
         spinup_directory = None
 
     for run_name, run_configuration in perturbations.items():
         run_directory = runs_directory / run_name
 
-        link_mesh = (
-            use_original_mesh
-            or run_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh
-        )
+        if not run_configuration.files_exist(run_directory):
+            link_mesh = (
+                use_original_mesh
+                or run_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh
+            )
 
-        run_kwargs = {
-            'directory': run_directory,
-            'name': run_name,
-            'phase': run_phase,
-            'configuration': run_configuration,
-            'local_fort13_filename': local_fort13_filename,
-            'local_fort14_filename': local_fort14_filename,
-            'link_mesh': link_mesh,
-            'relative_paths': relative_paths,
-            'overwrite': overwrite,
-            'platform': platform,
-            'adcirc_processors': adcirc_processors,
-            'slurm_account': slurm_account,
-            'job_duration': job_duration,
-            'partition': partition,
-            'email_type': email_type,
-            'email_address': email_address,
-            'do_spinup': do_spinup,
-            'spinup_directory': spinup_directory,
-        }
+            run_kwargs = {
+                'directory': run_directory,
+                'name': run_name,
+                'phase': run_phase,
+                'configuration': run_configuration,
+                'local_fort13_filename': local_fort13_filename,
+                'local_fort14_filename': local_fort14_filename,
+                'link_mesh': link_mesh,
+                'relative_paths': relative_paths,
+                'overwrite': overwrite,
+                'platform': platform,
+                'adcirc_processors': adcirc_processors,
+                'slurm_account': slurm_account,
+                'job_duration': job_duration,
+                'partition': partition,
+                'email_type': email_type,
+                'email_address': email_address,
+                'do_spinup': do_spinup,
+                'spinup_directory': spinup_directory,
+            }
 
-        if parallel:
-            # destroy stored copy of adcircpy mesh, because it cannot be pickled across processes
-            run_configuration.adcircpy_mesh = None
-            futures.append(process_pool.submit(write_run_directory, **run_kwargs))
-        else:
-            write_run_directory(**run_kwargs)
-            LOGGER.info(f'wrote configuration to "{run_directory}"')
+            if parallel:
+                # destroy stored copy of adcircpy mesh, because it cannot be pickled across processes
+                run_configuration.adcircpy_mesh = None
+                futures.append(process_pool.submit(write_run_directory, **run_kwargs))
+            else:
+                write_run_directory(**run_kwargs)
+                LOGGER.info(f'wrote configuration to "{run_directory}"')
 
     if parallel:
         for completed_future in concurrent.futures.as_completed(futures):
@@ -296,35 +298,9 @@ def write_spinup_directory(
     if not directory.exists():
         directory.mkdir(parents=True, exist_ok=True)
 
-    if 'besttrack' in configuration:
-        nws = configuration['besttrack']['nws']
-        use_aswip = nws in [8, 19, 20, 21]
-        if use_aswip and configuration['adcirc']['aswip_executable_path'] is None:
-            use_aswip = False
-            LOGGER.debug(
-                f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
-            )
-    else:
-        use_aswip = False
-
-    if not overwrite:
-        files_to_write = [
-            'fort.13',
-            'fort.14',
-            'fort.15',
-            'setup.job',
-            'adcirc.job',
-        ]
-        if 'nems' in configuration:
-            files_to_write.extend(
-                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
-            )
-        if use_aswip:
-            files_to_write.append('fort.22')
-        existing_files = [filename.name for filename in directory.iterdir()]
-        if all([filename in existing_files for filename in files_to_write]):
-            LOGGER.warning(f'skipping existing directory "{directory}"')
-            return directory
+    if not overwrite and configuration.files_exist(directory):
+        LOGGER.warning(f'skipping existing directory "{directory}"')
+        return directory
 
     setup_job_name = 'ADCIRC_SETUP_SPINUP'
     job_name = 'ADCIRC_COLDSTART_SPINUP'
@@ -362,7 +338,7 @@ def write_spinup_directory(
     setup_script_filename = directory / 'setup.job'
     job_script_filename = directory / 'adcirc.job'
 
-    if use_aswip:
+    if configuration.use_aswip:
         aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'])
     else:
         aswip_command = None
@@ -465,35 +441,9 @@ def write_run_directory(
         f'writing run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
     )
 
-    if 'besttrack' in configuration:
-        nws = configuration['besttrack']['nws']
-        use_aswip = nws in [8, 19, 20, 21]
-        if use_aswip and configuration['adcirc']['aswip_executable_path'] is None:
-            use_aswip = False
-            LOGGER.debug(
-                f'wind parameter {nws} but no `aswip` executable given; `aswip` will not be used'
-            )
-    else:
-        use_aswip = False
-
-    if not overwrite:
-        files_to_write = [
-            'fort.13',
-            'fort.14',
-            'fort.15',
-            'setup.job',
-            'adcirc.job',
-        ]
-        if 'nems' in configuration:
-            files_to_write.extend(
-                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
-            )
-        if use_aswip:
-            files_to_write.append('fort.22')
-        existing_files = [filename.name for filename in directory.iterdir()]
-        if all([filename in existing_files for filename in files_to_write]):
-            LOGGER.warning(f'skipping directory "{directory}"')
-            return directory
+    if not overwrite and configuration.files_exist(directory):
+        LOGGER.warning(f'skipping existing directory "{directory}"')
+        return directory
 
     setup_job_name = f'ADCIRC_SETUP_{name}'
     job_name = f'ADCIRC_{phase}_{name}'
@@ -524,7 +474,7 @@ def write_run_directory(
     setup_script_filename = directory / 'setup.job'
     job_script_filename = directory / 'adcirc.job'
 
-    if use_aswip:
+    if configuration.use_aswip:
         aswip_command = AswipCommand(path=aswip_path, nws=configuration['besttrack']['nws'])
     else:
         aswip_command = None
