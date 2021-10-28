@@ -27,9 +27,6 @@ def parse_generate_adcirc_arguments():
     argument_parser.add_argument(
         '--parallel', action='store_true', help='generate configurations concurrently',
     )
-    argument_parser.add_argument(
-        '--verbose', action='store_true', help='show more verbose log messages'
-    )
 
     arguments = argument_parser.parse_args()
 
@@ -39,7 +36,6 @@ def parse_generate_adcirc_arguments():
         'relative_paths': arguments.relative_paths,
         'overwrite': arguments.overwrite,
         'parallel': arguments.parallel,
-        'verbose': arguments.verbose,
     }
 
 

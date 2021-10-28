@@ -2,7 +2,6 @@ import concurrent.futures
 from copy import copy, deepcopy
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
 import os
 from os import PathLike
 from pathlib import Path
@@ -24,9 +23,10 @@ from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, 
 from coupledmodeldriver.utilities import (
     create_symlink,
     get_logger,
-    LOGGER,
     ProcessPoolExecutorStackTraced,
 )
+
+LOGGER = get_logger('cplmdldrv')
 
 
 class RunPhase(Enum):
@@ -40,7 +40,6 @@ def generate_adcirc_configuration(
     relative_paths: bool = False,
     overwrite: bool = False,
     parallel: bool = True,
-    verbose: bool = False,
 ):
     """
     Generate ADCIRC run configuration for given variable values.
@@ -50,13 +49,9 @@ def generate_adcirc_configuration(
     :param relative_paths: whether to write relative paths in generated configuration files
     :param overwrite: whether to overwrite existing files
     :param parallel: generate configuations concurrently
-    :param verbose: whether to show more verbose log messages
     """
 
     start_time = datetime.now()
-
-    if verbose:
-        get_logger(LOGGER.name, console_level=logging.DEBUG)
 
     if not isinstance(configuration_directory, Path):
         configuration_directory = Path(configuration_directory)
