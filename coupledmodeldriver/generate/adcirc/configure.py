@@ -180,6 +180,12 @@ class ADCIRCRunConfiguration(RunConfiguration):
         return use_aswip
 
     def files_exist(self, directory: PathLike) -> bool:
+        if not isinstance(directory, Path):
+            directory = Path(directory)
+
+        if not directory.exists():
+            return False
+
         files_to_write = [
             'fort.13',
             'fort.14',
@@ -194,6 +200,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         if self.use_aswip:
             files_to_write.append('fort.22')
         existing_files = [filename.name for filename in directory.iterdir()]
+
         return all([filename in existing_files for filename in files_to_write])
 
     def __copy__(self) -> 'ADCIRCRunConfiguration':
