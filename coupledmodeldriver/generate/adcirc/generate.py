@@ -497,7 +497,7 @@ def write_run_directory(
             files_to_write.append('fort.22')
         existing_files = [filename.name for filename in directory.iterdir()]
         if all([filename in existing_files for filename in files_to_write]):
-            LOGGER.warning(f'skipping directory')
+            LOGGER.warning(f'skipping directory "{directory}"')
             return directory
 
     setup_job_name = f'ADCIRC_SETUP_{name}'
