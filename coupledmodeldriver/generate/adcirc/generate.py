@@ -7,6 +7,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Union
 
+from adcircpy import AdcircMesh
 from nemspy import ModelingSystem
 
 from coupledmodeldriver import Platform
@@ -208,11 +209,6 @@ def generate_adcirc_configuration(
         run_directory = runs_directory / run_name
 
         if not run_configuration.files_exist(run_directory):
-            link_mesh = (
-                use_original_mesh
-                or run_configuration.adcircpy_mesh == base_configuration.adcircpy_mesh
-            )
-
             run_kwargs = {
                 'directory': run_directory,
                 'name': run_name,
@@ -220,7 +216,7 @@ def generate_adcirc_configuration(
                 'configuration': run_configuration,
                 'local_fort13_filename': local_fort13_filename,
                 'local_fort14_filename': local_fort14_filename,
-                'link_mesh': link_mesh,
+                'link_mesh': use_original_mesh,
                 'relative_paths': relative_paths,
                 'overwrite': overwrite,
                 'platform': platform,
@@ -432,6 +428,8 @@ def write_run_directory(
         directory = Path(directory)
     if spinup_directory is not None and not isinstance(spinup_directory, Path):
         spinup_directory = Path(spinup_directory)
+    if not isinstance(local_fort14_filename, Path):
+        local_fort14_filename = Path(local_fort14_filename)
     if local_fort13_filename is not None and not isinstance(local_fort13_filename, Path):
         local_fort13_filename = Path(local_fort13_filename)
 
@@ -534,6 +532,10 @@ def write_run_directory(
         hotstart='fort.15',
         driver=None,
     )
+
+    if not link_mesh and local_fort14_filename.exists():
+        link_mesh = configuration.adcircpy_mesh == AdcircMesh.open(local_fort14_filename)
+
     if link_mesh:
         if local_fort13_filename is not None and local_fort13_filename.exists():
             create_symlink(local_fort13_filename, directory / 'fort.13', relative=True)
