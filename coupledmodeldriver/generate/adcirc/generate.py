@@ -127,7 +127,7 @@ def generate_adcirc_configuration(
         if original_fort13_filename.exists():
             create_symlink(original_fort13_filename, local_fort13_filename)
         create_symlink(original_fort14_filename, local_fort14_filename)
-    else:
+    elif overwrite or not local_fort14_filename.exists():
         LOGGER.info(
             f'rewriting original mesh to "{os.path.relpath(local_fort14_filename.resolve(), Path.cwd())}"'
         )
