@@ -438,7 +438,7 @@ class NEMSJSON(ConfigurationJSON):
             start_time=self['modeled_start_time'],
             end_time=self['modeled_end_time'],
             interval=self['interval'],
-            **{model.model_type.value.lower(): model for model in models},
+            **{model.entry_type.value.lower(): model for model in models},
         )
         for connection in self['connections']:
             modeling_system.connect(*connection)

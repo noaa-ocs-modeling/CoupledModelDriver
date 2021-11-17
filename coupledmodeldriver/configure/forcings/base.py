@@ -13,7 +13,7 @@ from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds import BestTrackForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.forcing.winds.owi import OwiForcing
-from nemspy.model import AtmosphericMeshEntry, WaveWatch3MeshEntry
+from nemspy.model import AtmosphericForcingEntry, WaveWatch3ForcingEntry
 from pandas import DataFrame
 
 from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
@@ -377,8 +377,8 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         return cls(resource=forcing.filename, nws=forcing.NWS, interval=forcing.interval)
 
     @property
-    def nemspy_entry(self) -> AtmosphericMeshEntry:
-        return AtmosphericMeshEntry(
+    def nemspy_entry(self) -> AtmosphericForcingEntry:
+        return AtmosphericForcingEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
         )
 
@@ -433,7 +433,7 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         return cls(resource=forcing.filename, nrs=forcing.NRS, interval=forcing.interval)
 
     @property
-    def nemspy_entry(self) -> WaveWatch3MeshEntry:
-        return WaveWatch3MeshEntry(
+    def nemspy_entry(self) -> WaveWatch3ForcingEntry:
+        return WaveWatch3ForcingEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
         )

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from nemspy.model import ADCIRCEntry, AtmosphericMeshEntry, WaveWatch3MeshEntry
+from nemspy.model import ADCIRCEntry, AtmosphericForcingEntry, WaveWatch3ForcingEntry
 import pytest
 
 from coupledmodeldriver import Platform
@@ -56,8 +56,8 @@ def test_slurm():
 
 def test_nems():
     model_entries = [
-        AtmosphericMeshEntry('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
-        WaveWatch3MeshEntry('ww3.HWRF.NOV2018.2012_sxy.nc'),
+        AtmosphericForcingEntry('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+        WaveWatch3ForcingEntry('ww3.HWRF.NOV2018.2012_sxy.nc'),
         ADCIRCEntry(600),
     ]
 
