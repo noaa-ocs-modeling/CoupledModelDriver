@@ -5,7 +5,7 @@ import json
 import os
 from os import PathLike
 from pathlib import Path, PurePosixPath
-from typing import Any, Union
+from typing import Any, Dict, List, Union
 
 from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
@@ -20,9 +20,9 @@ from coupledmodeldriver.utilities import LOGGER
 class ConfigurationJSON(ABC):
     name: str
     default_filename: PathLike
-    field_types: {str: type}
+    field_types: Dict[str, type]
 
-    def __init__(self, fields: {str: type} = None, **configuration):
+    def __init__(self, fields: Dict[str, type] = None, **configuration):
         self.field_types = {key.lower(): value for key, value in self.field_types.items()}
 
         if not hasattr(self, 'fields'):
@@ -40,7 +40,7 @@ class ConfigurationJSON(ABC):
         if len(configuration) > 0:
             self.configuration.update(configuration)
 
-    def update(self, configuration: {str: Any}):
+    def update(self, configuration: Dict[str, Any]):
         for key, value in configuration.items():
             if key in self:
                 converted_value = convert_value(value, self.fields[key])
@@ -99,10 +99,10 @@ class ConfigurationJSON(ABC):
         return f'{self.__class__.__name__}({configuration_string})'
 
     @classmethod
-    def from_dict(cls, configuration: {str: Any}) -> 'ConfigurationJSON':
+    def from_dict(cls, configuration: Dict[str, Any]) -> 'ConfigurationJSON':
         return cls(**configuration)
 
-    def to_dict(self) -> {str: Any}:
+    def to_dict(self) -> Dict[str, Any]:
         return self.configuration
 
     @classmethod
@@ -216,9 +216,9 @@ class SlurmJSON(ConfigurationJSON):
         'email_type': SlurmEmailType,
         'email_address': str,
         'log_filename': Path,
-        'modules': [str],
+        'modules': List[str],
         'path_prefix': Path,
-        'extra_commands': [str],
+        'extra_commands': List[str],
         'launcher': str,
         'nodes': int,
     }
@@ -234,9 +234,9 @@ class SlurmJSON(ConfigurationJSON):
         email_type: SlurmEmailType = None,
         email_address: str = None,
         log_filename: PathLike = None,
-        modules: [str] = None,
+        modules: List[str] = None,
         path_prefix: Path = None,
-        extra_commands: [str] = None,
+        extra_commands: List[str] = None,
         launcher: str = None,
         nodes: int = None,
         **kwargs,
@@ -316,11 +316,11 @@ class ModelDriverJSON(ConfigurationJSON):
     default_filename = f'configure_modeldriver.json'
     field_types = {
         'platform': Platform,
-        'perturbations': {str: {str: {str: Any}}},
+        'perturbations': Dict[str, Dict[str, Dict[str, Any]]],
     }
 
     def __init__(
-        self, platform: Platform, perturbations: {str: {str: {str: Any}}} = None, **kwargs
+        self, platform: Platform, perturbations: Dict[str, Dict[str, Dict[str, Any]]] = None, **kwargs
     ):
         """
         :param platform: platform on which to run
@@ -341,12 +341,12 @@ class ModelDriverJSON(ConfigurationJSON):
 
 
 class AttributeJSON(ConfigurationJSON):
-    default_attributes: [str]
+    default_attributes: List[str]
     field_types = {
-        'attributes': {str: Any},
+        'attributes': Dict[str, Any],
     }
 
-    def __init__(self, attributes: {str: Any} = None, **kwargs):
+    def __init__(self, attributes: Dict[str, Any] = None, **kwargs):
         """
         :param attributes: attributes to store
         """
@@ -370,10 +370,10 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
     default_processors: int
     field_types = {
         'processors': int,
-        'nems_parameters': {str: str},
+        'nems_parameters': Dict[str,str],
     }
 
-    def __init__(self, processors: int = None, nems_parameters: {str: str} = None, **kwargs):
+    def __init__(self, processors: int = None, nems_parameters: Dict[str, str] = None, **kwargs):
         if processors is None:
             processors = self.default_processors
         if nems_parameters is None:
@@ -400,9 +400,9 @@ class NEMSJSON(ConfigurationJSON):
         'modeled_start_time': datetime,
         'modeled_end_time': datetime,
         'interval': timedelta,
-        'connections': [[str]],
-        'mediations': [str],
-        'sequence': [str],
+        'connections': List[List[str]],
+        'mediations': List[str],
+        'sequence': List[str],
     }
 
     def __init__(
@@ -411,9 +411,9 @@ class NEMSJSON(ConfigurationJSON):
         modeled_start_time: datetime,
         modeled_end_time: datetime,
         interval: timedelta = None,
-        connections: [[str]] = None,
-        mediations: [[str]] = None,
-        sequence: [str] = None,
+        connections: List[List[str]] = None,
+        mediations: List[List[str]] = None,
+        sequence: List[str] = None,
         **kwargs,
     ):
         if 'fields' not in kwargs:
@@ -430,7 +430,7 @@ class NEMSJSON(ConfigurationJSON):
         self['mediations'] = mediations
         self['sequence'] = sequence
 
-    def to_nemspy(self, models: [NEMSCapJSON]) -> ModelingSystem:
+    def to_nemspy(self, models: List[NEMSCapJSON]) -> ModelingSystem:
         models = [
             model.nemspy_entry if isinstance(model, NEMSCapJSON) else model for model in models
         ]

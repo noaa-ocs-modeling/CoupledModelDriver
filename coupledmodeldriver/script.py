@@ -3,7 +3,7 @@ from enum import Enum
 from os import PathLike
 from pathlib import Path
 import textwrap
-from typing import Sequence
+from typing import List, Sequence
 import uuid
 
 import numpy
@@ -30,7 +30,7 @@ class SlurmEmailType(Enum):
 class Script:
     shebang = '#!/bin/bash'
 
-    def __init__(self, commands: [str]):
+    def __init__(self, commands: List[str]):
         if commands is None:
             commands = []
         elif isinstance(commands, str):
@@ -70,7 +70,7 @@ class JobScript(Script):
     def __init__(
         self,
         platform: Platform,
-        commands: [str],
+        commands: List[str],
         slurm_run_name: str = None,
         slurm_tasks: int = None,
         slurm_duration: timedelta = None,
@@ -81,7 +81,7 @@ class JobScript(Script):
         slurm_log_filename: PathLike = None,
         slurm_nodes: int = None,
         slurm_partition: str = None,
-        modules: [PathLike] = None,
+        modules: List[PathLike] = None,
         path_prefix: str = None,
         write_slurm_directory: bool = False,
     ):
@@ -265,7 +265,7 @@ class EnsembleGenerationJob(JobScript):
         slurm_tasks: int = None,
         slurm_duration: timedelta = None,
         slurm_account: str = None,
-        commands: [str] = None,
+        commands: List[str] = None,
         **kwargs,
     ):
         if slurm_run_name is None:
@@ -287,7 +287,7 @@ class EnsembleGenerationJob(JobScript):
 
 
 class EnsembleRunScript(Script):
-    def __init__(self, platform: Platform, run_spinup: bool = True, commands: [str] = None):
+    def __init__(self, platform: Platform, run_spinup: bool = True, commands: List[str] = None):
         self.platform = platform
         self.run_spinup = run_spinup
         super().__init__(commands)
@@ -383,7 +383,7 @@ class EnsembleRunScript(Script):
 class EnsembleCleanupScript(Script):
     """ script for cleaning up ADCIRC NEMS configurations """
 
-    def __init__(self, commands: [str] = None):
+    def __init__(self, commands: List[str] = None):
         super().__init__(commands)
 
     def __str__(self):
@@ -427,7 +427,7 @@ class EnsembleCleanupScript(Script):
 
 
 def bash_if_statement(
-    condition: str, then: [str], *else_then: [[str]], indentation: str = '    '
+    condition: str, then: List[str], *else_then: List[List[str]], indentation: str = '    '
 ) -> str:
     """
     Create a if statement in Bash syntax using the given condition, then statement(s), and else condition(s) / statement(s).
@@ -480,7 +480,7 @@ def bash_if_statement(
     return '\n'.join(lines)
 
 
-def bash_for_loop(iteration: str, do: [str], indentation='    ') -> str:
+def bash_for_loop(iteration: str, do: List[str], indentation='    ') -> str:
     """
     Create a for loop in Bash syntax using the given variable, iterator, and do statement(s).
 
@@ -496,7 +496,7 @@ def bash_for_loop(iteration: str, do: [str], indentation='    ') -> str:
     return '\n'.join((f'{iteration}; do', textwrap.indent(do, indentation), 'done'))
 
 
-def bash_function(name: str, body: [str], indentation: str = '    ') -> str:
+def bash_function(name: str, body: List[str], indentation: str = '    ') -> str:
     """
     Create a function in Bash syntax using the given name and function statement(s).
 

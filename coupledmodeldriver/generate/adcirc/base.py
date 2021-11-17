@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Dict, List, Union
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.forcing import BestTrackForcing
@@ -165,7 +165,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         fort_14_path: PathLike,
         tidal_spinup_duration: timedelta = None,
         tidal_spinup_timestep: timedelta = None,
-        forcings: [Forcing] = None,
+        forcings: List[Forcing] = None,
         aswip_executable_path: PathLike = None,
         source_filename: PathLike = None,
         slurm_configuration: SlurmJSON = None,
@@ -181,8 +181,8 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         output_concentrations: bool = False,
         output_meteorological_factors: bool = False,
         processors: int = 11,
-        nems_parameters: {str: str} = None,
-        attributes: {str: Any} = None,
+        nems_parameters: Dict[str, str] = None,
+        attributes: Dict[str, Any] = None,
         **kwargs,
     ):
         """
@@ -267,11 +267,11 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
                 self[output_interval_entry] = default_interval
 
     @property
-    def forcings(self) -> [ForcingJSON]:
+    def forcings(self) -> List[ForcingJSON]:
         return list(self.__forcings)
 
     @forcings.setter
-    def forcings(self, forcings: [ForcingJSON]):
+    def forcings(self, forcings: List[ForcingJSON]):
         if forcings is None:
             forcings = []
         for forcing in forcings:
@@ -295,7 +295,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             self.__forcings.append(forcing)
 
     @property
-    def slurm_configuration(self) -> [SlurmJSON]:
+    def slurm_configuration(self) -> List[SlurmJSON]:
         return self.__slurm_configuration
 
     @slurm_configuration.setter
@@ -305,7 +305,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         self.__slurm_configuration = slurm_configuration
 
     @property
-    def adcircpy_forcings(self) -> [Forcing]:
+    def adcircpy_forcings(self) -> List[Forcing]:
         return [forcing.adcircpy_forcing for forcing in self.forcings]
 
     @property

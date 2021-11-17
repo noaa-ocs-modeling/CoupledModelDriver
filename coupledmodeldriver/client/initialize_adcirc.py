@@ -4,7 +4,7 @@ from enum import Enum
 import logging
 import os
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Dict, List, Mapping
 
 from adcircpy import TidalSource
 from typepigeon import convert_value
@@ -43,7 +43,7 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def parse_initialize_adcirc_arguments(extra_arguments: {str: type} = None) -> {str: Any}:
+def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -> Dict[str, Any]:
     if extra_arguments is None:
         extra_arguments = {}
     elif not isinstance(extra_arguments, Mapping):
@@ -315,13 +315,13 @@ def initialize_adcirc(
     modeled_duration: timedelta,
     modeled_timestep: timedelta,
     tidal_spinup_duration: timedelta = None,
-    perturbations: {str: {str: Any}} = None,
+    perturbations: Dict[str, Dict[str, Any]] = None,
     nems_interval: timedelta = None,
-    nems_connections: [str] = None,
-    nems_mediations: [str] = None,
-    nems_sequence: [str] = None,
+    nems_connections: List[str] = None,
+    nems_mediations: List[str] = None,
+    nems_sequence: List[str] = None,
     modulefile: os.PathLike = None,
-    forcings: [ForcingJSON] = None,
+    forcings: List[ForcingJSON] = None,
     adcirc_executable: os.PathLike = None,
     adcprep_executable: os.PathLike = None,
     aswip_executable: os.PathLike = None,
@@ -401,7 +401,7 @@ def initialize_adcirc(
 
 
 def get_argument(
-    argument: str, arguments: {str: str} = None, required: bool = False, message: str = None
+    argument: str, arguments: Dict[str, str] = None, required: bool = False, message: str = None
 ) -> str:
     if message is None:
         message = f'enter value for "{argument}": '

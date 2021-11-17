@@ -2,7 +2,7 @@ from abc import ABC
 from copy import copy
 from os import PathLike
 from pathlib import Path
-from typing import Any, Collection, Mapping, Union
+from typing import Any, Collection, Dict, List, Mapping, Set, Union
 
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON
 from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
@@ -10,14 +10,14 @@ from coupledmodeldriver.utilities import LOGGER
 
 
 class RunConfiguration(ABC):
-    REQUIRED: {ConfigurationJSON} = {ModelDriverJSON}
-    SUPPLEMENTARY: {ConfigurationJSON} = {}
+    REQUIRED: Set[ConfigurationJSON] = Set[ModelDriverJSON]
+    SUPPLEMENTARY: Set[ConfigurationJSON] = set()
 
-    def __init__(self, configurations: [ConfigurationJSON]):
+    def __init__(self, configurations: List[ConfigurationJSON]):
         self.__configurations = {}
         self.configurations = configurations
 
-    def perturb(self, relative_to: PathLike = None) -> {str: 'RunConfiguration'}:
+    def perturb(self, relative_to: PathLike = None) -> Dict[str, 'RunConfiguration']:
         perturbed_configurations = {}
         if 'modeldriver' in self:
             perturbations = self['modeldriver']['perturbations']
@@ -37,11 +37,11 @@ class RunConfiguration(ABC):
         return perturbed_configurations
 
     @property
-    def configurations(self) -> [ConfigurationJSON]:
+    def configurations(self) -> List[ConfigurationJSON]:
         return list(self.__configurations.values())
 
     @configurations.setter
-    def configurations(self, configurations: [ConfigurationJSON]):
+    def configurations(self, configurations: List[ConfigurationJSON]):
         if isinstance(configurations, Collection) and not isinstance(configurations, Mapping):
             configurations = {
                 entry.name.lower(): entry
@@ -94,7 +94,7 @@ class RunConfiguration(ABC):
 
     @classmethod
     def read_directory(
-        cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
+        cls, directory: PathLike, required: List[type] = None, supplementary: List[type] = None
     ) -> 'RunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
@@ -138,7 +138,7 @@ class RunConfiguration(ABC):
             configuration.to_file(directory, overwrite=overwrite)
 
     @classmethod
-    def from_configurations(cls, configurations: [ConfigurationJSON]) -> 'RunConfiguration':
+    def from_configurations(cls, configurations: List[ConfigurationJSON]) -> 'RunConfiguration':
         return cls(configurations)
 
 

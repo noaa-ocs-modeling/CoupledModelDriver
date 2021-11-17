@@ -1,6 +1,7 @@
 from datetime import timedelta
 from os import PathLike
 from pathlib import Path
+from typing import List
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import JobScript
@@ -10,7 +11,7 @@ class AdcircJob(JobScript):
     def __init__(
         self,
         platform: Platform,
-        commands: [str],
+        commands: List[str],
         slurm_run_name: str = None,
         slurm_tasks: int = None,
         slurm_duration: timedelta = None,
@@ -50,7 +51,7 @@ class AdcircRunJob(AdcircJob):
         slurm_duration: timedelta = None,
         slurm_account: str = None,
         executable: PathLike = None,
-        commands: [str] = None,
+        commands: List[str] = None,
         **kwargs,
     ):
         super().__init__(
@@ -204,7 +205,7 @@ class AdcircSetupJob(AdcircJob):
         slurm_account: str = None,
         adcprep_path: PathLike = None,
         aswip_command: str = None,
-        commands: [str] = None,
+        commands: List[str] = None,
         **kwargs,
     ):
         if slurm_tasks is None:
