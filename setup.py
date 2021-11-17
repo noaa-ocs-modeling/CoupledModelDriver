@@ -11,7 +11,7 @@ DEPENDENCIES = {
     'adcircpy>=1.0.41': ['gdal', 'fiona'],
     'filelock': [],
     'file-read-backwards': [],
-    'nemspy>=1.0.3': [],
+    'nemspy>=1.0.4': [],
     'numpy': [],
     'pyproj': [],
     'requests': [],
