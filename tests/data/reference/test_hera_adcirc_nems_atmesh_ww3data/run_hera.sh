@@ -1,6 +1,8 @@
 #!/bin/bash
 echo deleting previous ADCIRC output
 sh cleanup.sh
+echo deleting previous ADCIRC logs
+rm spinup/*.log runs/*/*.log
 DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # run configurations
