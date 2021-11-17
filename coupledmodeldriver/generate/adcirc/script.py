@@ -101,7 +101,7 @@ class AswipCommand:
 
     @property
     def path(self) -> Path:
-        """ path to `aswip` executable  """
+        """ path to ``aswip`` executable  """
         return self.__path
 
     @path.setter
@@ -113,7 +113,7 @@ class AswipCommand:
 
     @property
     def nws(self) -> int:
-        """ `-n` - ADCIRC NWS option """
+        """ ``-n`` - ADCIRC NWS option """
         return self.__nws
 
     @nws.setter
@@ -123,7 +123,7 @@ class AswipCommand:
     @property
     def isotachs(self) -> int:
         """
-        `-m` - methods using isotachs, one of [1, 2, 3, 4]
+        ``-m`` - methods using isotachs, one of [1, 2, 3, 4]
 
         1 = use the 34 isotach,
         2 = use the 64 isotach,
@@ -144,7 +144,7 @@ class AswipCommand:
     @property
     def rmax_approaches(self) -> int:
         """
-        `-z` - approaches solving for Rmax, one of [1, 2]
+        ``-z`` - approaches solving for Rmax, one of [1, 2]
 
         1 = only rotate wind vectors afterward,
         2 = rotate wind vectors before and afterwards (use this for NWS=20)
@@ -193,7 +193,7 @@ class AswipCommand:
 
 
 class AdcircSetupJob(AdcircJob):
-    """ script for performing domain decomposition with `adcprep` """
+    """ script for performing domain decomposition with ``adcprep`` """
 
     def __init__(
         self,

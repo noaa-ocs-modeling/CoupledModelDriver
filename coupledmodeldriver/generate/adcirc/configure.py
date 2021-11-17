@@ -65,7 +65,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         """
         Generate required configuration files for an ADCIRC run.
 
-        :param mesh_directory: path to input mesh directory (containing `fort.13`, `fort.14`)
+        :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
         :param modeled_start_time: start time within the modeled system
         :param modeled_end_time: end time within the modeled system
         :param modeled_timestep: time interval within the modeled system
@@ -77,10 +77,10 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
-        :param adcirc_executable: filename of compiled `adcirc`
-        :param adcprep_executable: filename of compiled `adcprep`
-        :param aswip_executable: filename of compiled `aswip`
-        :param source_filename: path to module file to `source`
+        :param adcirc_executable: filename of compiled ``adcirc``
+        :param adcprep_executable: filename of compiled ``adcprep``
+        :param aswip_executable: filename of compiled ``aswip``
+        :param source_filename: path to module file to ``source``
         """
 
         self.__adcircpy_mesh = None

@@ -188,20 +188,20 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         """
         Instantiate a new ADCIRCJSON configuration.
 
-        :param adcirc_executable_path: file path to `adcirc` or `NEMS.x`
-        :param adcprep_executable_path: file path to `adcprep`
-        :param aswip_executable_path: file path to `aswip`
+        :param adcirc_executable_path: file path to ``adcirc`` or `NEMS.x`
+        :param adcprep_executable_path: file path to ``adcprep``
+        :param aswip_executable_path: file path to ``aswip``
         :param modeled_start_time: start time in model run
         :param modeled_end_time: edn time in model run
         :param modeled_timestep: time interval between model steps
-        :param fort_13_path: file path to `fort.13`
-        :param fort_14_path: file path to `fort.14`
+        :param fort_13_path: file path to ``fort.13``
+        :param fort_14_path: file path to ``fort.14``
         :param tidal_spinup_duration: tidal spinup duration for ADCIRC coldstart
         :param tidal_spinup_timestep: tidal spinup modeled time interval for ADCIRC coldstart
         :param forcings: list of Forcing objects to apply to the mesh
-        :param source_filename: path to modulefile to `source`
+        :param source_filename: path to modulefile to ``source``
         :param slurm_configuration: Slurm configuration object
-        :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with `adcircpy`
+        :param use_original_mesh: whether to symlink / copy original mesh instead of rewriting with ``adcircpy``
         :param output_surface: write surface (entire mesh) to NetCDF
         :param surface_output_interval: frequency at which output is written to file
         :param output_stations: write stations to NetCDF (only applicable if stations file exists)
@@ -214,7 +214,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         :param output_meteorological_factors: write meteorological factors to NetCDF
         :param processors: number of processors to use
         :param nems_parameters: parameters to give to NEMS cap
-        :param attributes: attributes to set in `adcircpy.AdcircRun` object
+        :param attributes: attributes to set in ``adcircpy.AdcircRun`` object
         """
 
         self.__mesh = None

@@ -153,7 +153,7 @@ class JobScript(Script):
     @property
     def launcher(self) -> str:
         """
-        :return: command to start processes on target system (`srun`, `ibrun`, etc.)
+        :return: command to start processes on target system (``srun``, ``ibrun``, etc.)
         """
 
         return self.platform.value['launcher']
@@ -434,7 +434,7 @@ def bash_if_statement(
 
     :param condition: boolean condition to check
     :param then: Bash statement(s) to execute if condition is met
-    :param else_then: arbitrary number of Bash statement(s) to execute if condition is not met, with optional conditions (`elif`)
+    :param else_then: arbitrary number of Bash statement(s) to execute if condition is not met, with optional conditions (``elif``)
     :param indentation: indentation
     :return: if statement
     """
@@ -484,7 +484,7 @@ def bash_for_loop(iteration: str, do: List[str], indentation='    ') -> str:
     """
     Create a for loop in Bash syntax using the given variable, iterator, and do statement(s).
 
-    :param iteration: for loop statement, such as `for dir in ./*`
+    :param iteration: for loop statement, such as ``for dir in ./*``
     :param do: Bash statement(s) to execute on every loop iteration
     :param indentation: indentation
     :return: for loop
