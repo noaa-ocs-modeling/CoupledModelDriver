@@ -13,6 +13,10 @@ from coupledmodeldriver.utilities import LOGGER, make_executable
 
 
 class SlurmEmailType(Enum):
+    """
+    option for Slurm email notification
+    """
+
     NONE = 'NONE'
     BEGIN = 'BEGIN'
     END = 'END'
@@ -28,6 +32,10 @@ class SlurmEmailType(Enum):
 
 
 class Script:
+    """
+    abstraction of an executable script
+    """
+
     shebang = '#!/bin/bash'
 
     def __init__(self, commands: List[str]):
@@ -67,6 +75,10 @@ class Script:
 
 
 class JobScript(Script):
+    """
+    abstraction of a Slurm job script, to run locally or from a job manager
+    """
+
     def __init__(
         self,
         platform: Platform,
@@ -86,8 +98,6 @@ class JobScript(Script):
         write_slurm_directory: bool = False,
     ):
         """
-        instantiate a new job script, to run locally or from a job manager
-
         :param platform: HPC to run script on
         :param commands: shell commands to run in script
         :param slurm_run_name: Slurm run name
@@ -258,6 +268,10 @@ class JobScript(Script):
 
 
 class EnsembleGenerationJob(JobScript):
+    """
+    job script to generate the ensemble configuration
+    """
+
     def __init__(
         self,
         platform: Platform,
@@ -287,6 +301,11 @@ class EnsembleGenerationJob(JobScript):
 
 
 class EnsembleRunScript(Script):
+    """
+    script to run the ensemble, either by running it directly or by submitting model execution to the job manager
+    default filename is ``run_<platform>.sh``
+    """
+
     def __init__(self, platform: Platform, run_spinup: bool = True, commands: List[str] = None):
         self.platform = platform
         self.run_spinup = run_spinup
@@ -382,7 +401,7 @@ class EnsembleRunScript(Script):
 
 class EnsembleCleanupScript(Script):
     """
-    script for cleaning up ADCIRC NEMS configurations
+    script for cleaning an ensemble configuration, by deleting output and log files
     """
 
     def __init__(self, commands: List[str] = None):
@@ -438,7 +457,7 @@ def bash_if_statement(
     :param then: Bash statement(s) to execute if condition is met
     :param else_then: arbitrary number of Bash statement(s) to execute if condition is not met, with optional conditions (``elif``)
     :param indentation: indentation
-    :return: if statement
+    :return: if statement as a string
     """
 
     if not isinstance(then, str) and isinstance(then, Sequence):
@@ -489,7 +508,7 @@ def bash_for_loop(iteration: str, do: List[str], indentation='    ') -> str:
     :param iteration: for loop statement, such as ``for dir in ./*``
     :param do: Bash statement(s) to execute on every loop iteration
     :param indentation: indentation
-    :return: for loop
+    :return: for loop as a string
     """
 
     if not isinstance(do, str) and isinstance(do, Sequence):
@@ -505,7 +524,7 @@ def bash_function(name: str, body: List[str], indentation: str = '    ') -> str:
     :param name: name of function
     :param body: Bash statement(s) making up function body
     :param indentation: indentation
-    :return: function
+    :return: function as a string
     """
 
     if not isinstance(body, str) and isinstance(body, Sequence):

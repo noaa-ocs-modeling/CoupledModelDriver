@@ -8,6 +8,10 @@ from coupledmodeldriver.script import JobScript
 
 
 class AdcircJob(JobScript):
+    """
+    abstraction of a job script for running ADCIRC
+    """
+
     def __init__(
         self,
         platform: Platform,
@@ -42,7 +46,7 @@ class AdcircJob(JobScript):
 
 class AdcircRunJob(AdcircJob):
     """
-    script for running ADCIRC via a NEMS configuration
+    job script for running ADCIRC
     """
 
     def __init__(
@@ -83,7 +87,7 @@ class AdcircRunJob(AdcircJob):
 
 class AswipCommand:
     """
-    implement guidance and documentation from @WPringle
+    abstraction of an ``aswip`` command
     """
 
     def __init__(
@@ -202,7 +206,7 @@ class AswipCommand:
 
 class AdcircSetupJob(AdcircJob):
     """
-    script for performing domain decomposition with ``adcprep``
+    job script for performing domain decomposition with ``adcprep``
     """
 
     def __init__(

@@ -30,6 +30,10 @@ from coupledmodeldriver.utilities import LOGGER
 
 
 class ADCIRCRunConfiguration(RunConfiguration):
+    """
+    run configuration for ADCIRC-only run, with optional tidal and / or best track forcing using ADCIRC's input capability
+    """
+
     REQUIRED = {
         ModelDriverJSON,
         SlurmJSON,
@@ -63,17 +67,15 @@ class ADCIRCRunConfiguration(RunConfiguration):
         source_filename: PathLike = None,
     ):
         """
-        generate required configuration files for an ADCIRC run
-
         :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
         :param modeled_start_time: start time within the modeled system
         :param modeled_end_time: end time within the modeled system
         :param modeled_timestep: time interval within the modeled system
-        :param adcirc_processors: numbers of processors to assign for ADCIRC
-        :param platform: HPC platform for which to configure
         :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
+        :param platform: HPC platform for which to configure
         :param perturbations: dictionary of runs encompassing run names to parameter values
         :param forcings: list of forcing configurations to connect to ADCIRC
+        :param adcirc_processors: numbers of processors to assign for ADCIRC
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
@@ -195,7 +197,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         ]
         if 'nems' in self:
             files_to_write.extend(
-                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
+                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc', ]
             )
         if self.use_aswip:
             files_to_write.append('fort.22')
@@ -267,6 +269,10 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
 
 class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
+    """
+    run configuration coupling ADCIRC with other models / forcings using NUOPC NEMS
+    """
+
     REQUIRED = {
         ModelDriverJSON,
         NEMSJSON,
@@ -297,6 +303,29 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         aswip_executable: PathLike = None,
         source_filename: PathLike = None,
     ):
+        """
+        :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
+        :param modeled_start_time: start time within the modeled system
+        :param modeled_end_time: end time within the modeled system
+        :param modeled_timestep: time interval within the modeled system
+        :param nems_interval: modeled time interval of main NEMS loop
+        :param nems_connections: list of NEMS connections as strings (i.e. ``ATM -> OCN``)
+        :param nems_mediations: list of NEMS mediations, including functions
+        :param nems_sequence: list of NEMS entries in sequence order
+        :param adcirc_processors: numbers of processors to assign for ADCIRC
+        :param platform: HPC platform for which to configure
+        :param tidal_spinup_duration: spinup time for ADCIRC tidal coldstart
+        :param perturbations: dictionary of runs encompassing run names to parameter values
+        :param forcings: list of forcing configurations to connect to ADCIRC
+        :param slurm_job_duration: wall clock time of job
+        :param slurm_partition: Slurm partition
+        :param slurm_email_address: email address to send Slurm notifications
+        :param nems_executable: filename of compiled ``adcirc``
+        :param adcprep_executable: filename of compiled ``adcprep``
+        :param aswip_executable: filename of compiled ``aswip``
+        :param source_filename: path to module file to ``source``
+        """
+
         self.__nems = None
 
         super().__init__(

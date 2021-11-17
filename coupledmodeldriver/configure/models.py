@@ -5,6 +5,10 @@ from coupledmodeldriver.configure.base import ConfigurationJSON
 
 
 class Model(Enum):
+    """
+    model information -> class name
+    """
+
     ADCIRC = 'ADCIRC'
     TidalForcing = 'Tides'
     ATMESH = 'ATMESH'
@@ -12,6 +16,11 @@ class Model(Enum):
 
 
 class ModelJSON(ConfigurationJSON, ABC):
+    """
+    abstraction of a model configuration
+    stores model information
+    """
+
     def __init__(self, model: Model, **kwargs):
         if not isinstance(model, Model):
             model = Model[str(model).lower()]

@@ -124,6 +124,11 @@ OUTPUT_INTERVAL_DEFAULTS = {
 
 
 class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
+    """
+    ADCIRC configuration in ``configure_adcirc.json``
+    stores ADCIRC and optionally NEMS parameters
+    """
+
     name = 'ADCIRC'
     default_filename = f'configure_adcirc.json'
     default_processors = 11

@@ -342,7 +342,7 @@ def initialize_adcirc(
     :param modeled_timestep: time interval within the modeled system
     :param tidal_spinup_duration: duration of tidal spinup in model time
     :param perturbations: mapping of perturbation names to changed values
-    :param nems_interval: main loop interval of NEMS run
+    :param nems_interval: modeled time interval of NEMS main loop
     :param nems_connections: list of NEMS connections as strings (i.e. ``ATM -> OCN``)
     :param nems_mediations: list of NEMS mediations, including functions
     :param nems_sequence: list of NEMS entries in sequence order

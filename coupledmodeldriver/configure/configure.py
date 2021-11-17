@@ -10,7 +10,11 @@ from coupledmodeldriver.utilities import LOGGER
 
 
 class RunConfiguration(ABC):
-    REQUIRED: Set[ConfigurationJSON] = Set[ModelDriverJSON]
+    """
+    abstraction of a set of model run configurations, encapsulated in JSON files
+    """
+
+    REQUIRED: Set[ConfigurationJSON] = {ModelDriverJSON}
     SUPPLEMENTARY: Set[ConfigurationJSON] = set()
 
     def __init__(self, configurations: List[ConfigurationJSON]):
@@ -143,6 +147,13 @@ class RunConfiguration(ABC):
 
 
 def from_user_input(value: Any) -> ConfigurationJSON:
+    """
+    construct a configuration JSON object from a forcing object, a file, or a string
+
+    :param value: value to parse; either an ADCIRCpy forcing object, file path, or a JSON string value
+    :return: configuration JSON object
+    """
+
     if isinstance(value, str):
         if Path(value).exists():
             value = ConfigurationJSON.from_file(value)

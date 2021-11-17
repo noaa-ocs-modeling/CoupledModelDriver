@@ -9,6 +9,10 @@ from file_read_backwards import FileReadBackwards
 
 
 class CompletionStatus(Enum):
+    """
+    options for completion status
+    """
+
     NOT_CONFIGURED = 5
     NOT_STARTED = 4
     FAILED = 3
@@ -18,6 +22,13 @@ class CompletionStatus(Enum):
 
 
 def is_adcirc_run_directory(directory: PathLike = None) -> bool:
+    """
+    check if the given directory has the baseline ADCIRC configuration files
+
+    :param directory: path to directory
+    :return: whether the directory is an ADCIRC configuration
+    """
+
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
@@ -32,6 +43,14 @@ def is_adcirc_run_directory(directory: PathLike = None) -> bool:
 
 
 def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -> Dict[str, Any]:
+    """
+    return the status of ADCIRC execution within the given directory
+
+    :param directory: path to directory
+    :param verbose: whether to include errors and detailed status checks in output
+    :return: status of ADCIRC execution in JSON format
+    """
+
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):

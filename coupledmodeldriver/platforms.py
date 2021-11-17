@@ -2,6 +2,10 @@ from enum import Enum
 
 
 class Platform(Enum):
+    """
+    HPC platform information
+    """
+
     HERA = {
         'source_filename': '/scratch2/COASTAL/coastal/save/shared/repositories/ADC-WW3-NWM-NEMS/modulefiles/envmodules_intel.hera',
         'processors_per_node': 40,

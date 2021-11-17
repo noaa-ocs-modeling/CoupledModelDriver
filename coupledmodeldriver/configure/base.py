@@ -18,6 +18,10 @@ from coupledmodeldriver.utilities import LOGGER
 
 
 class ConfigurationJSON(ABC):
+    """
+    abstraction of a configuration JSON, including getters and setters for values and a built-in schema of field types
+    """
+
     name: str
     default_filename: PathLike
     field_types: Dict[str, type]
@@ -107,6 +111,13 @@ class ConfigurationJSON(ABC):
 
     @classmethod
     def from_string(cls, string: str) -> 'ConfigurationJSON':
+        """
+        read JSON string
+
+        :param string: JSON string
+        :return: configuration  object
+        """
+
         configuration = json.loads(string)
 
         configuration = {
@@ -132,7 +143,7 @@ class ConfigurationJSON(ABC):
     @classmethod
     def from_file(cls, filename: PathLike) -> 'ConfigurationJSON':
         """
-        create new object from an existing JSON file
+        read existing JSON file
 
         :param filename: path to JSON file
         :return: configuration object
@@ -205,8 +216,13 @@ class ConfigurationJSON(ABC):
 
 
 class SlurmJSON(ConfigurationJSON):
+    """
+    Slurm configuration parameters in ``configure_slurm.json``
+    stores account and partition names, wall-clock time, email notification, etc.
+    """
+
     name = 'Slurm'
-    default_filename = f'configure_slurm.json'
+    default_filename = 'configure_slurm.json'
     field_types = {
         'account': str,
         'partition': str,
@@ -312,6 +328,11 @@ class SlurmJSON(ConfigurationJSON):
 
 
 class ModelDriverJSON(ConfigurationJSON):
+    """
+    model driver configuration in ``configure_modeldriver.json``
+    stores platform information and a dictionary of perturbations of other configurations per each run
+    """
+
     name = 'ModelDriver'
     default_filename = f'configure_modeldriver.json'
     field_types = {
@@ -340,7 +361,11 @@ class ModelDriverJSON(ConfigurationJSON):
         self['perturbations'] = perturbations
 
 
-class AttributeJSON(ConfigurationJSON):
+class AttributeJSON(ConfigurationJSON, ABC):
+    """
+    abstraction of a configuration with an arbitrary number of custom assignable attributes
+    """
+
     default_attributes: List[str]
     field_types = {
         'attributes': Dict[str, Any],
@@ -367,10 +392,15 @@ class AttributeJSON(ConfigurationJSON):
 
 
 class NEMSCapJSON(ConfigurationJSON, ABC):
+    """
+    abtraction of an individual model configuration that implements a NEMS cap
+    stores NEMS-assigned processors and NEMS cap parameters
+    """
+
     default_processors: int
     field_types = {
         'processors': int,
-        'nems_parameters': Dict[str,str],
+        'nems_parameters': Dict[str, str],
     }
 
     def __init__(self, processors: int = None, nems_parameters: Dict[str, str] = None, **kwargs):
@@ -393,6 +423,11 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
 
 
 class NEMSJSON(ConfigurationJSON):
+    """
+    NEMS configuration in ``configure_nems.json``
+    stores NEMS executable path, modeled times / interval, connections / mediations, and the order of the run sequence
+    """
+
     name = 'NEMS'
     default_filename = f'configure_nems.json'
     field_types = {

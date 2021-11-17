@@ -31,9 +31,17 @@ ADCIRCPY_FORCING_CLASSES = (Forcing, Tides)
 
 
 class ForcingJSON(ConfigurationJSON, ABC):
+    """
+    abstraction of a forcing configuration
+    """
+
     @property
     @abstractmethod
     def adcircpy_forcing(self) -> Forcing:
+        """
+        create an ADCIRCpy forcing object with values from this configuration
+        """
+
         raise NotImplementedError
 
     def to_adcircpy(self) -> Forcing:
@@ -42,6 +50,10 @@ class ForcingJSON(ConfigurationJSON, ABC):
     @classmethod
     @abstractmethod
     def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
+        """
+        read configuration values from an ADCIRCpy forcing object
+        """
+
         forcing_class_name = forcing.__class__.__name__
         if forcing_class_name in ADCIRCPY_FORCINGS:
             configuration_class = getattr(
@@ -53,6 +65,10 @@ class ForcingJSON(ConfigurationJSON, ABC):
 
 
 class TimestepForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a forcing configuration with an arbitrary timestep interval
+    """
+
     default_interval: timedelta
     field_types = {'interval': timedelta}
 
@@ -69,6 +85,10 @@ class TimestepForcingJSON(ForcingJSON, ABC):
 
 
 class FileForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a forcing configuration tied to a forcing file on disk
+    """
+
     field_types = {'resource': Path}
 
     def __init__(self, resource: PathLike, **kwargs):
@@ -87,6 +107,11 @@ class FileForcingJSON(ForcingJSON, ABC):
 
 
 class TidalForcingJSON(FileForcingJSON):
+    """
+    tidal configuration in ``configure_tidal.json``
+    stores tidal database and constituent information
+    """
+
     name = 'TIDAL'
     default_filename = f'configure_tidal.json'
     field_types = {'tidal_source': TidalSource, 'constituents': List[str]}
@@ -178,6 +203,11 @@ BESTTRACK_ATTRIBUTES = [
 
 
 class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
+    """
+    storm best track configuration in ``configure_besttrack.json``
+    stores storm ID, forcing read interval, start and end dates, and optional path to `fort.22` file
+    """
+
     name = 'BestTrack'
     default_filename = f'configure_besttrack.json'
     default_nws = 20
@@ -323,6 +353,11 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 
 
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
+    """
+    OWI forcing configuration in ``configure_owi.json``
+    stores NWS parameter and forcing read interval
+    """
+
     name = 'OWI'
     default_filename = f'configure_owi.json'
     default_nws = 12
@@ -342,6 +377,11 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
 
 
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
+    """
+    atmospheric mesh (ATMESH) configuration in ``configure_atmesh.json``
+    stores NWS parameter, forcing read interval, and optionally NEMS parameters
+    """
+
     name = 'ATMESH'
     default_filename = f'configure_atmesh.json'
     default_nws = 17
@@ -384,6 +424,11 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
 
 
 class WaveForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a wave forcing configuration
+    stores NRS parameter (hundredths place of NWS parameter in ``fort.15``)
+    """
+
     default_nrs: int
     field_types = {'nrs': int}
 
@@ -400,6 +445,11 @@ class WaveForcingJSON(ForcingJSON, ABC):
 
 
 class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
+    """
+    WaveWatch III output file configuration in ``configure_ww3data.json``
+    stores NRS parameter, forcing read interval, and optionally NEMS parameters
+    """
+
     name = 'WW3DATA'
     default_filename = f'configure_ww3data.json'
     default_nrs = 5
