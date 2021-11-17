@@ -15,6 +15,7 @@ DEPENDENCIES = {
     'numpy': [],
     'pyproj': [],
     'requests': [],
+    'typepigeon': [],
 }
 
 

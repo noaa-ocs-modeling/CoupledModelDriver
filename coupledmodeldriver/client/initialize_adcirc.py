@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from adcircpy import TidalSource
+from typepigeon import convert_value
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
@@ -26,7 +27,7 @@ from coupledmodeldriver.configure.forcings.base import (
 )
 from coupledmodeldriver.generate import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration
 from coupledmodeldriver.script import EnsembleGenerationJob
-from coupledmodeldriver.utilities import convert_value, get_logger
+from coupledmodeldriver.utilities import get_logger
 
 
 class ForcingConfigurations(Enum):
