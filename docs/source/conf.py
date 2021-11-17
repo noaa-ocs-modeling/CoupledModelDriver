@@ -12,6 +12,7 @@
 import os
 from os import PathLike
 from pathlib import Path
+import subprocess
 import sys
 
 from dunamai import Version
@@ -32,6 +33,13 @@ def repository_root(path: PathLike = None) -> Path:
 
 
 sys.path.insert(0, str(repository_root()))
+
+subprocess.run(
+    f'{sys.executable} -m pip install -U pip',
+    shell=True,
+    stdout=subprocess.DEVNULL,
+    stderr=subprocess.DEVNULL,
+)
 
 # -- Project information -----------------------------------------------------
 metadata = config.read_configuration('../../setup.cfg')['metadata']
