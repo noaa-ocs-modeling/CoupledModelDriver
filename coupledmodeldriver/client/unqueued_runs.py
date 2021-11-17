@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from collections import Collection
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
 from coupledmodeldriver.client.check_completion import (
     check_completion,
@@ -13,7 +13,7 @@ from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.utilities import LOGGER
 
 
-def parse_missing_jobs_arguments() -> {str: Any}:
+def parse_missing_jobs_arguments() -> Dict[str, Any]:
     argument_parser = ArgumentParser()
     argument_parser.add_argument(
         'directory',
@@ -41,7 +41,7 @@ def parse_missing_jobs_arguments() -> {str: Any}:
     }
 
 
-def get_run_directories(directories: [os.PathLike], model: ModelJSON = None) -> [Path]:
+def get_run_directories(directories: List[os.PathLike], model: ModelJSON = None) -> List[Path]:
     if not isinstance(directories, Collection):
         directories = [directories]
     run_directories = []
@@ -57,8 +57,8 @@ def get_run_directories(directories: [os.PathLike], model: ModelJSON = None) -> 
 
 
 def get_unqueued_runs(
-    directories: [os.PathLike], model: ModelJSON = None, **kwargs
-) -> {str: Path}:
+    directories: List[os.PathLike], model: ModelJSON = None, **kwargs
+) -> Dict[str, Path]:
     runs = {
         directory.name: directory
         for directory in get_run_directories(directories, model=model)

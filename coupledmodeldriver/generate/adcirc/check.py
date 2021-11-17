@@ -3,7 +3,7 @@ from glob import glob
 from os import PathLike
 from pathlib import Path
 import re
-from typing import Any
+from typing import Any, Dict
 
 from file_read_backwards import FileReadBackwards
 
@@ -31,7 +31,7 @@ def is_adcirc_run_directory(directory: PathLike = None) -> bool:
         return True
 
 
-def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -> {str: Any}:
+def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -> Dict[str, Any]:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):

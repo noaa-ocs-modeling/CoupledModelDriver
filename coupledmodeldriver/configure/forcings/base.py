@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Dict, List
 
 from adcircpy import Tides
 from adcircpy.forcing.base import Forcing
@@ -89,13 +89,13 @@ class FileForcingJSON(ForcingJSON, ABC):
 class TidalForcingJSON(FileForcingJSON):
     name = 'TIDAL'
     default_filename = f'configure_tidal.json'
-    field_types = {'tidal_source': TidalSource, 'constituents': [str]}
+    field_types = {'tidal_source': TidalSource, 'constituents': List[str]}
 
     def __init__(
         self,
         resource: PathLike = None,
         tidal_source: TidalSource = TidalSource.TPXO,
-        constituents: [str] = None,
+        constituents: List[str] = None,
         **kwargs,
     ):
         if constituents is None:
@@ -199,7 +199,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         end_date: datetime = None,
         fort22_filename: PathLike = None,
         dataframe: DataFrame = None,
-        attributes: {str: Any} = None,
+        attributes: Dict[str, Any] = None,
         **kwargs,
     ):
         if storm_id is None and fort22_filename is None and dataframe is None:
@@ -354,7 +354,7 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         nws: int = None,
         interval: timedelta = None,
         processors: int = None,
-        nems_parameters: {str: str} = None,
+        nems_parameters: Dict[str, str] = None,
         **kwargs,
     ):
         WindForcingJSON.__init__(self, nws=nws, **kwargs)
@@ -412,7 +412,7 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         nrs: int = None,
         interval: timedelta = None,
         processors: int = None,
-        nems_parameters: {str: str} = None,
+        nems_parameters: Dict[str, str] = None,
         **kwargs,
     ):
         WaveForcingJSON.__init__(self, nrs=nrs, **kwargs)

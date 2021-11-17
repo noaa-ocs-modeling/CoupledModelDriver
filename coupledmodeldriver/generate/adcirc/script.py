@@ -1,6 +1,7 @@
 from datetime import timedelta
 from os import PathLike
 from pathlib import Path
+from typing import List
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import JobScript
@@ -10,7 +11,7 @@ class AdcircJob(JobScript):
     def __init__(
         self,
         platform: Platform,
-        commands: [str],
+        commands: List[str],
         slurm_run_name: str = None,
         slurm_tasks: int = None,
         slurm_duration: timedelta = None,
@@ -50,7 +51,7 @@ class AdcircRunJob(AdcircJob):
         slurm_duration: timedelta = None,
         slurm_account: str = None,
         executable: PathLike = None,
-        commands: [str] = None,
+        commands: List[str] = None,
         **kwargs,
     ):
         super().__init__(
@@ -100,7 +101,7 @@ class AswipCommand:
 
     @property
     def path(self) -> Path:
-        """ path to `aswip` executable  """
+        """ path to ``aswip`` executable  """
         return self.__path
 
     @path.setter
@@ -112,7 +113,7 @@ class AswipCommand:
 
     @property
     def nws(self) -> int:
-        """ `-n` - ADCIRC NWS option """
+        """ ``-n`` - ADCIRC NWS option """
         return self.__nws
 
     @nws.setter
@@ -122,7 +123,7 @@ class AswipCommand:
     @property
     def isotachs(self) -> int:
         """
-        `-m` - methods using isotachs, one of [1, 2, 3, 4]
+        ``-m`` - methods using isotachs, one of [1, 2, 3, 4]
 
         1 = use the 34 isotach,
         2 = use the 64 isotach,
@@ -143,7 +144,7 @@ class AswipCommand:
     @property
     def rmax_approaches(self) -> int:
         """
-        `-z` - approaches solving for Rmax, one of [1, 2]
+        ``-z`` - approaches solving for Rmax, one of [1, 2]
 
         1 = only rotate wind vectors afterward,
         2 = rotate wind vectors before and afterwards (use this for NWS=20)
@@ -192,7 +193,7 @@ class AswipCommand:
 
 
 class AdcircSetupJob(AdcircJob):
-    """ script for performing domain decomposition with `adcprep` """
+    """ script for performing domain decomposition with ``adcprep`` """
 
     def __init__(
         self,
@@ -204,7 +205,7 @@ class AdcircSetupJob(AdcircJob):
         slurm_account: str = None,
         adcprep_path: PathLike = None,
         aswip_command: str = None,
-        commands: [str] = None,
+        commands: List[str] = None,
         **kwargs,
     ):
         if slurm_tasks is None:

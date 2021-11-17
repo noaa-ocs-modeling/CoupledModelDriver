@@ -3,7 +3,7 @@ from functools import partial
 import json
 from os import PathLike
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Dict, Iterable, Mapping
 
 from typepigeon import convert_value
 
@@ -68,7 +68,7 @@ def is_model_directory(directory: PathLike, model: ModelJSON = None) -> bool:
 
 def check_model_directory(
     directory: PathLike, verbose: bool = False, model: ModelJSON = None
-) -> {str: Any}:
+) -> Dict[str, Any]:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
@@ -85,7 +85,7 @@ def check_model_directory(
 
 def check_completion(
     directory: PathLike = None, verbose: bool = False, model: ModelJSON = None
-) -> {str: Any}:
+) -> Dict[str, Any]:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path) and (

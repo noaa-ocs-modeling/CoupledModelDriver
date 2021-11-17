@@ -7,17 +7,21 @@
 [![license](https://img.shields.io/github/license/noaa-ocs-modeling/CoupledModelDriver)](https://creativecommons.org/share-your-work/public-domain/cc0)
 [![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
 
-`coupledmodeldriver` generates an overlying job submission framework and configuration directories for NEMS-coupled coastal
+CoupledModelDriver generates an overlying job submission framework and configuration directories for NEMS-coupled coastal
 ocean model ensembles.
 
-It utilizes [`nemspy`](https://pypi.org/project/nemspy) to generate NEMS configuration files, shares common configurations
+```shell
+pip install coupledmodeldriver
+```
+
+It utilizes [NEMSpy](https://pypi.org/project/nemspy) to generate NEMS configuration files, shares common configurations
 between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
 
 ## Supported models and platforms
 
 - **models**
     - circulation models
-        - ADCIRC (uses [`adcircpy`](https://pypi.org/project/adcircpy))
+        - ADCIRC (uses [ADCIRCpy](https://pypi.org/project/adcircpy))
     - forcings
         - ATMESH
         - WW3DATA
@@ -36,7 +40,7 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
 - William Pringle - wpringle@anl.gov
 - Saeed Moghimi - saeed.moghimi@noaa.gov
 
-## Usage
+## Workflow
 
 ### 1. generate JSON configuration files
 

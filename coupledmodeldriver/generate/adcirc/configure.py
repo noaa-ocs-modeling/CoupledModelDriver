@@ -2,7 +2,7 @@ from copy import copy
 from datetime import datetime, timedelta
 from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
 from adcircpy import AdcircMesh, AdcircRun
 from nemspy import ModelingSystem
@@ -51,8 +51,8 @@ class ADCIRCRunConfiguration(RunConfiguration):
         modeled_timestep: timedelta,
         tidal_spinup_duration: timedelta = None,
         platform: Platform = None,
-        perturbations: {str: {str: Any}} = None,
-        forcings: [ForcingJSON] = None,
+        perturbations: Dict[str, Dict[str, Any]] = None,
+        forcings: List[ForcingJSON] = None,
         adcirc_processors: int = None,
         slurm_job_duration: timedelta = None,
         slurm_partition: str = None,
@@ -65,7 +65,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         """
         Generate required configuration files for an ADCIRC run.
 
-        :param mesh_directory: path to input mesh directory (containing `fort.13`, `fort.14`)
+        :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
         :param modeled_start_time: start time within the modeled system
         :param modeled_end_time: end time within the modeled system
         :param modeled_timestep: time interval within the modeled system
@@ -77,10 +77,10 @@ class ADCIRCRunConfiguration(RunConfiguration):
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
-        :param adcirc_executable: filename of compiled `adcirc`
-        :param adcprep_executable: filename of compiled `adcprep`
-        :param aswip_executable: filename of compiled `aswip`
-        :param source_filename: path to module file to `source`
+        :param adcirc_executable: filename of compiled ``adcirc``
+        :param adcprep_executable: filename of compiled ``adcprep``
+        :param aswip_executable: filename of compiled ``aswip``
+        :param source_filename: path to module file to ``source``
         """
 
         self.__adcircpy_mesh = None
@@ -141,7 +141,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
                 LOGGER.error(error)
 
     @property
-    def forcings(self) -> [ForcingJSON]:
+    def forcings(self) -> List[ForcingJSON]:
         return [
             configuration
             for configuration in self.configurations
@@ -210,7 +210,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
     @classmethod
     def from_configurations(
-        cls, configurations: [ConfigurationJSON]
+        cls, configurations: List[ConfigurationJSON]
     ) -> 'ADCIRCRunConfiguration':
         required = {configuration_class: None for configuration_class in cls.REQUIRED}
         supplementary = {
@@ -250,7 +250,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
     @classmethod
     def read_directory(
-        cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
+        cls, directory: PathLike, required: List[type] = None, supplementary: List[type] = None
     ) -> 'ADCIRCRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)
@@ -281,13 +281,13 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         modeled_end_time: datetime,
         modeled_timestep: timedelta,
         nems_interval: timedelta,
-        nems_connections: [str],
-        nems_mediations: [str],
-        nems_sequence: [str],
+        nems_connections: List[str],
+        nems_mediations: List[str],
+        nems_sequence: List[str],
         tidal_spinup_duration: timedelta = None,
         platform: Platform = None,
-        perturbations: {str: {str: Any}} = None,
-        forcings: [ForcingJSON] = None,
+        perturbations: Dict[str, Dict[str, Any]] = None,
+        forcings: List[ForcingJSON] = None,
         adcirc_processors: int = None,
         slurm_job_duration: timedelta = None,
         slurm_partition: str = None,
@@ -336,7 +336,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
         self['slurm'].tasks = self.nemspy_modeling_system.processors
 
     @property
-    def nemspy_entries(self) -> [ModelEntry]:
+    def nemspy_entries(self) -> List[ModelEntry]:
         return [
             configuration.nemspy_entry
             for configuration in self.configurations
@@ -354,7 +354,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
 
     @classmethod
     def from_configurations(
-        cls, configurations: [ConfigurationJSON]
+        cls, configurations: List[ConfigurationJSON]
     ) -> 'NEMSADCIRCRunConfiguration':
         instance = ADCIRCRunConfiguration.from_configurations(configurations)
         instance.__class__ = cls
@@ -375,7 +375,7 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
 
     @classmethod
     def read_directory(
-        cls, directory: PathLike, required: [type] = None, supplementary: [type] = None
+        cls, directory: PathLike, required: List[type] = None, supplementary: List[type] = None
     ) -> 'NEMSADCIRCRunConfiguration':
         if not isinstance(directory, Path):
             directory = Path(directory)

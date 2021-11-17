@@ -7,6 +7,7 @@ import shutil
 import sys
 import tarfile
 import traceback
+from typing import List
 
 import numpy
 from pyproj import CRS, Geod, Transformer
@@ -167,7 +168,7 @@ def download_mesh(url: str, directory: PathLike, overwrite: bool = False):
 
 
 def extract_download(
-    url: str, directory: PathLike, filenames: [str] = None, overwrite: bool = False
+    url: str, directory: PathLike, filenames: List[str] = None, overwrite: bool = False
 ):
     if not isinstance(directory, Path):
         directory = Path(directory)
@@ -198,19 +199,17 @@ def extract_download(
 
 
 class ProcessPoolExecutorStackTraced(ProcessPoolExecutor):
-    def submit(self, fn, *args, **kwargs):
-        """Submits the wrapped function instead of `fn`"""
+    """
+    preserves the traceback of any kind of raised exception
+    """
 
+    def submit(self, fn, *args, **kwargs):
         return super(ProcessPoolExecutorStackTraced, self).submit(
             self._function_wrapper, fn, *args, **kwargs,
         )
 
     @staticmethod
     def _function_wrapper(fn, *args, **kwargs):
-        """
-        Wraps `fn` in order to preserve the traceback of any kind of raised exception
-        """
-
         try:
             return fn(*args, **kwargs)
         except Exception:
