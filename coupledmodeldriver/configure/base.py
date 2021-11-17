@@ -10,10 +10,11 @@ from typing import Any, Union
 from adcircpy.server import SlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model.base import ModelEntry
+from typepigeon import convert_to_json, convert_value
 
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import SlurmEmailType
-from coupledmodeldriver.utilities import convert_to_json, convert_value, LOGGER
+from coupledmodeldriver.utilities import LOGGER
 
 
 class ConfigurationJSON(ABC):

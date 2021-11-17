@@ -5,6 +5,8 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from typepigeon import convert_value
+
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.adcirc.check import (
@@ -12,7 +14,7 @@ from coupledmodeldriver.generate.adcirc.check import (
     CompletionStatus,
     is_adcirc_run_directory,
 )
-from coupledmodeldriver.utilities import convert_value, ProcessPoolExecutorStackTraced
+from coupledmodeldriver.utilities import ProcessPoolExecutorStackTraced
 
 MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
 

@@ -1,8 +1,9 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
+from typepigeon import convert_value
+
 from coupledmodeldriver.generate import generate_adcirc_configuration
-from coupledmodeldriver.utilities import convert_value
 
 
 def parse_generate_adcirc_arguments():
