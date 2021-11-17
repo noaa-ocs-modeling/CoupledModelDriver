@@ -40,7 +40,7 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
 - William Pringle - wpringle@anl.gov
 - Saeed Moghimi - saeed.moghimi@noaa.gov
 
-## Workflow
+## Usage Example
 
 ### 1. generate JSON configuration files
 

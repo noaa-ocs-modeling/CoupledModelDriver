@@ -162,7 +162,7 @@ class ConfigurationJSON(ABC):
 
     def to_file(self, filename: PathLike = None, overwrite: bool = False):
         """
-        Write script to file.
+        write script to file
 
         :param filename: path to output file
         :param overwrite: whether to overwrite existing file

@@ -65,7 +65,7 @@ def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -
         '--modeled-start-time', required=True, help='start time within the modeled system'
     )
     argument_parser.add_argument(
-        '--modeled-duration', required=True, help=' end time within the modeled system'
+        '--modeled-duration', required=True, help='duration within the modeled system'
     )
     argument_parser.add_argument(
         '--modeled-timestep', required=True, help='time interval within the modeled system'
@@ -74,7 +74,7 @@ def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -
         '--nems-interval', default=None, help='main loop interval of NEMS run'
     )
     argument_parser.add_argument(
-        '--modulefile', default=None, help='path to module file to `source`'
+        '--modulefile', default=None, help='path to modulefile to source before model execution`'
     )
     argument_parser.add_argument(
         '--forcings',
@@ -87,10 +87,10 @@ def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -
         help='filename of compiled `adcirc` or `NEMS.x`',
     )
     argument_parser.add_argument(
-        '--adcprep-executable', default='adcprep', help='filename of compiled `adcprep`'
+        '--adcprep-executable', default='adcprep', help='filename of compiled `adcprep` (mesh decomposition)'
     )
     argument_parser.add_argument(
-        '--aswip-executable', default='aswip', help='filename of compiled `aswip`'
+        '--aswip-executable', default='aswip', help='filename of compiled `aswip` (preprocessing of best track / ATCF file)'
     )
     argument_parser.add_argument(
         '--adcirc-processors', default=11, help='numbers of processors to assign for ADCIRC'
@@ -332,6 +332,33 @@ def initialize_adcirc(
     overwrite: bool = None,
     verbose: bool = False,
 ):
+    """
+    creates a set of JSON configuration files according to the given parameters
+
+    :param platform: HPC platform for which to configure
+    :param mesh_directory: path to input mesh (`fort.13`, `fort.14`)
+    :param modeled_start_time: start time within the modeled system
+    :param modeled_duration: duration within the modeled system
+    :param modeled_timestep: time interval within the modeled system
+    :param tidal_spinup_duration: duration of tidal spinup in model time
+    :param perturbations: mapping of perturbation names to changed values
+    :param nems_interval: main loop interval of NEMS run
+    :param nems_connections: list of NEMS connections as strings (i.e. ``ATM -> OCN``)
+    :param nems_mediations: list of NEMS mediations, including functions
+    :param nems_sequence: list of NEMS entries in sequence order
+    :param modulefile: path to modulefile to source before model execution
+    :param forcings: list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi', 'ww3data']
+    :param adcirc_executable: filename of compiled ``adcirc` `or ``NEMS.x``
+    :param adcprep_executable: filename of compiled ``adcprep`` (mesh decomposition)
+    :param aswip_executable: filename of compiled ``aswip`` (preprocessing of best track / ATCF file)
+    :param adcirc_processors: numbers of processors to assign for ADCIRC
+    :param job_duration: wall clock time for job
+    :param output_directory: directory to which to write configuration files (defaults to ``.``)
+    :param absolute_paths: whether to use absolute paths in configuration
+    :param overwrite: whether to overwrite existing files
+    :param verbose: whether to log extra debugging messages
+    """
+
     logger = get_logger(
         'initialize_adcirc', console_level=logging.DEBUG if verbose else logging.INFO
     )

@@ -63,7 +63,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         source_filename: PathLike = None,
     ):
         """
-        Generate required configuration files for an ADCIRC run.
+        generate required configuration files for an ADCIRC run
 
         :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
         :param modeled_start_time: start time within the modeled system

@@ -41,7 +41,9 @@ class AdcircJob(JobScript):
 
 
 class AdcircRunJob(AdcircJob):
-    """ script for running ADCIRC via a NEMS configuration """
+    """
+    script for running ADCIRC via a NEMS configuration
+    """
 
     def __init__(
         self,
@@ -80,7 +82,9 @@ class AdcircRunJob(AdcircJob):
 
 
 class AswipCommand:
-    """ implement guidance and documentation from @WPringle """
+    """
+    implement guidance and documentation from @WPringle
+    """
 
     def __init__(
         self,
@@ -101,7 +105,9 @@ class AswipCommand:
 
     @property
     def path(self) -> Path:
-        """ path to ``aswip`` executable  """
+        """
+        path to ``aswip`` executable
+        """
         return self.__path
 
     @path.setter
@@ -113,7 +119,9 @@ class AswipCommand:
 
     @property
     def nws(self) -> int:
-        """ ``-n`` - ADCIRC NWS option """
+        """
+        ``-n`` - ADCIRC NWS option
+        """
         return self.__nws
 
     @nws.setter
@@ -193,7 +201,9 @@ class AswipCommand:
 
 
 class AdcircSetupJob(AdcircJob):
-    """ script for performing domain decomposition with ``adcprep`` """
+    """
+    script for performing domain decomposition with ``adcprep``
+    """
 
     def __init__(
         self,

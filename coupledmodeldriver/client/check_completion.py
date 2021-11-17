@@ -86,6 +86,15 @@ def check_model_directory(
 def check_completion(
     directory: PathLike = None, verbose: bool = False, model: ModelJSON = None
 ) -> Dict[str, Any]:
+    """
+    check the completion status of a running model
+
+    :param directory: directory containing model run configuration
+    :param verbose: list all errors and problems with runs
+    :param model: model that is running, one of: ``ADCIRC``
+    :return: JSON output of completion status
+    """
+
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path) and (

@@ -43,7 +43,7 @@ def generate_adcirc_configuration(
     parallel: bool = True,
 ):
     """
-    Generate ADCIRC run configuration for given variable values.
+    generate ADCIRC run configuration for given variable values
 
     :param configuration_directory: path containing JSON configuration files
     :param output_directory: path to store generated configuration files

@@ -49,7 +49,7 @@ class Script:
 
     def write(self, filename: PathLike, overwrite: bool = False):
         """
-        Write script to file.
+        write script to file
 
         :param filename: path to output file
         :param overwrite: whether to overwrite existing files
@@ -86,7 +86,7 @@ class JobScript(Script):
         write_slurm_directory: bool = False,
     ):
         """
-        Instantiate a new job script, to run locally or from a job manager.
+        instantiate a new job script, to run locally or from a job manager
 
         :param platform: HPC to run script on
         :param commands: shell commands to run in script
@@ -153,7 +153,7 @@ class JobScript(Script):
     @property
     def launcher(self) -> str:
         """
-        :return: command to start processes on target system (``srun``, ``ibrun``, etc.)
+        command to start processes on target system (``srun``, ``ibrun``, etc.)
         """
 
         return self.platform.value['launcher']
@@ -381,7 +381,9 @@ class EnsembleRunScript(Script):
 
 
 class EnsembleCleanupScript(Script):
-    """ script for cleaning up ADCIRC NEMS configurations """
+    """
+    script for cleaning up ADCIRC NEMS configurations
+    """
 
     def __init__(self, commands: List[str] = None):
         super().__init__(commands)
@@ -430,7 +432,7 @@ def bash_if_statement(
     condition: str, then: List[str], *else_then: List[List[str]], indentation: str = '    '
 ) -> str:
     """
-    Create a if statement in Bash syntax using the given condition, then statement(s), and else condition(s) / statement(s).
+    create a if statement in Bash syntax using the given condition, then statement(s), and else condition(s) / statement(s)
 
     :param condition: boolean condition to check
     :param then: Bash statement(s) to execute if condition is met
@@ -482,7 +484,7 @@ def bash_if_statement(
 
 def bash_for_loop(iteration: str, do: List[str], indentation='    ') -> str:
     """
-    Create a for loop in Bash syntax using the given variable, iterator, and do statement(s).
+    create a for loop in Bash syntax using the given variable, iterator, and do statement(s)
 
     :param iteration: for loop statement, such as ``for dir in ./*``
     :param do: Bash statement(s) to execute on every loop iteration
@@ -498,7 +500,7 @@ def bash_for_loop(iteration: str, do: List[str], indentation='    ') -> str:
 
 def bash_function(name: str, body: List[str], indentation: str = '    ') -> str:
     """
-    Create a function in Bash syntax using the given name and function statement(s).
+    create a function in Bash syntax using the given name and function statement(s)
 
     :param name: name of function
     :param body: Bash statement(s) making up function body

@@ -186,8 +186,6 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         **kwargs,
     ):
         """
-        Instantiate a new ADCIRCJSON configuration.
-
         :param adcirc_executable_path: file path to ``adcirc`` or `NEMS.x`
         :param adcprep_executable_path: file path to ``adcprep``
         :param aswip_executable_path: file path to ``aswip``

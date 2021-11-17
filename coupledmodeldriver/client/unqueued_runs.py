@@ -4,11 +4,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from coupledmodeldriver.client.check_completion import (
-    check_completion,
-    is_model_directory,
-    MODELS,
-)
+from coupledmodeldriver.client.check_completion import (MODELS, check_completion, is_model_directory)
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.utilities import LOGGER
 
@@ -59,6 +55,14 @@ def get_run_directories(directories: List[os.PathLike], model: ModelJSON = None)
 def get_unqueued_runs(
     directories: List[os.PathLike], model: ModelJSON = None, **kwargs
 ) -> Dict[str, Path]:
+    """
+    get runs in the local configuration that have not been submitted / queued to the job manager
+
+    :param directories: directory containing model run configuration
+    :param model: model that is running, one of: ``ADCIRC``
+    :return: mapping of unqueued run names to their directory paths
+    """
+
     runs = {
         directory.name: directory
         for directory in get_run_directories(directories, model=model)
@@ -85,6 +89,10 @@ def get_unqueued_runs(
 
 
 def main():
+    """
+    submit unqueued runs in the current configuration
+    """
+
     arguments = parse_missing_jobs_arguments()
     directories = arguments['directories']
     model = arguments['model']

@@ -67,7 +67,15 @@ WaveWatch III output file forcing configuration (``configure_ww3data.json``)
 abstract classes
 ----------------
 
+configuration
+^^^^^^^^^^^^^
 .. autoclass:: coupledmodeldriver.configure.base.ConfigurationJSON
 .. autoclass:: coupledmodeldriver.configure.base.AttributeJSON
+
+NEMS
+^^^^
 .. autoclass:: coupledmodeldriver.configure.base.NEMSCapJSON
+
+model
+^^^^^
 .. autoclass:: coupledmodeldriver.configure.models.ModelJSON
