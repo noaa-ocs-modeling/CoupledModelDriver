@@ -1,8 +1,6 @@
 Run Configurations
 ==================
 
-
-
 ADCIRC-only run configuration
 -----------------------------
 
