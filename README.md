@@ -7,8 +7,8 @@
 [![license](https://img.shields.io/github/license/noaa-ocs-modeling/CoupledModelDriver)](https://creativecommons.org/share-your-work/public-domain/cc0)
 [![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
 
-CoupledModelDriver generates an overlying job submission framework and configuration directories for NEMS-coupled coastal
-ocean model ensembles.
+CoupledModelDriver generates an overlying job submission framework and configuration directories for NEMS-coupled coastal ocean
+model ensembles.
 
 ```shell
 pip install coupledmodeldriver
@@ -17,7 +17,7 @@ pip install coupledmodeldriver
 It utilizes [NEMSpy](https://pypi.org/project/nemspy) to generate NEMS configuration files, shares common configurations
 between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
 
-## Supported models and platforms
+## supported models and platforms
 
 - **models**
     - circulation models
@@ -34,65 +34,19 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
         - Stampede2
         - Orion
 
-## Organization / Responsibility
+## organization / responsibility
 
 - Zachary Burnett (**lead**) - zachary.burnett@noaa.gov
 - William Pringle - wpringle@anl.gov
 - Saeed Moghimi - saeed.moghimi@noaa.gov
 
-## Usage Example
+## usage example
 
 ### 1. generate JSON configuration files
 
-`initialize_adcirc` creates JSON configuration files according to the given parameters:
-
-```
-usage: initialize_adcirc [-h] --platform PLATFORM --mesh-directory MESH_DIRECTORY --modeled-start-time MODELED_START_TIME
-                         --modeled-duration MODELED_DURATION --modeled-timestep MODELED_TIMESTEP
-                         [--nems-interval NEMS_INTERVAL] [--modulefile MODULEFILE] [--forcings FORCINGS]
-                         [--adcirc-executable ADCIRC_EXECUTABLE] [--adcprep-executable ADCPREP_EXECUTABLE]
-                         [--aswip-executable ASWIP_EXECUTABLE] [--adcirc-processors ADCIRC_PROCESSORS]
-                         [--job-duration JOB_DURATION] [--output-directory OUTPUT_DIRECTORY] [--skip-existing]
-                         [--absolute-paths] [--verbose]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --platform PLATFORM   HPC platform for which to configure
-  --mesh-directory MESH_DIRECTORY
-                        path to input mesh (`fort.13`, `fort.14`)
-  --modeled-start-time MODELED_START_TIME
-                        start time within the modeled system
-  --modeled-duration MODELED_DURATION
-                        end time within the modeled system
-  --modeled-timestep MODELED_TIMESTEP
-                        time interval within the modeled system
-  --nems-interval NEMS_INTERVAL
-                        main loop interval of NEMS run
-  --modulefile MODULEFILE
-                        path to module file to `source`
-  --forcings FORCINGS   comma-separated list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi',
-                        'ww3data']
-  --adcirc-executable ADCIRC_EXECUTABLE
-                        filename of compiled `adcirc` or `NEMS.x`
-  --adcprep-executable ADCPREP_EXECUTABLE
-                        filename of compiled `adcprep`
-  --aswip-executable ASWIP_EXECUTABLE
-                        filename of compiled `aswip`
-  --adcirc-processors ADCIRC_PROCESSORS
-                        numbers of processors to assign for ADCIRC
-  --job-duration JOB_DURATION
-                        wall clock time for job
-  --output-directory OUTPUT_DIRECTORY
-                        directory to which to write configuration files (defaults to `.`)
-  --skip-existing       skip existing files
-  --absolute-paths      write paths as absolute in configuration
-  --verbose             show more verbose log messages
-```
-
-ADCIRC run options that are not exposed by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly
-modifying the JSON files.
-
-The following command creates JSON files for coupling `(ATMESH + WW3DATA) -> ADCIRC` over a small Shinnecock Inlet mesh:
+`initialize_adcirc` creates JSON configuration files according to the given parameters. ADCIRC run options that are not exposed
+by this command, such as `runs` or `gwce_solution_scheme`, can be specified by directly modifying the JSON files. The following
+creates JSON files for coupling `(ATMESH + WW3DATA) -> ADCIRC` over a small Shinnecock Inlet mesh:
 
 ```shell
 initialize_adcirc \
@@ -115,100 +69,7 @@ initialize_adcirc \
     --ww3data-path /scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike/ww3.Constant.20151214_sxy_ike_date.nc
 ```
 
-Alternatively, the following Python code creates the same configuration:
-
-```python
-from datetime import datetime, timedelta
-from pathlib import Path
-
-from adcircpy.forcing.tides import Tides
-from adcircpy.forcing.tides.tides import TidalSource
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
-from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-
-from coupledmodeldriver import Platform
-from coupledmodeldriver.generate import NEMSADCIRCRunConfiguration
-
-# directory to which to write configuration
-OUTPUT_DIRECTORY = 'hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/'
-
-# start and end times for model
-MODELED_START_TIME = datetime(year=2008, month=8, day=23)
-MODELED_DURATION = timedelta(days=14.5)
-MODELED_TIMESTEP = timedelta(seconds=2)
-TIDAL_SPINUP_DURATION = timedelta(days=12.5)
-NEMS_INTERVAL = timedelta(hours=1)
-
-# directories containing forcings and mesh
-MESH_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/meshes/shinnecock/v1.0'
-FORCINGS_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/shinnecock/ike'
-HAMTIDE_DIRECTORY = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/hamtide'
-TPXO_FILENAME = '/scratch2/COASTAL/coastal/save/shared/models/forcings/tides/h_tpxo9.v1.nc'
-
-# connections between coupled components
-NEMS_CONNECTIONS = ['ATM -> OCN', 'WAV -> OCN']
-NEMS_SEQUENCE = [
-    'ATM -> OCN',
-    'WAV -> OCN',
-    'ATM',
-    'WAV',
-    'OCN',
-]
-
-# platform-specific parameters
-PLATFORM = Platform.HERA
-ADCIRC_PROCESSORS = 1 * PLATFORM.value['processors_per_node']
-NEMS_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ALLBIN_INSTALL/NEMS-adcirc-atmesh-ww3data.x'
-ADCPREP_EXECUTABLE = '/scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ALLBIN_INSTALL/adcprep'
-MODULEFILE = '/scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/modulefiles/envmodules_intel.hera'
-SLURM_JOB_DURATION = timedelta(hours=6)
-
-if __name__ == '__main__':
-    # initialize `adcircpy` forcing objects
-    FORCINGS_DIRECTORY = Path(FORCINGS_DIRECTORY)
-    tidal_forcing = Tides(tidal_source=TidalSource.TPXO, resource=TPXO_FILENAME)
-    tidal_forcing.use_all()
-    wind_forcing = AtmosphericMeshForcing(
-        filename=FORCINGS_DIRECTORY / 'wind_atm_fin_ch_time_vec.nc',
-        nws=17,
-        interval_seconds=3600,
-    )
-    wave_forcing = WaveWatch3DataForcing(
-        filename=FORCINGS_DIRECTORY / 'ww3.Constant.20151214_sxy_ike_date.nc',
-        nrs=5,
-        interval_seconds=3600,
-    )
-    forcings = [tidal_forcing, wind_forcing, wave_forcing]
-
-    # initialize configuration object
-    configuration = NEMSADCIRCRunConfiguration(
-        mesh_directory=MESH_DIRECTORY,
-        modeled_start_time=MODELED_START_TIME,
-        modeled_end_time=MODELED_START_TIME + MODELED_DURATION,
-        modeled_timestep=MODELED_TIMESTEP,
-        nems_interval=NEMS_INTERVAL,
-        nems_connections=NEMS_CONNECTIONS,
-        nems_mediations=None,
-        nems_sequence=NEMS_SEQUENCE,
-        tidal_spinup_duration=TIDAL_SPINUP_DURATION,
-        platform=PLATFORM,
-        perturbations=None,
-        forcings=forcings,
-        adcirc_processors=ADCIRC_PROCESSORS,
-        slurm_partition=None,
-        slurm_job_duration=SLURM_JOB_DURATION,
-        slurm_email_address=None,
-        nems_executable=NEMS_EXECUTABLE,
-        adcprep_executable=ADCPREP_EXECUTABLE,
-        source_filename=MODULEFILE,
-    )
-
-    # write configuration to `*.json` files
-    configuration.write_directory(OUTPUT_DIRECTORY, overwrite=False)
-```
-
-Either method will create the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/` with the following JSON
-configuration files:
+This will create the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/` with the following JSON configuration files:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
@@ -222,33 +83,20 @@ configuration files:
 ```
 
 These files contain relevant configuration values for an ADCIRC run. You will likely wish to change these values to alter the
-resulting run, before generating the actual model configuration.
+resulting run, before generating the actual model configuration. For instance, NEMS connections and the run sequence need to be
+manually specified in `configure_nems.json`.
 
 ### 2. generate model configuration files
 
-`generate_adcirc` reads a set of JSON configuration files and generates an ADCIRC run configuration from the options read from
-these files:
-
-```
-usage: generate_adcirc [-h] [--configuration-directory CONFIGURATION_DIRECTORY] [--output-directory OUTPUT_DIRECTORY] [--relative-paths] [--skip-existing] [--verbose]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --configuration-directory CONFIGURATION_DIRECTORY
-                        path containing JSON configuration files
-  --output-directory OUTPUT_DIRECTORY
-                        path to store generated configuration files
-  --relative-paths      use relative paths in output configuration
-  --skip-existing       skip existing files
-  --verbose             show more verbose log messages
-```
+`generate_adcirc` generates an ADCIRC run configuration (`fort.14`, `fort.15`, etc.) using options read from the JSON
+configuration files (generated in the previous step).
 
 ```shell
 cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
 generate_adcirc
 ```
 
-The resulting configuration will have the following structure:
+The resulting configuration will look like this:
 
 ```
 📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
@@ -289,7 +137,8 @@ The resulting configuration will have the following structure:
 
 ### 3. run the model
 
-Run the following to submit the model run to the Slurm job queue:
+The previous step will also have generated a script called `./run_hera.sh`. You can run it to submit the model run to the Slurm
+job queue:
 
 ```shell
 ./run_hera.sh
@@ -309,18 +158,7 @@ The queue will have the following jobs added:
 
 `check_completion` checks the completion status of a running model directory.
 
-```
-usage: check_completion [-h] [--model MODEL] [--verbose] [directory ...]
-
-positional arguments:
-  directory      directory containing model run configuration
-
-optional arguments:
-  -h, --help     show this help message and exit
-  --model MODEL  model that is running, one of: `ADCIRC`
-  --verbose      list all errors and problems with runs
-```
-
 ```shell
 check_completion hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
 ```
+
