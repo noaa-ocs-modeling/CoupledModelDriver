@@ -1,5 +1,0 @@
-dunamai
-m2r2
-sphinx
-sphinx-rtd-theme
-sphinxcontrib-programoutput

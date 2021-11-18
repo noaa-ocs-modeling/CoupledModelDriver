@@ -186,7 +186,7 @@ setup(
     extras_require={
         'testing': ['pytest', 'pytest-cov', 'pytest-xdist', 'wget'],
         'development': ['flake8', 'isort', 'oitnb'],
-        'documentation': ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme'],
+        'documentation': ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput'],
     },
     entry_points={
         'console_scripts': [
