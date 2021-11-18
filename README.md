@@ -159,6 +159,114 @@ The queue will have the following jobs added:
 `check_completion` checks the completion status of a running model directory.
 
 ```shell
-check_completion hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
+cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
+check_completion
 ```
 
+```json
+{
+    "hera_shinnecock_ike_spinup_tidal_atmesh_ww3data": {
+        "spinup": "running - 15%",
+        "runs": "not_started - 0%"
+    }
+}
+```
+
+you can also pass a specific directory (or several directories):
+
+```shell
+check_completion spinup
+```
+
+```json
+{
+    "spinup": "running - 27%"
+}
+```
+
+```shell
+cd run_20211027_florence_besttrack_250msubset_quadrature
+check_completion runs/*_13
+```
+
+```json
+{
+    "vortex_4_variable_perturbation_13": "completed - 100.0%",
+    "vortex_4_variable_quadrature_13": "not_started - 0%"
+}
+```
+
+if a run has an error, you can pass `--verbose` to see detailed logs:
+
+```shell
+check_completion spinup
+```
+
+```json
+{
+    "spinup": "error - 0%"
+}
+```
+
+```shell
+check_completion spinup --verbose
+```
+
+```json
+{
+    "spinup": {
+        "status": "error",
+        "progress": "0%",
+        "error": {
+            "ADCIRC_SETUP_SPINUP.err.log": [
+                "forrtl: severe (24): end-of-file during read, unit -4, file /proc/92195/fd/0\n",
+                "Image              PC                Routine            Line        Source             \n",
+                "adcprep            000000000069A72E  Unknown               Unknown  Unknown\n",
+                "adcprep            00000000006CBAAF  Unknown               Unknown  Unknown\n",
+                "adcprep            000000000050A5CB  openprepfiles_           6996  prep.F\n",
+                "adcprep            0000000000507F22  prep13_                   753  prep.F\n",
+                "adcprep            000000000042E2E9  prepinput_                717  adcprep.F\n",
+                "adcprep            000000000042BCDB  MAIN__                    239  adcprep.F\n",
+                "adcprep            000000000040B65E  Unknown               Unknown  Unknown\n",
+                "libc-2.17.so       00002AAEC02EB555  __libc_start_main     Unknown  Unknown\n",
+                "adcprep            000000000040B569  Unknown               Unknown  Unknown\n",
+                "srun: error: h24c51: task 0: Exited with exit code 24\n",
+                "srun: launch/slurm: _step_signal: Terminating StepId=25366266.1\n"
+            ]
+        }
+    }
+}
+```
+
+```shell
+check_completion runs
+```
+
+```json
+{
+    "spinup": "failed - 0%"
+}
+```
+
+```shell
+check_completion runs --verbose
+```
+
+```json
+{
+    "runs": {
+        "status": "failed",
+        "progress": "0%",
+        "failed": {
+            "fort.16": "ADCIRC output file `fort.16` not found"
+        },
+        "error": {
+            "ADCIRC_SETUP_unperturbed.err.log": [
+                "slurmstepd: error: execve(): /scratch2/COASTAL/coastal/save/shared/repositories/CoastalApp/ADCIRC/ALLBIN_INSTALL/adcprep: No such file or directory\n",
+                "srun: error: h18c49: task 0: Exited with exit code 2\n",
+                "srun: launch/slurm: _step_signal: Terminating StepId=25366268.0\n"
+            ]
+        }
+    }
+}
+```
