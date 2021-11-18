@@ -69,7 +69,7 @@ MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
 if len(MISSING_DEPENDENCIES) > 0:
     print(
-        f'found {len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) missing dependencies'
+        f'{len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) dependencies are missing'
     )
 
 if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
