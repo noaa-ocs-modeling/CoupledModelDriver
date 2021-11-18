@@ -72,7 +72,7 @@ initialize_adcirc \
 This will create the directory `hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/` with the following JSON configuration files:
 
 ```
-📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
+📂 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
 ┣ 📜 configure_adcirc.json
 ┣ 📜 configure_atmesh.json
 ┣ 📜 configure_modeldriver.json
@@ -99,7 +99,7 @@ generate_adcirc
 The resulting configuration will look like this:
 
 ```
-📦 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
+📂 hera_shinnecock_ike_spinup_tidal_atmesh_ww3data/
 ┣ 📜 configure_adcirc.json
 ┣ 📜 configure_atmesh.json
 ┣ 📜 configure_modeldriver.json
