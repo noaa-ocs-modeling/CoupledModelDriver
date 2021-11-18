@@ -41,7 +41,6 @@ CLI Commands
 
 ``check_completion`` - check status of currently running model
 --------------------------------------------------------------
-
 .. code-block:: shell
 
     cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data
@@ -55,7 +54,6 @@ CLI Commands
 
 ``unqueued_runs`` - find and submit runs that haven't been queued to job manager
 --------------------------------------------------------------------------------
-
 .. code-block:: shell
 
     cd hera_shinnecock_ike_spinup_tidal_atmesh_ww3data

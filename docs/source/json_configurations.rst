@@ -21,52 +21,42 @@ Then, the configuration can be regenerated with ``generate_adcirc``.
 
 model driver configuration (``configure_modeldriver.json``)
 -----------------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.base.NEMSJSON
 
 model driver configuration (``configure_modeldriver.json``)
 -----------------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.base.SlurmJSON
 
 NEMS configuration (``configure_nems.json``)
 --------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.base.ModelDriverJSON
 
 ADCIRC configuration (``configure_adcirc.json``)
 ------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.generate.adcirc.base.ADCIRCJSON
 
 tidal forcing configuration (``configure_tidal.json``)
 ------------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.forcings.base.TidalForcingJSON
 
 best track forcing configuration (``configure_besttrack.json``)
 ---------------------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.forcings.base.BestTrackForcingJSON
 
 OWI forcing configuration (``configure_owi.json``)
 --------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.forcings.base.OWIForcingJSON
 
 atmosphere combined mesh (ATMESH) forcing configuration (``configure_atmesh.json``)
 -----------------------------------------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.forcings.base.ATMESHForcingJSON
 
 WaveWatch III output file forcing configuration (``configure_ww3data.json``)
 ----------------------------------------------------------------------------
-
 .. autoclass:: coupledmodeldriver.configure.forcings.base.WW3DATAForcingJSON
 
 abstract classes
 ----------------
-
 configuration
 ^^^^^^^^^^^^^
 .. autoclass:: coupledmodeldriver.configure.base.ConfigurationJSON
