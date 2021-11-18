@@ -341,7 +341,10 @@ class ModelDriverJSON(ConfigurationJSON):
     }
 
     def __init__(
-        self, platform: Platform, perturbations: Dict[str, Dict[str, Dict[str, Any]]] = None, **kwargs
+        self,
+        platform: Platform,
+        perturbations: Dict[str, Dict[str, Dict[str, Any]]] = None,
+        **kwargs,
     ):
         """
         :param platform: platform on which to run
@@ -403,7 +406,9 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
         'nems_parameters': Dict[str, str],
     }
 
-    def __init__(self, processors: int = None, nems_parameters: Dict[str, str] = None, **kwargs):
+    def __init__(
+        self, processors: int = None, nems_parameters: Dict[str, str] = None, **kwargs
+    ):
         if processors is None:
             processors = self.default_processors
         if nems_parameters is None:

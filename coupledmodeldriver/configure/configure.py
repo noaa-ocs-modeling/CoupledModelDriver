@@ -142,7 +142,9 @@ class RunConfiguration(ABC):
             configuration.to_file(directory, overwrite=overwrite)
 
     @classmethod
-    def from_configurations(cls, configurations: List[ConfigurationJSON]) -> 'RunConfiguration':
+    def from_configurations(
+        cls, configurations: List[ConfigurationJSON]
+    ) -> 'RunConfiguration':
         return cls(configurations)
 
 

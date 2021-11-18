@@ -197,7 +197,7 @@ class ADCIRCRunConfiguration(RunConfiguration):
         ]
         if 'nems' in self:
             files_to_write.extend(
-                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc', ]
+                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
             )
         if self.use_aswip:
             files_to_write.append('fort.22')

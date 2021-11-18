@@ -27,7 +27,9 @@ def tpxo_filename() -> Path:
 
 
 def check_reference_directory(
-    test_directory: PathLike, reference_directory: PathLike, skip_lines: Dict[str, List[int]] = None
+    test_directory: PathLike,
+    reference_directory: PathLike,
+    skip_lines: Dict[str, List[int]] = None,
 ):
     if not isinstance(test_directory, Path):
         test_directory = Path(test_directory)

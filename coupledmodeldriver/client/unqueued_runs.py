@@ -4,7 +4,11 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from coupledmodeldriver.client.check_completion import (MODELS, check_completion, is_model_directory)
+from coupledmodeldriver.client.check_completion import (
+    check_completion,
+    is_model_directory,
+    MODELS,
+)
 from coupledmodeldriver.configure import ModelJSON
 from coupledmodeldriver.utilities import LOGGER
 

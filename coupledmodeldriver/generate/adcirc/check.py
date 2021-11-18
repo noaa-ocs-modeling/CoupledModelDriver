@@ -42,7 +42,9 @@ def is_adcirc_run_directory(directory: PathLike = None) -> bool:
         return True
 
 
-def check_adcirc_completion(directory: PathLike = None, verbose: bool = False) -> Dict[str, Any]:
+def check_adcirc_completion(
+    directory: PathLike = None, verbose: bool = False
+) -> Dict[str, Any]:
     """
     return the status of ADCIRC execution within the given directory
 

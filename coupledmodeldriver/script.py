@@ -306,7 +306,9 @@ class EnsembleRunScript(Script):
     default filename is ``run_<platform>.sh``
     """
 
-    def __init__(self, platform: Platform, run_spinup: bool = True, commands: List[str] = None):
+    def __init__(
+        self, platform: Platform, run_spinup: bool = True, commands: List[str] = None
+    ):
         self.platform = platform
         self.run_spinup = run_spinup
         super().__init__(commands)

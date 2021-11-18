@@ -43,7 +43,7 @@ def missing_packages(required_packages: Dict[str, List[str]]) -> Dict[str, List[
             required_package
             for required_package in required_packages
             if re.split('<|<=|==|>=|>', required_package)[0].lower()
-               not in installed_packages()
+            not in installed_packages()
         ]
 
 
@@ -68,9 +68,7 @@ print(f'using version {version}')
 MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
 if len(MISSING_DEPENDENCIES) > 0:
-    print(
-        f'{len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) dependencies are missing'
-    )
+    print(f'{len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) dependencies are missing')
 
 if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
     print(f'found conda environment at {sys.prefix}')
@@ -90,10 +88,10 @@ if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
             non_conda_packages = [
                 package.replace('-', '').strip()
                 for package in output[
-                               output.index(package_not_found_start): output.index(
-                                   package_not_found_stop
-                               )
-                               ].splitlines()[2:]
+                    output.index(package_not_found_start) : output.index(
+                        package_not_found_stop
+                    )
+                ].splitlines()[2:]
             ]
             conda_packages = [
                 package
@@ -186,7 +184,13 @@ setup(
     extras_require={
         'testing': ['pytest', 'pytest-cov', 'pytest-xdist', 'wget'],
         'development': ['flake8', 'isort', 'oitnb'],
-        'documentation': ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput'],
+        'documentation': [
+            'dunamai',
+            'm2r2',
+            'sphinx',
+            'sphinx-rtd-theme',
+            'sphinxcontrib-programoutput',
+        ],
     },
     entry_points={
         'console_scripts': [

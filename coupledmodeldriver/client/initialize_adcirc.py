@@ -43,7 +43,9 @@ DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
-def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -> Dict[str, Any]:
+def parse_initialize_adcirc_arguments(
+    extra_arguments: Dict[str, type] = None
+) -> Dict[str, Any]:
     if extra_arguments is None:
         extra_arguments = {}
     elif not isinstance(extra_arguments, Mapping):
@@ -74,7 +76,9 @@ def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -
         '--nems-interval', default=None, help='main loop interval of NEMS run'
     )
     argument_parser.add_argument(
-        '--modulefile', default=None, help='path to modulefile to source before model execution`'
+        '--modulefile',
+        default=None,
+        help='path to modulefile to source before model execution`',
     )
     argument_parser.add_argument(
         '--forcings',
@@ -87,10 +91,14 @@ def parse_initialize_adcirc_arguments(extra_arguments: Dict[str, type] = None) -
         help='filename of compiled `adcirc` or `NEMS.x`',
     )
     argument_parser.add_argument(
-        '--adcprep-executable', default='adcprep', help='filename of compiled `adcprep` (mesh decomposition)'
+        '--adcprep-executable',
+        default='adcprep',
+        help='filename of compiled `adcprep` (mesh decomposition)',
     )
     argument_parser.add_argument(
-        '--aswip-executable', default='aswip', help='filename of compiled `aswip` (preprocessing of best track / ATCF file)'
+        '--aswip-executable',
+        default='aswip',
+        help='filename of compiled `aswip` (preprocessing of best track / ATCF file)',
     )
     argument_parser.add_argument(
         '--adcirc-processors', default=11, help='numbers of processors to assign for ADCIRC'
@@ -428,7 +436,10 @@ def initialize_adcirc(
 
 
 def get_argument(
-    argument: str, arguments: Dict[str, str] = None, required: bool = False, message: str = None
+    argument: str,
+    arguments: Dict[str, str] = None,
+    required: bool = False,
+    message: str = None,
 ) -> str:
     if message is None:
         message = f'enter value for "{argument}": '

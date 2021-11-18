@@ -21,7 +21,11 @@ from coupledmodeldriver.generate.adcirc.script import (
     AswipCommand,
 )
 from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
-from coupledmodeldriver.utilities import (ProcessPoolExecutorStackTraced, create_symlink, get_logger)
+from coupledmodeldriver.utilities import (
+    create_symlink,
+    get_logger,
+    ProcessPoolExecutorStackTraced,
+)
 
 LOGGER = get_logger('cplmdldrv')
 
