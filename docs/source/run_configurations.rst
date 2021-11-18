@@ -1,7 +1,7 @@
 Run Configurations
 ==================
 
-The :code:`RunConfiguration` is the underlying class used by :code:`initialize_adcirc` command, and stores individual JSON configurations (`configure_adcirc.json`, `configure_nems.json`, etc.) as Python :code:`ConfigurationJSON` objects.
+The :code:`RunConfiguration` is the underlying class used by the :code:`initialize_adcirc` command, and stores individual JSON configurations (``configure_adcirc.json``, ``configure_nems.json``, etc.) as Python :code:`ConfigurationJSON` objects.
 
 The following Python script generates a set of JSON configuration files, encapsulating all values for a NEMS+ADCIRC+tidal+WW3DATA run, to be submitted via Slurm to Hera.
 
