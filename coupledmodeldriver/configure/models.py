@@ -18,6 +18,7 @@ class Model(Enum):
 class ModelJSON(ConfigurationJSON, ABC):
     """
     abstraction of a model configuration
+
     stores model information
     """
 

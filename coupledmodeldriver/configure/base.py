@@ -218,6 +218,7 @@ class ConfigurationJSON(ABC):
 class SlurmJSON(ConfigurationJSON):
     """
     Slurm configuration parameters in ``configure_slurm.json``
+
     stores account and partition names, wall-clock time, email notification, etc.
     """
 
@@ -330,6 +331,7 @@ class SlurmJSON(ConfigurationJSON):
 class ModelDriverJSON(ConfigurationJSON):
     """
     model driver configuration in ``configure_modeldriver.json``
+
     stores platform information and a dictionary of perturbations of other configurations per each run
     """
 
@@ -397,6 +399,7 @@ class AttributeJSON(ConfigurationJSON, ABC):
 class NEMSCapJSON(ConfigurationJSON, ABC):
     """
     abtraction of an individual model configuration that implements a NEMS cap
+
     stores NEMS-assigned processors and NEMS cap parameters
     """
 
@@ -430,6 +433,7 @@ class NEMSCapJSON(ConfigurationJSON, ABC):
 class NEMSJSON(ConfigurationJSON):
     """
     NEMS configuration in ``configure_nems.json``
+
     stores NEMS executable path, modeled times / interval, connections / mediations, and the order of the run sequence
     """
 

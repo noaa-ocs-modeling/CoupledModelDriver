@@ -23,7 +23,7 @@ model driver configuration (``configure_modeldriver.json``)
 -----------------------------------------------------------
 .. autoclass:: coupledmodeldriver.configure.base.NEMSJSON
 
-model driver configuration (``configure_modeldriver.json``)
+Slurm job manager configuration (``configure_slurm.json``)
 -----------------------------------------------------------
 .. autoclass:: coupledmodeldriver.configure.base.SlurmJSON
 

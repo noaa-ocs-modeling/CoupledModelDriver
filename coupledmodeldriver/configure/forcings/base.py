@@ -109,6 +109,7 @@ class FileForcingJSON(ForcingJSON, ABC):
 class TidalForcingJSON(FileForcingJSON):
     """
     tidal configuration in ``configure_tidal.json``
+
     stores tidal database and constituent information
     """
 
@@ -179,6 +180,12 @@ class TidalForcingJSON(FileForcingJSON):
 
 
 class WindForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a wind forcing configuration
+
+    stores NWS parameter
+    """
+
     default_nws: int
     field_types = {'nws': int}
 
@@ -205,7 +212,8 @@ BESTTRACK_ATTRIBUTES = [
 class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     """
     storm best track configuration in ``configure_besttrack.json``
-    stores storm ID, forcing read interval, start and end dates, and optional path to `fort.22` file
+
+    stores storm ID, NWS parameter, forcing read interval, start and end dates, and optionally a path to an existing `fort.22` file
     """
 
     name = 'BestTrack'
@@ -355,6 +363,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
     """
     OWI forcing configuration in ``configure_owi.json``
+
     stores NWS parameter and forcing read interval
     """
 
@@ -379,6 +388,7 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
     """
     atmospheric mesh (ATMESH) configuration in ``configure_atmesh.json``
+
     stores NWS parameter, forcing read interval, and optionally NEMS parameters
     """
 
@@ -426,6 +436,7 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
 class WaveForcingJSON(ForcingJSON, ABC):
     """
     abstraction of a wave forcing configuration
+
     stores NRS parameter (hundredths place of NWS parameter in ``fort.15``)
     """
 
@@ -447,6 +458,7 @@ class WaveForcingJSON(ForcingJSON, ABC):
 class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
     """
     WaveWatch III output file configuration in ``configure_ww3data.json``
+
     stores NRS parameter, forcing read interval, and optionally NEMS parameters
     """
 
