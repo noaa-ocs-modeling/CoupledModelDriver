@@ -46,7 +46,7 @@ metadata = config.read_configuration('../../setup.cfg')['metadata']
 
 project = metadata['name']
 author = metadata['author']
-copyright = f'2021, {author}'
+copyright = f'2021, Office of Coast Survey (OCS), National Oceanic and Atmospheric Administration (NOAA)'
 
 # The full version, including alpha/beta/rc tags
 try:
