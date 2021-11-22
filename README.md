@@ -36,6 +36,8 @@ between runs, and organizes spinup and mesh partition into separate jobs for dep
 
 ## organization / responsibility
 
+CoupledModelDriver is developed for the COASTAL Act project by the [Coastal Marine Modeling Branch (CMMB)](https://coastaloceanmodels.noaa.gov) of the Office of Coast Survey (OCS), a part of the [National Oceanic and Atmospheric Administration (NOAA)](https://www.noaa.gov), an agency of the United States federal government.
+
 - Zachary Burnett (**lead**) - zachary.burnett@noaa.gov
 - William Pringle - wpringle@anl.gov
 - Saeed Moghimi - saeed.moghimi@noaa.gov
