@@ -339,7 +339,7 @@ def initialize_adcirc(
     absolute_paths: bool = True,
     overwrite: bool = None,
     verbose: bool = False,
-):
+) -> ADCIRCRunConfiguration:
     """
     creates a set of JSON configuration files according to the given parameters
 
@@ -433,6 +433,8 @@ def initialize_adcirc(
 
     generation_job_script = EnsembleGenerationJob(platform=platform)
     generation_job_script.write(filename=output_directory / 'generate.job', overwrite=True)
+
+    return configuration
 
 
 def get_argument(

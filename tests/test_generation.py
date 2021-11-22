@@ -8,13 +8,8 @@ import pytest
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.client.initialize_adcirc import initialize_adcirc
-from coupledmodeldriver.generate import generate_adcirc_configuration
-from tests import (
-    check_reference_directory,
-    INPUT_DIRECTORY,
-    OUTPUT_DIRECTORY,
-    REFERENCE_DIRECTORY,
-)
+from coupledmodeldriver.generate import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration, generate_adcirc_configuration
+from tests import (INPUT_DIRECTORY, OUTPUT_DIRECTORY, REFERENCE_DIRECTORY, check_reference_directory)
 
 
 def test_hera_adcirc():
@@ -897,3 +892,122 @@ def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
             'nems.configure': [0],
         },
     )
+
+
+def test_adcirc_run_configuration():
+    output_directory = OUTPUT_DIRECTORY / 'test_adcirc_run_configuration'
+
+    platform = Platform.HERA
+    mesh = 'shinnecock'
+    adcirc_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = timedelta(days=12.5)
+    job_duration = timedelta(hours=6)
+
+    mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
+
+    tidal_forcing = Tides(tidal_source=TidalSource.HAMTIDE)
+    tidal_forcing.use_all()
+    forcings = [tidal_forcing]
+
+    configuration = initialize_adcirc(
+        platform=platform,
+        mesh_directory=mesh_directory,
+        modeled_start_time=modeled_start_time,
+        modeled_duration=modeled_duration,
+        modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
+        nems_interval=None,
+        nems_connections=None,
+        nems_mediations=None,
+        nems_sequence=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        forcings=forcings,
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'padcirc',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
+    )
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
+
+    parsed_configuration = ADCIRCRunConfiguration.from_model_configuration_directory(output_directory)
+
+    assert parsed_configuration == configuration
+
+
+def test_nems_adcirc_run_configuration():
+    output_directory = OUTPUT_DIRECTORY / 'test_nems_adcirc_run_configuration'
+
+    platform = Platform.HERA
+    mesh = 'shinnecock'
+    storm = 'ike'
+    adcirc_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = None
+    nems_interval = timedelta(hours=1)
+    job_duration = timedelta(hours=6)
+
+    mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
+    forcings_directory = INPUT_DIRECTORY / 'forcings' / storm
+
+    nems_connections = ['ATM -> OCN', 'WAV -> OCN']
+    nems_mediations = None
+    nems_sequence = [
+        'ATM -> OCN',
+        'WAV -> OCN',
+        'ATM',
+        'WAV',
+        'OCN',
+    ]
+
+    wind_forcing = AtmosphericMeshForcing(
+        filename=forcings_directory / 'wind_atm_fin_ch_time_vec.nc',
+        nws=17,
+        interval_seconds=3600,
+    )
+    wave_forcing = WaveWatch3DataForcing(
+        filename=forcings_directory / 'ww3.Constant.20151214_sxy_ike_date.nc',
+        nrs=5,
+        interval_seconds=3600,
+    )
+    forcings = [wind_forcing, wave_forcing]
+
+    configuration = initialize_adcirc(
+        platform=platform,
+        mesh_directory=mesh_directory,
+        modeled_start_time=modeled_start_time,
+        modeled_duration=modeled_duration,
+        modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
+        nems_interval=nems_interval,
+        nems_connections=nems_connections,
+        nems_mediations=nems_mediations,
+        nems_sequence=nems_sequence,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        forcings=forcings,
+        adcirc_executable=INPUT_DIRECTORY / 'bin' / 'NEMS.x',
+        adcprep_executable=INPUT_DIRECTORY / 'bin' / 'adcprep',
+        aswip_executable=None,
+        adcirc_processors=adcirc_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
+    )
+    generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
+
+    parsed_configuration = NEMSADCIRCRunConfiguration.from_model_configuration_directory(output_directory)
+
+    assert parsed_configuration == configuration

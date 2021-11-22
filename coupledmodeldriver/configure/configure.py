@@ -1,15 +1,15 @@
-from abc import ABC
 from copy import copy
 from os import PathLike
 from pathlib import Path
 from typing import Any, Collection, Dict, List, Mapping, Set, Union
 
+from coupledmodeldriver.configure import ConfigurationJSON
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON
 from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
 from coupledmodeldriver.utilities import LOGGER
 
 
-class RunConfiguration(ABC):
+class RunConfiguration:
     """
     abstraction of a set of model run configurations, encapsulated in JSON files
     """
@@ -146,6 +146,10 @@ class RunConfiguration(ABC):
         cls, configurations: List[ConfigurationJSON]
     ) -> 'RunConfiguration':
         return cls(configurations)
+
+    @classmethod
+    def from_model_configuration_directory(cls, directory: PathLike) -> 'RunConfiguration':
+        raise NotImplementedError
 
 
 def from_user_input(value: Any) -> ConfigurationJSON:

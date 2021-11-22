@@ -21,7 +21,7 @@ class CompletionStatus(Enum):
     COMPLETED = 0
 
 
-def is_adcirc_run_directory(directory: PathLike = None) -> bool:
+def is_adcirc_directory(directory: PathLike = None) -> bool:
     """
     check if the given directory has the baseline ADCIRC configuration files
 
@@ -63,7 +63,7 @@ def check_adcirc_completion(
 
     completion = {entry: {} for entry in CompletionStatus}
 
-    if not is_adcirc_run_directory(directory):
+    if not is_adcirc_directory(directory):
         completion[CompletionStatus.NOT_CONFIGURED][
             'fort.14,fort.15'
         ] = f'ADCIRC configuration files not found'

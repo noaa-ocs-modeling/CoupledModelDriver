@@ -12,7 +12,7 @@ from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.adcirc.check import (
     check_adcirc_completion,
     CompletionStatus,
-    is_adcirc_run_directory,
+    is_adcirc_directory,
 )
 from coupledmodeldriver.utilities import ProcessPoolExecutorStackTraced
 
@@ -59,7 +59,7 @@ def is_model_directory(directory: PathLike, model: ModelJSON = None) -> bool:
         model = ADCIRCJSON
 
     if model == ADCIRCJSON:
-        is_model_directory = is_adcirc_run_directory(directory)
+        is_model_directory = is_adcirc_directory(directory)
     else:
         raise NotImplementedError(f'model "{model}" not implemented')
 
