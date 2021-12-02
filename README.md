@@ -6,6 +6,7 @@
 [![version](https://img.shields.io/pypi/v/CoupledModelDriver)](https://pypi.org/project/CoupledModelDriver)
 [![license](https://img.shields.io/github/license/noaa-ocs-modeling/CoupledModelDriver)](https://creativecommons.org/share-your-work/public-domain/cc0)
 [![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
+[![documentation](https://readthedocs.org/projects/coupledmodeldriver/badge/?version=latest)](https://coupledmodeldriver.readthedocs.io/en/latest/?badge=latest)
 
 CoupledModelDriver generates an overlying job submission framework and configuration directories for NEMS-coupled coastal ocean
 model ensembles.
@@ -14,7 +15,7 @@ model ensembles.
 pip install coupledmodeldriver
 ```
 
-It utilizes [NEMSpy](https://pypi.org/project/nemspy) to generate NEMS configuration files, shares common configurations
+It utilizes [NEMSpy](https://nemspy.readthedocs.io) to generate NEMS configuration files, shares common configurations
 between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
 
 ## supported models and platforms
