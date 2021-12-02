@@ -7,6 +7,7 @@ import pytest
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
     ATMESHForcingJSON,
+    BestTrackForcingJSON,
     ModelDriverJSON,
     NEMSJSON,
     SlurmJSON,

@@ -111,6 +111,14 @@ class TidalForcingJSON(FileForcingJSON):
     tidal configuration in ``configure_tidal.json``
 
     stores tidal database and constituent information
+
+    .. code-block:: python
+
+        configuration = TidalForcingJSON(
+            tidal_source='HAMTIDE',
+            constituents='all',
+        )
+
     """
 
     name = 'TIDAL'
@@ -214,6 +222,15 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     storm best track configuration in ``configure_besttrack.json``
 
     stores storm ID, NWS parameter, forcing read interval, start and end dates, and optionally a path to an existing `fort.22` file
+
+    .. code-block:: python
+
+        configuration = BestTrackForcingJSON(storm_id='florence2018')
+
+        configuration = BestTrackForcingJSON.from_fort22('./fort.22')
+
+        configuration.to_adcircpy().write('output.fort.22')
+
     """
 
     name = 'BestTrack'
@@ -390,6 +407,15 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
     atmospheric mesh (ATMESH) configuration in ``configure_atmesh.json``
 
     stores NWS parameter, forcing read interval, and optionally NEMS parameters
+
+    .. code-block:: python
+
+        configuration = ATMESHForcingJSON(
+            resource='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
+            nws=17,
+            interval=timedelta(hours=1),
+        )
+
     """
 
     name = 'ATMESH'
@@ -460,6 +486,15 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
     WaveWatch III output file configuration in ``configure_ww3data.json``
 
     stores NRS parameter, forcing read interval, and optionally NEMS parameters
+
+    .. code-block:: python
+
+        configuration = WW3DATAForcingJSON(
+            resource='ww3.HWRF.NOV2018.2012_sxy.nc',
+            nrs=5,
+            interval=timedelta(hours=1),
+        )
+
     """
 
     name = 'WW3DATA'

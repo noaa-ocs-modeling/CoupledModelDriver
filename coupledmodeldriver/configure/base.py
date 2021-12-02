@@ -220,6 +220,15 @@ class SlurmJSON(ConfigurationJSON):
     Slurm configuration parameters in ``configure_slurm.json``
 
     stores account and partition names, wall-clock time, email notification, etc.
+
+    .. code-block:: python
+
+        configuration = SlurmJSON(
+            account='coastal',
+            tasks=602,
+            job_duration=timedelta(hours=6),
+        )
+
     """
 
     name = 'Slurm'
@@ -333,6 +342,14 @@ class ModelDriverJSON(ConfigurationJSON):
     model driver configuration in ``configure_modeldriver.json``
 
     stores platform information and a dictionary of perturbations of other configurations per each run
+
+    .. code-block:: python
+
+        configuration = ModelDriverJSON(
+            platform=Platform.HERA,
+            perturbations=None,
+        )
+
     """
 
     name = 'ModelDriver'
@@ -435,6 +452,37 @@ class NEMSJSON(ConfigurationJSON):
     NEMS configuration in ``configure_nems.json``
 
     stores NEMS executable path, modeled times / interval, connections / mediations, and the order of the run sequence
+
+    .. code-block:: python
+
+        model_entries = [
+            AtmosphericForcingEntry('Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc'),
+            WaveWatch3ForcingEntry('ww3.HWRF.NOV2018.2012_sxy.nc'),
+            ADCIRCEntry(600),
+        ]
+
+        connections = [['ATM', 'OCN'], ['WAV', 'OCN']]
+        mediations = None
+        sequence = [
+            'ATM -> OCN',
+            'WAV -> OCN',
+            'ATM',
+            'WAV',
+            'OCN',
+        ]
+
+        configuration = NEMSJSON(
+            executable_path='NEMS.x',
+            modeled_start_time=datetime(2012, 10, 22, 6),
+            modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
+            interval=timedelta(hours=1),
+            connections=connections,
+            mediations=mediations,
+            sequence=sequence,
+        )
+
+        modeling_system = configuration.to_nemspy(model_entries)
+
     """
 
     name = 'NEMS'
