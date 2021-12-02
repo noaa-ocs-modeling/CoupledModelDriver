@@ -18,6 +18,8 @@ pip install coupledmodeldriver
 It utilizes [NEMSpy](https://nemspy.readthedocs.io) to generate NEMS configuration files, shares common configurations
 between runs, and organizes spinup and mesh partition into separate jobs for dependant submission.
 
+Documentation can be found at https://coupledmodeldriver.readthedocs.io
+
 ## supported models and platforms
 
 - **models**
