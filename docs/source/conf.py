@@ -78,6 +78,7 @@ extensions = [
     'sphinx.ext.autosummary',
     # The Napoleon extension allows for nicer argument formatting.
     'sphinx.ext.napoleon',
+    'sphinx.ext.autosectionlabel',
     'm2r2',
 ]
 
@@ -103,3 +104,5 @@ html_static_path = ['_static']
 
 # -- Extension configuration -------------------------------------------------
 source_suffix = ['.rst', '.md']
+
+autosectionlabel_prefix_document = True
