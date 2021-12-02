@@ -22,7 +22,7 @@ Then, the configuration can be regenerated with ``generate_adcirc``.
 ``configure_modeldriver.json``
 ------------------------------
 
-.. autoclass:: coupledmodeldriver.configure.base.NEMSJSON
+.. autoclass:: coupledmodeldriver.configure.base.ModelDriverJSON
 
 ``configure_slurm.json``
 ------------------------
@@ -32,7 +32,7 @@ Then, the configuration can be regenerated with ``generate_adcirc``.
 ``configure_nems.json``
 -----------------------
 
-.. autoclass:: coupledmodeldriver.configure.base.ModelDriverJSON
+.. autoclass:: coupledmodeldriver.configure.base.NEMSJSON
 
 ``configure_adcirc.json``
 -------------------------
