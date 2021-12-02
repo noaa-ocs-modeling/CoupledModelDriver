@@ -128,6 +128,20 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     ADCIRC configuration in ``configure_adcirc.json``
 
     stores a number of ADCIRC parameters (``ICS``, ``IM``, etc.) and optionally NEMS parameters
+
+    .. code-block:: python
+
+        configuration = ADCIRCJSON(
+            adcirc_executable_path='adcirc',
+            adcprep_executable_path='adcprep',
+            modeled_start_time=datetime(2012, 10, 22, 6),
+            modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
+            modeled_timestep=timedelta(seconds=2),
+            fort_13_path=None,
+            fort_14_path=INPUT_DIRECTORY / 'meshes' / 'shinnecock' / 'fort.14',
+            tidal_spinup_duration=timedelta(days=12.5),
+        )
+
     """
 
     name = 'ADCIRC'
@@ -192,7 +206,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         **kwargs,
     ):
         """
-        :param adcirc_executable_path: file path to ``adcirc`` or `NEMS.x`
+        :param adcirc_executable_path: file path to ``adcirc`` or ``NEMS.x``
         :param adcprep_executable_path: file path to ``adcprep``
         :param aswip_executable_path: file path to ``aswip``
         :param modeled_start_time: start time in model run
