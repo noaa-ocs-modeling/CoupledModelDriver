@@ -46,6 +46,8 @@ def get_run_directories(directories: List[os.PathLike], model: ModelJSON = None)
         directories = [directories]
     run_directories = []
     for directory in directories:
+        if not isinstance(directory, Path):
+            directory = Path(directory)
         if is_model_directory(directory, model=model):
             run_directories.append(directory)
         else:
