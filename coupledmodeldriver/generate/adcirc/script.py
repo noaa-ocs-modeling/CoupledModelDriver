@@ -173,12 +173,15 @@ class AswipCommand:
         self.__rmax_approaches = rmax_approaches
 
     def __str__(self) -> str:
+        aswip_command = f'{self.path.as_posix()} -n {self.nws}'
+
+        if self.isotachs is not None:
+            aswip_command = f'{aswip_command} -m {self.isotachs}'
+        if self.isotachs is not None:
+            aswip_command = f'{aswip_command} -z {self.rmax_approaches}'
+
         return '\n'.join(
-            [
-                f'{self.path.as_posix()} -n {self.nws} -m {self.isotachs} -z {self.rmax_approaches}',
-                'mv fort.22 fort.22.original',
-                'mv NWS_20_fort.22 fort.22',
-            ]
+            [f'{aswip_command}', 'mv fort.22 fort.22.original', 'mv NWS_20_fort.22 fort.22']
         )
 
     @classmethod
