@@ -146,11 +146,9 @@ class JobScript(Script):
         self.slurm_email_type = slurm_email_type
         self.slurm_email_address = slurm_email_address
 
-        self.slurm_error_filename = (
-            slurm_error_filename if slurm_error_filename is not None else 'slurm.log'
-        )
+        self.slurm_error_filename = slurm_error_filename
         self.slurm_log_filename = (
-            slurm_log_filename if slurm_log_filename is not None else 'slurm.log'
+            slurm_log_filename if slurm_log_filename is not None else f'{slurm_run_name}.log'
         )
         self.slurm_nodes = slurm_nodes
 
@@ -275,29 +273,28 @@ class EnsembleGenerationJob(JobScript):
     def __init__(
         self,
         platform: Platform,
-        slurm_run_name: str = None,
         slurm_tasks: int = None,
         slurm_duration: timedelta = None,
         slurm_account: str = None,
         commands: List[str] = None,
+        parallel: bool = False,
         **kwargs,
     ):
-        if slurm_run_name is None:
-            slurm_run_name = 'ADCIRC_GENERATE_CONFIGURATION'
-
         super().__init__(
             platform=platform,
             commands=commands,
-            slurm_run_name=slurm_run_name,
+            slurm_run_name='ADCIRC_GENERATE_CONFIGURATION',
             slurm_tasks=slurm_tasks,
             slurm_duration=slurm_duration,
             slurm_account=slurm_account,
             **kwargs,
         )
 
-        self.commands.extend(
-            ['rm **/*.log', 'generate_adcirc', 'echo "use ./run_hera.sh to start model"']
-        )
+        generate_command = 'generate_adcirc'
+        if parallel:
+            generate_command = f'{generate_command} --parallel'
+
+        self.commands.extend([generate_command, 'echo "use ./run_hera.sh to start model"'])
 
 
 class EnsembleRunScript(Script):
