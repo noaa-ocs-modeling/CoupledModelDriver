@@ -293,8 +293,11 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 end_date=self['end_date'],
             )
             if self['storm_id'] is not None and forcing.storm_id != self['storm_id']:
-                forcing.storm_id = self['storm_id']
-                self['storm_id'] = forcing.storm_id
+                try:
+                    forcing.storm_id = self['storm_id']
+                    self['storm_id'] = forcing.storm_id
+                except ConnectionError:
+                    pass
         elif self.__dataframe is not None:
             forcing = BestTrackForcing(
                 storm=self.__dataframe,
