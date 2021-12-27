@@ -101,17 +101,24 @@ def main():
     dependency = arguments['dependency']
 
     unqueued_runs = get_unqueued_runs(directories, model=model)
-    for run_name, run_directory in unqueued_runs.items():
-        print(run_name)
-        if submit:
+    starting_directory = Path.cwd()
+    if submit:
+        unqueued_run_names = []
+        for run_name, run_directory in unqueued_runs.items():
             dependencies = "afterok:$(sbatch setup.job | awk '{print $NF}')"
             if dependency is not None:
                 dependencies = f'{dependencies}:{dependency}'
 
-            starting_directory = Path.cwd()
             os.chdir(run_directory)
             os.system(f'sbatch --dependency={dependencies} adcirc.job')
             os.chdir(starting_directory)
+
+            unqueued_run_names.append(run_name)
+    else:
+        unqueued_run_names = list(unqueued_runs)
+
+    for run_name in sorted(unqueued_run_names):
+        print(run_name)
 
 
 if __name__ == '__main__':
