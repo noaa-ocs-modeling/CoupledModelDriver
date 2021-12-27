@@ -4,13 +4,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from coupledmodeldriver.client.check_completion import (
-    check_completion,
-    is_model_directory,
-    MODELS,
-)
+from coupledmodeldriver.client.check_completion import (MODELS, check_completion, is_model_directory)
 from coupledmodeldriver.configure import ModelJSON
-from coupledmodeldriver.utilities import LOGGER
 
 
 def parse_missing_jobs_arguments() -> Dict[str, Any]:
@@ -107,8 +102,8 @@ def main():
 
     unqueued_runs = get_unqueued_runs(directories, model=model)
     for run_name, run_directory in unqueued_runs.items():
+        print(run_name)
         if submit:
-            LOGGER.info(f'submitting unqueued run "{run_name}"')
             dependencies = "afterok:$(sbatch setup.job | awk '{print $NF}')"
             if dependency is not None:
                 dependencies = f'{dependencies}:{dependency}'
@@ -117,8 +112,6 @@ def main():
             os.chdir(run_directory)
             os.system(f'sbatch --dependency={dependencies} adcirc.job')
             os.chdir(starting_directory)
-        else:
-            LOGGER.info(f'found unqueued run "{run_name}"')
 
 
 if __name__ == '__main__':
