@@ -428,7 +428,7 @@ def initialize_adcirc(
         logger.debug(repr(configuration_json))
 
     configuration.write_directory(
-        directory=output_directory, overwrite=overwrite,
+        directory=output_directory, absolute=absolute_paths, overwrite=overwrite,
     )
 
     generation_job_script = EnsembleGenerationJob(platform=platform)

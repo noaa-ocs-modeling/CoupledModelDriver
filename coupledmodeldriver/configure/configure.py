@@ -126,9 +126,12 @@ class RunConfiguration:
 
         return cls.from_configurations(configurations)
 
-    def write_directory(self, directory: PathLike, overwrite: bool = False):
+    def write_directory(
+        self, directory: PathLike, absolute: bool = False, overwrite: bool = False
+    ):
         """
         :param directory: directory in which to write generated JSON configuration files
+        :param absolute: whether to write absolute paths
         :param overwrite: whether to overwrite existing files
         """
 
@@ -139,7 +142,7 @@ class RunConfiguration:
             directory.mkdir(parents=True, exist_ok=True)
 
         for configuration in self.__configurations.values():
-            configuration.to_file(directory, overwrite=overwrite)
+            configuration.to_file(directory, absolute=absolute, overwrite=overwrite)
 
     @classmethod
     def from_configurations(
