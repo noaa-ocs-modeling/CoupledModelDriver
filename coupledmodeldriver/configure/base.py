@@ -171,11 +171,14 @@ class ConfigurationJSON(ABC):
 
         return cls(**configuration)
 
-    def to_file(self, filename: PathLike = None, overwrite: bool = False):
+    def to_file(
+        self, filename: PathLike = None, absolute: bool = False, overwrite: bool = False
+    ):
         """
-        write script to file
+        write configuration to file
 
         :param filename: path to output file
+        :param absolute: whether to write absolute paths
         :param overwrite: whether to overwrite existing file
         """
 
@@ -191,11 +194,12 @@ class ConfigurationJSON(ABC):
             filename.mkdir(parents=True, exist_ok=True)
 
         for key, value in self.configuration.items():
-            if isinstance(value, Path) and value.is_absolute():
-                try:
-                    value = Path(os.path.relpath(value, filename.absolute().parent))
-                except:
-                    pass
+            if isinstance(value, Path):
+                if not absolute and value.is_absolute():
+                    try:
+                        value = Path(os.path.relpath(value, filename.absolute().parent))
+                    except:
+                        pass
                 self.configuration[key] = value
 
         configuration = convert_to_json(self.configuration)
