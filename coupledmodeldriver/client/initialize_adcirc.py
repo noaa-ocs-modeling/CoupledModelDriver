@@ -431,7 +431,14 @@ def initialize_adcirc(
         directory=output_directory, absolute=absolute_paths, overwrite=overwrite,
     )
 
-    generation_job_script = EnsembleGenerationJob(platform=platform)
+    if platform == Platform.HERA:
+        partition = 'bigmem'
+    else:
+        partition = None
+
+    generation_job_script = EnsembleGenerationJob(
+        platform=platform, parallel=True, slurm_partition=partition
+    )
     generation_job_script.write(filename=output_directory / 'generate.job', overwrite=True)
 
 
