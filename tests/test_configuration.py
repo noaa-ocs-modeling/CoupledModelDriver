@@ -7,7 +7,6 @@ import pytest
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
     ATMESHForcingJSON,
-    BestTrackForcingJSON,
     ModelDriverJSON,
     NEMSJSON,
     SlurmJSON,
@@ -15,7 +14,8 @@ from coupledmodeldriver.configure import (
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
-from tests import INPUT_DIRECTORY
+# noinspection PyUnresolvedReferences
+from tests import INPUT_DIRECTORY, tpxo_filename
 
 
 def test_update():
@@ -157,10 +157,11 @@ def test_tidal():
     with pytest.raises((FileNotFoundError, OSError)):
         configuration.adcircpy_forcing
 
-    configuration['resource'] = None
-    configuration['constituents'] = ['q1', 'p1', 'm2']
+    # TODO find a better way to host TPXO for testing
+    # configuration['resource'] = tpxo_filename()
+    # configuration['constituents'] = ['q1', 'p1', 'm2']
 
-    assert list(configuration.adcircpy_forcing.active_constituents) == ['Q1', 'P1', 'M2']
+    # assert list(configuration.adcircpy_forcing.active_constituents) == ['Q1', 'P1', 'M2']
 
 
 def test_atmesh():
