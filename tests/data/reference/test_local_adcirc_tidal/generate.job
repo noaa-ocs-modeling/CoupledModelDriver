@@ -1,4 +1,3 @@
 #!/bin/bash
-rm **/*.log
-generate_adcirc
+generate_adcirc --parallel
 echo "use ./run_hera.sh to start model"
