@@ -1,8 +1,7 @@
 #!/bin/bash
 #SBATCH -J ADCIRC_GENERATE_CONFIGURATION
 #SBATCH -A coastal
-#SBATCH --error=slurm.log
-#SBATCH --output=slurm.log
+#SBATCH --output=ADCIRC_GENERATE_CONFIGURATION.log
 #SBATCH -n 68
 #SBATCH -N 1
 #SBATCH --time=01:00:00
@@ -10,6 +9,5 @@
 
 set -e
 
-rm **/*.log
-generate_adcirc
+generate_adcirc --parallel
 echo "use ./run_hera.sh to start model"
