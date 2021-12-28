@@ -21,6 +21,7 @@ TPXO_FILENAME = INPUT_DIRECTORY / 'h_tpxo9.v1.nc'
 def tpxo_filename() -> Path:
     with FileLock(str(TPXO_FILENAME) + '.lock'):
         if not TPXO_FILENAME.exists():
+            # TODO find a better way to host TPXO for testing
             url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
             extract_download(url, TPXO_FILENAME.parent, ['h_tpxo9.v1.nc'])
     return TPXO_FILENAME
