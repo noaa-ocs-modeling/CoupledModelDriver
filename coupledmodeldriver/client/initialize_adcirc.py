@@ -44,16 +44,19 @@ DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
 def parse_initialize_adcirc_arguments(
-    extra_arguments: Dict[str, type] = None
+    extra_arguments: Dict[str, (type, str)] = None
 ) -> Dict[str, Any]:
     if extra_arguments is None:
         extra_arguments = {}
     elif not isinstance(extra_arguments, Mapping):
-        extra_arguments = {extra_argument: None for extra_argument in extra_arguments}
-    extra_arguments = {
-        extra_argument.strip('-'): extra_arguments[extra_argument]
-        for extra_argument in extra_arguments
-    }
+        extra_arguments = {extra_argument: (None, None) for extra_argument in extra_arguments}
+
+    compiled_arguments = {}
+    for extra_argument, argument_info in extra_arguments.items():
+        if argument_info is None or isinstance(argument_info, type):
+            argument_info = (argument_info, None)
+        compiled_arguments[extra_argument.strip('-')] = argument_info
+    extra_arguments = compiled_arguments
 
     argument_parser = ArgumentParser()
 
@@ -123,19 +126,21 @@ def parse_initialize_adcirc_arguments(
         '--verbose', action='store_true', help='show more verbose log messages'
     )
 
-    for extra_argument, extra_argument_type in extra_arguments.items():
+    # add extra arguments with bool types and descriptions
+    for extra_argument, (argument_type, argument_description) in extra_arguments.items():
         kwargs = {}
-        if extra_argument_type is bool:
+        if argument_type is bool:
             kwargs['action'] = 'store_true'
+        if argument_description is not None:
+            kwargs['help'] = argument_description
         argument_parser.add_argument(f'--{extra_argument}', **kwargs)
 
     arguments, unknown_arguments = argument_parser.parse_known_args()
 
+    # convert extra arguments to their given type
     extra_arguments = {
-        extra_argument: convert_value(
-            arguments.__dict__[extra_argument], extra_arguments[extra_argument]
-        )
-        for extra_argument in extra_arguments
+        extra_argument: convert_value(arguments.__dict__[extra_argument], argument_info[0])
+        for extra_argument, argument_info in extra_arguments.items()
     }
 
     platform = convert_value(arguments.platform, Platform)

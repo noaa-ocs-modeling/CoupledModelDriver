@@ -14,6 +14,7 @@ from coupledmodeldriver.configure import (
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
+
 # noinspection PyUnresolvedReferences
 from tests import INPUT_DIRECTORY, tpxo_filename
 
