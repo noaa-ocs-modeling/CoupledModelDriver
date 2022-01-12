@@ -4,7 +4,7 @@ from enum import Enum
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Tuple
 
 from adcircpy import TidalSource
 from typepigeon import convert_value
@@ -44,7 +44,7 @@ DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
 def parse_initialize_adcirc_arguments(
-    extra_arguments: Dict[str, (type, str)] = None
+    extra_arguments: Dict[str, Tuple[type, str]] = None
 ) -> Dict[str, Any]:
     if extra_arguments is None:
         extra_arguments = {}
