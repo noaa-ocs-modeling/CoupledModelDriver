@@ -50,13 +50,10 @@ def parse_initialize_adcirc_arguments(
         extra_arguments = {}
     elif not isinstance(extra_arguments, Mapping):
         extra_arguments = {extra_argument: (None, None) for extra_argument in extra_arguments}
-
-    compiled_arguments = {}
-    for extra_argument, argument_info in extra_arguments.items():
-        if argument_info is None or isinstance(argument_info, type):
-            argument_info = (argument_info, None)
-        compiled_arguments[extra_argument.strip('-')] = argument_info
-    extra_arguments = compiled_arguments
+    extra_arguments = {
+        extra_argument.strip('-'): argument_info
+        for extra_argument, argument_info in extra_arguments.items()
+    }
 
     argument_parser = ArgumentParser()
 
