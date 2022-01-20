@@ -19,7 +19,6 @@ from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 
 # noinspection PyUnresolvedReferences
 from tests import INPUT_DIRECTORY, tpxo_filename
-from tests import INPUT_DIRECTORY, OUTPUT_DIRECTORY
 
 
 def test_update():
