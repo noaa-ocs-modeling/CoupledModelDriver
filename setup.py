@@ -10,7 +10,7 @@ from typing import Dict, List
 from setuptools import config, find_packages, setup
 
 DEPENDENCIES = {
-    'adcircpy>=1.0.41': ['gdal', 'fiona'],
+    'adcircpy>=1.1.0': ['gdal', 'fiona'],
     'filelock': [],
     'file-read-backwards': [],
     'nemspy>=1.0.4': [],
