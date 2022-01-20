@@ -1,1 +1,1 @@
-/home/zrb/repositories/CoupledModelDriver/tests/data/input/symlink_test.txt
+test
