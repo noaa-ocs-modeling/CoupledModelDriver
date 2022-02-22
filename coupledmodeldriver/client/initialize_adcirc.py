@@ -136,7 +136,9 @@ def parse_initialize_adcirc_arguments(
 
     # convert extra arguments to their given type
     extra_arguments = {
-        extra_argument: convert_value(arguments.__dict__[extra_argument], argument_info[0])
+        extra_argument: convert_value(
+            arguments.__dict__[extra_argument.replace('-', '_')], argument_info[0]
+        )
         for extra_argument, argument_info in extra_arguments.items()
     }
 
