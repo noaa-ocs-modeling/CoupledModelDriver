@@ -221,7 +221,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     """
     storm best track configuration in ``configure_besttrack.json``
 
-    stores storm ID, NWS parameter, forcing read interval, start and end dates, and optionally a path to an existing `fort.22` file
+    stores storm NHC code, NWS parameter, forcing read interval, start and end dates, and optionally a path to an existing `fort.22` file
 
     .. code-block:: python
 

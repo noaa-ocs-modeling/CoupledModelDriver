@@ -244,7 +244,7 @@ def parse_initialize_adcirc_arguments(
                     argument='besttrack-nhc-code',
                     arguments=unknown_arguments,
                     required=True,
-                    message='enter storm ID for best track: ',
+                    message='enter NHC code of storm: ',
                 )
                 kwargs['nhc_code'] = nhc_code
                 best_track_start_date = get_argument(
