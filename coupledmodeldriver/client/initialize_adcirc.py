@@ -241,7 +241,7 @@ def parse_initialize_adcirc_arguments(
                 kwargs['constituents'] = tidal_constituents
             if issubclass(forcing_configuration_class, BestTrackForcingJSON):
                 nhc_code = get_argument(
-                    argument='besttrack-storm-id',
+                    argument='besttrack-nhc-code',
                     arguments=unknown_arguments,
                     required=True,
                     message='enter storm ID for best track: ',
