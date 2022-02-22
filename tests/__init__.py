@@ -16,6 +16,11 @@ REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
 
 TPXO_FILENAME = INPUT_DIRECTORY / 'h_tpxo9.v1.nc'
 
+try:
+    from importlib import metadata as importlib_metadata
+except ImportError:  # for Python<3.8
+    import importlib_metadata
+
 
 @pytest.fixture
 def tpxo_filename() -> Path:
@@ -25,6 +30,15 @@ def tpxo_filename() -> Path:
             url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
             extract_download(url, TPXO_FILENAME.parent, ['h_tpxo9.v1.nc'])
     return TPXO_FILENAME
+
+
+def installed_packages() -> List[str]:
+    installed_distributions = importlib_metadata.distributions()
+    return [
+        distribution.metadata['Name'].lower()
+        for distribution in installed_distributions
+        if distribution.metadata['Name'] is not None
+    ]
 
 
 def check_reference_directory(
@@ -46,6 +60,24 @@ def check_reference_directory(
             )
         else:
             test_filename = test_directory / reference_filename.name
+
+            if reference_filename.suffix in ['.h5', '.nc']:
+                if 'xarray' in installed_packages():
+                    try:
+                        reference_dataset = xarray.open_dataset(reference_filename)
+                        test_dataset = xarray.open_dataset(test_filename)
+                        return test_dataset == reference_dataset
+                    except:
+                        pass
+
+                reference_filesize = Path(reference_filename).stat().st_size
+                test_filesize = Path(test_filename).stat().st_size
+
+                diff = test_filesize - reference_filesize
+                message = f'"{test_filesize}" != "{reference_filesize}"\n{diff}'
+
+                assert reference_filesize == test_filesize, message
+                continue
 
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
                 test_lines = list(test_file.readlines())
