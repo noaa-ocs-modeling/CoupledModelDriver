@@ -62,14 +62,6 @@ def check_reference_directory(
             test_filename = test_directory / reference_filename.name
 
             if reference_filename.suffix in ['.h5', '.nc']:
-                if 'xarray' in installed_packages():
-                    try:
-                        reference_dataset = xarray.open_dataset(reference_filename)
-                        test_dataset = xarray.open_dataset(test_filename)
-                        return test_dataset == reference_dataset
-                    except:
-                        pass
-
                 reference_filesize = Path(reference_filename).stat().st_size
                 test_filesize = Path(test_filename).stat().st_size
 
