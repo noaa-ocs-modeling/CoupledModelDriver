@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH -J ADCIRC_HOTSTART_unperturbed
+#SBATCH -A coastal
+#SBATCH --error=ADCIRC_HOTSTART_unperturbed.err.log
+#SBATCH --output=ADCIRC_HOTSTART_unperturbed.out.log
+#SBATCH -n 601
+#SBATCH -N 16
+#SBATCH --time=06:00:00
+
+set -e
+
+source ../../../../input/modulefiles/envmodules_intel.hera
+srun ../../../../input/bin/NEMS.x

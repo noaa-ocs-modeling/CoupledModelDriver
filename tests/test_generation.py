@@ -285,7 +285,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data():
 
 
 @pytest.mark.disable_socket
-@pytest.mark.skip
 def test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet():
     output_directory = (
         OUTPUT_DIRECTORY / 'test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet'
