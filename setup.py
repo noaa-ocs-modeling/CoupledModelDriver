@@ -20,7 +20,7 @@ except ImportError:  # for Python<3.8
 from setuptools import config, find_packages, setup
 
 DEPENDENCIES = {
-    'adcircpy>=1.1.0': ['gdal', 'fiona'],
+    'adcircpy>=1.1.2': ['gdal', 'fiona'],
     'filelock': [],
     'file-read-backwards': [],
     'nemspy>=1.0.4': [],
