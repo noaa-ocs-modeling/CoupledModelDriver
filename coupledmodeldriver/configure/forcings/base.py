@@ -225,7 +225,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 
     .. code-block:: python
 
-        configuration = BestTrackForcingJSON(storm_id='florence2018')
+        configuration = BestTrackForcingJSON(nhc_code='florence2018')
 
         configuration = BestTrackForcingJSON.from_fort22('./fort.22')
 
@@ -238,7 +238,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     default_nws = 20
     default_attributes = BESTTRACK_ATTRIBUTES
     field_types = {
-        'storm_id': str,
+        'nhc_code': str,
         'interval': timedelta,
         'start_date': datetime,
         'end_date': datetime,
@@ -247,7 +247,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 
     def __init__(
         self,
-        storm_id: str = None,
+        nhc_code: str = None,
         nws: int = None,
         interval: timedelta = None,
         start_date: datetime = None,
@@ -257,8 +257,8 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         attributes: Dict[str, Any] = None,
         **kwargs,
     ):
-        if storm_id is None and fort22_filename is None and dataframe is None:
-            LOGGER.warning("no 'storm_id' given")
+        if nhc_code is None and fort22_filename is None and dataframe is None:
+            LOGGER.warning("no 'nhc_code' given")
 
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
@@ -267,7 +267,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         WindForcingJSON.__init__(self, nws=nws, **kwargs)
         AttributeJSON.__init__(self, attributes=attributes, **kwargs)
 
-        self['storm_id'] = storm_id
+        self['nhc_code'] = nhc_code
         self['interval'] = interval
         self['start_date'] = start_date
         self['end_date'] = end_date
@@ -277,7 +277,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 
         if self.__dataframe is not None:
             forcing = self.adcircpy_forcing
-            self['storm_id'] = forcing.storm_id
+            self['nhc_code'] = forcing.nhc_code
             self['interval'] = forcing.interval
             self['start_date'] = forcing.start_date
             self['end_date'] = forcing.end_date
@@ -292,10 +292,10 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 start_date=self['start_date'],
                 end_date=self['end_date'],
             )
-            if self['storm_id'] is not None and forcing.storm_id != self['storm_id']:
+            if self['nhc_code'] is not None and forcing.nhc_code != self['nhc_code']:
                 try:
-                    forcing.storm_id = self['storm_id']
-                    self['storm_id'] = forcing.storm_id
+                    forcing.nhc_code = self['nhc_code']
+                    self['nhc_code'] = forcing.nhc_code
                 except ConnectionError:
                     pass
         elif self.__dataframe is not None:
@@ -306,9 +306,9 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 start_date=self['start_date'],
                 end_date=self['end_date'],
             )
-        elif self['storm_id'] is not None:
+        elif self['nhc_code'] is not None:
             forcing = BestTrackForcing(
-                storm=self['storm_id'],
+                storm=self['nhc_code'],
                 nws=self['nws'],
                 interval_seconds=self['interval'],
                 start_date=self['start_date'],
@@ -319,9 +319,9 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 f'could not create `{BestTrackForcing.__name__}` object from given information'
             )
 
-        if self['storm_id'] is None:
+        if self['nhc_code'] is None:
             self[
-                'storm_id'
+                'nhc_code'
             ] = f'{forcing.basin}{forcing.storm_number}{forcing.start_date.year}'
 
         for name, value in self['attributes'].items():
@@ -338,13 +338,13 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
     @classmethod
     def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
-            storm_id=forcing.storm_id,
+            nhc_code=forcing.nhc_code,
             nws=forcing.NWS,
             interval=forcing.interval,
             start_date=forcing.start_date,
             end_date=forcing.end_date,
             fort22_filename=forcing.filename,
-            dataframe=forcing.dataframe,
+            dataframe=forcing.data,
         )
 
     @classmethod
@@ -365,7 +365,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         )
 
         return cls(
-            storm_id=forcing.storm_id,
+            nhc_code=forcing.nhc_code,
             nws=forcing.NWS,
             interval=forcing.interval,
             start_date=forcing.start_date,
