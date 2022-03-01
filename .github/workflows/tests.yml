@@ -52,7 +52,9 @@ jobs:
           key: ${{ runner.os }}-python${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}
           restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
       - name: install dependencies
-        run: pip install ".[testing]" gartersnake
+        run: |
+          pip install dunamai gartersnake
+          pip install ".[testing]"
       - name: install `pipwin` on Windows
         if: contains(matrix.os, 'windows')
         run: pip install pipwin
