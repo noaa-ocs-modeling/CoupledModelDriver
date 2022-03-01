@@ -38,7 +38,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
         python-version: [ '3.6', '3.x' ]
     steps:
       - name: clone repository
@@ -53,12 +53,12 @@ jobs:
           path: ~/.local
           key: ${{ runner.os }}-python${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}
           restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
+      - name: install `pipwin` on Windows
+        if: contains(matrix.os, 'windows')
+        run: pip install pipwin
       - name: install dependencies
         run: |
           pip install dunamai gartersnake
           pip install ".[testing]"
-      - name: install `pipwin` on Windows
-        if: contains(matrix.os, 'windows')
-        run: pip install pipwin
       - name: run tests
         run: pytest --numprocesses auto
