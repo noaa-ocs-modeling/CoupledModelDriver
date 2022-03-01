@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.local
-          key: ${{ runner.os }}-python${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}
+          key: ${{ runner.os }}-python${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('setup.py') }}
           restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
       - name: install `pipwin` on Windows
         if: contains(matrix.os, 'windows')
