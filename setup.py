@@ -40,7 +40,7 @@ setup(
     setup_requires=['dunamai', 'gartersnake', 'setuptools>=41.2'],
     install_requires=list(DEPENDENCIES),
     extras_require={
-        'testing': ['filelock', 'pytest', 'pytest-cov', 'pytest-xdist', 'wget'],
+        'testing': ['pooch', 'pytest', 'pytest-cov', 'pytest-socket', 'pytest-xdist', 'wget'],
         'development': ['flake8', 'isort', 'oitnb'],
         'documentation': [
             'dunamai',

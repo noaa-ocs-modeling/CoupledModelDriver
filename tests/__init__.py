@@ -4,10 +4,8 @@ from pathlib import Path
 import re
 from typing import Dict, List
 
-from filelock import FileLock
+import pooch
 import pytest
-
-from coupledmodeldriver.utilities import extract_download
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
@@ -24,21 +22,11 @@ except ImportError:  # for Python<3.8
 
 @pytest.fixture
 def tpxo_filename() -> Path:
-    with FileLock(str(TPXO_FILENAME) + '.lock'):
-        if not TPXO_FILENAME.exists():
-            # TODO find a better way to host TPXO for testing
-            url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
-            extract_download(url, TPXO_FILENAME.parent, ['h_tpxo9.v1.nc'])
-    return TPXO_FILENAME
-
-
-def installed_packages() -> List[str]:
-    installed_distributions = importlib_metadata.distributions()
-    return [
-        distribution.metadata['Name'].lower()
-        for distribution in installed_distributions
-        if distribution.metadata['Name'] is not None
-    ]
+    return pooch.retrieve(
+        'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1',
+        known_hash='54be47bbce88702d8ef232462bfea3456fa76b908e0e905dc94700070031dd25',
+        fname=TPXO_FILENAME,
+    )
 
 
 def check_reference_directory(
