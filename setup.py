@@ -21,7 +21,9 @@ if (Path(sys.prefix) / 'conda-meta').exists() or os.name == 'nt':
         MISSING_DEPENDENCIES = gartersnake.missing_requirements(DEPENDENCIES)
 
         if len(MISSING_DEPENDENCIES) > 0:
-            print(f'{len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) dependencies are missing')
+            print(
+                f'{len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) dependencies are missing'
+            )
 
         if len(MISSING_DEPENDENCIES) > 0 and gartersnake.is_conda():
             gartersnake.install_conda_requirements(MISSING_DEPENDENCIES)
@@ -62,7 +64,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.7',
     setup_requires=['dunamai', 'setuptools>=41.2'],
-    install_requires=list(DEPENDENCIES),
+    install_requires=DEPENDENCIES,
     extras_require={
         'testing': ['pooch', 'pytest', 'pytest-cov', 'pytest-socket', 'pytest-xdist', 'wget'],
         'development': ['flake8', 'isort', 'oitnb'],
