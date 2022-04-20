@@ -2,7 +2,7 @@
   "nhc_code": "AL092008",
   "interval": 3600.0,
   "start_date": "2008-09-01 06:00:00",
-  "end_date": "2008-09-29 06:00:00",
+  "end_date": "2008-09-15 06:00:00",
   "fort22_filename": "../../input/forcings/ike/fort.22",
   "nws": 8,
   "attributes": {

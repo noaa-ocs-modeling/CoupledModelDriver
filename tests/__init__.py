@@ -14,11 +14,6 @@ REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
 
 TPXO_FILENAME = INPUT_DIRECTORY / 'h_tpxo9.v1.nc'
 
-try:
-    from importlib import metadata as importlib_metadata
-except ImportError:  # for Python<3.8
-    import importlib_metadata
-
 
 @pytest.fixture
 def tpxo_filename() -> Path:

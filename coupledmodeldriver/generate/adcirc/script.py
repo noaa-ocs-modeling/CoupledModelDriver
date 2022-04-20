@@ -88,6 +88,8 @@ class AdcircRunJob(AdcircJob):
 class AswipCommand:
     """
     abstraction of an ``aswip`` command
+
+    https://wiki.adcirc.org/wiki/Fort.22_file
     """
 
     def __init__(
