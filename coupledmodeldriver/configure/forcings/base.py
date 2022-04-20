@@ -29,6 +29,13 @@ ADCIRCPY_FORCINGS = {
 
 ADCIRCPY_FORCING_CLASSES = (Forcing, Tides)
 
+PYSCHISM_FORCINGS = {
+    # TODO enumerate pySCHISM forcing classes here
+    ...
+}
+
+PYSCHISM_FORCING_CLASSES = (...)
+
 
 class ForcingJSON(ConfigurationJSON, ABC):
     """
@@ -60,6 +67,34 @@ class ForcingJSON(ConfigurationJSON, ABC):
                 sys.modules[__name__], ADCIRCPY_FORCINGS[forcing_class_name]
             )
             return configuration_class.from_adcircpy(forcing)
+        else:
+            raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def pyschism_forcing(self) -> ...:
+        """
+        create an pySCHISM forcing object with values from this configuration
+        """
+
+        raise NotImplementedError
+
+    def to_pyschism(self) -> ...:
+        return self.pyschism_forcing
+
+    @classmethod
+    @abstractmethod
+    def from_pyschism(cls, forcing: ...) -> 'ForcingJSON':
+        """
+        read configuration values from an pySCHISM forcing object
+        """
+
+        forcing_class_name = forcing.__class__.__name__
+        if forcing_class_name in PYSCHISM_FORCINGS:
+            configuration_class = getattr(
+                sys.modules[__name__], PYSCHISM_FORCINGS[forcing_class_name]
+            )
+            return configuration_class.from_pyschism(forcing)
         else:
             raise NotImplementedError()
 

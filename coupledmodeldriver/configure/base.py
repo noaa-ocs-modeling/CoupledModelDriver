@@ -340,6 +340,15 @@ class SlurmJSON(ConfigurationJSON):
 
         instance['filename'] = slurm_config._filename
 
+    def to_pyschism(self) -> ...:
+        # TODO write pySCHISM implementation here
+        ...
+
+    @classmethod
+    def from_pyschism(cls, slurm_config: ...):
+        # TODO write pySCHISM implementation here
+        ...
+
 
 class ModelDriverJSON(ConfigurationJSON):
     """
