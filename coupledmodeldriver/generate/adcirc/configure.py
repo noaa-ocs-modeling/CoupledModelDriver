@@ -25,6 +25,7 @@ from coupledmodeldriver.configure.forcings.base import (
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
+from coupledmodeldriver.generate.adcirc.check import is_adcirc_directory
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.utilities import LOGGER
 
@@ -267,6 +268,36 @@ class ADCIRCRunConfiguration(RunConfiguration):
 
         return super().read_directory(directory, required, supplementary)
 
+    @classmethod
+    def from_model_configuration_directory(cls, directory: PathLike) -> 'RunConfiguration':
+        if not isinstance(directory, Path):
+            directory = Path(directory)
+
+        configurations = []
+
+        spinup_directory = directory / 'spinup'
+        if spinup_directory.exists():
+            if not is_adcirc_directory(spinup_directory):
+                raise FileNotFoundError(f'not an ADCIRC directory: "{spinup_directory}"')
+
+            configurations.append(ADCIRCJSON.from_fort15(spinup_directory / 'fort.15'))
+
+        runs_directory = directory / 'runs'
+        if runs_directory.exists():
+            perturbations = {}
+            for run_directory in runs_directory.iterdir():
+                pass
+
+        if not is_adcirc_directory(directory):
+            raise FileNotFoundError('not an ADCIRC directory')
+
+        required = {configuration_class: None for configuration_class in cls.REQUIRED}
+        supplementary = {
+            configuration_class: None for configuration_class in cls.SUPPLEMENTARY
+        }
+
+        return cls()
+
 
 class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
     """
@@ -274,10 +305,8 @@ class NEMSADCIRCRunConfiguration(ADCIRCRunConfiguration):
     """
 
     REQUIRED = {
-        ModelDriverJSON,
+        *ADCIRCRunConfiguration.REQUIRED,
         NEMSJSON,
-        SlurmJSON,
-        ADCIRCJSON,
     }
 
     def __init__(

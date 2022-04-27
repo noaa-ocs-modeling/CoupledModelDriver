@@ -343,7 +343,7 @@ def initialize_adcirc(
     absolute_paths: bool = True,
     overwrite: bool = None,
     verbose: bool = False,
-):
+) -> ADCIRCRunConfiguration:
     """
     creates a set of JSON configuration files according to the given parameters
 
@@ -444,6 +444,8 @@ def initialize_adcirc(
         platform=platform, parallel=True, slurm_partition=partition
     )
     generation_job_script.write(filename=output_directory / 'generate.job', overwrite=True)
+
+    return configuration
 
 
 def get_argument(

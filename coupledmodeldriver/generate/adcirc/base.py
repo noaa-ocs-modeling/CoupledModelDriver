@@ -3,7 +3,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy import AdcircMesh, AdcircRun, Fort15, Tides
 from adcircpy.forcing import BestTrackForcing
 from adcircpy.forcing.base import Forcing
 from adcircpy.mesh.fort13 import NodalAttributes
@@ -529,3 +529,7 @@ class ADCIRCJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         instance.base_mesh = self.base_mesh
         instance.forcings = self.forcings
         return instance
+
+    @classmethod
+    def from_fort15(cls, filename: PathLike):
+        Fort15()
