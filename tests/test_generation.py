@@ -9,8 +9,17 @@ import pytest
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.client.initialize_adcirc import initialize_adcirc
-from coupledmodeldriver.generate import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration, generate_adcirc_configuration
-from tests import (INPUT_DIRECTORY, OUTPUT_DIRECTORY, REFERENCE_DIRECTORY, check_reference_directory)
+from coupledmodeldriver.generate import (
+    ADCIRCRunConfiguration,
+    generate_adcirc_configuration,
+    NEMSADCIRCRunConfiguration,
+)
+from tests import (
+    check_reference_directory,
+    INPUT_DIRECTORY,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+)
 
 
 def test_hera_adcirc():
@@ -943,7 +952,9 @@ def test_adcirc_run_configuration():
     )
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
-    parsed_configuration = ADCIRCRunConfiguration.from_model_configuration_directory(output_directory)
+    parsed_configuration = ADCIRCRunConfiguration.from_model_configuration_directory(
+        output_directory
+    )
 
     assert parsed_configuration == configuration
 
@@ -1013,6 +1024,8 @@ def test_nems_adcirc_run_configuration():
     )
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
-    parsed_configuration = NEMSADCIRCRunConfiguration.from_model_configuration_directory(output_directory)
+    parsed_configuration = NEMSADCIRCRunConfiguration.from_model_configuration_directory(
+        output_directory
+    )
 
     assert parsed_configuration == configuration

@@ -50,12 +50,16 @@ def parse_initialize_from_configuration_arguments():
     }
 
 
-def initialize_from_model_configuration_directory(directory: PathLike, model: ModelJSON = None) -> RunConfiguration:
+def initialize_from_model_configuration_directory(
+    directory: PathLike, model: ModelJSON = None
+) -> RunConfiguration:
     if model is None:
         model = ADCIRCJSON
 
     if model == ADCIRCJSON:
-        run_configuration = ADCIRCRunConfiguration.from_model_configuration_directory(directory=directory)
+        run_configuration = ADCIRCRunConfiguration.from_model_configuration_directory(
+            directory=directory
+        )
     else:
         raise NotImplementedError(f'model "{model}" not implemented')
 
@@ -65,12 +69,10 @@ def initialize_from_model_configuration_directory(directory: PathLike, model: Mo
 def main():
     arguments = parse_initialize_from_configuration_arguments()
     run_configuration = initialize_from_model_configuration_directory(
-        directory=arguments['input_directory'],
-        model=arguments['model'],
+        directory=arguments['input_directory'], model=arguments['model'],
     )
     run_configuration.write_directory(
-        directory=arguments['output_directory'],
-        overwrite=arguments['overwrite'],
+        directory=arguments['output_directory'], overwrite=arguments['overwrite'],
     )
 
 
