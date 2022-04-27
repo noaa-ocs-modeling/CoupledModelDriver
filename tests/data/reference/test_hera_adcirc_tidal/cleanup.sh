@@ -2,13 +2,7 @@
 DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # clean spinup files
-pushd ${DIRECTORY}/spinup >/dev/null 2>&1
-rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.6* fort.80
-popd >/dev/null 2>&1
+rm -rf ${DIRECTORY}/spinup/PE* ${DIRECTORY}/spinup/ADC_* ${DIRECTORY}/spinup/max* ${DIRECTORY}/spinup/partmesh.txt ${DIRECTORY}/spinup/metis_graph.txt ${DIRECTORY}/spinup/fort.16 ${DIRECTORY}/spinup/fort.80 ${DIRECTORY}/spinup/fort.6*
 
 # clean run configurations
-for hotstart in ${DIRECTORY}/runs/*/; do
-    pushd ${hotstart} >/dev/null 2>&1
-    rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.63 fort.64 fort.80
-    popd >/dev/null 2>&1
-done
+rm -rf ${DIRECTORY}/runs/*/PE* ${DIRECTORY}/runs/*/ADC_* ${DIRECTORY}/runs/*/max* ${DIRECTORY}/runs/*/partmesh.txt ${DIRECTORY}/runs/*/metis_graph.txt ${DIRECTORY}/runs/*/fort.16 ${DIRECTORY}/runs/*/fort.80 ${DIRECTORY}/runs/*/fort.61* ${DIRECTORY}/runs/*/fort.62* ${DIRECTORY}/runs/*/fort.63* ${DIRECTORY}/runs/*/fort.64*

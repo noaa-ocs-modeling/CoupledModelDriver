@@ -4,10 +4,8 @@ from pathlib import Path
 import re
 from typing import Dict, List
 
-from filelock import FileLock
+import pooch
 import pytest
-
-from coupledmodeldriver.utilities import extract_download
 
 DATA_DIRECTORY = Path(__file__).parent / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
@@ -19,12 +17,11 @@ TPXO_FILENAME = INPUT_DIRECTORY / 'h_tpxo9.v1.nc'
 
 @pytest.fixture
 def tpxo_filename() -> Path:
-    with FileLock(str(TPXO_FILENAME) + '.lock'):
-        if not TPXO_FILENAME.exists():
-            # TODO find a better way to host TPXO for testing
-            url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1'
-            extract_download(url, TPXO_FILENAME.parent, ['h_tpxo9.v1.nc'])
-    return TPXO_FILENAME
+    return pooch.retrieve(
+        'https://www.dropbox.com/s/uc44cbo5s2x4n93/h_tpxo9.v1.tar.gz?dl=1',
+        known_hash='54be47bbce88702d8ef232462bfea3456fa76b908e0e905dc94700070031dd25',
+        fname=TPXO_FILENAME,
+    )
 
 
 def check_reference_directory(
@@ -46,6 +43,16 @@ def check_reference_directory(
             )
         else:
             test_filename = test_directory / reference_filename.name
+
+            if reference_filename.suffix in ['.h5', '.nc']:
+                reference_filesize = Path(reference_filename).stat().st_size
+                test_filesize = Path(test_filename).stat().st_size
+
+                diff = test_filesize - reference_filesize
+                message = f'"{test_filesize}" != "{reference_filesize}"\n{diff}'
+
+                assert reference_filesize == test_filesize, message
+                continue
 
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
                 test_lines = list(test_file.readlines())

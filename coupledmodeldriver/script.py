@@ -412,24 +412,33 @@ class EnsembleCleanupScript(Script):
         if self.shebang is not None:
             lines.append(self.shebang)
 
+        filenames = [
+            'PE*',
+            'ADC_*',
+            'max*',
+            'partmesh.txt',
+            'metis_graph.txt',
+            'fort.16',
+            'fort.80',
+        ]
+        spinup_filenames = filenames + ['fort.6*']
+        hotstart_filenames = filenames + ['fort.61*', 'fort.62*', 'fort.63*', 'fort.64*']
+
         lines.extend(
             [
                 *(str(command) for command in self.commands),
                 'DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"',
                 '',
                 '# clean spinup files',
-                'pushd ${DIRECTORY}/spinup >/dev/null 2>&1',
-                'rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.6* fort.80',
-                'popd >/dev/null 2>&1',
+                'rm -rf '
+                + ' '.join(
+                    f'${{DIRECTORY}}/spinup/{filename}' for filename in spinup_filenames
+                ),
                 '',
                 '# clean run configurations',
-                bash_for_loop(
-                    'for hotstart in ${DIRECTORY}/runs/*/',
-                    [
-                        'pushd ${hotstart} >/dev/null 2>&1',
-                        'rm -rf PE* ADC_* max* partmesh.txt metis_graph.txt fort.16 fort.63 fort.64 fort.80',
-                        'popd >/dev/null 2>&1',
-                    ],
+                'rm -rf '
+                + ' '.join(
+                    f'${{DIRECTORY}}/runs/*/{filename}' for filename in hotstart_filenames
                 ),
             ]
         )

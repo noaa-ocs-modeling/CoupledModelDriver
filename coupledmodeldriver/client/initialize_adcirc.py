@@ -136,7 +136,9 @@ def parse_initialize_adcirc_arguments(
 
     # convert extra arguments to their given type
     extra_arguments = {
-        extra_argument: convert_value(arguments.__dict__[extra_argument], argument_info[0])
+        extra_argument: convert_value(
+            arguments.__dict__[extra_argument.replace('-', '_')], argument_info[0]
+        )
         for extra_argument, argument_info in extra_arguments.items()
     }
 
@@ -240,13 +242,13 @@ def parse_initialize_adcirc_arguments(
                 kwargs['tidal_source'] = tidal_source
                 kwargs['constituents'] = tidal_constituents
             if issubclass(forcing_configuration_class, BestTrackForcingJSON):
-                best_track_storm_id = get_argument(
-                    argument='besttrack-storm-id',
+                nhc_code = get_argument(
+                    argument='besttrack-nhc-code',
                     arguments=unknown_arguments,
                     required=True,
-                    message='enter storm ID for best track: ',
+                    message='enter NHC code of storm: ',
                 )
-                kwargs['storm_id'] = best_track_storm_id
+                kwargs['nhc_code'] = nhc_code
                 best_track_start_date = get_argument(
                     argument='besttrack-start-date', arguments=unknown_arguments,
                 )
