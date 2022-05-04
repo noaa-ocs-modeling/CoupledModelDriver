@@ -19,8 +19,10 @@ from coupledmodeldriver.generate.adcirc.script import (
     AdcircRunJob,
     AdcircSetupJob,
     AswipCommand,
+    AdcircEnsembleRunScript,
+    AdcircEnsembleCleanupScript,
 )
-from coupledmodeldriver.script import EnsembleCleanupScript, EnsembleRunScript, SlurmEmailType
+from coupledmodeldriver.script import SlurmEmailType
 from coupledmodeldriver.utilities import (
     create_symlink,
     get_logger,
@@ -246,7 +248,7 @@ def generate_adcirc_configuration(
         for completed_future in concurrent.futures.as_completed(futures):
             LOGGER.info(f'wrote configuration to "{completed_future.result()}"')
 
-    cleanup_script = EnsembleCleanupScript()
+    cleanup_script = AdcircEnsembleCleanupScript()
     LOGGER.debug(
         f'writing cleanup script "{os.path.relpath(ensemble_cleanup_script_filename.resolve(), Path.cwd())}"'
     )
@@ -255,7 +257,7 @@ def generate_adcirc_configuration(
     LOGGER.info(
         f'writing ensemble run script "{os.path.relpath(ensemble_run_script_filename.resolve(), Path.cwd())}"'
     )
-    run_job_script = EnsembleRunScript(
+    run_job_script = AdcircEnsembleRunScript(
         platform=platform,
         commands=[
             'echo deleting previous ADCIRC output',

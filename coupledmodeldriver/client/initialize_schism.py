@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Tuple
 
 from typepigeon import convert_value
+from pyschism.forcing.bctides.tides import TidalDatabase
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.configure import (
@@ -25,20 +26,16 @@ from coupledmodeldriver.configure.forcings.base import (
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import SCHISMRunConfiguration, NEMSSCHISMRunConfiguration
-from coupledmodeldriver.script import EnsembleGenerationJob
+from coupledmodeldriver.generate.schism.script import SchismEnsembleGenerationJob
 from coupledmodeldriver.utilities import get_logger
 
 
 class ForcingConfigurations(Enum):
     tidal = TidalForcingJSON
-    atmesh = ATMESHForcingJSON
-    besttrack = BestTrackForcingJSON
-    owi = OWIForcingJSON
-    ww3data = WW3DATAForcingJSON
 
 
 FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)
-DEFAULT_TIDAL_SOURCE = TidalSource.TPXO
+DEFAULT_TIDAL_SOURCE = TidalDatabase.TPXO
 DEFAULT_TIDAL_CONSTITUENTS = 'all'
 
 
@@ -60,7 +57,9 @@ def parse_initialize_schism_arguments(
         '--platform', required=True, help='HPC platform for which to configure'
     )
     argument_parser.add_argument(
-        '--mesh-directory', required=True, help='path to input mesh (`fort.13`, `fort.14`)'
+        '--mesh-directory',
+        required=True,
+        help='path to input mesh (`hgrid.gr3`, `manning.gr3` or `drag.gr3`)',
     )
     argument_parser.add_argument(
         '--modeled-start-time', required=True, help='start time within the modeled system'
@@ -86,18 +85,23 @@ def parse_initialize_schism_arguments(
     )
     argument_parser.add_argument(
         '--schism-executable',
-        default='schism',
-        help='filename of compiled `schism` or `NEMS.x`',
+        default='pschism-TVD_VL',
+        help='filename of compiled `pschism-TVD_VL` or `NEMS.x`',
     )
     argument_parser.add_argument(
-        '--adcprep-executable',
-        default='adcprep',
-        help='filename of compiled `adcprep` (mesh decomposition)',
+        '--schism-hotstart-combiner',
+        default='combine_hotstart7',
+        help='filename of compiled `combine_hotstart7` executable',
     )
     argument_parser.add_argument(
-        '--aswip-executable',
-        default='aswip',
-        help='filename of compiled `aswip` (preprocessing of best track / ATCF file)',
+        '--schism-schout-combiner',
+        default='combine_output11',
+        help='filename of compiled `combine_output11` executable',
+    )
+    argument_parser.add_argument(
+        '--schism-use-old-io',
+        action='store_true',
+        help='flag to indicate whether SCHISM executable uses old or new IO',
     )
     argument_parser.add_argument(
         '--schism-processors', default=11, help='numbers of processors to assign for SCHISM'
@@ -162,8 +166,13 @@ def parse_initialize_schism_arguments(
         forcings = []
 
     schism_executable = convert_value(arguments.schism_executable, Path).resolve().absolute()
-    adcprep_executable = convert_value(arguments.adcprep_executable, Path).resolve().absolute()
-    aswip_executable = convert_value(arguments.aswip_executable, Path).resolve().absolute()
+    schism_hotstart_combiner = (
+        convert_value(arguments.schism_hotstart_combiner, Path).resolve().absolute()
+    )
+    schism_schout_combiner = (
+        convert_value(arguments.schism_schout_combiner, Path).resolve().absolute()
+    )
+    schism_use_old_io = convert_value(arguments.schism_use_old_io, bool)
 
     job_duration = convert_value(arguments.job_duration, timedelta)
     output_directory = convert_value(arguments.output_directory, Path).resolve().absolute()
@@ -217,7 +226,7 @@ def parse_initialize_schism_arguments(
                     tidal_source.name.lower()
                     if tidal_source != DEFAULT_TIDAL_SOURCE
                     else tidal_source.name.upper()
-                    for tidal_source in TidalSource
+                    for tidal_source in TidalDatabase
                 )
                 tidal_source = get_argument(
                     argument=f'tidal-source',
@@ -226,7 +235,7 @@ def parse_initialize_schism_arguments(
                     message=f'enter tidal forcing source ({tidal_source_options}): ',
                 )
                 if tidal_source is not None:
-                    tidal_source = convert_value(tidal_source, TidalSource)
+                    tidal_source = convert_value(tidal_source, TidalDatabase)
                 else:
                     tidal_source = DEFAULT_TIDAL_SOURCE
                 tidal_constituents = get_argument(
@@ -307,8 +316,9 @@ def parse_initialize_schism_arguments(
         'modulefile': modulefile,
         'forcings': forcing_configurations,
         'schism_executable': schism_executable,
-        'adcprep_executable': adcprep_executable,
-        'aswip_executable': aswip_executable,
+        'schism_hotstart_combiner': schism_hotstart_combiner,
+        'schism_schout_combiner': schism_schout_combiner,
+        'schism_use_old_io': schism_use_old_io,
         'schism_processors': schism_processors,
         'job_duration': job_duration,
         'output_directory': output_directory,
@@ -334,8 +344,9 @@ def initialize_schism(
     modulefile: os.PathLike = None,
     forcings: List[ForcingJSON] = None,
     schism_executable: os.PathLike = None,
-    adcprep_executable: os.PathLike = None,
-    aswip_executable: os.PathLike = None,
+    schism_hotstart_combiner: os.PathLike = None,
+    schism_schout_combiner: os.PathLike = None,
+    schism_use_old_io: bool = False,
     schism_processors: int = None,
     job_duration: timedelta = None,
     output_directory: os.PathLike = None,
@@ -359,9 +370,10 @@ def initialize_schism(
     :param nems_sequence: list of NEMS entries in sequence order
     :param modulefile: path to modulefile to source before model execution
     :param forcings: list of forcings to configure, from ['tidal', 'atmesh', 'besttrack', 'owi', 'ww3data']
-    :param schism_executable: filename of compiled ``schism` `or ``NEMS.x``
-    :param adcprep_executable: filename of compiled ``adcprep`` (mesh decomposition)
-    :param aswip_executable: filename of compiled ``aswip`` (preprocessing of best track / ATCF file)
+    :param schism_executable: filename of compiled ``pschism-TVD_VL` `or ``NEMS.x``
+    :param schism_hotstart_combiner: filename of compiled hotstart combiner
+    :param schism_schout_combiner: filename of compiled SCHISM old output combiner
+    :param schism_use_old_io: flag to indicate if the compiled SCHISM uses old IO
     :param schism_processors: numbers of processors to assign for SCHISM
     :param job_duration: wall clock time for job
     :param output_directory: directory to which to write configuration files (defaults to ``.``)
@@ -393,8 +405,9 @@ def initialize_schism(
             slurm_job_duration=job_duration,
             slurm_email_address=None,
             nems_executable=schism_executable,
-            adcprep_executable=adcprep_executable,
-            aswip_executable=aswip_executable,
+            schism_hotstart_combiner=schism_hotstart_combiner,
+            schism_schout_combiner=schism_schout_combiner,
+            schism_use_old_io=schism_use_old_io,
             source_filename=modulefile,
         )
     else:
@@ -412,8 +425,9 @@ def initialize_schism(
             slurm_job_duration=job_duration,
             slurm_email_address=None,
             schism_executable=schism_executable,
-            adcprep_executable=adcprep_executable,
-            aswip_executable=aswip_executable,
+            schism_hotstart_combiner=schism_hotstart_combiner,
+            schism_schout_combiner=schism_schout_combiner,
+            schism_use_old_io=schism_use_old_io,
             source_filename=modulefile,
         )
 
@@ -439,7 +453,7 @@ def initialize_schism(
     else:
         partition = None
 
-    generation_job_script = EnsembleGenerationJob(
+    generation_job_script = SchismEnsembleGenerationJob(
         platform=platform, parallel=True, slurm_partition=partition
     )
     generation_job_script.write(filename=output_directory / 'generate.job', overwrite=True)

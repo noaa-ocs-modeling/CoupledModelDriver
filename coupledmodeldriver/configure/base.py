@@ -7,9 +7,10 @@ from os import PathLike
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Union
 
-from adcircpy.server import SlurmConfig
+from adcircpy.server import SlurmConfig as ADCIRCPySlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model.base import ModelEntry
+from pyschism.server import SlurmConfig as PySCHISMSlurmConfig
 from typepigeon import convert_to_json, convert_value
 
 from coupledmodeldriver.platforms import Platform
@@ -300,8 +301,8 @@ class SlurmJSON(ConfigurationJSON):
             if self['email_address'] is not None:
                 self['email_type'] = SlurmEmailType.ALL
 
-    def to_adcircpy(self) -> SlurmConfig:
-        return SlurmConfig(
+    def to_adcircpy(self) -> ADCIRCPySlurmConfig:
+        return ADCIRCPySlurmConfig(
             account=self['account'],
             ntasks=self.tasks,
             partition=self['partition'],
@@ -320,7 +321,7 @@ class SlurmJSON(ConfigurationJSON):
         )
 
     @classmethod
-    def from_adcircpy(cls, slurm_config: SlurmConfig):
+    def from_adcircpy(cls, slurm_config: ADCIRCPySlurmConfig):
         instance = cls(
             account=slurm_config._account,
             tasks=slurm_config._slurm_ntasks,
@@ -340,14 +341,43 @@ class SlurmJSON(ConfigurationJSON):
 
         instance['filename'] = slurm_config._filename
 
-    def to_pyschism(self) -> ...:
-        # TODO write pySCHISM implementation here
-        ...
+    def to_pyschism(self) -> PySCHISMSlurmConfig:
+        return PySCHISMSlurmConfig(
+            account=self['account'],
+            ntasks=self.tasks,
+            partition=self['partition'],
+            walltime=self['job_duration'],
+            filename=self['filename'] if 'filename' in self else None,
+            run_directory=self['run_directory'],
+            run_name=self['run_name'],
+            mail_type=self['email_type'],
+            mail_user=self['email_address'],
+            log_filename=self['log_filename'],
+            modules=self['modules'],
+            path_prefix=self['path_prefix'],
+            extra_commands=self['extra_commands'],
+            launcher=self['launcher'],
+            nodes=self['nodes'],
+        )
 
     @classmethod
-    def from_pyschism(cls, slurm_config: ...):
-        # TODO write pySCHISM implementation here
-        ...
+    def from_pyschism(cls, slurm_config: PySCHISMSlurmConfig):
+        instance = cls(
+            account=slurm_config._account,
+            tasks=slurm_config._slurm_ntasks,
+            partition=slurm_config._partition,
+            job_duration=slurm_config._walltime,
+            run_directory=slurm_config._run_directory,
+            run_name=slurm_config._run_name,
+            email_type=slurm_config._mail_type,
+            email_address=slurm_config._mail_user,
+            log_filename=slurm_config._log_filename,
+            modules=slurm_config._modules,
+            path_prefix=slurm_config._path_prefix,
+            extra_commands=slurm_config._extra_commands,
+            launcher=slurm_config._launcher,
+            nodes=slurm_config._nodes,
+        )
 
 
 class ModelDriverJSON(ConfigurationJSON):

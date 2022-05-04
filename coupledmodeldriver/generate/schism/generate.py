@@ -1,4 +1,5 @@
-from copy import deepcopy
+import concurrent.futures
+from copy import copy, deepcopy
 from datetime import datetime, timedelta
 from enum import Enum
 import os
@@ -7,14 +8,25 @@ from pathlib import Path
 from typing import Union
 
 from nemspy import ModelingSystem
+import numpy as np
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.generate.schism.configure import (NEMSSCHISMRunConfiguration, SCHISMRunConfiguration)
-from coupledmodeldriver.generate.schism.script import SchismRunJob
+from coupledmodeldriver.generate.schism.configure import (
+    NEMSSCHISMRunConfiguration,
+    SCHISMRunConfiguration,
+)
+from coupledmodeldriver.generate.schism.script import (
+    SchismEnsembleRunScript,
+    SchismEnsembleCleanupScript,
+    SchismRunJob,
+    SchismCombineHotstartJob,
+    SchismCombineSchoutJob,
+)
 from coupledmodeldriver.script import SlurmEmailType
 from coupledmodeldriver.utilities import (
     create_symlink,
     get_logger,
+    ProcessPoolExecutorStackTraced,
 )
 
 LOGGER = get_logger('cplmdldrv')
@@ -91,8 +103,165 @@ def generate_schism_configuration(
     email_type = base_configuration['slurm']['email_type']
     email_address = base_configuration['slurm']['email_address']
 
-    # TODO create a SCHISM or NEMS + SCHISM configuration
-    ...
+    # TODO update functions for SCHISM
+    original_fgrid_filename = base_configuration['schism']['fgrid_path']
+    original_hgrid_filename = base_configuration['schism']['hgrid_path']
+    schism_processors = base_configuration['schism']['processors']
+    spinup_duration = base_configuration['schism']['tidal_spinup_duration']
+    use_original_mesh = base_configuration['schism']['use_original_mesh']
+
+    if original_hgrid_filename is None or not original_hgrid_filename.exists():
+        raise FileNotFoundError(f'horizontal grid not found at "{original_hgrid_filename}"')
+
+    local_fgrid_filename = output_directory / original_fgrid_filename.name
+    local_hgrid_filename = output_directory / 'hgrid.gr3'
+    local_param_filename = output_directory / 'param.nml'
+
+    do_spinup = spinup_duration is not None
+
+    run_phase = 'HOTSTART' if do_spinup else 'COLDSTART'
+
+    if slurm_account is None:
+        slurm_account = platform.value['slurm_account']
+
+    ensemble_run_script_filename = output_directory / f'run_{platform.name.lower()}.sh'
+    ensemble_cleanup_script_filename = output_directory / f'cleanup.sh'
+
+    if use_original_mesh:
+        LOGGER.info(
+            f'using original mesh from "{os.path.relpath(original_hgrid_filename.resolve(), Path.cwd())}"'
+        )
+        if original_fgrid_filename.exists():
+            create_symlink(original_fgrid_filename, local_fgrid_filename)
+        create_symlink(original_hgrid_filename, local_hgrid_filename)
+    elif overwrite or not local_hgrid_filename.exists():
+        LOGGER.info(
+            f'rewriting original mesh to "{os.path.relpath(local_hgrid_filename.resolve(), Path.cwd())}"'
+        )
+        try:
+            # TODO: COPY MESH FILE
+            ...
+        except Exception as error:
+            LOGGER.warning(error)
+
+    if local_param_filename.exists():
+        os.remove(local_param_filename)
+
+    if local_fgrid_filename.exists():
+        base_configuration['schism']['fgrid_path'] = local_fgrid_filename
+    if local_hgrid_filename.exists():
+        base_configuration['schism']['hgrid_path'] = local_hgrid_filename
+
+    runs_directory = output_directory / 'runs'
+    if not runs_directory.exists():
+        runs_directory.mkdir(parents=True, exist_ok=True)
+
+    perturbations = base_configuration.perturb()
+
+    LOGGER.info(
+        f'generating {len(perturbations)} run configuration(s) in "{os.path.relpath(runs_directory.resolve(), Path.cwd())}"'
+    )
+
+    if parallel:
+        process_pool = ProcessPoolExecutorStackTraced()
+        LOGGER.info(f'leveraging {os.cpu_count()} processor(s)')
+    else:
+        process_pool = None
+
+    futures = []
+
+    if do_spinup:
+        spinup_directory = output_directory / 'spinup'
+
+        spinup_configuration = copy(base_configuration)
+
+        if not spinup_configuration.files_exist(spinup_directory):
+            spinup_kwargs = {
+                'directory': spinup_directory,
+                'configuration': spinup_configuration,
+                'duration': spinup_duration,
+                'local_fgrid_filename': local_fgrid_filename,
+                'local_hgrid_filename': local_hgrid_filename,
+                'link_mesh': True,
+                'relative_paths': relative_paths,
+                'overwrite': overwrite,
+                'platform': platform,
+                'schism_processors': schism_processors,
+                'slurm_account': slurm_account,
+                'job_duration': job_duration,
+                'partition': partition,
+                'email_type': email_type,
+                'email_address': email_address,
+            }
+
+            if parallel:
+                futures.append(process_pool.submit(write_spinup_directory, **spinup_kwargs))
+            else:
+                spinup_directory = write_spinup_directory(**spinup_kwargs)
+                LOGGER.info(f'wrote configuration to "{spinup_directory}"')
+    else:
+        spinup_directory = None
+
+    for run_name, run_configuration in perturbations.items():
+        run_directory = runs_directory / run_name
+
+        if not run_configuration.files_exist(run_directory):
+            run_kwargs = {
+                'directory': run_directory,
+                'name': run_name,
+                'phase': run_phase,
+                'configuration': run_configuration,
+                'local_fgrid_filename': local_fgrid_filename,
+                'local_hgrid_filename': local_hgrid_filename,
+                'link_mesh': use_original_mesh,
+                'relative_paths': relative_paths,
+                'overwrite': overwrite,
+                'platform': platform,
+                'schism_processors': schism_processors,
+                'slurm_account': slurm_account,
+                'job_duration': job_duration,
+                'partition': partition,
+                'email_type': email_type,
+                'email_address': email_address,
+                'do_spinup': do_spinup,
+                'spinup_directory': spinup_directory,
+            }
+
+            if parallel:
+                futures.append(process_pool.submit(write_run_directory, **run_kwargs))
+            else:
+                write_run_directory(**run_kwargs)
+                LOGGER.info(f'wrote configuration to "{run_directory}"')
+
+    if parallel:
+        for completed_future in concurrent.futures.as_completed(futures):
+            LOGGER.info(f'wrote configuration to "{completed_future.result()}"')
+
+    cleanup_script = SchismEnsembleCleanupScript()
+    LOGGER.debug(
+        f'writing cleanup script "{os.path.relpath(ensemble_cleanup_script_filename.resolve(), Path.cwd())}"'
+    )
+    cleanup_script.write(filename=ensemble_cleanup_script_filename, overwrite=overwrite)
+
+    LOGGER.info(
+        f'writing ensemble run script "{os.path.relpath(ensemble_run_script_filename.resolve(), Path.cwd())}"'
+    )
+    run_job_script = SchismEnsembleRunScript(
+        platform=platform,
+        commands=[
+            'echo deleting previous SCHISM output',
+            f'sh {ensemble_cleanup_script_filename.name}',
+            'echo deleting previous SCHISM logs',
+            'rm spinup/*.log runs/*/*.log',
+        ],
+        run_spinup=do_spinup,
+    )
+    run_job_script.write(ensemble_run_script_filename, overwrite=overwrite)
+
+    if starting_directory is not None:
+        os.chdir(starting_directory)
+
+    LOGGER.info(f'finished in {datetime.now() - start_time}')
 
     if starting_directory is not None:
         os.chdir(starting_directory)
@@ -104,6 +273,9 @@ def write_spinup_directory(
     directory: PathLike,
     configuration: Union[SCHISMRunConfiguration, NEMSSCHISMRunConfiguration],
     duration: timedelta,
+    local_hgrid_filename: PathLike,
+    local_fgrid_filename: PathLike = None,
+    link_mesh: bool = False,
     relative_paths: bool = False,
     overwrite: bool = False,
     platform: Platform = None,
@@ -142,13 +314,26 @@ def write_spinup_directory(
         return directory
 
     job_name = 'SCHISM_COLDSTART_SPINUP'
+    combine_job_name = 'SCHISM_COMBINE_HOTSTARTFILES_SPINUP'
 
     pyschism_driver = configuration.pyschism_driver
+
+    start_date = configuration['schism']['modeled_start_time']
+    end_date = configuration['schism']['modeled_end_time']
+    spinup_duration = configuration['schism']['tidal_spinup_duration']
+
+    pyschism_driver.param.opt.start_date = start_date - spinup_duration
+    pyschism_driver.param.core.rnday = spinup_duration
+    pyschism_driver.param.core.ihfskip = spinup_duration
+    pyschism_driver.param.schout.nhot = 1
+    pyschism_driver.param.schout.nhot_write = pyschism_driver.param.core.ihfskip
 
     if relative_paths:
         configuration.relative_to(directory, inplace=True)
 
+    schism_old_io = False
     if 'nems' in configuration:
+        # TODO: Check if nems uses the new or old io run
         nems = configuration.nemspy_modeling_system
         nems = ModelingSystem(
             nems.start_time - duration,
@@ -163,6 +348,7 @@ def write_spinup_directory(
         nems = None
         processors = schism_processors
         model_executable = configuration['schism']['schism_executable_path']
+        schism_old_io = configuration['schism']['schism_use_old_io']
 
     source_filename = configuration['schism']['source_filename']
 
@@ -170,9 +356,9 @@ def write_spinup_directory(
     source_filename = update_path_relative(source_filename, relative_paths, directory)
 
     job_script_filename = directory / 'schism.job'
-
     job_script = SchismRunJob(
         platform=platform,
+        old_io=schism_old_io,
         slurm_tasks=processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
@@ -185,8 +371,38 @@ def write_spinup_directory(
         slurm_log_filename=f'{job_name}.out.log',
         source_filename=source_filename,
     )
-
     job_script.write(job_script_filename, overwrite=overwrite)
+
+    combine_script_filename = directory / 'combine_hotstart.job'
+    combine_script = SchismCombineHotstartJob(
+        platform=platform,
+        iterations_idx=[pyschism_driver.param.schout.nhot_write],
+        slurm_tasks=processors,
+        slurm_account=slurm_account,
+        slurm_duration=job_duration,
+        slurm_run_name=combine_job_name,
+        executable=model_executable,
+        slurm_partition=partition,
+        slurm_email_type=email_type,
+        slurm_email_address=email_address,
+        slurm_error_filename=f'{combine_job_name}.err.log',
+        slurm_log_filename=f'{combine_job_name}.out.log',
+        source_filename=source_filename,
+    )
+    combine_script.write(combine_script_filename, overwrite=overwrite)
+
+    # Link to the combined hotstart file
+    try:
+        combined_hotstart_filename = (
+            f'hotstart_it={pyschism_driver.param.schout.nhot_write}.nc'
+        )
+        create_symlink(
+            directory / 'outputs' / combined_hotstart_filename,
+            directory / 'hotstart_out.nc',
+            relative=True,
+        )
+    except:
+        LOGGER.warning(f'unable to link `{combined_hotstart_filename}`')
 
     if 'nems' in configuration:
         LOGGER.debug(f'setting spinup to {duration}')
@@ -202,11 +418,7 @@ def write_spinup_directory(
             f'writing SCHISM tidal spinup configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
         )
 
-    # TODO write pySCHISM driver write command here
-    pyschism_driver.write(
-        directory,
-        overwrite=overwrite,
-    )
+    pyschism_driver.write(directory, overwrite=overwrite)
 
     return directory
 
@@ -216,6 +428,9 @@ def write_run_directory(
     name: str,
     phase: str,
     configuration: Union[SCHISMRunConfiguration, NEMSSCHISMRunConfiguration],
+    local_hgrid_filename: PathLike,
+    local_fgrid_filename: PathLike = None,
+    link_mesh: bool = False,
     relative_paths: bool = False,
     overwrite: bool = False,
     platform: Platform = None,
@@ -264,13 +479,24 @@ def write_run_directory(
         return directory
 
     job_name = f'SCHISM_{phase}_{name}'
+    combine_job_name = f'SCHISM_COMBINE_HOTSTARTFILES_{name}'
+    combine2_job_name = f'SCHISM_COMBINE_OUTPUTFILES_{name}'
 
     pyschism_driver = configuration.pyschism_driver
+
+    pyschism_driver.param.opt.dramp = None
+    pyschism_driver.param.opt.drampbc = None
+    pyschism_driver.param.opt.dramp_ss = None
+    pyschism_driver.param.opt.drampwind = None
+    if do_spinup:
+        pyschism_driver.param.opt.ihot = 1
 
     if relative_paths:
         configuration.relative_to(directory, inplace=True)
 
+    schism_old_io = False
     if 'nems' in configuration:
+        # TODO: Check if nems uses the new or old io run
         nems = configuration.nemspy_modeling_system
         processors = nems.processors
         model_executable = configuration['nems']['executable_path']
@@ -278,6 +504,7 @@ def write_run_directory(
         nems = None
         processors = schism_processors
         model_executable = configuration['schism']['schism_executable_path']
+        schism_old_io = configuration['schism']['schism_use_old_io']
 
     source_filename = configuration['schism']['source_filename']
 
@@ -285,9 +512,9 @@ def write_run_directory(
     source_filename = update_path_relative(source_filename, relative_paths, directory)
 
     job_script_filename = directory / 'schism.job'
-
     job_script = SchismRunJob(
         platform=platform,
+        old_io=schism_old_io,
         slurm_tasks=processors,
         slurm_account=slurm_account,
         slurm_duration=job_duration,
@@ -300,8 +527,61 @@ def write_run_directory(
         slurm_log_filename=f'{job_name}.out.log',
         source_filename=source_filename,
     )
-
     job_script.write(job_script_filename, overwrite=overwrite)
+
+    rnday = pyschism_driver.param.core.rnday
+    ihfskip = pyschism_driver.param.core.ihfskip
+    nhot = pyschism_driver.param.schout.nhot
+    nhot_write = pyschism_driver.param.schout.nhot_write
+    dt = pyschism_driver.param.core.dt
+
+    if nhot == 1 and nhot_write is not None:
+
+        # num_hs_files = int(nhot_write / ihfskip)
+        num_hs_files = int(round(timedelta(days=rnday).total_seconds() / (dt * nhot_write)))
+        hotstart_iters_idx = [nhot_write * (mult + 1) for mult in range(num_hs_files)]
+
+        combine_script_filename = directory / 'combine_hotstart.job'
+        combine_script = SchismCombineHotstartJob(
+            platform=platform,
+            iterations_idx=hotstart_iters_idx,
+            slurm_tasks=processors,
+            slurm_account=slurm_account,
+            slurm_duration=job_duration,
+            slurm_run_name=combine_job_name,
+            executable=model_executable,
+            slurm_partition=partition,
+            slurm_email_type=email_type,
+            slurm_email_address=email_address,
+            slurm_error_filename=f'{combine_job_name}.err.log',
+            slurm_log_filename=f'{combine_job_name}.out.log',
+            source_filename=source_filename,
+        )
+        combine_script.write(combine_script_filename, overwrite=overwrite)
+
+    if schism_old_io:
+        end_output_stack_idx = int(
+            np.ceil(np.ceil(timedelta(days=rnday).total_seconds() / dt) / ihfskip)
+        )
+
+        combine2_script_filename = directory / 'combine_output.job'
+        combine2_script = SchismCombineSchoutJob(
+            platform=platform,
+            start_idx=1,
+            end_idx=end_output_stack_idx,
+            slurm_tasks=processors,
+            slurm_account=slurm_account,
+            slurm_duration=job_duration,
+            slurm_run_name=combine2_job_name,
+            executable=model_executable,
+            slurm_partition=partition,
+            slurm_email_type=email_type,
+            slurm_email_address=email_address,
+            slurm_error_filename=f'{combine2_job_name}.err.log',
+            slurm_log_filename=f'{combine2_job_name}.out.log',
+            source_filename=source_filename,
+        )
+        combine2_script.write(combine2_script_filename, overwrite=overwrite)
 
     if 'nems' in configuration:
         nems.write(
@@ -315,26 +595,20 @@ def write_run_directory(
             f'writing SCHISM run configuration to "{os.path.relpath(directory.resolve(), Path.cwd())}"'
         )
 
-    # TODO write pySCHISM configuration
     pyschism_driver.write(
-        directory,
-        overwrite=overwrite,
+        directory, overwrite=overwrite,
     )
 
     if do_spinup:
-        # TODO enumerate SCHISM hotstart filenames here
-        for hotstart_filename in [...]:
-            try:
-                create_symlink(
-                    spinup_directory / hotstart_filename,
-                    directory / hotstart_filename,
-                    relative=True,
-                )
-            except:
-                LOGGER.warning(
-                    f'unable to link `{hotstart_filename}` from coldstart to hotstart; '
-                    'you must manually link or copy this file after coldstart completes'
-                )
+        try:
+            create_symlink(
+                spinup_directory / 'hotstart_out.nc', directory / 'hotstart.nc', relative=True,
+            )
+        except:
+            LOGGER.warning(
+                f'unable to link hotstart from coldstart to hotstart; '
+                'you must manually link or copy this file after coldstart completes'
+            )
 
     return directory
 

@@ -4,7 +4,12 @@ from pathlib import Path
 from typing import List
 
 from coupledmodeldriver.platforms import Platform
-from coupledmodeldriver.script import JobScript
+from coupledmodeldriver.script import (
+    JobScript,
+    EnsembleGenerationJob,
+    EnsembleRunScript,
+    EnsembleCleanupScript,
+)
 
 
 class AdcircJob(JobScript):
@@ -272,3 +277,103 @@ class AdcircSetupJob(AdcircJob):
             )
 
         self.commands.extend(setup_commands)
+
+
+class AdcircEnsembleGenerationJob(EnsembleGenerationJob):
+    """
+    job script to generate the ensemble configuration
+    """
+
+    def __init__(
+        self,
+        platform: Platform,
+        slurm_tasks: int = None,
+        slurm_duration: timedelta = None,
+        slurm_account: str = None,
+        commands: List[str] = None,
+        parallel: bool = False,
+        **kwargs,
+    ):
+        super().__init__(
+            platform=platform,
+            generate_command='generate_adcirc',
+            commands=commands,
+            slurm_run_name='ADCIRC_GENERATE_CONFIGURATION',
+            slurm_tasks=slurm_tasks,
+            slurm_duration=slurm_duration,
+            slurm_account=slurm_account,
+            parallel=parallel,
+            **kwargs,
+        )
+
+
+class AdcircEnsembleRunScript(EnsembleRunScript):
+    """
+    script to run the ensemble, either by running it directly or by submitting model execution to the job manager
+    default filename is ``run_<platform>.sh``
+    """
+
+    def _spinup_lines(self):
+        spinup_lines = ['# run spinup', 'pushd ${DIRECTORY}/spinup >/dev/null 2>&1']
+        if self.platform.value['uses_slurm']:
+            dependencies = ['$setup_jobid']
+            if len(dependencies) > 0:
+                dependencies = f'--dependency=afterok:{":".join(dependencies)}'
+            else:
+                dependencies = ''
+            # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
+            spinup_lines.extend(
+                [
+                    "setup_jobid=$(sbatch setup.job | awk '{print $NF}')",
+                    f"spinup_jobid=$(sbatch {dependencies} adcirc.job | awk '{{print $NF}}')",
+                ]
+            )
+        else:
+            spinup_lines.extend(['sh setup.job', 'sh adcirc.job'])
+        spinup_lines.extend(['popd >/dev/null 2>&1', ''])
+
+        return spinup_lines
+
+    def _hotstart_lines(self):
+        hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
+        if self.platform.value['uses_slurm']:
+            dependencies = ['$setup_jobid']
+            if self.run_spinup:
+                dependencies.append('$spinup_jobid')
+            if len(dependencies) > 0:
+                dependencies = f'--dependency=afterok:{":".join(dependencies)}'
+            else:
+                dependencies = ''
+            # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
+            hotstart_lines.extend(
+                [
+                    f"setup_jobid=$(sbatch setup.job | awk '{{print $NF}}')",
+                    f'sbatch {dependencies} adcirc.job',
+                ]
+            )
+        else:
+            hotstart_lines.extend(['sh setup.job', 'sh adcirc.job'])
+        hotstart_lines.append('popd >/dev/null 2>&1')
+
+        return hotstart_lines
+
+
+class AdcircEnsembleCleanupScript(EnsembleCleanupScript):
+    """
+    script for cleaning an ensemble configuration, by deleting output and log files
+    """
+
+    def __init__(self, commands: List[str] = None):
+        filenames = [
+            'PE*',
+            'ADC_*',
+            'max*',
+            'partmesh.txt',
+            'metis_graph.txt',
+            'fort.16',
+            'fort.80',
+        ]
+        spinup_filenames = ['fort.6*']
+        hotstart_filenames = ['fort.61*', 'fort.62*', 'fort.63*', 'fort.64*']
+
+        super().__init__(commands, filenames, spinup_filenames, hotstart_filenames)

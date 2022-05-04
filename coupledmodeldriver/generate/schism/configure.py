@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 
 from nemspy import ModelingSystem
 from nemspy.model.base import ModelEntry
+from pyschism.driver import ModelDriver
+from pyschism.mesh import Hgrid
 
 from coupledmodeldriver.configure import NEMSJSON
 from coupledmodeldriver.configure.base import (
@@ -16,12 +18,8 @@ from coupledmodeldriver.configure.base import (
 )
 from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (
-    ATMESHForcingJSON,
-    BestTrackForcingJSON,
     ForcingJSON,
-    OWIForcingJSON,
     TidalForcingJSON,
-    WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.schism.base import SCHISMJSON
 from coupledmodeldriver.platforms import Platform
@@ -40,10 +38,6 @@ class SCHISMRunConfiguration(RunConfiguration):
     }
     SUPPLEMENTARY = {
         TidalForcingJSON,
-        BestTrackForcingJSON,
-        OWIForcingJSON,
-        ATMESHForcingJSON,
-        WW3DATAForcingJSON,
     }
 
     def __init__(
@@ -61,6 +55,9 @@ class SCHISMRunConfiguration(RunConfiguration):
         slurm_partition: str = None,
         slurm_email_address: str = None,
         schism_executable: PathLike = None,
+        schism_hotstart_combiner: PathLike = None,
+        schism_schout_combiner: PathLike = None,
+        schism_use_old_io: bool = False,
         source_filename: PathLike = None,
     ):
         """
@@ -76,7 +73,10 @@ class SCHISMRunConfiguration(RunConfiguration):
         :param slurm_job_duration: wall clock time of job
         :param slurm_partition: Slurm partition
         :param slurm_email_address: email address to send Slurm notifications
-        :param schism_executable: filename of compiled ``schism``
+        :param schism_executable: filename of compiled ``pschism-TVD_VL``
+        :param schism_hotstart_combiner: filename of compiled hotstart combiner
+        :param schism_schout_combiner: filename of compiled SCHISM old output combiner
+        :param schism_use_old_io: flag to indicate if the compiled SCHISM uses old IO
         :param source_filename: path to module file to ``source``
         """
 
@@ -95,7 +95,13 @@ class SCHISMRunConfiguration(RunConfiguration):
             schism_processors = 11
 
         if schism_executable is None:
-            schism_executable = 'schism'
+            schism_executable = 'pschism-TVD_VL'
+
+        if schism_hotstart_combiner is None:
+            schism_hotstart_combiner = 'combine_hotstart7'
+
+        if schism_schout_combiner is None:
+            schism_schout_combiner = 'combine_output11'
 
         slurm = SlurmJSON(
             account=platform.value['slurm_account'],
@@ -107,13 +113,14 @@ class SCHISMRunConfiguration(RunConfiguration):
 
         schism = SCHISMJSON(
             schism_executable_path=schism_executable,
-            adcprep_executable_path=adcprep_executable,
-            aswip_executable_path=aswip_executable,
+            schism_hotstart_combiner_path=schism_hotstart_combiner,
+            schism_schout_combiner_path=schism_schout_combiner,
+            schism_use_old_io=schism_use_old_io,
             modeled_start_time=modeled_start_time,
             modeled_end_time=modeled_end_time,
             modeled_timestep=modeled_timestep,
-            fort_13_path=mesh_directory / 'fort.13',
-            fort_14_path=mesh_directory / 'fort.14',
+            fgrid_path=mesh_directory / 'manning.gr3',
+            hgrid_path=mesh_directory / 'hgrid.gr3',
             tidal_spinup_duration=tidal_spinup_duration,
             source_filename=source_filename,
             slurm_configuration=slurm,
@@ -143,20 +150,16 @@ class SCHISMRunConfiguration(RunConfiguration):
         ]
 
     @property
-    def pyschism_mesh(self) -> ...:
+    def pyschism_mesh(self) -> Hgrid:
         return self['schism'].pyschism_mesh
 
     @pyschism_mesh.setter
-    def pyschism_mesh(self, pyschism_mesh: ...):
+    def pyschism_mesh(self, pyschism_mesh: Hgrid):
         self['schism'].pyschism_mesh = pyschism_mesh
 
     @property
-    def pyschism_driver(self) -> ...:
+    def pyschism_driver(self) -> ModelDriver:
         return self['schism'].pyschism_driver
-
-    @pyschism_driver.setter
-    def pyschism_driver(self, pyschism_driver: ...):
-        self['schism'].pyschism_driver = pyschism_driver
 
     def files_exist(self, directory: PathLike) -> bool:
         if not isinstance(directory, Path):
@@ -166,12 +169,18 @@ class SCHISMRunConfiguration(RunConfiguration):
             return False
 
         files_to_write = [
-            # TODO enumerate SCHISM files here
-            ...
+            'bctides.in',
+            'hgrid.gr3',
+            'hgrid.ll',
+            #            'manning.gr3',
+            'outputs',
+            'param.nml',
+            'vgrid.in',
+            'schism.job',
         ]
         if 'nems' in self:
             files_to_write.extend(
-                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc', ]
+                ['nems.configure', 'atm_namelist.rc', 'model_configure', 'config.rc',]
             )
         existing_files = [filename.name for filename in directory.iterdir()]
 
@@ -271,6 +280,9 @@ class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
         slurm_partition: str = None,
         slurm_email_address: str = None,
         nems_executable: PathLike = None,
+        schism_hotstart_combiner: PathLike = None,
+        schism_schout_combiner: PathLike = None,
+        # schism_use_old_io: bool = False,
         adcprep_executable: PathLike = None,
         aswip_executable: PathLike = None,
         source_filename: PathLike = None,
@@ -295,6 +307,8 @@ class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
         :param nems_executable: filename of compiled ``schism``
         :param source_filename: path to module file to ``source``
         """
+
+        # TODO: Implement nems coupling for SCHISM
 
         self.__nems = None
 
