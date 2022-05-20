@@ -10,4 +10,4 @@
 set -e
 
 generate_adcirc --parallel
-echo "use ./run_hera.sh to start model"
+echo "use ./run_<platform>.sh to start model"

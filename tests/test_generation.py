@@ -356,9 +356,6 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet():
         verbose=False,
     )
 
-    # TODO fix this
-    os.chdir(output_directory)
-
     generate_adcirc_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(

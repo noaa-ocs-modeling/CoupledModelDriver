@@ -25,7 +25,12 @@ from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.base import ModelForcing as PySCHISMForcing
 
-from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import (
+    AttributeJSON,
+    ConfigurationJSON,
+    NEMSCapJSON,
+    NoRelPath,
+)
 from coupledmodeldriver.configure.models import Model
 from coupledmodeldriver.utilities import LOGGER
 
@@ -170,7 +175,30 @@ class FileForcingJSON(ForcingJSON, ABC):
         self['resource'] = resource
 
 
-class TidalForcingJSON(FileForcingJSON):
+class FileGenForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a forcing configuration tied to a file on disk which is
+    used to generate the forcing
+    """
+
+    field_types = {'resource': NoRelPath}
+
+    def __init__(self, resource: PathLike, **kwargs):
+        if resource is None:
+            LOGGER.warning(
+                f'resource path not specified for "{self.default_filename}"; '
+                f'update entry before generating configuration'
+            )
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(FileGenForcingJSON.field_types)
+
+        ForcingJSON.__init__(self, **kwargs)
+
+        self['resource'] = resource
+
+
+class TidalForcingJSON(FileGenForcingJSON):
     """
     tidal configuration in ``configure_tidal.json``
 
@@ -369,7 +397,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         'interval': timedelta,
         'start_date': datetime,
         'end_date': datetime,
-        'fort22_filename': Path,
+        'fort22_filename': NoRelPath,
     }
 
     def __init__(

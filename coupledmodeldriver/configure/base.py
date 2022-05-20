@@ -18,6 +18,13 @@ from coupledmodeldriver.script import SlurmEmailType
 from coupledmodeldriver.utilities import LOGGER
 
 
+class NoRelPath(type(Path())):
+    """
+    a helper class to indicate paths that are used only during generation
+    and must NOT be converted to relative paths for solve input or run scripts
+    """
+
+
 class ConfigurationJSON(ABC):
     """
     abstraction of a configuration JSON, including getters and setters for values and a built-in schema of field types
@@ -72,7 +79,7 @@ class ConfigurationJSON(ABC):
     def relative_to(self, path: PathLike, inplace: bool = False) -> 'ConfigurationJSON':
         instance = copy(self) if not inplace else self
         for name, value in instance.configuration.items():
-            if isinstance(value, Path):
+            if isinstance(value, Path) and not isinstance(value, NoRelPath):
                 instance[name] = PurePosixPath(os.path.relpath(value.resolve(), path))
         return instance
 
