@@ -344,15 +344,20 @@ def write_spinup_directory(
         )
         processors = nems.processors
         model_executable = configuration['nems']['executable_path']
+        hotstart_combiner = configuration['schism']['schism_hotstart_combiner_path']
     else:
         nems = None
         processors = schism_processors
         model_executable = configuration['schism']['schism_executable_path']
         schism_old_io = configuration['schism']['schism_use_old_io']
+        hotstart_combiner = configuration['schism']['schism_hotstart_combiner_path']
 
     source_filename = configuration['schism']['source_filename']
 
     model_executable = update_path_relative(model_executable, relative_paths, directory)
+    hotstart_combiner = update_path_relative(
+        hotstart_combiner, relative_paths, directory / 'outputs'
+    )
     source_filename = update_path_relative(source_filename, relative_paths, directory)
 
     job_script_filename = directory / 'schism.job'
@@ -381,7 +386,7 @@ def write_spinup_directory(
         slurm_account=slurm_account,
         slurm_duration=job_duration,
         slurm_run_name=combine_job_name,
-        executable=model_executable,
+        executable=hotstart_combiner,
         slurm_partition=partition,
         slurm_email_type=email_type,
         slurm_email_address=email_address,
@@ -500,15 +505,25 @@ def write_run_directory(
         nems = configuration.nemspy_modeling_system
         processors = nems.processors
         model_executable = configuration['nems']['executable_path']
+        hotstart_combiner = configuration['schism']['schism_hotstart_combiner_path']
+        output_combiner = configuration['schism']['schism_schout_combiner_path']
     else:
         nems = None
         processors = schism_processors
         model_executable = configuration['schism']['schism_executable_path']
         schism_old_io = configuration['schism']['schism_use_old_io']
+        hotstart_combiner = configuration['schism']['schism_hotstart_combiner_path']
+        output_combiner = configuration['schism']['schism_schout_combiner_path']
 
     source_filename = configuration['schism']['source_filename']
 
     model_executable = update_path_relative(model_executable, relative_paths, directory)
+    hotstart_combiner = update_path_relative(
+        hotstart_combiner, relative_paths, directory / 'outputs'
+    )
+    output_combiner = update_path_relative(
+        output_combiner, relative_paths, directory / 'outputs'
+    )
     source_filename = update_path_relative(source_filename, relative_paths, directory)
 
     job_script_filename = directory / 'schism.job'
@@ -549,7 +564,7 @@ def write_run_directory(
             slurm_account=slurm_account,
             slurm_duration=job_duration,
             slurm_run_name=combine_job_name,
-            executable=model_executable,
+            executable=hotstart_combiner,
             slurm_partition=partition,
             slurm_email_type=email_type,
             slurm_email_address=email_address,
@@ -573,7 +588,7 @@ def write_run_directory(
             slurm_account=slurm_account,
             slurm_duration=job_duration,
             slurm_run_name=combine2_job_name,
-            executable=model_executable,
+            executable=output_combiner,
             slurm_partition=partition,
             slurm_email_type=email_type,
             slurm_email_address=email_address,

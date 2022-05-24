@@ -25,6 +25,7 @@ Documentation can be found at https://coupledmodeldriver.readthedocs.io
 - **models**
     - circulation models
         - ADCIRC (uses [ADCIRCpy](https://pypi.org/project/adcircpy))
+        - SCHISM (uses [PySCHISM](https://github.com/schism-dev/pyschism))
     - forcings
         - ATMESH
         - WW3DATA

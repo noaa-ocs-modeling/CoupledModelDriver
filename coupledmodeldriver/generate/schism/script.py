@@ -136,8 +136,12 @@ class SchismCombineSchoutJob(SchismJob):
         self.executable = executable
         self.start_idx = start_idx
         self.end_idx = end_idx
-        self.commands.append(
-            f'{self.executable} --begin {self.start_idx} --end {self.end_idx}'
+        self.commands.extend(
+            [
+                'pushd outputs',
+                f'{self.executable} --begin {self.start_idx} --end {self.end_idx}',
+                'popd',
+            ]
         )
 
 
@@ -174,7 +178,11 @@ class SchismCombineHotstartJob(SchismJob):
         self.executable = executable
         self.iterations_idx = iterations_idx
         self.commands.extend(
-            [f'{self.executable} --iteration {it}' for it in self.iterations_idx]
+            [
+                'pushd outputs',
+                *[f'{self.executable} --iteration {it}' for it in self.iterations_idx],
+                'popd',
+            ]
         )
 
 
