@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import sys
 
 from adcircpy.forcing.tides.tides import TidalSource, Tides
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
@@ -905,6 +906,9 @@ def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
     )
 
 
+@pytest.mark.skipif(
+    sys.platform == 'darwin', reason='MacOSX issue with pickling local objects'
+)
 def test_hera_schism():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_schism'
     reference_directory = REFERENCE_DIRECTORY / 'test_hera_schism'
