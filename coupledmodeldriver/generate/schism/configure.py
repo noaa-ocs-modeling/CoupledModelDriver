@@ -20,6 +20,7 @@ from coupledmodeldriver.configure.configure import RunConfiguration
 from coupledmodeldriver.configure.forcings.base import (
     ForcingJSON,
     TidalForcingJSON,
+    BestTrackForcingJSON,
 )
 from coupledmodeldriver.generate.schism.base import SCHISMJSON
 from coupledmodeldriver.platforms import Platform
@@ -38,6 +39,7 @@ class SCHISMRunConfiguration(RunConfiguration):
     }
     SUPPLEMENTARY = {
         TidalForcingJSON,
+        BestTrackForcingJSON,
     }
 
     def __init__(
