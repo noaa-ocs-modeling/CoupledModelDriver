@@ -1,5 +1,5 @@
 from coupledmodeldriver.generate.schism.configure import (
     SCHISMRunConfiguration,
-    NEMSSCHISMRunConfiguration,
+    # NEMSSCHISMRunConfiguration,
 )
 from coupledmodeldriver.generate.schism.generate import generate_schism_configuration

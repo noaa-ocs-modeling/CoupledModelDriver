@@ -249,154 +249,154 @@ class SCHISMRunConfiguration(RunConfiguration):
         return super().read_directory(directory, required, supplementary)
 
 
-class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
-    """
-    run configuration coupling SCHISM with other models / forcings using NUOPC NEMS
-    """
-
-    REQUIRED = {
-        ModelDriverJSON,
-        NEMSJSON,
-        SlurmJSON,
-        SCHISMJSON,
-    }
-
-    def __init__(
-        self,
-        mesh_directory: PathLike,
-        modeled_start_time: datetime,
-        modeled_end_time: datetime,
-        modeled_timestep: timedelta,
-        nems_interval: timedelta,
-        nems_connections: List[str],
-        nems_mediations: List[str],
-        nems_sequence: List[str],
-        tidal_spinup_duration: timedelta = None,
-        platform: Platform = None,
-        perturbations: Dict[str, Dict[str, Any]] = None,
-        forcings: List[ForcingJSON] = None,
-        schism_processors: int = None,
-        slurm_job_duration: timedelta = None,
-        slurm_partition: str = None,
-        slurm_email_address: str = None,
-        nems_executable: PathLike = None,
-        schism_hotstart_combiner: PathLike = None,
-        schism_schout_combiner: PathLike = None,
-        # schism_use_old_io: bool = False,
-        adcprep_executable: PathLike = None,
-        aswip_executable: PathLike = None,
-        source_filename: PathLike = None,
-    ):
-        """
-        :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
-        :param modeled_start_time: start time within the modeled system
-        :param modeled_end_time: end time within the modeled system
-        :param modeled_timestep: time interval within the modeled system
-        :param nems_interval: modeled time interval of main NEMS loop
-        :param nems_connections: list of NEMS connections as strings (i.e. ``ATM -> OCN``)
-        :param nems_mediations: list of NEMS mediations, including functions
-        :param nems_sequence: list of NEMS entries in sequence order
-        :param schism_processors: numbers of processors to assign for SCHISM
-        :param platform: HPC platform for which to configure
-        :param tidal_spinup_duration: spinup time for SCHISM tidal coldstart
-        :param perturbations: dictionary of runs encompassing run names to parameter values
-        :param forcings: list of forcing configurations to connect to SCHISM
-        :param slurm_job_duration: wall clock time of job
-        :param slurm_partition: Slurm partition
-        :param slurm_email_address: email address to send Slurm notifications
-        :param nems_executable: filename of compiled ``schism``
-        :param source_filename: path to module file to ``source``
-        """
-
-        # TODO: Implement nems coupling for SCHISM
-
-        self.__nems = None
-
-        super().__init__(
-            mesh_directory=mesh_directory,
-            modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
-            modeled_timestep=modeled_timestep,
-            tidal_spinup_duration=tidal_spinup_duration,
-            platform=platform,
-            perturbations=perturbations,
-            forcings=None,
-            schism_processors=schism_processors,
-            slurm_job_duration=slurm_job_duration,
-            slurm_partition=slurm_partition,
-            slurm_email_address=slurm_email_address,
-            schism_executable=nems_executable,
-            source_filename=source_filename,
-        )
-
-        nems = NEMSJSON(
-            executable_path=nems_executable,
-            modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_end_time,
-            interval=nems_interval,
-            connections=nems_connections,
-            mediations=nems_mediations,
-            sequence=nems_sequence,
-        )
-
-        self[nems.name.lower()] = nems
-
-        for forcing in forcings:
-            self.add_forcing(forcing)
-
-        self['slurm'].tasks = self.nemspy_modeling_system.processors
-
-    @property
-    def nemspy_entries(self) -> List[ModelEntry]:
-        return [
-            configuration.nemspy_entry
-            for configuration in self.configurations
-            if isinstance(configuration, NEMSCapJSON)
-        ]
-
-    @property
-    def nemspy_modeling_system(self) -> ModelingSystem:
-        return self['nems'].to_nemspy(self.nemspy_entries)
-
-    def add_forcing(self, forcing: ForcingJSON):
-        if forcing not in self:
-            forcing = self[self.add(forcing)]
-            self['schism'].add_forcing(forcing)
-
-    @classmethod
-    def from_configurations(
-        cls, configurations: List[ConfigurationJSON]
-    ) -> 'NEMSSCHISMRunConfiguration':
-        instance = SCHISMRunConfiguration.from_configurations(configurations)
-        instance.__class__ = cls
-
-        nems = None
-        for configuration in configurations:
-            if isinstance(configuration, NEMSJSON):
-                if nems is None:
-                    nems = configuration
-                    break
-                else:
-                    raise ValueError(
-                        f'multiple configurations given for "{NEMSJSON.__name__}"'
-                    )
-        instance['nems'] = nems
-
-        return instance
-
-    @classmethod
-    def read_directory(
-        cls, directory: PathLike, required: List[type] = None, supplementary: List[type] = None
-    ) -> 'NEMSSCHISMRunConfiguration':
-        if not isinstance(directory, Path):
-            directory = Path(directory)
-        if directory.is_file():
-            directory = directory.parent
-        if required is None:
-            required = set()
-        required.update(NEMSSCHISMRunConfiguration.REQUIRED)
-        if supplementary is None:
-            supplementary = set()
-        supplementary.update(NEMSSCHISMRunConfiguration.SUPPLEMENTARY)
-
-        return super().read_directory(directory, required, supplementary)
+# class NEMSSCHISMRunConfiguration(SCHISMRunConfiguration):
+#     """
+#     run configuration coupling SCHISM with other models / forcings using NUOPC NEMS
+#     """
+#
+#     REQUIRED = {
+#         ModelDriverJSON,
+#         NEMSJSON,
+#         SlurmJSON,
+#         SCHISMJSON,
+#     }
+#
+#     def __init__(
+#         self,
+#         mesh_directory: PathLike,
+#         modeled_start_time: datetime,
+#         modeled_end_time: datetime,
+#         modeled_timestep: timedelta,
+#         nems_interval: timedelta,
+#         nems_connections: List[str],
+#         nems_mediations: List[str],
+#         nems_sequence: List[str],
+#         tidal_spinup_duration: timedelta = None,
+#         platform: Platform = None,
+#         perturbations: Dict[str, Dict[str, Any]] = None,
+#         forcings: List[ForcingJSON] = None,
+#         schism_processors: int = None,
+#         slurm_job_duration: timedelta = None,
+#         slurm_partition: str = None,
+#         slurm_email_address: str = None,
+#         nems_executable: PathLike = None,
+#         schism_hotstart_combiner: PathLike = None,
+#         schism_schout_combiner: PathLike = None,
+#         # schism_use_old_io: bool = False,
+#         adcprep_executable: PathLike = None,
+#         aswip_executable: PathLike = None,
+#         source_filename: PathLike = None,
+#     ):
+#         """
+#         :param mesh_directory: path to input mesh directory (containing ``fort.13``, ``fort.14``)
+#         :param modeled_start_time: start time within the modeled system
+#         :param modeled_end_time: end time within the modeled system
+#         :param modeled_timestep: time interval within the modeled system
+#         :param nems_interval: modeled time interval of main NEMS loop
+#         :param nems_connections: list of NEMS connections as strings (i.e. ``ATM -> OCN``)
+#         :param nems_mediations: list of NEMS mediations, including functions
+#         :param nems_sequence: list of NEMS entries in sequence order
+#         :param schism_processors: numbers of processors to assign for SCHISM
+#         :param platform: HPC platform for which to configure
+#         :param tidal_spinup_duration: spinup time for SCHISM tidal coldstart
+#         :param perturbations: dictionary of runs encompassing run names to parameter values
+#         :param forcings: list of forcing configurations to connect to SCHISM
+#         :param slurm_job_duration: wall clock time of job
+#         :param slurm_partition: Slurm partition
+#         :param slurm_email_address: email address to send Slurm notifications
+#         :param nems_executable: filename of compiled ``schism``
+#         :param source_filename: path to module file to ``source``
+#         """
+#
+#         # TODO: Implement nems coupling for SCHISM
+#
+#         self.__nems = None
+#
+#         super().__init__(
+#             mesh_directory=mesh_directory,
+#             modeled_start_time=modeled_start_time,
+#             modeled_end_time=modeled_end_time,
+#             modeled_timestep=modeled_timestep,
+#             tidal_spinup_duration=tidal_spinup_duration,
+#             platform=platform,
+#             perturbations=perturbations,
+#             forcings=None,
+#             schism_processors=schism_processors,
+#             slurm_job_duration=slurm_job_duration,
+#             slurm_partition=slurm_partition,
+#             slurm_email_address=slurm_email_address,
+#             schism_executable=nems_executable,
+#             source_filename=source_filename,
+#         )
+#
+#         nems = NEMSJSON(
+#             executable_path=nems_executable,
+#             modeled_start_time=modeled_start_time,
+#             modeled_end_time=modeled_end_time,
+#             interval=nems_interval,
+#             connections=nems_connections,
+#             mediations=nems_mediations,
+#             sequence=nems_sequence,
+#         )
+#
+#         self[nems.name.lower()] = nems
+#
+#         for forcing in forcings:
+#             self.add_forcing(forcing)
+#
+#         self['slurm'].tasks = self.nemspy_modeling_system.processors
+#
+#     @property
+#     def nemspy_entries(self) -> List[ModelEntry]:
+#         return [
+#             configuration.nemspy_entry
+#             for configuration in self.configurations
+#             if isinstance(configuration, NEMSCapJSON)
+#         ]
+#
+#     @property
+#     def nemspy_modeling_system(self) -> ModelingSystem:
+#         return self['nems'].to_nemspy(self.nemspy_entries)
+#
+#     def add_forcing(self, forcing: ForcingJSON):
+#         if forcing not in self:
+#             forcing = self[self.add(forcing)]
+#             self['schism'].add_forcing(forcing)
+#
+#     @classmethod
+#     def from_configurations(
+#         cls, configurations: List[ConfigurationJSON]
+#     ) -> 'NEMSSCHISMRunConfiguration':
+#         instance = SCHISMRunConfiguration.from_configurations(configurations)
+#         instance.__class__ = cls
+#
+#         nems = None
+#         for configuration in configurations:
+#             if isinstance(configuration, NEMSJSON):
+#                 if nems is None:
+#                     nems = configuration
+#                     break
+#                 else:
+#                     raise ValueError(
+#                         f'multiple configurations given for "{NEMSJSON.__name__}"'
+#                     )
+#         instance['nems'] = nems
+#
+#         return instance
+#
+#     @classmethod
+#     def read_directory(
+#         cls, directory: PathLike, required: List[type] = None, supplementary: List[type] = None
+#     ) -> 'NEMSSCHISMRunConfiguration':
+#         if not isinstance(directory, Path):
+#             directory = Path(directory)
+#         if directory.is_file():
+#             directory = directory.parent
+#         if required is None:
+#             required = set()
+#         required.update(NEMSSCHISMRunConfiguration.REQUIRED)
+#         if supplementary is None:
+#             supplementary = set()
+#         supplementary.update(NEMSSCHISMRunConfiguration.SUPPLEMENTARY)
+#
+#         return super().read_directory(directory, required, supplementary)

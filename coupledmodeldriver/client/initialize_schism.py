@@ -25,7 +25,10 @@ from coupledmodeldriver.configure.forcings.base import (
     WaveForcingJSON,
     WindForcingJSON,
 )
-from coupledmodeldriver.generate import SCHISMRunConfiguration, NEMSSCHISMRunConfiguration
+from coupledmodeldriver.generate import (
+    SCHISMRunConfiguration,
+    # NEMSSCHISMRunConfiguration,
+)
 from coupledmodeldriver.generate.schism.script import SchismEnsembleGenerationJob
 from coupledmodeldriver.utilities import get_logger
 
@@ -387,29 +390,31 @@ def initialize_schism(
     )
 
     if nems_interval is not None:
-        configuration = NEMSSCHISMRunConfiguration(
-            mesh_directory=mesh_directory,
-            modeled_start_time=modeled_start_time,
-            modeled_end_time=modeled_start_time + modeled_duration,
-            modeled_timestep=modeled_timestep,
-            nems_interval=nems_interval,
-            nems_connections=nems_connections,
-            nems_mediations=nems_mediations,
-            nems_sequence=nems_sequence,
-            tidal_spinup_duration=tidal_spinup_duration,
-            platform=platform,
-            perturbations=perturbations,
-            forcings=forcings,
-            schism_processors=schism_processors,
-            slurm_partition=None,
-            slurm_job_duration=job_duration,
-            slurm_email_address=None,
-            nems_executable=schism_executable,
-            schism_hotstart_combiner=schism_hotstart_combiner,
-            schism_schout_combiner=schism_schout_combiner,
-            schism_use_old_io=schism_use_old_io,
-            source_filename=modulefile,
-        )
+        raise ValueError('NEMS run setup is not supported for SCHISM yet!')
+
+        # configuration = NEMSSCHISMRunConfiguration(
+        #     mesh_directory=mesh_directory,
+        #     modeled_start_time=modeled_start_time,
+        #     modeled_end_time=modeled_start_time + modeled_duration,
+        #     modeled_timestep=modeled_timestep,
+        #     nems_interval=nems_interval,
+        #     nems_connections=nems_connections,
+        #     nems_mediations=nems_mediations,
+        #     nems_sequence=nems_sequence,
+        #     tidal_spinup_duration=tidal_spinup_duration,
+        #     platform=platform,
+        #     perturbations=perturbations,
+        #     forcings=forcings,
+        #     schism_processors=schism_processors,
+        #     slurm_partition=None,
+        #     slurm_job_duration=job_duration,
+        #     slurm_email_address=None,
+        #     nems_executable=schism_executable,
+        #     schism_hotstart_combiner=schism_hotstart_combiner,
+        #     schism_schout_combiner=schism_schout_combiner,
+        #     schism_use_old_io=schism_use_old_io,
+        #     source_filename=modulefile,
+        # )
     else:
         configuration = SCHISMRunConfiguration(
             mesh_directory=mesh_directory,

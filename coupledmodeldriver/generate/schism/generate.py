@@ -12,7 +12,7 @@ import numpy as np
 
 from coupledmodeldriver import Platform
 from coupledmodeldriver.generate.schism.configure import (
-    NEMSSCHISMRunConfiguration,
+    # NEMSSCHISMRunConfiguration,
     SCHISMRunConfiguration,
 )
 from coupledmodeldriver.generate.schism.script import (
@@ -88,7 +88,9 @@ def generate_schism_configuration(
 
     if use_nems:
         LOGGER.debug(f'generating NEMS configuration')
-        base_configuration = NEMSSCHISMRunConfiguration.read_directory(configuration_directory)
+        pass
+        # TODO
+        # base_configuration = NEMSSCHISMRunConfiguration.read_directory(configuration_directory)
     else:
         LOGGER.debug(f'generating SCHISM-only configuration')
         base_configuration = SCHISMRunConfiguration.read_directory(configuration_directory)
@@ -271,7 +273,8 @@ def generate_schism_configuration(
 
 def write_spinup_directory(
     directory: PathLike,
-    configuration: Union[SCHISMRunConfiguration, NEMSSCHISMRunConfiguration],
+    # configuration: Union[SCHISMRunConfiguration, NEMSSCHISMRunConfiguration],
+    configuration: SCHISMRunConfiguration,
     duration: timedelta,
     local_hgrid_filename: PathLike,
     local_fgrid_filename: PathLike = None,
@@ -432,7 +435,8 @@ def write_run_directory(
     directory: PathLike,
     name: str,
     phase: str,
-    configuration: Union[SCHISMRunConfiguration, NEMSSCHISMRunConfiguration],
+    # configuration: Union[SCHISMRunConfiguration, NEMSSCHISMRunConfiguration],
+    configuration: SCHISMRunConfiguration,
     local_hgrid_filename: PathLike,
     local_fgrid_filename: PathLike = None,
     link_mesh: bool = False,
