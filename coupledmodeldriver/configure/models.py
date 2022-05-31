@@ -10,6 +10,7 @@ class Model(Enum):
     """
 
     ADCIRC = 'ADCIRC'
+    SCHISM = 'SCHISM'
     TidalForcing = 'Tides'
     ATMESH = 'ATMESH'
     WW3DATA = 'WW3DATA'

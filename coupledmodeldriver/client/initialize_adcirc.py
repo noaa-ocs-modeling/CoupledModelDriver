@@ -26,7 +26,7 @@ from coupledmodeldriver.configure.forcings.base import (
     WindForcingJSON,
 )
 from coupledmodeldriver.generate import ADCIRCRunConfiguration, NEMSADCIRCRunConfiguration
-from coupledmodeldriver.script import EnsembleGenerationJob
+from coupledmodeldriver.generate.adcirc.script import AdcircEnsembleGenerationJob
 from coupledmodeldriver.utilities import get_logger
 
 
@@ -440,7 +440,7 @@ def initialize_adcirc(
     else:
         partition = None
 
-    generation_job_script = EnsembleGenerationJob(
+    generation_job_script = AdcircEnsembleGenerationJob(
         platform=platform, parallel=True, slurm_partition=partition
     )
     generation_job_script.write(filename=output_directory / 'generate.job', overwrite=True)

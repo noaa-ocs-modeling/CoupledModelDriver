@@ -14,6 +14,12 @@ from coupledmodeldriver.generate.adcirc.check import (
     CompletionStatus,
     is_adcirc_run_directory,
 )
+from coupledmodeldriver.generate.schism.base import SCHISMJSON
+from coupledmodeldriver.generate.schism.check import (
+    check_schism_completion,
+    CompletionStatus,
+    is_schism_run_directory,
+)
 from coupledmodeldriver.utilities import ProcessPoolExecutorStackTraced
 
 MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
@@ -60,6 +66,8 @@ def is_model_directory(directory: PathLike, model: ModelJSON = None) -> bool:
 
     if model == ADCIRCJSON:
         is_model_directory = is_adcirc_run_directory(directory)
+    elif model == SCHISMJSON:
+        is_model_directory = is_schism_run_directory(directory)
     else:
         raise NotImplementedError(f'model "{model}" not implemented')
 
@@ -79,6 +87,8 @@ def check_model_directory(
 
     if model == ADCIRCJSON:
         return check_adcirc_completion(directory, verbose=verbose)
+    elif model == SCHISMJSON:
+        return check_schism_completion(directory, verbose=verbose)
     else:
         raise NotImplementedError(f'model "{model}" not implemented')
 
@@ -102,9 +112,6 @@ def check_completion(
     ):
         directory = Path(directory)
 
-    if model is None:
-        model = ADCIRCJSON
-
     completion_status = {}
     if isinstance(directory, Iterable):
         with ProcessPoolExecutorStackTraced() as process_pool:
@@ -115,8 +122,18 @@ def check_completion(
             for subdirectory_completion_status in subdirectory_completion_statuses:
                 completion_status.update(subdirectory_completion_status)
     elif isinstance(directory, Path):
+        if model is None:
+            # model = ADCIRCJSON
+            for model_type in MODELS.values():
+                if not is_model_directory(directory, model=model_type):
+                    continue
+                model = model_type
+                break
+
         if is_model_directory(directory, model=model):
-            completion = check_model_directory(directory=directory, verbose=verbose)
+            completion = check_model_directory(
+                directory=directory, verbose=verbose, model=model
+            )
             for key in [
                 key
                 for key, value in completion.items()

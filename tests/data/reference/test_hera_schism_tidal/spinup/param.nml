@@ -1,0 +1,29 @@
+&CORE
+  ipre=0
+  ibc=1
+  ibtp=0
+  nspool=1800
+  ihfskip=540000
+  dt=2.0
+  rnday=12.5
+/
+
+&OPT
+  start_year=2008
+  start_month=8
+  start_day=10
+  start_hour=12.0
+  utc_start=-0.0
+  ics=2
+  dramp=12.5
+  drampbc=12.5
+  dramp_ss=12.5
+  nchi=-1
+  hmin_man=1.0
+  drampwind=12.5
+/
+
+&SCHOUT
+  nhot=1
+  nhot_write=540000
+/

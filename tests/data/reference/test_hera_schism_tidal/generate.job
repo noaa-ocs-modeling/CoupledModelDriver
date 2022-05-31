@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH -J SCHISM_GENERATE_CONFIGURATION
+#SBATCH -A coastal
+#SBATCH --output=SCHISM_GENERATE_CONFIGURATION.log
+#SBATCH -n 40
+#SBATCH -N 1
+#SBATCH --time=01:00:00
+#SBATCH --partition=bigmem
+
+set -e
+
+generate_schism --parallel
+echo "use ./run_<platform>.sh to start model"

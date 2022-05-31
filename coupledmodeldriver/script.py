@@ -1,9 +1,10 @@
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from enum import Enum
 from os import PathLike
 from pathlib import Path
 import textwrap
-from typing import List, Sequence
+from typing import List, Sequence, Iterable
 import uuid
 
 import numpy
@@ -273,9 +274,11 @@ class EnsembleGenerationJob(JobScript):
     def __init__(
         self,
         platform: Platform,
+        generate_command: str,
         slurm_tasks: int = None,
         slurm_duration: timedelta = None,
         slurm_account: str = None,
+        slurm_run_name: str = 'GENERATE_CONFIGURATION',
         commands: List[str] = None,
         parallel: bool = False,
         **kwargs,
@@ -283,32 +286,41 @@ class EnsembleGenerationJob(JobScript):
         super().__init__(
             platform=platform,
             commands=commands,
-            slurm_run_name='ADCIRC_GENERATE_CONFIGURATION',
+            slurm_run_name=slurm_run_name,
             slurm_tasks=slurm_tasks,
             slurm_duration=slurm_duration,
             slurm_account=slurm_account,
             **kwargs,
         )
 
-        generate_command = 'generate_adcirc'
         if parallel:
             generate_command = f'{generate_command} --parallel'
 
-        self.commands.extend([generate_command, 'echo "use ./run_hera.sh to start model"'])
+        self.commands.extend(
+            [generate_command, 'echo "use ./run_<platform>.sh to start model"']
+        )
 
 
-class EnsembleRunScript(Script):
+class EnsembleRunScript(Script, ABC):
     """
     script to run the ensemble, either by running it directly or by submitting model execution to the job manager
     default filename is ``run_<platform>.sh``
     """
 
     def __init__(
-        self, platform: Platform, run_spinup: bool = True, commands: List[str] = None
+        self, platform: Platform, run_spinup: bool = True, commands: List[str] = None,
     ):
         self.platform = platform
         self.run_spinup = run_spinup
         super().__init__(commands)
+
+    @abstractmethod
+    def _spinup_lines(self):
+        pass
+
+    @abstractmethod
+    def _hotstart_lines(self):
+        pass
 
     def __str__(self) -> str:
         lines = []
@@ -324,49 +336,12 @@ class EnsembleRunScript(Script):
             ]
         )
 
-        spinup_lines = []
         if self.run_spinup:
-            spinup_lines.extend(['# run spinup', 'pushd ${DIRECTORY}/spinup >/dev/null 2>&1'])
-            if self.platform.value['uses_slurm']:
-                dependencies = ['$setup_jobid']
-                if len(dependencies) > 0:
-                    dependencies = f'--dependency=afterok:{":".join(dependencies)}'
-                else:
-                    dependencies = ''
-                # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
-                spinup_lines.extend(
-                    [
-                        "setup_jobid=$(sbatch setup.job | awk '{print $NF}')",
-                        f"spinup_jobid=$(sbatch {dependencies} adcirc.job | awk '{{print $NF}}')",
-                    ]
-                )
-            else:
-                spinup_lines.extend(['sh setup.job', 'sh adcirc.job'])
-            spinup_lines.extend(['popd >/dev/null 2>&1', ''])
-        lines.extend(spinup_lines)
+            lines.extend(self._spinup_lines())
 
-        hotstart_lines = ['pushd ${hotstart} >/dev/null 2>&1']
-        if self.platform.value['uses_slurm']:
-            dependencies = ['$setup_jobid']
-            if self.run_spinup:
-                dependencies.append('$spinup_jobid')
-            if len(dependencies) > 0:
-                dependencies = f'--dependency=afterok:{":".join(dependencies)}'
-            else:
-                dependencies = ''
-            # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
-            hotstart_lines.extend(
-                [
-                    f"setup_jobid=$(sbatch setup.job | awk '{{print $NF}}')",
-                    f'sbatch {dependencies} adcirc.job',
-                ]
-            )
-        else:
-            hotstart_lines.extend(['sh setup.job', 'sh adcirc.job'])
-        hotstart_lines.append('popd >/dev/null 2>&1')
         hotstart_lines = [
             '# run configurations',
-            bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', hotstart_lines),
+            bash_for_loop('for hotstart in ${DIRECTORY}/runs/*/', self._hotstart_lines()),
         ]
         lines.extend(hotstart_lines)
 
@@ -403,7 +378,21 @@ class EnsembleCleanupScript(Script):
     script for cleaning an ensemble configuration, by deleting output and log files
     """
 
-    def __init__(self, commands: List[str] = None):
+    def __init__(
+        self,
+        commands: List[str] = None,
+        filenames: List[PathLike] = None,
+        spinup_filenames: List[PathLike] = None,
+        hotstart_filenames: List[PathLike] = None,
+    ):
+
+        self._filenames = filenames if isinstance(filenames, Iterable) else []
+        self._spinup_filenames = (
+            spinup_filenames if isinstance(spinup_filenames, Iterable) else []
+        )
+        self._hotstart_filenames = (
+            hotstart_filenames if isinstance(hotstart_filenames, Iterable) else []
+        )
         super().__init__(commands)
 
     def __str__(self):
@@ -412,17 +401,8 @@ class EnsembleCleanupScript(Script):
         if self.shebang is not None:
             lines.append(self.shebang)
 
-        filenames = [
-            'PE*',
-            'ADC_*',
-            'max*',
-            'partmesh.txt',
-            'metis_graph.txt',
-            'fort.16',
-            'fort.80',
-        ]
-        spinup_filenames = filenames + ['fort.6*']
-        hotstart_filenames = filenames + ['fort.61*', 'fort.62*', 'fort.63*', 'fort.64*']
+        spinup_filenames = self._filenames + self._spinup_filenames
+        hotstart_filenames = self._filenames + self._hotstart_filenames
 
         lines.extend(
             [
@@ -539,3 +519,38 @@ def bash_function(name: str, body: List[str], indentation: str = '    ') -> str:
         body = '\n'.join(body)
 
     return '\n'.join([f'{name}() {{', textwrap.indent(body, indentation), '}'])
+
+
+def bash_if(condition, command, oneline=True):
+
+    div = ';' if oneline else '\n'
+    return f'if {condition}{div}then {command}{div}fi'
+
+
+def slurm_dependencies(after_ok: List[str]):
+    """
+    create dependency argument for sbatch cli based on input list
+
+    :param after_ok: list of dependencies as they should appear on bash script sbatch call
+    :return: either an empty string or a dependencies argument for sbatch
+    """
+
+    dependency_list = []
+    if len(after_ok) > 0:
+        dependency_list.append(f'--dependency=afterok:{":".join(after_ok)}')
+
+    return ' '.join(dependency_list)
+
+
+def slurm_submit_get_id(job_file: PathLike, job_id_var: str, dependencies: str = ''):
+    """
+    create a script to call a job via sbatch and return the job id as a named variable in bash
+
+    :param job_file: path to the slurm script file
+    :param job_id_var: bash variable name to store the submitted slurm job id
+    :param dependecies: dependency argument for sbatch command
+    :return: bash script to call sbatch with optional dependencies and store job id in the specified bash variable
+    """
+
+    # NOTE: `sbatch` will only use `--dependency` if it is BEFORE the job filename
+    return f"{job_id_var}=$(sbatch {dependencies} {str(job_file)} | awk '{{print $NF}}')"

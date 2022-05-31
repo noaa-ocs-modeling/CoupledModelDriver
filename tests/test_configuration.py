@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from nemspy.model import ADCIRCEntry, AtmosphericForcingEntry, WaveWatch3ForcingEntry
+from pyschism.driver import ModelDriver
 import pytest
 
 from coupledmodeldriver import Platform
@@ -14,6 +15,7 @@ from coupledmodeldriver.configure import (
     WW3DATAForcingJSON,
 )
 from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
+from coupledmodeldriver.generate.schism.base import SCHISMJSON
 
 # noinspection PyUnresolvedReferences
 from tests import INPUT_DIRECTORY, tpxo_filename
@@ -123,6 +125,22 @@ def test_adcirc():
     configuration['attributes']['smagorinsky'] = True
 
     assert configuration.adcircpy_driver.IM == 511112
+
+
+def test_schism():
+    configuration = SCHISMJSON(
+        schism_executable_path='pschism-TVD_VL',
+        schism_hotstart_combiner_path='combine_hotstart7',
+        modeled_start_time=datetime(2012, 10, 22, 6),
+        modeled_end_time=datetime(2012, 10, 22, 6) + timedelta(days=14.5),
+        modeled_timestep=timedelta(seconds=2),
+        fgrid_path=None,
+        hgrid_path=INPUT_DIRECTORY / 'meshes' / 'shinnecock' / 'fort.14',
+        tidal_spinup_duration=timedelta(days=12.5),
+    )
+
+    # TODO: Find better tests
+    assert isinstance(configuration.pyschism_driver, ModelDriver)
 
 
 def test_tidal():

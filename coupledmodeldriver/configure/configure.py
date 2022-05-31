@@ -5,7 +5,11 @@ from pathlib import Path
 from typing import Any, Collection, Dict, List, Mapping, Set, Union
 
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON
-from coupledmodeldriver.configure.forcings.base import ADCIRCPY_FORCING_CLASSES, ForcingJSON
+from coupledmodeldriver.configure.forcings.base import (
+    ADCIRCPY_FORCING_CLASSES,
+    PYSCHISM_FORCING_CLASSES,
+    ForcingJSON,
+)
 from coupledmodeldriver.utilities import LOGGER
 
 
@@ -166,4 +170,6 @@ def from_user_input(value: Any) -> ConfigurationJSON:
             value = ConfigurationJSON.from_string(value)
     elif isinstance(value, ADCIRCPY_FORCING_CLASSES):
         value = ForcingJSON.from_adcircpy(value)
+    elif isinstance(value, PYSCHISM_FORCING_CLASSES):
+        value = ForcingJSON.from_pyschism(value)
     return value

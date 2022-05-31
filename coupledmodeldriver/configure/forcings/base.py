@@ -1,22 +1,36 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from enum import IntEnum, Enum
 from os import PathLike
 from pathlib import Path
 import sys
 from typing import Any, Dict, List
 
-from adcircpy import Tides
-from adcircpy.forcing.base import Forcing
-from adcircpy.forcing.tides import HAMTIDE
-from adcircpy.forcing.tides.tides import TidalSource
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
-from adcircpy.forcing.winds import BestTrackForcing
-from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-from adcircpy.forcing.winds.owi import OwiForcing
+from adcircpy import Tides as ADCIRCPyTides
+from adcircpy.forcing.base import Forcing as ADCIRCPyForcing
+from adcircpy.forcing.tides import HAMTIDE as ADCIRCPyHAMTIDE
+from adcircpy.forcing.tides.tides import TidalSource as ADCIRCPyTidalSource
+from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing as ADCIRCPyWaveWatch3DataForcing
+from adcircpy.forcing.winds import BestTrackForcing as ADCIRCPyBestTrackForcing
+from adcircpy.forcing.winds.atmesh import (
+    AtmosphericMeshForcing as ADCIRCPyAtmosphericMeshForcing,
+)
+from adcircpy.forcing.winds.owi import OwiForcing as ADCIRCPyOwiForcing
 from nemspy.model import AtmosphericForcingEntry, WaveWatch3ForcingEntry
 from pandas import DataFrame
+from pyschism.forcing.bctides.tides import Tides as PySCHISMTides
+from pyschism.forcing.bctides.tpxo import TPXO_ELEVATION as PySCHISMTPXO_ELEV
+from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
+from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
+from pyschism.forcing.base import ModelForcing as PySCHISMForcing
 
-from coupledmodeldriver.configure.base import AttributeJSON, ConfigurationJSON, NEMSCapJSON
+from coupledmodeldriver.configure.base import (
+    AttributeJSON,
+    ConfigurationJSON,
+    NEMSCapJSON,
+    NoRelPath,
+)
+from coupledmodeldriver.configure.models import Model
 from coupledmodeldriver.utilities import LOGGER
 
 ADCIRCPY_FORCINGS = {
@@ -27,7 +41,33 @@ ADCIRCPY_FORCINGS = {
     'WaveWatch3DataForcing': 'WW3DATAForcingJSON',
 }
 
-ADCIRCPY_FORCING_CLASSES = (Forcing, Tides)
+ADCIRCPY_FORCING_CLASSES = (ADCIRCPyForcing, ADCIRCPyTides)
+
+PYSCHISM_FORCINGS = {
+    'Tides': 'TidalForcingJSON',
+    #    'GFS, etc.': 'ATMESHForcingJSON',
+    #    'NWM : ,
+    #    'AtmosphericMeshForcing': 'ATMESHForcingJSON',
+}
+
+PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing)
+
+
+class TidalSource(IntEnum):
+    TPXO = 1
+    HAMTIDE = 2
+
+
+MODEL_TIDAL_SOURCE = {
+    TidalSource.TPXO: {
+        Model.ADCIRC: ADCIRCPyTidalSource.TPXO,
+        Model.SCHISM: PySCHISMTidalDatabase.TPXO,
+    },
+    TidalSource.HAMTIDE: {
+        Model.ADCIRC: ADCIRCPyTidalSource.HAMTIDE,
+        Model.SCHISM: PySCHISMTidalDatabase.HAMTIDE,
+    },
+}
 
 
 class ForcingJSON(ConfigurationJSON, ABC):
@@ -37,19 +77,19 @@ class ForcingJSON(ConfigurationJSON, ABC):
 
     @property
     @abstractmethod
-    def adcircpy_forcing(self) -> Forcing:
+    def adcircpy_forcing(self) -> ADCIRCPyForcing:
         """
         create an ADCIRCpy forcing object with values from this configuration
         """
 
         raise NotImplementedError
 
-    def to_adcircpy(self) -> Forcing:
+    def to_adcircpy(self) -> ADCIRCPyForcing:
         return self.adcircpy_forcing
 
     @classmethod
     @abstractmethod
-    def from_adcircpy(cls, forcing: Forcing) -> 'ForcingJSON':
+    def from_adcircpy(cls, forcing: ADCIRCPyForcing) -> 'ForcingJSON':
         """
         read configuration values from an ADCIRCpy forcing object
         """
@@ -60,6 +100,34 @@ class ForcingJSON(ConfigurationJSON, ABC):
                 sys.modules[__name__], ADCIRCPY_FORCINGS[forcing_class_name]
             )
             return configuration_class.from_adcircpy(forcing)
+        else:
+            raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def pyschism_forcing(self) -> PySCHISMForcing:
+        """
+        create an pySCHISM forcing object with values from this configuration
+        """
+
+        raise NotImplementedError
+
+    def to_pyschism(self) -> PySCHISMForcing:
+        return self.pyschism_forcing
+
+    @classmethod
+    @abstractmethod
+    def from_pyschism(cls, forcing: PySCHISMForcing) -> 'ForcingJSON':
+        """
+        read configuration values from an pySCHISM forcing object
+        """
+
+        forcing_class_name = forcing.__class__.__name__
+        if forcing_class_name in PYSCHISM_FORCINGS:
+            configuration_class = getattr(
+                sys.modules[__name__], PYSCHISM_FORCINGS[forcing_class_name]
+            )
+            return configuration_class.from_pyschism(forcing)
         else:
             raise NotImplementedError()
 
@@ -106,7 +174,30 @@ class FileForcingJSON(ForcingJSON, ABC):
         self['resource'] = resource
 
 
-class TidalForcingJSON(FileForcingJSON):
+class FileGenForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a forcing configuration tied to a file on disk which is
+    used to generate the forcing
+    """
+
+    field_types = {'resource': NoRelPath}
+
+    def __init__(self, resource: PathLike, **kwargs):
+        if resource is None:
+            LOGGER.warning(
+                f'resource path not specified for "{self.default_filename}"; '
+                f'update entry before generating configuration'
+            )
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(FileGenForcingJSON.field_types)
+
+        ForcingJSON.__init__(self, **kwargs)
+
+        self['resource'] = resource
+
+
+class TidalForcingJSON(FileGenForcingJSON):
     """
     tidal configuration in ``configure_tidal.json``
 
@@ -128,7 +219,7 @@ class TidalForcingJSON(FileForcingJSON):
     def __init__(
         self,
         resource: PathLike = None,
-        tidal_source: TidalSource = TidalSource.TPXO,
+        tidal_source: TidalSource = None,
         constituents: List[str] = None,
         **kwargs,
     ):
@@ -146,8 +237,11 @@ class TidalForcingJSON(FileForcingJSON):
         self['constituents'] = constituents
 
     @property
-    def adcircpy_forcing(self) -> Forcing:
-        tides = Tides(tidal_source=self['tidal_source'], resource=self['resource'])
+    def adcircpy_forcing(self) -> ADCIRCPyForcing:
+        tides = ADCIRCPyTides(
+            tidal_source=MODEL_TIDAL_SOURCE[self['tidal_source']][Model.ADCIRC],
+            resource=self['resource'],
+        )
 
         constituents = [constituent.capitalize() for constituent in self['constituents']]
 
@@ -174,15 +268,76 @@ class TidalForcingJSON(FileForcingJSON):
         return tides
 
     @classmethod
-    def from_adcircpy(cls, forcing: Tides) -> 'TidalForcingJSON':
+    def from_adcircpy(cls, forcing: ADCIRCPyTides) -> 'TidalForcingJSON':
         # TODO: workaround for this issue: https://github.com/JaimeCalzadaNOAA/adcircpy/pull/70#discussion_r607245713
         resource = forcing.tidal_dataset.path
-        if resource == HAMTIDE.OPENDAP_URL:
+        if resource == ADCIRCPyHAMTIDE.OPENDAP_URL:
             resource = None
+
+        tidal_source = getattr(TidalSource, forcing.tidal_source.name)
 
         return cls(
             resource=resource,
-            tidal_source=forcing.tidal_source,
+            tidal_source=tidal_source,
+            constituents=forcing.active_constituents,
+        )
+
+    @property
+    def pyschism_forcing(self) -> PySCHISMTides:
+
+        # Setup resource
+        if self['tidal_source'] == TidalSource.TPXO:
+            # TODO: What if h and uv files are in different locations?
+            tidal_database_kwargs = dict(
+                h_file=self['resource'].parent / PySCHISMTPXO_ELEV,
+                u_file=self['resource'].parent / PySCHISMTPXO_VEL,
+            )
+
+        elif self['tidal_source'] == TidalSource.HAMTIDE:
+            tidal_database_kwargs = {'resource': self['resource']}
+        else:
+            raise ValueError(f"PySCHISM doesn't support {self['tidal_source']}!")
+
+        # Setup tidal database
+        tidal_database = MODEL_TIDAL_SOURCE[self['tidal_source']][Model.SCHISM].value(
+            **tidal_database_kwargs
+        )
+
+        # Setup tidal constituents
+        constituents = self['constituents']
+
+        if sorted(constituents) == sorted(
+            constituent.capitalize() for constituent in PySCHISMTides.constituents
+        ):
+            constituents = 'all'
+        elif sorted(constituents) == sorted(
+            constituent.capitalize() for constituent in PySCHISMTides.major_constituents
+        ):
+            constituents = 'major'
+        if constituents[0].lower() in ['all', 'major', 'minor']:
+            constituents = list(map(str.lower, constituents))
+
+        tides = PySCHISMTides(tidal_database=tidal_database, constituents=constituents)
+
+        self['constituents'] = list(tides.active_constituents)
+        return tides
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMTides) -> 'TidalForcingJSON':
+
+        tidal_source = getattr(TidalSource, forcing.tidal_database.__class__.__name__)
+
+        if tidal_source == TidalSource.TPXO:
+            resource = forcing.tidal_database.h.filepath()
+        elif tidal_source == TidalSource.HAMTIDE:
+            # Local resource for hamtide is not yet implemented in pyschism
+            resource = None
+        else:
+            raise ValueError(f'Invalid tidal source: {tidal_source}')
+
+        return cls(
+            resource=resource,
+            tidal_source=tidal_source,
             constituents=forcing.active_constituents,
         )
 
@@ -242,7 +397,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         'interval': timedelta,
         'start_date': datetime,
         'end_date': datetime,
-        'fort22_filename': Path,
+        'fort22_filename': NoRelPath,
     }
 
     def __init__(
@@ -283,9 +438,9 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             self['end_date'] = forcing.end_date
 
     @property
-    def adcircpy_forcing(self) -> BestTrackForcing:
+    def adcircpy_forcing(self) -> ADCIRCPyBestTrackForcing:
         if self['fort22_filename'] is not None:
-            forcing = BestTrackForcing.from_fort22(
+            forcing = ADCIRCPyBestTrackForcing.from_fort22(
                 self['fort22_filename'],
                 nws=self['nws'],
                 interval_seconds=self['interval'],
@@ -299,7 +454,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 except ConnectionError:
                     pass
         elif self.__dataframe is not None:
-            forcing = BestTrackForcing(
+            forcing = ADCIRCPyBestTrackForcing(
                 storm=self.__dataframe,
                 nws=self['nws'],
                 interval_seconds=self['interval'],
@@ -307,7 +462,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
                 end_date=self['end_date'],
             )
         elif self['nhc_code'] is not None:
-            forcing = BestTrackForcing(
+            forcing = ADCIRCPyBestTrackForcing(
                 storm=self['nhc_code'],
                 nws=self['nws'],
                 interval_seconds=self['interval'],
@@ -316,7 +471,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             )
         else:
             raise ValueError(
-                f'could not create `{BestTrackForcing.__name__}` object from given information'
+                f'could not create `{ADCIRCPyBestTrackForcing.__name__}` object from given information'
             )
 
         if self['nhc_code'] is None:
@@ -336,7 +491,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         return forcing
 
     @classmethod
-    def from_adcircpy(cls, forcing: BestTrackForcing) -> 'BestTrackForcingJSON':
+    def from_adcircpy(cls, forcing: ADCIRCPyBestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
             nhc_code=forcing.nhc_code,
             nws=forcing.NWS,
@@ -347,6 +502,16 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             dataframe=forcing.data,
         )
 
+    @property
+    def pyschism_forcing(self) -> PySCHISMForcing:
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMForcing) -> 'ForcingJSON':
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
+
     @classmethod
     def from_fort22(
         cls,
@@ -356,7 +521,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         start_date: datetime = None,
         end_date: datetime = None,
     ):
-        forcing = BestTrackForcing.from_fort22(
+        forcing = ADCIRCPyBestTrackForcing.from_fort22(
             filename,
             nws=nws,
             interval_seconds=interval_seconds,
@@ -397,12 +562,22 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
         TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
-    def adcircpy_forcing(self) -> OwiForcing:
-        return OwiForcing(interval_seconds=self['interval'] / timedelta(seconds=1))
+    def adcircpy_forcing(self) -> ADCIRCPyOwiForcing:
+        return ADCIRCPyOwiForcing(interval_seconds=self['interval'] / timedelta(seconds=1))
 
     @classmethod
-    def from_adcircpy(cls, forcing: OwiForcing) -> 'OWIForcingJSON':
+    def from_adcircpy(cls, forcing: ADCIRCPyOwiForcing) -> 'OWIForcingJSON':
         return cls(interval=timedelta(seconds=forcing.interval))
+
+    @property
+    def pyschism_forcing(self) -> PySCHISMForcing:
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMForcing) -> 'ForcingJSON':
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
 
 
 class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, NEMSCapJSON):
@@ -444,16 +619,26 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
-    def adcircpy_forcing(self) -> Forcing:
-        return AtmosphericMeshForcing(
+    def adcircpy_forcing(self) -> ADCIRCPyForcing:
+        return ADCIRCPyAtmosphericMeshForcing(
             filename=self['resource'],
             nws=self['nws'],
             interval_seconds=self['interval'] / timedelta(seconds=1),
         )
 
     @classmethod
-    def from_adcircpy(cls, forcing: AtmosphericMeshForcing) -> 'ATMESHForcingJSON':
+    def from_adcircpy(cls, forcing: ADCIRCPyAtmosphericMeshForcing) -> 'ATMESHForcingJSON':
         return cls(resource=forcing.filename, nws=forcing.NWS, interval=forcing.interval)
+
+    @property
+    def pyschism_forcing(self) -> PySCHISMForcing:
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMForcing) -> 'ForcingJSON':
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
 
     @property
     def nemspy_entry(self) -> AtmosphericForcingEntry:
@@ -523,14 +708,24 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
-    def adcircpy_forcing(self) -> Forcing:
-        return WaveWatch3DataForcing(
+    def adcircpy_forcing(self) -> ADCIRCPyForcing:
+        return ADCIRCPyWaveWatch3DataForcing(
             filename=self['resource'], nrs=self['nrs'], interval_seconds=self['interval'],
         )
 
     @classmethod
-    def from_adcircpy(cls, forcing: WaveWatch3DataForcing) -> 'WW3DATAForcingJSON':
+    def from_adcircpy(cls, forcing: ADCIRCPyWaveWatch3DataForcing) -> 'WW3DATAForcingJSON':
         return cls(resource=forcing.filename, nrs=forcing.NRS, interval=forcing.interval)
+
+    @property
+    def pyschism_forcing(self) -> PySCHISMForcing:
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMForcing) -> 'ForcingJSON':
+        # TODO:
+        raise NotImplementedError('This forcing is not supported for SCHISM')
 
     @property
     def nemspy_entry(self) -> WaveWatch3ForcingEntry:
