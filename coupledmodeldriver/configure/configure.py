@@ -6,7 +6,9 @@ from typing import Any, Collection, Dict, List, Mapping, Set, Union
 
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON
 from coupledmodeldriver.configure.forcings.base import (
-    ADCIRCPY_FORCING_CLASSES, PYSCHISM_FORCING_CLASSES, ForcingJSON
+    ADCIRCPY_FORCING_CLASSES,
+    PYSCHISM_FORCING_CLASSES,
+    ForcingJSON,
 )
 from coupledmodeldriver.utilities import LOGGER
 

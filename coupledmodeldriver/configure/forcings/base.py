@@ -19,7 +19,6 @@ from adcircpy.forcing.winds.owi import OwiForcing as ADCIRCPyOwiForcing
 from nemspy.model import AtmosphericForcingEntry, WaveWatch3ForcingEntry
 from pandas import DataFrame
 from pyschism.forcing.bctides.tides import Tides as PySCHISMTides
-from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.bctides.tpxo import TPXO_ELEVATION as PySCHISMTPXO_ELEV
 from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
@@ -334,7 +333,7 @@ class TidalForcingJSON(FileGenForcingJSON):
             # Local resource for hamtide is not yet implemented in pyschism
             resource = None
         else:
-            raise ValueError(f"Invalid tidal source: {tidal_source}")
+            raise ValueError(f'Invalid tidal source: {tidal_source}')
 
         return cls(
             resource=resource,
