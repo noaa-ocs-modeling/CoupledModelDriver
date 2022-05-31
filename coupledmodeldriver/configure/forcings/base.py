@@ -326,14 +326,15 @@ class TidalForcingJSON(FileGenForcingJSON):
     @classmethod
     def from_pyschism(cls, forcing: PySCHISMTides) -> 'TidalForcingJSON':
 
-        tidal_source = getattr(TidalSource, forcing.tidal_database.name)
+        tidal_source = getattr(TidalSource, forcing.tidal_database.__class__.__name__)
 
         if tidal_source == TidalSource.TPXO:
             resource = forcing.tidal_database.h.filepath()
+        elif tidal_source == TidalSource.HAMTIDE:
+            # Local resource for hamtide is not yet implemented in pyschism
+            resource = None
         else:
-            resource = forcing.tidal_database.path
-            if resource == ADCIRCPyHAMTIDE.OPENDAP_URL:
-                resource = None
+            raise ValueError(f"Invalid tidal source: {tidal_source}")
 
         return cls(
             resource=resource,
