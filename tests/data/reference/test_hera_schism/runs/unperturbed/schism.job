@@ -3,8 +3,8 @@
 #SBATCH -A coastal
 #SBATCH --error=SCHISM_COLDSTART_unperturbed.err.log
 #SBATCH --output=SCHISM_COLDSTART_unperturbed.out.log
-#SBATCH -n 11
-#SBATCH -N 1
+#SBATCH -n 600
+#SBATCH -N 15
 #SBATCH --time=06:00:00
 
 set -e

@@ -19,7 +19,7 @@
   "stations_output_interval": 360.0,
   "output_spinup": true,
   "output_elevations": true,
-  "processors": 11,
+  "processors": 600,
   "nems_parameters": {},
   "attributes": {
     "ipre": null,

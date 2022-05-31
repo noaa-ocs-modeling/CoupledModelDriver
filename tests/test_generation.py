@@ -907,7 +907,8 @@ def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
 
 
 @pytest.mark.skipif(
-    sys.platform == 'darwin', reason='MacOSX issue with pickling local objects'
+    sys.platform == 'darwin',
+    reason='MacOSX issue with pickling local objects used in PySCHISM',
 )
 def test_hera_schism():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_schism'
@@ -915,7 +916,7 @@ def test_hera_schism():
 
     platform = Platform.HERA
     mesh = 'shinnecock'
-    adcirc_processors = 15 * platform.value['processors_per_node']
+    schism_processors = 15 * platform.value['processors_per_node']
     modeled_start_time = datetime(2008, 8, 23)
     modeled_duration = timedelta(days=14.5)
     modeled_timestep = timedelta(seconds=2)
@@ -940,6 +941,7 @@ def test_hera_schism():
         forcings=None,
         schism_executable=INPUT_DIRECTORY / 'bin' / 'pschism-TVD_VL',
         schism_hotstart_combiner=INPUT_DIRECTORY / 'bin' / 'combine_hotstart7',
+        schism_processors=schism_processors,
         job_duration=job_duration,
         output_directory=output_directory,
         absolute_paths=False,
