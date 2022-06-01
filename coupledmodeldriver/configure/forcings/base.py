@@ -22,6 +22,7 @@ from pyschism.forcing.bctides.tides import Tides as PySCHISMTides
 from pyschism.forcing.bctides.tpxo import TPXO_ELEVATION as PySCHISMTPXO_ELEV
 from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
+from pyschism.forcing.nws import BestTrackForcing as PySCHISMBestTrackForcing
 from pyschism.forcing.base import ModelForcing as PySCHISMForcing
 
 from coupledmodeldriver.configure.base import (
@@ -45,9 +46,10 @@ ADCIRCPY_FORCING_CLASSES = (ADCIRCPyForcing, ADCIRCPyTides)
 
 PYSCHISM_FORCINGS = {
     'Tides': 'TidalForcingJSON',
-    #    'GFS, etc.': 'ATMESHForcingJSON',
-    #    'NWM : ,
-    #    'AtmosphericMeshForcing': 'ATMESHForcingJSON',
+    'BestTrackForcing': 'BestTrackForcingJSON',
+    # 'GFS, etc.': 'ATMESHForcingJSON',
+    # 'NWM : ,
+    # 'AtmosphericMeshForcing': 'ATMESHForcingJSON',
 }
 
 PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing)
@@ -504,13 +506,60 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
 
     @property
     def pyschism_forcing(self) -> PySCHISMForcing:
-        # TODO:
-        raise NotImplementedError('This forcing is not supported for SCHISM')
+        if self['fort22_filename'] is not None:
+            forcing = PySCHISMBestTrackForcing.from_nhc_bdeck(
+                self['fort22_filename'],
+                start_date=self['start_date'],
+                end_date=self['end_date'],
+            )
+            if self['nhc_code'] is not None and forcing.nhc_code != self['nhc_code']:
+                try:
+                    forcing.nhc_code = self['nhc_code']
+                    self['nhc_code'] = forcing.nhc_code
+                except ConnectionError:
+                    pass
+        elif self.__dataframe is not None:
+            forcing = PySCHISMBestTrackForcing(
+                storm=self.__dataframe,
+                start_date=self['start_date'],
+                end_date=self['end_date'],
+            )
+        elif self['nhc_code'] is not None:
+            forcing = PySCHISMBestTrackForcing(
+                storm=self['nhc_code'],
+                start_date=self['start_date'],
+                end_date=self['end_date'],
+            )
+        else:
+            raise ValueError(
+                f'could not create `{PySCHISMBestTrackForcing.__name__}` object from given information'
+            )
+
+        if self['nhc_code'] is None:
+            self[
+                'nhc_code'
+            ] = f'{forcing.basin}{forcing.storm_number}{forcing.start_date.year}'
+
+        for name, value in self['attributes'].items():
+            if value is not None:
+                try:
+                    setattr(forcing, name, value)
+                except:
+                    LOGGER.warning(
+                        f'could not set `{forcing.__class__.__name__}` attribute `{name}` to `{value}`'
+                    )
+
+        return forcing
 
     @classmethod
     def from_pyschism(cls, forcing: PySCHISMForcing) -> 'ForcingJSON':
-        # TODO:
-        raise NotImplementedError('This forcing is not supported for SCHISM')
+        return cls(
+            nhc_code=forcing.nhc_code,
+            start_date=forcing.start_date,
+            end_date=forcing.end_date,
+            dataframe=forcing.data,
+            fort22_filename=forcing.filename,
+        )
 
     @classmethod
     def from_fort22(
@@ -521,6 +570,8 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         start_date: datetime = None,
         end_date: datetime = None,
     ):
+        # NOTE: The forcing object is just a temporary, so it doesn't
+        # matter if it's from adcircpy or pyschism
         forcing = ADCIRCPyBestTrackForcing.from_fort22(
             filename,
             nws=nws,
@@ -537,6 +588,8 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
             end_date=forcing.end_date,
             fort22_filename=filename,
         )
+
+    from_nhc_bdeck = from_fort22
 
     def __copy__(self) -> 'BestTrackForcingJSON':
         instance = super().__copy__()

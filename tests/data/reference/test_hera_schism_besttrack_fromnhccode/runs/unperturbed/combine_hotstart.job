@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -J SCHISM_COMBINE_HOTSTARTFILES_unperturbed
+#SBATCH -A coastal
+#SBATCH --error=SCHISM_COMBINE_HOTSTARTFILES_unperturbed.err.log
+#SBATCH --output=SCHISM_COMBINE_HOTSTARTFILES_unperturbed.out.log
+#SBATCH -n 600
+#SBATCH -N 15
+#SBATCH --time=06:00:00
+
+set -e
+
+source ../../../../input/modulefiles/envmodules_intel.hera
+pushd outputs
+../../../../input/bin/combine_hotstart7 --iteration 604800
+popd

@@ -12,6 +12,7 @@ from pyschism.forcing.bctides.ifltype import TidalVelocity
 from pyschism.forcing.bctides.tides import Tides
 from pyschism.forcing.base import ModelForcing
 from pyschism.stations import Stations
+from pyschism.forcing.nws.base import NWS
 
 from coupledmodeldriver.configure import Model, ModelJSON, SlurmJSON
 from coupledmodeldriver.configure.base import AttributeJSON, NEMSCapJSON
@@ -365,7 +366,7 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         self.__slurm_configuration = slurm_configuration
 
     @property
-    def pyschism_forcings(self):  # TODO -> List[...]:
+    def pyschism_forcings(self) -> List[ModelForcing]:
         return [forcing.pyschism_forcing for forcing in self.forcings]
 
     @property
@@ -406,6 +407,7 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
         tidal_elevation = None
         tidal_velocity = None
+        meteo = None
         for pyschism_forcing in self.pyschism_forcings:
             if isinstance(pyschism_forcing, Tides):
 
@@ -415,14 +417,17 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
                 tidal_velocity = TidalVelocity()
                 tidal_velocity.tides = pyschism_forcing
 
+            elif isinstance(pyschism_forcing, NWS):
+                meteo = pyschism_forcing
+
         config = ModelConfig(
             hgrid=self.pyschism_mesh,
             vgrid=None,
             fgrid=None,  # TODO
             iettype=tidal_elevation,
             ifltype=tidal_velocity,
-            #            nws=NWS2(GFS(), HRRR()),
-            #            source_sink=NWM()
+            nws=meteo,
+            # source_sink=NWM()
         )
 
         # TODO: What about other variable outputs?
