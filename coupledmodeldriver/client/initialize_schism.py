@@ -35,6 +35,7 @@ from coupledmodeldriver.utilities import get_logger
 
 class ForcingConfigurations(Enum):
     tidal = TidalForcingJSON
+    besttrack = BestTrackForcingJSON
 
 
 FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)
