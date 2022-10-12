@@ -13,6 +13,7 @@ from pyschism.forcing.bctides.tides import Tides
 from pyschism.forcing.base import ModelForcing
 from pyschism.stations import Stations
 from pyschism.forcing.nws.base import NWS
+from pyschism.forcing import NWM
 
 from coupledmodeldriver.configure import Model, ModelJSON, SlurmJSON
 from coupledmodeldriver.configure.base import AttributeJSON, NEMSCapJSON
@@ -408,6 +409,7 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
         tidal_elevation = None
         tidal_velocity = None
         meteo = None
+        hydrology = None
         for pyschism_forcing in self.pyschism_forcings:
             if isinstance(pyschism_forcing, Tides):
 
@@ -420,14 +422,18 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             elif isinstance(pyschism_forcing, NWS):
                 meteo = pyschism_forcing
 
+            elif isinstance(pyschism_forcing, NWM):
+                hydrology = pyschism_forcing
+                
+
         config = ModelConfig(
             hgrid=self.pyschism_mesh,
             vgrid=None,
-            fgrid=None,  # TODO
+            fgrid=None,  # pyschism writes linear with depth for 2D
             iettype=tidal_elevation,
             ifltype=tidal_velocity,
             nws=meteo,
-            # source_sink=NWM()
+            source_sink=hydrology
         )
 
         # TODO: What about other variable outputs?

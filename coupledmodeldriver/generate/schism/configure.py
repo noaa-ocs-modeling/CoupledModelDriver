@@ -21,6 +21,7 @@ from coupledmodeldriver.configure.forcings.base import (
     ForcingJSON,
     TidalForcingJSON,
     BestTrackForcingJSON,
+    NationalWaterModelFocringJSON,
 )
 from coupledmodeldriver.generate.schism.base import SCHISMJSON
 from coupledmodeldriver.platforms import Platform
@@ -40,6 +41,7 @@ class SCHISMRunConfiguration(RunConfiguration):
     SUPPLEMENTARY = {
         TidalForcingJSON,
         BestTrackForcingJSON,
+        NationalWaterModelFocringJSON,
     }
 
     def __init__(
@@ -174,7 +176,7 @@ class SCHISMRunConfiguration(RunConfiguration):
             'bctides.in',
             'hgrid.gr3',
             'hgrid.ll',
-            #            'manning.gr3',
+            'manning.gr3',
             'outputs',
             'param.nml',
             'vgrid.in',

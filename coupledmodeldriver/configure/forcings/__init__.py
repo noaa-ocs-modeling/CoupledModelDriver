@@ -4,4 +4,5 @@ from coupledmodeldriver.configure.forcings.base import (
     OWIForcingJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
+    NationalWaterModelFocringJSON,
 )
