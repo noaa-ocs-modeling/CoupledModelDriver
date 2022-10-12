@@ -424,7 +424,6 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
 
             elif isinstance(pyschism_forcing, NWM):
                 hydrology = pyschism_forcing
-                
 
         config = ModelConfig(
             hgrid=self.pyschism_mesh,
@@ -433,7 +432,7 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             iettype=tidal_elevation,
             ifltype=tidal_velocity,
             nws=meteo,
-            source_sink=hydrology
+            source_sink=hydrology,
         )
 
         # TODO: What about other variable outputs?

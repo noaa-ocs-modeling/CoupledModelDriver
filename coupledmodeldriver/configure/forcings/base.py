@@ -796,15 +796,13 @@ class HydrologyForcingJSON(ForcingJSON, ABC):
     """
 
     field_types = {}
+
     def __init__(self, **kwargs):
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(HydrologyForcingJSON.field_types)
 
         ForcingJSON.__init__(self, **kwargs)
-
-
-
 
 
 class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
@@ -826,31 +824,29 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
     }
 
     def __init__(
-        self,
-        resource: PathLike,
-        **kwargs,
+        self, resource: PathLike, **kwargs,
     ):
         if 'fields' not in kwargs:
             kwargs['fields'] = {}
         kwargs['fields'].update(NationalWaterModelFocringJSON.field_types)
-        
+
         HydrologyForcingJSON.__init__(self, **kwargs)
         FileForcingJSON.__init__(self, resource=resource, **kwargs)
 
     @property
     def adcircpy_forcing(self) -> None:
-        raise NotImplementedError("ADCIRC does NOT support NWM forcing!")
+        raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
 
     @classmethod
     def from_adcircpy(cls, forcing: None) -> 'None':
-        raise NotImplementedError("ADCIRC does NOT support NWM forcing!")
+        raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
 
     @property
     def pyschism_forcing(self) -> PySCHISMForcing:
         return PySCHISMNWM(
             aggregation_radius=self['aggregation_radius'],
             nwm_file=self['resource'],
-            cache=self['cache']
+            cache=self['cache'],
         )
 
     @classmethod
@@ -858,5 +854,5 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
         return cls(
             resource=forcing.nwm_file,
             aggregation_radius=forcing.aggregation_radius,
-            cache=forcing.cache
+            cache=forcing.cache,
         )
