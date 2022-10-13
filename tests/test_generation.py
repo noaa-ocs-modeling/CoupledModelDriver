@@ -10,6 +10,7 @@ from pyschism.forcing.bctides.tides import Tides as PySCHISMTides
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.nws.best_track import BestTrackForcing as PySCHISMBestTrackForcing
+from pyschism.forcing import NWM as PySCHISMNWM
 import pytest
 
 from coupledmodeldriver import Platform
@@ -1096,6 +1097,60 @@ def test_hera_schism_besttrack_fromnhccode():
 
     wind_forcing = PySCHISMBestTrackForcing(storm='IKE2008')
     forcings = [wind_forcing]
+
+    initialize_schism(
+        platform=platform,
+        mesh_directory=mesh_directory,
+        modeled_start_time=modeled_start_time,
+        modeled_duration=modeled_duration,
+        modeled_timestep=modeled_timestep,
+        tidal_spinup_duration=tidal_spinup_duration,
+        perturbations=None,
+        nems_interval=None,
+        nems_connections=None,
+        nems_mediations=None,
+        nems_sequence=None,
+        modulefile=INPUT_DIRECTORY / 'modulefiles' / 'envmodules_intel.hera',
+        forcings=forcings,
+        schism_executable=INPUT_DIRECTORY / 'bin' / 'pschism-TVD_VL',
+        schism_hotstart_combiner=INPUT_DIRECTORY / 'bin' / 'combine_hotstart7',
+        schism_processors=schism_processors,
+        job_duration=job_duration,
+        output_directory=output_directory,
+        absolute_paths=False,
+        overwrite=True,
+        verbose=False,
+    )
+    generate_schism_configuration(output_directory, relative_paths=True, overwrite=True)
+
+    check_reference_directory(
+        test_directory=output_directory,
+        reference_directory=reference_directory,
+        skip_lines={'param.nml': [0], 'model_configure': [0], 'Makefile': [3]},
+    )
+
+
+@pytest.mark.skipif(
+    sys.platform == 'darwin',
+    reason='MacOSX issue with pickling local objects used in PySCHISM',
+)
+def test_hera_schism_nwm():
+    output_directory = OUTPUT_DIRECTORY / 'test_hera_schism_nwm'
+    reference_directory = REFERENCE_DIRECTORY / 'test_hera_schism_nwm'
+
+    platform = Platform.HERA
+    mesh = 'shinnecock_w_floodplain'
+    schism_processors = 15 * platform.value['processors_per_node']
+    modeled_start_time = datetime(2008, 8, 23)
+    modeled_duration = timedelta(days=14.5)
+    modeled_timestep = timedelta(seconds=2)
+    tidal_spinup_duration = None
+    job_duration = timedelta(hours=6)
+
+    mesh_directory = INPUT_DIRECTORY / 'meshes' / mesh
+
+    nwm = PySCHISMNWM()
+    forcings = [nwm]
 
     initialize_schism(
         platform=platform,

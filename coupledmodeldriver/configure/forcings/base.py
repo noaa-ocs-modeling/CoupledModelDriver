@@ -55,7 +55,7 @@ PYSCHISM_FORCINGS = {
     # 'AtmosphericMeshForcing': 'ATMESHForcingJSON',
 }
 
-PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing)
+PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing, PySCHISMNWM)
 
 
 class TidalSource(IntEnum):
@@ -817,10 +817,10 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
     name = 'NWM'
     default_filename = f'configure_nwm.json'
     default_aggregation_radius = None
-    defaul_cache = None
+    defaul_cache = False
     field_types = {
         'aggregation_radius': float,
-        'cache': PathLike,
+        'cache': bool,
     }
 
     def __init__(
@@ -842,7 +842,7 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
         raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
 
     @property
-    def pyschism_forcing(self) -> PySCHISMForcing:
+    def pyschism_forcing(self) -> PySCHISMNWM:
         return PySCHISMNWM(
             aggregation_radius=self['aggregation_radius'],
             nwm_file=self['resource'],
