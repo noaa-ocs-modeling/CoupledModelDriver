@@ -16,6 +16,7 @@ from coupledmodeldriver.configure import (
     OWIForcingJSON,
     TidalForcingJSON,
     WW3DATAForcingJSON,
+    NationalWaterModelFocringJSON,
 )
 from coupledmodeldriver.configure.base import NEMSCapJSON
 from coupledmodeldriver.configure.forcings.base import (
@@ -36,6 +37,7 @@ from coupledmodeldriver.utilities import get_logger
 class ForcingConfigurations(Enum):
     tidal = TidalForcingJSON
     besttrack = BestTrackForcingJSON
+    nwm = NationalWaterModelFocringJSON
 
 
 FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)

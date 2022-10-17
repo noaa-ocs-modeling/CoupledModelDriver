@@ -24,6 +24,8 @@ from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.nws import BestTrackForcing as PySCHISMBestTrackForcing
 from pyschism.forcing.base import ModelForcing as PySCHISMForcing
+from pyschism.forcing import NWM as PySCHISMNWM
+from pyschism.forcing.source_sink.nwm import NWMElementPairings
 
 from coupledmodeldriver.configure.base import (
     AttributeJSON,
@@ -47,12 +49,13 @@ ADCIRCPY_FORCING_CLASSES = (ADCIRCPyForcing, ADCIRCPyTides)
 PYSCHISM_FORCINGS = {
     'Tides': 'TidalForcingJSON',
     'BestTrackForcing': 'BestTrackForcingJSON',
-    # 'GFS, etc.': 'ATMESHForcingJSON',
+    'NationalWaterModel': 'NationalWaterModelFocringJSON'
     # 'NWM : ,
+    # 'GFS, etc.': 'ATMESHForcingJSON',
     # 'AtmosphericMeshForcing': 'ATMESHForcingJSON',
 }
 
-PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing)
+PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing, PySCHISMNWM)
 
 
 class TidalSource(IntEnum):
@@ -784,4 +787,72 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
     def nemspy_entry(self) -> WaveWatch3ForcingEntry:
         return WaveWatch3ForcingEntry(
             filename=self['resource'], processors=self['processors'], **self['nems_parameters']
+        )
+
+
+class HydrologyForcingJSON(ForcingJSON, ABC):
+    """
+    abstraction of a hydrology forcing configuration
+    """
+
+    field_types = {}
+
+    def __init__(self, **kwargs):
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(HydrologyForcingJSON.field_types)
+
+        ForcingJSON.__init__(self, **kwargs)
+
+
+class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
+    """
+    National water model file configuration in ``configure_nwm.json``
+
+    .. code-block:: python
+        TODO
+
+    """
+
+    name = 'NWM'
+    default_filename = f'configure_nwm.json'
+    default_aggregation_radius = None
+    defaul_cache = False
+    field_types = {
+        'aggregation_radius': float,
+        'cache': bool,
+    }
+
+    def __init__(
+        self, resource: PathLike, **kwargs,
+    ):
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(NationalWaterModelFocringJSON.field_types)
+
+        HydrologyForcingJSON.__init__(self, **kwargs)
+        FileForcingJSON.__init__(self, resource=resource, **kwargs)
+
+    @property
+    def adcircpy_forcing(self) -> None:
+        raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
+
+    @classmethod
+    def from_adcircpy(cls, forcing: None) -> 'None':
+        raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
+
+    @property
+    def pyschism_forcing(self) -> PySCHISMNWM:
+        return PySCHISMNWM(
+            aggregation_radius=self['aggregation_radius'],
+            nwm_file=self['resource'],
+            cache=self['cache'],
+        )
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMNWM) -> 'ForcingJSON':
+        return cls(
+            resource=forcing.nwm_file,
+            aggregation_radius=forcing.aggregation_radius,
+            cache=forcing.cache,
         )
