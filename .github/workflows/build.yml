@@ -17,6 +17,8 @@ jobs:
         uses: abatilo/actions-poetry@v2.2.0
       - name: install Dunamai
         run: pip install dunamai
+      - name: set python version
+        run: poetry env use 3.9
       - name: extract version from VCS
         run: poetry version $(dunamai from any)
       - name: build wheel and source
