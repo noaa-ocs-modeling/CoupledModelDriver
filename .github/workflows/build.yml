@@ -1,24 +1,40 @@
 name: build
 
 on:
+  push:
   release:
     types:
       - published
 
 jobs:
-  publish:
-    name: publish package to PyPI
+  build:
+    name: build package
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
         uses: actions/checkout@v2
       - name: install Poetry
-        uses: abatilo/actions-poetry@v2.1.3
+        uses: abatilo/actions-poetry@v2.2.0
       - name: install Dunamai
         run: pip install dunamai
       - name: extract version from VCS
         run: poetry version $(dunamai from any)
       - name: build wheel and source
         run: poetry build
+      - name: save builds
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: ./dist
+  publish:
+      if: github.event_name == 'release'
+      name: publish package to PyPI
+      runs-on: ubuntu-latest
+      steps:
+      - name: retrieve wheel(s) and source
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: dist
       - name: upload wheel and source
         run: poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
