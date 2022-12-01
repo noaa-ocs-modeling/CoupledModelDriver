@@ -41,6 +41,8 @@ jobs:
         with:
           name: build
           path: dist
+      - name: checkout repository
+        uses: actions/checkout@v3
       - name: install Poetry
         uses: abatilo/actions-poetry@v2.2.0          
       - name: upload wheel and source
