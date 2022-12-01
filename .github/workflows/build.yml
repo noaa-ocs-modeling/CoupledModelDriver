@@ -41,5 +41,7 @@ jobs:
         with:
           name: build
           path: dist
+      - name: install Poetry
+        uses: abatilo/actions-poetry@v2.2.0          
       - name: upload wheel and source
         run: poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
