@@ -31,6 +31,7 @@ jobs:
           name: build
           path: ./dist
   publish:
+      needs: build
       if: github.event_name == 'release'
       name: publish package to PyPI
       runs-on: ubuntu-latest
