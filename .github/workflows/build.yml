@@ -28,20 +28,18 @@ jobs:
       - name: save builds
         uses: actions/upload-artifact@v3
         with:
-          name: build
-          path: ./dist
+          name: repo_w_build
+          path: .
   publish_dry:
       needs: build
       name: dry-run publishing package to PyPI
       runs-on: ubuntu-latest
       steps:
-      - name: checkout repository
-        uses: actions/checkout@v3
       - name: retrieve wheel(s) and source
         uses: actions/download-artifact@v3
         with:
-          name: build
-          path: dist
+          name: repo_w_build
+          path: .
       - name: install Poetry
         uses: abatilo/actions-poetry@v2.2.0          
       - name: upload wheel and source
@@ -52,13 +50,11 @@ jobs:
       name: publish package to PyPI
       runs-on: ubuntu-latest
       steps:
-      - name: checkout repository
-        uses: actions/checkout@v3
       - name: retrieve wheel(s) and source
         uses: actions/download-artifact@v3
         with:
-          name: build
-          path: dist
+          name: repo_w_build
+          path: .
       - name: install Poetry
         uses: abatilo/actions-poetry@v2.2.0          
       - name: upload wheel and source
