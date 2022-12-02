@@ -36,13 +36,13 @@ jobs:
       name: publish package to PyPI
       runs-on: ubuntu-latest
       steps:
+      - name: checkout repository
+        uses: actions/checkout@v3
       - name: retrieve wheel(s) and source
         uses: actions/download-artifact@v3
         with:
           name: build
           path: dist
-      - name: checkout repository
-        uses: actions/checkout@v3
       - name: install Poetry
         uses: abatilo/actions-poetry@v2.2.0          
       - name: upload wheel and source
