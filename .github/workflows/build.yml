@@ -30,6 +30,22 @@ jobs:
         with:
           name: build
           path: ./dist
+  publish_dry:
+      needs: build
+      name: dry-run publishing package to PyPI
+      runs-on: ubuntu-latest
+      steps:
+      - name: checkout repository
+        uses: actions/checkout@v3
+      - name: retrieve wheel(s) and source
+        uses: actions/download-artifact@v3
+        with:
+          name: build
+          path: dist
+      - name: install Poetry
+        uses: abatilo/actions-poetry@v2.2.0          
+      - name: upload wheel and source
+        run: poetry publish --dry-run --username __token__ --password ${{ secrets.PYPI_TOKEN }}
   publish:
       needs: build
       if: github.event_name == 'release'
