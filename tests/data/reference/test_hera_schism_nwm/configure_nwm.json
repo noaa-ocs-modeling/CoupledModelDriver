@@ -1,5 +1,8 @@
 {
   "aggregation_radius": null,
   "cache": false,
+  "source_json": null,
+  "sink_json": null,
+  "pairing_hgrid": null,
   "resource": null
 }
