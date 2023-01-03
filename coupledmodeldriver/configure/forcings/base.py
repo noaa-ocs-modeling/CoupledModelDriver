@@ -18,6 +18,7 @@ from adcircpy.forcing.winds.atmesh import (
 from adcircpy.forcing.winds.owi import OwiForcing as ADCIRCPyOwiForcing
 from nemspy.model import AtmosphericForcingEntry, WaveWatch3ForcingEntry
 from pandas import DataFrame
+from pyschism.mesh import Hgrid
 from pyschism.forcing.bctides.tides import Tides as PySCHISMTides
 from pyschism.forcing.bctides.tpxo import TPXO_ELEVATION as PySCHISMTPXO_ELEV
 from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
@@ -805,7 +806,7 @@ class HydrologyForcingJSON(ForcingJSON, ABC):
         ForcingJSON.__init__(self, **kwargs)
 
 
-class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
+class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileGenForcingJSON):
     """
     National water model file configuration in ``configure_nwm.json``
 
@@ -817,10 +818,16 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
     name = 'NWM'
     default_filename = f'configure_nwm.json'
     default_aggregation_radius = None
-    defaul_cache = False
+    default_cache = False
+    default_source_json: PathLike
+    default_sink_json: PathLike
+    default_pairing_hgrid: PathLike
     field_types = {
         'aggregation_radius': float,
         'cache': bool,
+        'source_json': PathLike,
+        'sink_json': PathLike,
+        'pairing_hgrid': PathLike,
     }
 
     def __init__(
@@ -843,16 +850,40 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileForcingJSON):
 
     @property
     def pyschism_forcing(self) -> PySCHISMNWM:
+
+        pairings = None
+        if (
+            (self['source_json'] is not None or self['sink_json'] is not None)
+            and self['pairing_hgrid'] is not None
+            and self['pairing_hgrid'].is_file()
+        ):
+            hgrid = Hgrid.open(self['pairing_hgrid'], crs=4326)
+            pairings = NWMElementPairings.load_json(
+                hgrid, sources=self['source_json'], sinks=self['sink_json']
+            )
         return PySCHISMNWM(
             aggregation_radius=self['aggregation_radius'],
             nwm_file=self['resource'],
             cache=self['cache'],
+            pairings=pairings,
         )
 
     @classmethod
     def from_pyschism(cls, forcing: PySCHISMNWM) -> 'ForcingJSON':
+
+        # For now the pairing info is not kept from forcing object
+        # TODO: Where to store these files?
+        # source_json_path =
+        # sink_json_path =
+        # pairing_hgrid_path =
+        # forcing.pairings.save_json(
+        #     sources=source_json_path, sinks=sink_json_path
+        # )
         return cls(
             resource=forcing.nwm_file,
             aggregation_radius=forcing.aggregation_radius,
             cache=forcing.cache,
+            # source_json=source_json_path,
+            # sink_json=sink_json_path,
+            # pairing_hgrid=pairing_hgrid_path
         )
