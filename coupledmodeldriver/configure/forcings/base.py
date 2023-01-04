@@ -811,23 +811,29 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileGenForcingJSON):
     National water model file configuration in ``configure_nwm.json``
 
     .. code-block:: python
-        TODO
 
+        configuration = NationalWaterModelFocringJSON(
+            resource='NWM_v2.0_channel_hydrofabric/nwm_v2_0_hydrofabric.gdb',
+            cache=True,
+            source_json='source.json',
+            sink_json='sink.json',
+            pairing_hgrid='hgrid.grd'
+        )
     """
 
     name = 'NWM'
     default_filename = f'configure_nwm.json'
     default_aggregation_radius = None
     default_cache = False
-    default_source_json: PathLike
-    default_sink_json: PathLike
-    default_pairing_hgrid: PathLike
+    default_source_json: Path
+    default_sink_json: Path
+    default_pairing_hgrid: Path
     field_types = {
         'aggregation_radius': float,
         'cache': bool,
-        'source_json': PathLike,
-        'sink_json': PathLike,
-        'pairing_hgrid': PathLike,
+        'source_json': Path,
+        'sink_json': Path,
+        'pairing_hgrid': Path,
     }
 
     def __init__(
