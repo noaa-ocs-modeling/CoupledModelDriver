@@ -60,10 +60,17 @@ jobs:
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install non-python dependencies
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: sudo apt-get install -y udunits-bin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev
+          sudo apt-get install -y libnetcdf-dev
+          sudo apt-get install -y udunits-bin
       - name: install non-python dependencies
         if: ${{ matrix.os == 'macos-latest' }}
-        run: brew install udunits
+        run: |
+          brew install hdf5
+          brew install netcdf
+          brew install udunits
       - name: install dependencies
         run: pip install ".[testing]"
       - name: run tests
@@ -85,6 +92,9 @@ jobs:
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev
+          sudo apt-get install -y libnetcdf-dev
           sudo apt-get install -y udunits-bin
           pip install ".[testing]"
       - name: run tests with coverage
