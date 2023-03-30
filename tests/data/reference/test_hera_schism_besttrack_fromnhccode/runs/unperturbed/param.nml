@@ -19,6 +19,7 @@
   hmin_man=1.0
   nws=-1
   wtiminc=2.0
+  model_type_pahm=10
 /
 
 &SCHOUT

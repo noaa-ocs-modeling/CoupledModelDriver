@@ -375,6 +375,7 @@ BESTTRACK_ATTRIBUTES = [
     'geofactor',
     'start_date',
     'end_date',
+    'model',
 ]
 
 
