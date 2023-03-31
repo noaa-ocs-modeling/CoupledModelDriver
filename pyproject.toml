@@ -2,7 +2,10 @@
 name = 'coupledmodeldriver'
 version = '0.0.0'
 description = 'coupled model configuration generation'
-authors = ['Zach Burnett <zachary.r.burnett@gmail.com>']
+authors = [
+    'Zach Burnett <zachary.r.burnett@gmail.com>',
+    'Soroosh Mani <soroosh.mani@noaa.gov>',
+    ]
 license = 'CC0-1.0'
 readme = 'README.md'
 repository = 'https://github.com/noaa-ocs-modeling/CoupledModelDriver.git'
@@ -20,7 +23,7 @@ enable = true
 
 [tool.poetry.dependencies]
 python = '<3.11' # due to numba
-adcircpy = '^1.2.1'
+adcircpy = '>=1.2.5'
 file-read-backwards = '*'
 nemspy = '>=1.0.4'
 numpy = '*'
