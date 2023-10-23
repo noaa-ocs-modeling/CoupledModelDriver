@@ -2,10 +2,10 @@
   ipre=0
   ibc=1
   ibtp=0
+  rnday=14.0
+  dt=2.0
   nspool=1800
   ihfskip=604800
-  dt=2.0
-  rnday=14.0
 /
 
 &OPT
@@ -17,6 +17,7 @@
   ics=2
   nchi=-1
   hmin_man=1.0
+  ncor=1
   nws=-1
   wtiminc=2.0
   model_type_pahm=10
@@ -25,4 +26,6 @@
 &SCHOUT
   nhot=1
   nhot_write=604800
+  iof_hydro(1)=1
+  iof_hydro(16)=1
 /
