@@ -1,5 +1,5 @@
-2008-09-01 06:00:00+00:00
-0 50.0
-0
-1
-75 0 0 0 0
+!2008-09-01 06:00:00+00:00 UTC
+0 50.0 !number of earth tidal potential, cut-off depth for applying tidal potential
+0 !nbfr
+1 !nope
+75 0 0 0 0 !open bnd 1

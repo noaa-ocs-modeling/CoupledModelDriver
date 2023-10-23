@@ -7,8 +7,6 @@ from nemspy.model import SCHISMEntry
 from pyschism.mesh import Hgrid
 from pyschism.server import SlurmConfig
 from pyschism.driver import ModelConfig, ModelDriver
-from pyschism.forcing.bctides.iettype import TidalElevation
-from pyschism.forcing.bctides.ifltype import TidalVelocity
 from pyschism.forcing.bctides.tides import Tides
 from pyschism.forcing.base import ModelForcing
 from pyschism.stations import Stations
@@ -406,18 +404,14 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     @property
     def pyschism_driver(self) -> ModelDriver:
 
-        tidal_elevation = None
-        tidal_velocity = None
+        tides = None
+        tidal_flags = [0, 0, 0, 0]  # Needed for correct no tide BC
         meteo = None
         hydrology = None
         for pyschism_forcing in self.pyschism_forcings:
             if isinstance(pyschism_forcing, Tides):
-
-                # NOTE: Create tidal BC and then replace the tidal database
-                tidal_elevation = TidalElevation()
-                tidal_elevation.tides = pyschism_forcing
-                tidal_velocity = TidalVelocity()
-                tidal_velocity.tides = pyschism_forcing
+                tides = pyschism_forcing
+                tidal_flags = [3, 3, 0, 0]
 
             elif isinstance(pyschism_forcing, NWS):
                 meteo = pyschism_forcing
@@ -429,11 +423,15 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             hgrid=self.pyschism_mesh,
             vgrid=None,
             fgrid=None,  # pyschism writes linear with depth for 2D
-            iettype=tidal_elevation,
-            ifltype=tidal_velocity,
+            flags=[tidal_flags for _ in self.pyschism_mesh.boundaries.open.itertuples()],
+            constituents=[],  # we're overwriting Tides obj
+            database='tpxo',  # we're overwriting Tides obj
             nws=meteo,
             source_sink=hydrology,
         )
+        # Hacky way to set the resource for tide
+        if tides is not None:
+            config.bctides.tides = tides
 
         # TODO: What about other variable outputs?
 
