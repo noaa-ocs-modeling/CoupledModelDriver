@@ -405,7 +405,7 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
     def pyschism_driver(self) -> ModelDriver:
 
         tides = None
-        tidal_flags = None
+        tidal_flags = [[0, 0, 0, 0]]  # Needed for correct no tide BC
         meteo = None
         hydrology = None
         for pyschism_forcing in self.pyschism_forcings:
@@ -424,8 +424,8 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             vgrid=None,
             fgrid=None,  # pyschism writes linear with depth for 2D
             flags=tidal_flags,
-            constituents=None,  # we're overwriting Tides obj
-            database=None,  # we're overwriting Tides obj
+            constituents=[],  # we're overwriting Tides obj
+            database='tpxo',  # we're overwriting Tides obj
             nws=meteo,
             source_sink=hydrology,
         )
