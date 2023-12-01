@@ -45,7 +45,7 @@ sphinxcontrib-programoutput = { version = '*', optional = true }
 [tool.poetry.extras]
 testing = ['pooch', 'pytest', 'pytest-cov', 'pytest-socket', 'pytest-xdist', 'wget']
 development = ['isort', 'oitnb']
-documentation = ['m2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput']
+documentation = ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput']
 
 [tool.poetry.scripts]
 initialize_adcirc = 'coupledmodeldriver.client.initialize_adcirc:main'
