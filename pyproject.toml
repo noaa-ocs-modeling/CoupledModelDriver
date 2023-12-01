@@ -24,6 +24,7 @@ enable = true
 [tool.poetry.dependencies]
 python = '<3.11' # due to numba
 adcircpy = '>=1.2.5'
+dunamai = { version = '*', optional = true }
 file-read-backwards = '*'
 nemspy = '>=1.0.4'
 numpy = '*'
