@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from collections import Collection
+from collections.abc import Collection
 import os
 from pathlib import Path
 from typing import Any, Dict, List
