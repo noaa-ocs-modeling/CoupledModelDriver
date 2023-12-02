@@ -9,6 +9,7 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+from datetime import datetime
 import os
 from os import PathLike
 from pathlib import Path
@@ -16,7 +17,7 @@ import subprocess
 import sys
 
 from dunamai import Version
-from setuptools import config
+from importlib.metadata import metadata
 
 
 def repository_root(path: PathLike = None) -> Path:
@@ -42,11 +43,11 @@ subprocess.run(
 )
 
 # -- Project information -----------------------------------------------------
-metadata = config.read_configuration('../../setup.cfg')['metadata']
+md = metadata('coupledmodeldriver')
 
-project = metadata['name']
-author = metadata['author']
-copyright = f'2021, Office of Coast Survey (OCS), National Oceanic and Atmospheric Administration (NOAA)'
+project = md['name']
+author = md['author']
+copyright = f'{datetime.now().year}, Office of Coast Survey (OCS), National Oceanic and Atmospheric Administration (NOAA)'
 
 # The full version, including alpha/beta/rc tags
 try:
