@@ -22,6 +22,7 @@ from coupledmodeldriver.configure.forcings.base import (
     TidalForcingJSON,
     BestTrackForcingJSON,
     NationalWaterModelFocringJSON,
+    SfluxFileForcingJSON,
 )
 from coupledmodeldriver.generate.schism.base import SCHISMJSON
 from coupledmodeldriver.platforms import Platform
@@ -42,6 +43,7 @@ class SCHISMRunConfiguration(RunConfiguration):
         TidalForcingJSON,
         BestTrackForcingJSON,
         NationalWaterModelFocringJSON,
+        SfluxFileForcingJSON,
     }
 
     def __init__(

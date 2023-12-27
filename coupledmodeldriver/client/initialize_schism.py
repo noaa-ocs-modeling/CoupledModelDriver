@@ -25,6 +25,7 @@ from coupledmodeldriver.configure.forcings.base import (
     TimestepForcingJSON,
     WaveForcingJSON,
     WindForcingJSON,
+    SfluxFileForcingJSON,
 )
 from coupledmodeldriver.generate import (
     SCHISMRunConfiguration,
@@ -38,6 +39,7 @@ class ForcingConfigurations(Enum):
     tidal = TidalForcingJSON
     besttrack = BestTrackForcingJSON
     nwm = NationalWaterModelFocringJSON
+    sfluxfiles = SfluxFileForcingJSON
 
 
 FORCING_NAMES = list(entry.name for entry in ForcingConfigurations)
