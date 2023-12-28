@@ -24,6 +24,7 @@ from pyschism.forcing.bctides.tpxo import TPXO_ELEVATION as PySCHISMTPXO_ELEV
 from pyschism.forcing.bctides.tpxo import TPXO_VELOCITY as PySCHISMTPXO_VEL
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.nws import BestTrackForcing as PySCHISMBestTrackForcing
+from pyschism.forcing.nws.nws2 import NWS2 as PySCHISMSfluxForcing
 from pyschism.forcing.base import ModelForcing as PySCHISMForcing
 from pyschism.forcing import NWM as PySCHISMNWM
 from pyschism.forcing.source_sink.nwm import NWMElementPairings
@@ -50,13 +51,11 @@ ADCIRCPY_FORCING_CLASSES = (ADCIRCPyForcing, ADCIRCPyTides)
 PYSCHISM_FORCINGS = {
     'Tides': 'TidalForcingJSON',
     'BestTrackForcing': 'BestTrackForcingJSON',
-    'NationalWaterModel': 'NationalWaterModelFocringJSON'
-    # 'NWM : ,
-    # 'GFS, etc.': 'ATMESHForcingJSON',
-    # 'AtmosphericMeshForcing': 'ATMESHForcingJSON',
+    'NationalWaterModel': 'NationalWaterModelFocringJSON',
+    'NWS2': 'SfluxFileForcingJSON',
 }
 
-PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing, PySCHISMNWM)
+PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing, PySCHISMNWM, PySCHISMSfluxForcing)
 
 
 class TidalSource(IntEnum):
@@ -845,7 +844,7 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileGenForcingJSON):
         kwargs['fields'].update(NationalWaterModelFocringJSON.field_types)
 
         HydrologyForcingJSON.__init__(self, **kwargs)
-        FileForcingJSON.__init__(self, resource=resource, **kwargs)
+        FileGenForcingJSON.__init__(self, resource=resource, **kwargs)
 
     @property
     def adcircpy_forcing(self) -> None:
@@ -894,3 +893,99 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileGenForcingJSON):
             # sink_json=sink_json_path,
             # pairing_hgrid=pairing_hgrid_path
         )
+
+
+class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
+
+    name = 'Sflux'
+    default_filename = f'configure_sfluxfiles.json'
+    default_nws = 2  # SCHISM NWS
+    default_sflux_1_glob = '*_1.*'
+    default_sflux_2_glob = '*_2.*'
+    field_types = {
+        'sflux_1_glob': str,
+        'sflux_2_glob': str,
+    }
+
+    def __init__(
+        self, resource: PathLike, sflux_1_glob: str = None, sflux_2_glob: str = None, **kwargs,
+    ):
+
+        # TODO: Add windrot?
+        if sflux_1_glob is None:
+            sflux_1_glob = self.default_sflux_1_glob
+        if sflux_2_glob is None:
+            sflux_2_glob = self.default_sflux_2_glob
+
+        if 'fields' not in kwargs:
+            kwargs['fields'] = {}
+        kwargs['fields'].update(SfluxFileForcingJSON.field_types)
+
+        WindForcingJSON.__init__(self, **kwargs)
+        FileForcingJSON.__init__(self, resource=resource, **kwargs)
+
+        self['sflux_1_glob'] = sflux_1_glob
+        self['sflux_2_glob'] = sflux_2_glob
+
+    @property
+    def adcircpy_forcing(self) -> None:
+        raise NotImplementedError('ADCIRC does NOT support Sflux forcing!')
+
+    @classmethod
+    def from_adcircpy(cls, forcing: None) -> 'None':
+        raise NotImplementedError('ADCIRC does NOT support Sflux forcing!')
+
+    @property
+    def pyschism_forcing(self) -> PySCHISMSfluxForcing:
+
+        return PySCHISMSfluxForcing.read(
+            path=self['resource'],
+            sflux_1_glob=self['sflux_1_glob'],
+            sflux_2_glob=self['sflux_2_glob'],
+        )
+
+    @classmethod
+    def from_pyschism(cls, forcing: PySCHISMSfluxForcing) -> 'ForcingJSON':
+        sf1_paths = forcing.sflux_1.resource
+        if isinstance(sf1_paths, (str, Path)):
+            sf1_paths = [sf1_paths]
+        sf2_paths = forcing.sflux_2.resource
+        if isinstance(sf2_paths, (str, Path)):
+            sf2_paths = [sf2_paths]
+
+        path = cls._find_shared_root(*sf1_paths, *sf2_paths)
+        sf1_pat = cls._find_simple_pattern(sf1_paths, path)
+        sf2_pat = cls._find_simple_pattern(sf2_paths, path)
+
+        return cls(resource=path, sflux_1_glob=sf1_pat, sflux_2_glob=sf2_pat,)
+
+    def _find_shared_root(*paths):
+        roots = {Path(i).parent for i in paths}
+        while len(roots) != 0:
+            roots = {Path(i).parent for i in roots}
+
+        return roots.pop()
+
+    def _find_simple_pattern(paths, root):
+        # Note: CANNOT match complicated patterns, depth MUST be the same
+
+        if len(paths) == 0:
+            return ''
+
+        relpaths = [Path(p).relative_to(root) for p in paths]
+        if len(relpaths) == 1:
+            return relpaths[0]
+
+        exts = {rp.suffix for rp in relpaths}
+        ext = '.*'
+        if len(exts) == 1:
+            ext = exts.pop()
+
+        ns_parts = {len(rp.parts) - 1 for rp in relpaths}
+        if len(ns_parts) > 1:
+            raise ValueError('Cannot deduce pattern for different directory depths!')
+        n_parts = ns_parts.pop()
+
+        pat = ('*/' * n_parts) + '*' + ext
+
+        return pat
