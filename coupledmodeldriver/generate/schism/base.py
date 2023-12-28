@@ -429,6 +429,9 @@ class SCHISMJSON(ModelJSON, NEMSCapJSON, AttributeJSON):
             nws=meteo,
             source_sink=hydrology,
         )
+        # To avoid excessive memory use, especially when writing ensembles
+        self.base_mesh = self['hgrid_path']
+        self.pyschism_mesh = self['hgrid_path']
         # Hacky way to set the resource for tide
         if tides is not None:
             config.bctides.tides = tides
