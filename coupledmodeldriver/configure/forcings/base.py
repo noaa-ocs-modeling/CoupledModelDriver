@@ -55,8 +55,7 @@ PYSCHISM_FORCINGS = {
     'NWS2': 'SfluxFileForcingJSON',
 }
 
-PYSCHISM_FORCING_CLASSES = (
-    PySCHISMTides, PySCHISMForcing, PySCHISMNWM, PySCHISMSfluxForcing)
+PYSCHISM_FORCING_CLASSES = (PySCHISMTides, PySCHISMForcing, PySCHISMNWM, PySCHISMSfluxForcing)
 
 
 class TidalSource(IntEnum):
@@ -900,20 +899,16 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
 
     name = 'Sflux'
     default_filename = f'configure_sfluxfiles.json'
-    default_nws = 2 # SCHISM NWS
+    default_nws = 2  # SCHISM NWS
     default_sflux_1_glob = '*_1.*'
     default_sflux_2_glob = '*_2.*'
     field_types = {
-        'sflux_1_glob': str, 
+        'sflux_1_glob': str,
         'sflux_2_glob': str,
     }
-    
+
     def __init__(
-        self,
-        resource: PathLike,
-        sflux_1_glob: str = None,
-        sflux_2_glob: str = None,
-        **kwargs,
+        self, resource: PathLike, sflux_1_glob: str = None, sflux_2_glob: str = None, **kwargs,
     ):
 
         # TODO: Add windrot?
@@ -931,7 +926,6 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
 
         self['sflux_1_glob'] = sflux_1_glob
         self['sflux_2_glob'] = sflux_2_glob
-
 
     @property
     def adcircpy_forcing(self) -> None:
@@ -959,16 +953,11 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
         if isinstance(sf2_paths, (str, Path)):
             sf2_paths = [sf2_paths]
 
-        path = self._find_shared_root(*sf1_paths, *sf2_paths)
-        sf1_pat = self._find_simple_pattern(sf1_paths, path)
-        sf2_pat = self._find_simple_pattern(sf2_paths, path)
+        path = cls._find_shared_root(*sf1_paths, *sf2_paths)
+        sf1_pat = cls._find_simple_pattern(sf1_paths, path)
+        sf2_pat = cls._find_simple_pattern(sf2_paths, path)
 
-        return cls(
-            resource=path,
-            sflux_1_glob=sf1_path,
-            sflux_2_glob=sf2_path,
-        )
-
+        return cls(resource=path, sflux_1_glob=sf1_pat, sflux_2_glob=sf2_pat,)
 
     def _find_shared_root(*paths):
         roots = {Path(i).parent for i in paths}
@@ -976,7 +965,6 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
             roots = {Path(i).parent for i in roots}
 
         return roots.pop()
-
 
     def _find_simple_pattern(paths, root):
         # Note: CANNOT match complicated patterns, depth MUST be the same
@@ -987,7 +975,7 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
         relpaths = [Path(p).relative_to(root) for p in paths]
         if len(relpaths) == 1:
             return relpaths[0]
-        
+
         exts = {rp.suffix for rp in relpaths}
         ext = '.*'
         if len(exts) == 1:
@@ -995,9 +983,7 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
 
         ns_parts = {len(rp.parts) - 1 for rp in relpaths}
         if len(ns_parts) > 1:
-            raise ValueError(
-                'Cannot deduce pattern for different directory depths!'
-            )
+            raise ValueError('Cannot deduce pattern for different directory depths!')
         n_parts = ns_parts.pop()
 
         pat = ('*/' * n_parts) + '*' + ext
