@@ -44,7 +44,7 @@ jobs:
       - name: install Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.10'  # due to numba
+          python-version: '3.10'
       - name: load cached Python installation
         id: cache
         uses: actions/cache@v2
