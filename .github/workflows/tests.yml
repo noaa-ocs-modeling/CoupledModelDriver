@@ -64,10 +64,13 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        shell: micromamba-shell {0}
       - name: install dependencies
         run: pip install ".[testing]"
+        shell: micromamba-shell {0}
       - name: run tests
         run: pytest --numprocesses auto
+        shell: micromamba-shell {0}
   test_with_coverage:
     needs: [ lint, test ]
     name: test with coverage
