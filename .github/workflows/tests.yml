@@ -55,7 +55,7 @@ jobs:
           environment-name: ci-env
           create-args: >-
             python=${{ matrix.python-version }}
-            libnetcdf4
+            libnetcdf
             hdf5
             udunits2
       - name: load cached Python installation
