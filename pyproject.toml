@@ -22,7 +22,7 @@ build-backend = 'poetry.core.masonry.api'
 enable = true
 
 [tool.poetry.dependencies]
-python = '>=3.8'
+python = '>=3.8,<3.12'
 adcircpy = '>=1.2.5'
 dunamai = { version = '*', optional = true }
 file-read-backwards = '*'
