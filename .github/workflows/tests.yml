@@ -48,29 +48,21 @@ jobs:
     steps:
       - name: clone repository
         uses: actions/checkout@v2
-      - name: install Python
-        uses: actions/setup-python@v2
+      - name: conda virtual environment
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          init-shell: bash
+          create-args: >-
+            python=${{ matrix.python-version }}
+            libnetcdf4
+            hdf5
+            udunits2
       - name: load cached Python installation
         id: cache
         uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-      - name: install non-python dependencies
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev
-          sudo apt-get install -y libnetcdf-dev
-          sudo apt-get install -y udunits-bin
-      - name: install non-python dependencies
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          brew install hdf5
-          brew install netcdf
-          brew install udunits
       - name: install dependencies
         run: pip install ".[testing]"
       - name: run tests
