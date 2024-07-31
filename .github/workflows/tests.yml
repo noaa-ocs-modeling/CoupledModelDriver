@@ -58,13 +58,7 @@ jobs:
             libnetcdf
             hdf5
             udunits2
-      - name: load cached Python installation
-        id: cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.pythonLocation }}
-          key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-        shell: micromamba-shell {0}
+        # TODO: cache?
       - name: install dependencies
         run: pip install ".[testing]"
         shell: micromamba-shell {0}
