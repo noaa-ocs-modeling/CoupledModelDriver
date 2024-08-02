@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from copy import copy
 from datetime import datetime, timedelta
@@ -7,7 +8,6 @@ from os import PathLike
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Union
 
-from adcircpy.server import SlurmConfig as ADCIRCPySlurmConfig
 from nemspy import ModelingSystem
 from nemspy.model.base import ModelEntry
 from pyschism.server import SlurmConfig as PySCHISMSlurmConfig
@@ -16,6 +16,12 @@ from typepigeon import convert_to_json, convert_value
 from coupledmodeldriver.platforms import Platform
 from coupledmodeldriver.script import SlurmEmailType
 from coupledmodeldriver.utilities import LOGGER
+from coupledmodeldriver._depend import requires_adcircpy, optional_import
+
+
+adcircpy = optional_import('adcircpy')
+if adcircpy is not None:
+    ADCIRCPySlurmConfig = adcircpy.server.SlurmConfig
 
 
 class NoRelPath(type(Path())):
@@ -308,6 +314,7 @@ class SlurmJSON(ConfigurationJSON):
             if self['email_address'] is not None:
                 self['email_type'] = SlurmEmailType.ALL
 
+    @requires_adcircpy
     def to_adcircpy(self) -> ADCIRCPySlurmConfig:
         return ADCIRCPySlurmConfig(
             account=self['account'],
@@ -328,6 +335,7 @@ class SlurmJSON(ConfigurationJSON):
         )
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, slurm_config: ADCIRCPySlurmConfig):
         instance = cls(
             account=slurm_config._account,
@@ -361,7 +369,7 @@ class SlurmJSON(ConfigurationJSON):
             mail_user=self['email_address'],
             log_filename=self['log_filename'],
             modules=self['modules'],
-            path_prefix=self['path_prefix'],
+            modulepath=self['path_prefix'],
             extra_commands=self['extra_commands'],
             launcher=self['launcher'],
             nodes=self['nodes'],

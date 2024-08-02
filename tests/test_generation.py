@@ -2,10 +2,6 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-from adcircpy.forcing.tides.tides import TidalSource, Tides
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
-from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
-from adcircpy.forcing.winds.best_track import BestTrackForcing
 from pyschism.forcing.bctides.tides import Tides as PySCHISMTides
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
 from pyschism.forcing.bctides.tides import TidalDatabase as PySCHISMTidalDatabase
@@ -14,12 +10,10 @@ from pyschism.forcing import NWM as PySCHISMNWM
 import pytest
 
 from coupledmodeldriver import Platform
-from coupledmodeldriver.client.initialize_adcirc import initialize_adcirc
 from coupledmodeldriver.client.initialize_schism import initialize_schism
-from coupledmodeldriver.generate import (
-    generate_adcirc_configuration,
-    generate_schism_configuration,
-)
+from coupledmodeldriver.generate import generate_schism_configuration
+from coupledmodeldriver._depend import optional_import
+
 from tests import (
     check_reference_directory,
     INPUT_DIRECTORY,
@@ -28,6 +22,25 @@ from tests import (
 )
 
 
+test_adcirc = False
+skip_adcircpy_msg = 'AdcircPy is not available!'
+if (adcircpy := optional_import('adcircpy')) is not None:
+    test_adcirc = True
+    skip_adcircpy_msg = ""
+
+    TidalSource = adcircpy.forcing.tides.TidalSource
+    Tides = adcircpy.forcing.tides.tides.Tides
+    WaveWatch3DataForcing = adcircpy.forcing.waves.ww3.WaveWatch3DataForcing
+    AtmosphericMeshForcing = adcircpy.forcing.winds.atmesh.AtmosphericMeshForcing
+    BestTrackForcing = adcircpy.forcing.winds.best_track.BestTrackForcing
+
+    _adc_init = optional_import('coupledmodeldriver.client.initialize_adcirc')
+    initialize_adcirc = _adc_init.initialize_adcirc
+    _adc_gen = optional_import('coupledmodeldriver.generate.adcirc')
+    generate_adcirc_configuration = _adc_gen.generate_adcirc_configuration
+
+
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc'
     reference_directory = REFERENCE_DIRECTORY / 'test_hera_adcirc'
@@ -82,6 +95,7 @@ def test_hera_adcirc():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc_nems_atmesh_ww3data():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc_nems_atmesh_ww3data'
     reference_directory = REFERENCE_DIRECTORY / 'test_hera_adcirc_nems_atmesh_ww3data'
@@ -161,6 +175,7 @@ def test_hera_adcirc_nems_atmesh_ww3data():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc_tidal():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc_tidal'
     reference_directory = REFERENCE_DIRECTORY / 'test_hera_adcirc_tidal'
@@ -219,6 +234,7 @@ def test_hera_adcirc_tidal():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc_tidal_besttrack_nems_ww3data():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc_tidal_besttrack_nems_ww3data'
     reference_directory = REFERENCE_DIRECTORY / 'test_hera_adcirc_tidal_besttrack_nems_ww3data'
@@ -294,6 +310,7 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 @pytest.mark.disable_socket
 def test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet():
     output_directory = (
@@ -377,6 +394,7 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_nointernet():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc_tidal_besttrack_nems_ww3data_aswip():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc_tidal_besttrack_nems_ww3data_aswip'
     reference_directory = (
@@ -454,6 +472,7 @@ def test_hera_adcirc_tidal_besttrack_nems_ww3data_aswip():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc_tidal_nems_atmesh_ww3data():
     output_directory = OUTPUT_DIRECTORY / 'test_hera_adcirc_tidal_nems_atmesh_ww3data'
     reference_directory = REFERENCE_DIRECTORY / 'test_hera_adcirc_tidal_nems_atmesh_ww3data'
@@ -535,6 +554,7 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed():
     output_directory = (
         OUTPUT_DIRECTORY / 'test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed'
@@ -630,6 +650,7 @@ def test_hera_adcirc_tidal_nems_atmesh_ww3data_perturbed():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_local_adcirc_tidal():
     output_directory = OUTPUT_DIRECTORY / 'test_local_adcirc_tidal'
     reference_directory = REFERENCE_DIRECTORY / 'test_local_adcirc_tidal'
@@ -688,6 +709,7 @@ def test_local_adcirc_tidal():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_local_adcirc_tidal_nems_atmesh_ww3data():
     output_directory = OUTPUT_DIRECTORY / 'test_local_adcirc_tidal_nems_atmesh_ww3data'
     reference_directory = REFERENCE_DIRECTORY / 'test_local_adcirc_tidal_nems_atmesh_ww3data'
@@ -769,6 +791,7 @@ def test_local_adcirc_tidal_nems_atmesh_ww3data():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_stampede2_adcirc_tidal():
     output_directory = OUTPUT_DIRECTORY / 'test_stampede2_adcirc_tidal'
     reference_directory = REFERENCE_DIRECTORY / 'test_stampede2_adcirc_tidal'
@@ -828,6 +851,7 @@ def test_stampede2_adcirc_tidal():
     )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_stampede2_adcirc_tidal_nems_atmesh_ww3data():
     output_directory = OUTPUT_DIRECTORY / 'test_stampede2_adcirc_tidal_nems_atmesh_ww3data'
     reference_directory = (

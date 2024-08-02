@@ -4,13 +4,20 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Collection, Dict, List, Mapping, Set, Union
 
+import coupledmodeldriver.configure.forcings.base
 from coupledmodeldriver.configure.base import ConfigurationJSON, ModelDriverJSON
 from coupledmodeldriver.configure.forcings.base import (
-    ADCIRCPY_FORCING_CLASSES,
     PYSCHISM_FORCING_CLASSES,
     ForcingJSON,
 )
 from coupledmodeldriver.utilities import LOGGER
+from coupledmodeldriver._depend import optional_import
+
+ADCIRCPY_FORCING_CLASSES = ()
+if optional_import('adcircpy'):
+    ADCIRCPY_FORCING_CLASSES = (
+        coupledmodeldriver.configure.forcings.base.ADCIRCPY_FORCING_CLASSES
+    )
 
 
 class RunConfiguration(ABC):

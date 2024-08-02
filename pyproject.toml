@@ -23,9 +23,10 @@ enable = true
 
 [tool.poetry.dependencies]
 python = '>=3.8,<3.12'
-adcircpy = '>=1.2.5'
+adcircpy = { version = '>=1.3', optional = true }  # effectively disable until new version released
 dunamai = { version = '*', optional = true }
 file-read-backwards = '*'
+fiona = '*'  # improper upstream dependency setup
 nemspy = '>=1.0.4'
 numpy = '*'
 pyproj = '*'
@@ -47,6 +48,7 @@ sphinxcontrib-programoutput = { version = '*', optional = true }
 testing = ['pooch', 'pytest', 'pytest-cov', 'pytest-socket', 'pytest-xdist', 'wget']
 development = ['isort', 'oitnb']
 documentation = ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput']
+adcirc = ['adcircpy']
 
 [tool.poetry.scripts]
 initialize_adcirc = 'coupledmodeldriver.client.initialize_adcirc:main'
