@@ -30,6 +30,7 @@ fiona = '*'  # improper upstream dependency setup
 nemspy = '>=1.0.4'
 numpy = '*'
 pyproj = '*'
+stormevents = '>=2.3.2' # tests results based on speed fix
 typepigeon = '^1.0.3'
 isort = { version = '*', optional = true }
 oitnb = { version = '*', optional = true }
