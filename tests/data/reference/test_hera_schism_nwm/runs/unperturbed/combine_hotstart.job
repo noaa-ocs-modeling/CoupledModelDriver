@@ -11,5 +11,5 @@ set -e
 
 source ../../../../input/modulefiles/envmodules_intel.hera
 pushd outputs
-../../../../input/bin/combine_hotstart7 --iteration 626400
+../../../../input/bin/combine_hotstart7 --iteration 1152
 popd

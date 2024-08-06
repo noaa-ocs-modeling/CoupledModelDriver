@@ -1166,8 +1166,8 @@ def test_hera_schism_nwm():
     mesh = 'shinnecock_w_floodplain'
     schism_processors = 15 * platform.value['processors_per_node']
     modeled_start_time = datetime(2008, 8, 23)
-    modeled_duration = timedelta(days=14.5)
-    modeled_timestep = timedelta(seconds=2)
+    modeled_duration = timedelta(days=2)
+    modeled_timestep = timedelta(seconds=150)
     tidal_spinup_duration = None
     job_duration = timedelta(hours=6)
 
@@ -1199,6 +1199,7 @@ def test_hera_schism_nwm():
         overwrite=True,
         verbose=False,
     )
+    breakpoint()
     generate_schism_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
