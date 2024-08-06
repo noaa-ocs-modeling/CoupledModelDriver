@@ -1199,7 +1199,6 @@ def test_hera_schism_nwm():
         overwrite=True,
         verbose=False,
     )
-    breakpoint()
     generate_schism_configuration(output_directory, relative_paths=True, overwrite=True)
 
     check_reference_directory(
