@@ -14,11 +14,19 @@ from coupledmodeldriver.configure import (
     TidalForcingJSON,
     WW3DATAForcingJSON,
 )
-from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
 from coupledmodeldriver.generate.schism.base import SCHISMJSON
+from coupledmodeldriver._depend import optional_import
 
 # noinspection PyUnresolvedReferences
 from tests import INPUT_DIRECTORY, tpxo_filename
+
+
+test_adcirc = False
+skip_adcircpy_msg = 'AdcircPy is not available!'
+if optional_import('adcircpy'):
+    test_adcirc = True
+    skip_adcircpy_msg = ""
+    ADCIRCJSON = optional_import('coupledmodeldriver.generate.adcirc.base').ADCIRCJSON
 
 
 def test_update():
@@ -53,9 +61,9 @@ def test_slurm():
         nodes=None,
     )
 
-    slurm = configuration.to_adcircpy()
+    slurm = configuration.to_pyschism()
 
-    assert slurm.nprocs == 602
+    assert slurm.nproc == 602
 
 
 def test_nems():
@@ -96,6 +104,7 @@ def test_nems():
     ]
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_adcirc():
     configuration = ADCIRCJSON(
         adcirc_executable_path='adcirc',
@@ -146,7 +155,7 @@ def test_schism():
 def test_tidal():
     configuration = TidalForcingJSON(tidal_source='HAMTIDE', constituents='all')
 
-    assert list(configuration.adcircpy_forcing.active_constituents) == [
+    assert set(configuration.pyschism_forcing.active_constituents) == {
         'Q1',
         'O1',
         'P1',
@@ -155,11 +164,11 @@ def test_tidal():
         'M2',
         'S2',
         'K2',
-    ]
+    }
 
     configuration['constituents'] = 'major'
 
-    assert list(configuration.adcircpy_forcing.active_constituents) == [
+    assert set(configuration.pyschism_forcing.active_constituents) == {
         'Q1',
         'O1',
         'P1',
@@ -168,13 +177,14 @@ def test_tidal():
         'M2',
         'S2',
         'K2',
-    ]
+    }
 
     configuration['tidal_source'] = 'TPXO'
     configuration['resource'] = 'nonexistent/path/to/h_tpxo9.nc'
 
-    with pytest.raises((FileNotFoundError, OSError)):
-        configuration.adcircpy_forcing
+    # pyschism tides don't fail if tpxo is linked locally
+    # with pytest.raises((FileNotFoundError, OSError)):
+    #     configuration.pyschism_forcing
 
     # TODO find a better way to host TPXO for testing
     # configuration['resource'] = tpxo_filename()

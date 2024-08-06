@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from enum import IntEnum, Enum
@@ -6,16 +7,6 @@ from pathlib import Path
 import sys
 from typing import Any, Dict, List
 
-from adcircpy import Tides as ADCIRCPyTides
-from adcircpy.forcing.base import Forcing as ADCIRCPyForcing
-from adcircpy.forcing.tides import HAMTIDE as ADCIRCPyHAMTIDE
-from adcircpy.forcing.tides.tides import TidalSource as ADCIRCPyTidalSource
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing as ADCIRCPyWaveWatch3DataForcing
-from adcircpy.forcing.winds import BestTrackForcing as ADCIRCPyBestTrackForcing
-from adcircpy.forcing.winds.atmesh import (
-    AtmosphericMeshForcing as ADCIRCPyAtmosphericMeshForcing,
-)
-from adcircpy.forcing.winds.owi import OwiForcing as ADCIRCPyOwiForcing
 from nemspy.model import AtmosphericForcingEntry, WaveWatch3ForcingEntry
 from pandas import DataFrame
 from pyschism.mesh import Hgrid
@@ -37,16 +28,28 @@ from coupledmodeldriver.configure.base import (
 )
 from coupledmodeldriver.configure.models import Model
 from coupledmodeldriver.utilities import LOGGER
+from coupledmodeldriver._depend import requires_adcircpy, optional_import
 
-ADCIRCPY_FORCINGS = {
-    'Tides': 'TidalForcingJSON',
-    'AtmosphericMeshForcing': 'ATMESHForcingJSON',
-    'BestTrackForcing': 'BestTrackForcingJSON',
-    'OWIForcing': 'OWIForcingJSON',
-    'WaveWatch3DataForcing': 'WW3DATAForcingJSON',
-}
 
-ADCIRCPY_FORCING_CLASSES = (ADCIRCPyForcing, ADCIRCPyTides)
+adcircpy = optional_import('adcircpy')
+if adcircpy is not None:
+    ADCIRCPyTides = adcircpy.Tides
+    ADCIRCPyForcing = adcircpy.forcing.base.Forcing
+    ADCIRCPyHAMTIDE = adcircpy.forcing.tides.HAMTIDE
+    ADCIRCPyTidalSource = adcircpy.forcing.tides.tides.TidalSource
+    ADCIRCPyWaveWatch3DataForcing = adcircpy.forcing.waves.ww3.WaveWatch3DataForcing
+    ADCIRCPyBestTrackForcing = adcircpy.forcing.winds.BestTrackForcing
+    ADCIRCPyAtmosphericMeshForcing = adcircpy.forcing.winds.atmesh.AtmosphericMeshForcing
+    ADCIRCPyOwiForcing = adcircpy.forcing.winds.owi.OwiForcing
+    ADCIRCPY_FORCINGS = {
+        'Tides': 'TidalForcingJSON',
+        'AtmosphericMeshForcing': 'ATMESHForcingJSON',
+        'BestTrackForcing': 'BestTrackForcingJSON',
+        'OWIForcing': 'OWIForcingJSON',
+        'WaveWatch3DataForcing': 'WW3DATAForcingJSON',
+    }
+
+    ADCIRCPY_FORCING_CLASSES = (ADCIRCPyForcing, ADCIRCPyTides)
 
 PYSCHISM_FORCINGS = {
     'Tides': 'TidalForcingJSON',
@@ -64,15 +67,13 @@ class TidalSource(IntEnum):
 
 
 MODEL_TIDAL_SOURCE = {
-    TidalSource.TPXO: {
-        Model.ADCIRC: ADCIRCPyTidalSource.TPXO,
-        Model.SCHISM: PySCHISMTidalDatabase.TPXO,
-    },
-    TidalSource.HAMTIDE: {
-        Model.ADCIRC: ADCIRCPyTidalSource.HAMTIDE,
-        Model.SCHISM: PySCHISMTidalDatabase.HAMTIDE,
-    },
+    TidalSource.TPXO: {Model.SCHISM: PySCHISMTidalDatabase.TPXO,},
+    TidalSource.HAMTIDE: {Model.SCHISM: PySCHISMTidalDatabase.HAMTIDE,},
 }
+
+if adcircpy is not None:
+    MODEL_TIDAL_SOURCE[TidalSource.TPXO][Model.ADCIRC] = ADCIRCPyTidalSource.TPXO
+    MODEL_TIDAL_SOURCE[TidalSource.HAMTIDE][Model.ADCIRC] = ADCIRCPyTidalSource.HAMTIDE
 
 
 class ForcingJSON(ConfigurationJSON, ABC):
@@ -82,6 +83,7 @@ class ForcingJSON(ConfigurationJSON, ABC):
 
     @property
     @abstractmethod
+    @requires_adcircpy
     def adcircpy_forcing(self) -> ADCIRCPyForcing:
         """
         create an ADCIRCpy forcing object with values from this configuration
@@ -89,11 +91,13 @@ class ForcingJSON(ConfigurationJSON, ABC):
 
         raise NotImplementedError
 
+    @requires_adcircpy
     def to_adcircpy(self) -> ADCIRCPyForcing:
         return self.adcircpy_forcing
 
     @classmethod
     @abstractmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: ADCIRCPyForcing) -> 'ForcingJSON':
         """
         read configuration values from an ADCIRCpy forcing object
@@ -242,6 +246,7 @@ class TidalForcingJSON(FileGenForcingJSON):
         self['constituents'] = constituents
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> ADCIRCPyForcing:
         tides = ADCIRCPyTides(
             tidal_source=MODEL_TIDAL_SOURCE[self['tidal_source']][Model.ADCIRC],
@@ -273,6 +278,7 @@ class TidalForcingJSON(FileGenForcingJSON):
         return tides
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: ADCIRCPyTides) -> 'TidalForcingJSON':
         # TODO: workaround for this issue: https://github.com/JaimeCalzadaNOAA/adcircpy/pull/70#discussion_r607245713
         resource = forcing.tidal_dataset.path
@@ -437,13 +443,18 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         self.__dataframe = dataframe
 
         if self.__dataframe is not None:
-            forcing = self.adcircpy_forcing
+            # TODO: Find a better solution; for now adcircpy is optional
+            # but pyschism is not!
+            forcing = self.pyschism_forcing
             self['nhc_code'] = forcing.nhc_code
-            self['interval'] = forcing.interval
+            # for adcircpy
+            if hasattr(forcing, 'interval'):
+                self['interval'] = forcing.interval
             self['start_date'] = forcing.start_date
             self['end_date'] = forcing.end_date
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> ADCIRCPyBestTrackForcing:
         if self['fort22_filename'] is not None:
             forcing = ADCIRCPyBestTrackForcing.from_fort22(
@@ -497,6 +508,7 @@ class BestTrackForcingJSON(WindForcingJSON, AttributeJSON):
         return forcing
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: ADCIRCPyBestTrackForcing) -> 'BestTrackForcingJSON':
         return cls(
             nhc_code=forcing.nhc_code,
@@ -619,10 +631,12 @@ class OWIForcingJSON(WindForcingJSON, TimestepForcingJSON):
         TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> ADCIRCPyOwiForcing:
         return ADCIRCPyOwiForcing(interval_seconds=self['interval'] / timedelta(seconds=1))
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: ADCIRCPyOwiForcing) -> 'OWIForcingJSON':
         return cls(interval=timedelta(seconds=forcing.interval))
 
@@ -676,6 +690,7 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> ADCIRCPyForcing:
         return ADCIRCPyAtmosphericMeshForcing(
             filename=self['resource'],
@@ -684,6 +699,7 @@ class ATMESHForcingJSON(WindForcingJSON, FileForcingJSON, TimestepForcingJSON, N
         )
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: ADCIRCPyAtmosphericMeshForcing) -> 'ATMESHForcingJSON':
         return cls(resource=forcing.filename, nws=forcing.NWS, interval=forcing.interval)
 
@@ -765,12 +781,14 @@ class WW3DATAForcingJSON(WaveForcingJSON, FileForcingJSON, TimestepForcingJSON, 
         TimestepForcingJSON.__init__(self, interval=interval, **kwargs)
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> ADCIRCPyForcing:
         return ADCIRCPyWaveWatch3DataForcing(
             filename=self['resource'], nrs=self['nrs'], interval_seconds=self['interval'],
         )
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: ADCIRCPyWaveWatch3DataForcing) -> 'WW3DATAForcingJSON':
         return cls(resource=forcing.filename, nrs=forcing.NRS, interval=forcing.interval)
 
@@ -847,10 +865,12 @@ class NationalWaterModelFocringJSON(HydrologyForcingJSON, FileGenForcingJSON):
         FileGenForcingJSON.__init__(self, resource=resource, **kwargs)
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> None:
         raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: None) -> 'None':
         raise NotImplementedError('ADCIRC does NOT support NWM forcing!')
 
@@ -928,10 +948,12 @@ class SfluxFileForcingJSON(WindForcingJSON, FileForcingJSON):
         self['sflux_2_glob'] = sflux_2_glob
 
     @property
+    @requires_adcircpy
     def adcircpy_forcing(self) -> None:
         raise NotImplementedError('ADCIRC does NOT support Sflux forcing!')
 
     @classmethod
+    @requires_adcircpy
     def from_adcircpy(cls, forcing: None) -> 'None':
         raise NotImplementedError('ADCIRC does NOT support Sflux forcing!')
 

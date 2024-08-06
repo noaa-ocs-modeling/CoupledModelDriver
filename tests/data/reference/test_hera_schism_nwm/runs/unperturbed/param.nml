@@ -2,10 +2,10 @@
   ipre=0
   ibc=1
   ibtp=0
-  rnday=14.5
-  dt=2.0
-  nspool=1800
-  ihfskip=626400
+  rnday=2.0
+  dt=150.0
+  nspool=24
+  ihfskip=1152
 /
 
 &OPT
@@ -23,7 +23,7 @@
 
 &SCHOUT
   nhot=1
-  nhot_write=626400
+  nhot_write=1152
   iof_hydro(1)=1
   iof_hydro(16)=1
 /

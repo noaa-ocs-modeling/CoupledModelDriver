@@ -7,22 +7,20 @@ from typing import Any, Dict, Iterable, Mapping
 
 from typepigeon import convert_value
 
-from coupledmodeldriver.configure import ModelJSON
-from coupledmodeldriver.generate.adcirc.base import ADCIRCJSON
-from coupledmodeldriver.generate.adcirc.check import (
-    check_adcirc_completion,
-    CompletionStatus,
-    is_adcirc_run_directory,
-)
-from coupledmodeldriver.generate.schism.base import SCHISMJSON
+from coupledmodeldriver.configure import Model
 from coupledmodeldriver.generate.schism.check import (
     check_schism_completion,
     CompletionStatus,
     is_schism_run_directory,
 )
 from coupledmodeldriver.utilities import ProcessPoolExecutorStackTraced
+from coupledmodeldriver._depend import optional_import
 
-MODELS = {model.name.lower(): model for model in ModelJSON.__subclasses__()}
+
+if (adcirc_check := optional_import('coupledmodeldriver.generate.adcirc.check')) is not None:
+    check_adcirc_completion = adcirc_check.check_adcirc_completion
+    CompletionStatus = adcirc_check.CompletionStatus
+    is_adcirc_run_directory = adcirc_check.is_adcirc_run_directory
 
 
 def parse_check_completion_arguments():
@@ -33,7 +31,9 @@ def parse_check_completion_arguments():
         default=Path.cwd(),
         help='directory containing model run configuration',
     )
-    argument_parser.add_argument('--model', help='model that is running, one of: `ADCIRC`')
+    argument_parser.add_argument(
+        '--model', help='model that is running, one of: `ADCIRC`, `SCHISM`'
+    )
     argument_parser.add_argument(
         '--verbose', action='store_true', help='list all errors and problems with runs'
     )
@@ -42,7 +42,7 @@ def parse_check_completion_arguments():
 
     model = arguments.model
     if model is not None:
-        model = MODELS[model.lower()]
+        model = Model[model.upper()]
 
     directory = convert_value(arguments.directory, [Path])
     if len(directory) == 1:
@@ -55,18 +55,18 @@ def parse_check_completion_arguments():
     }
 
 
-def is_model_directory(directory: PathLike, model: ModelJSON = None) -> bool:
+def is_model_directory(directory: PathLike, model: Model = None) -> bool:
     if directory is None:
         directory = Path.cwd()
     elif not isinstance(directory, Path):
         directory = Path(directory)
 
     if model is None:
-        model = ADCIRCJSON
+        model = Model.SCHISM
 
-    if model == ADCIRCJSON:
+    if model == Model.ADCIRC:
         is_model_directory = is_adcirc_run_directory(directory)
-    elif model == SCHISMJSON:
+    elif model == Model.SCHISM:
         is_model_directory = is_schism_run_directory(directory)
     else:
         raise NotImplementedError(f'model "{model}" not implemented')
@@ -75,7 +75,7 @@ def is_model_directory(directory: PathLike, model: ModelJSON = None) -> bool:
 
 
 def check_model_directory(
-    directory: PathLike, verbose: bool = False, model: ModelJSON = None
+    directory: PathLike, verbose: bool = False, model: Model = None
 ) -> Dict[str, Any]:
     if directory is None:
         directory = Path.cwd()
@@ -83,25 +83,25 @@ def check_model_directory(
         directory = Path(directory)
 
     if model is None:
-        model = ADCIRCJSON
+        model = Model.SCHISM
 
-    if model == ADCIRCJSON:
+    if model == Model.ADCIRC:
         return check_adcirc_completion(directory, verbose=verbose)
-    elif model == SCHISMJSON:
+    elif model == Model.SCHISM:
         return check_schism_completion(directory, verbose=verbose)
     else:
         raise NotImplementedError(f'model "{model}" not implemented')
 
 
 def check_completion(
-    directory: PathLike = None, verbose: bool = False, model: ModelJSON = None
+    directory: PathLike = None, verbose: bool = False, model: Model = None
 ) -> Dict[str, Any]:
     """
     check the completion status of a running model
 
     :param directory: directory containing model run configuration
     :param verbose: list all errors and problems with runs
-    :param model: model that is running, one of: ``ADCIRC``
+    :param model: model that is running, one of: ``ADCIRC``, ``SCHISM``
     :return: JSON output of completion status
     """
 
@@ -123,8 +123,7 @@ def check_completion(
                 completion_status.update(subdirectory_completion_status)
     elif isinstance(directory, Path):
         if model is None:
-            # model = ADCIRCJSON
-            for model_type in MODELS.values():
+            for model_type in Model.values():
                 if not is_model_directory(directory, model=model_type):
                     continue
                 model = model_type

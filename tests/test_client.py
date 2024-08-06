@@ -4,34 +4,45 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from coupledmodeldriver.client.initialize_adcirc import parse_initialize_adcirc_arguments
+import pytest
+
 from coupledmodeldriver.client.initialize_schism import parse_initialize_schism_arguments
 from coupledmodeldriver.platforms import Platform
+from coupledmodeldriver._depend import optional_import
 
 # noinspection PyUnresolvedReferences
 from tests import INPUT_DIRECTORY
 
 
-ADCIRC_ARGUMENT_TYPES = {
-    'platform': Platform,
-    'mesh_directory': Path,
-    'modeled_start_time': datetime,
-    'modeled_duration': timedelta,
-    'modeled_timestep': timedelta,
-    'nems_interval': (timedelta, type(None)),
-    'tidal_spinup_duration': (timedelta, type(None)),
-    'modulefile': (Path, type(None)),
-    'forcings': list,
-    'adcirc_executable': Path,
-    'adcprep_executable': Path,
-    'aswip_executable': Path,
-    'adcirc_processors': int,
-    'job_duration': timedelta,
-    'output_directory': Path,
-    'absolute_paths': bool,
-    'overwrite': bool,
-    'verbose': bool,
-}
+test_adcirc = False
+skip_adcircpy_msg = 'AdcircPy is not available!'
+if optional_import('adcircpy'):
+    test_adcirc = True
+    skip_adcircpy_msg = ""
+    init_adcirc = optional_import('coupledmodeldriver.client.initialize_adcirc')
+    parse_initialize_adcirc_arguments = init_adcirc.parse_initialize_adcirc_arguments
+
+    ADCIRC_ARGUMENT_TYPES = {
+        'platform': Platform,
+        'mesh_directory': Path,
+        'modeled_start_time': datetime,
+        'modeled_duration': timedelta,
+        'modeled_timestep': timedelta,
+        'nems_interval': (timedelta, type(None)),
+        'tidal_spinup_duration': (timedelta, type(None)),
+        'modulefile': (Path, type(None)),
+        'forcings': list,
+        'adcirc_executable': Path,
+        'adcprep_executable': Path,
+        'aswip_executable': Path,
+        'adcirc_processors': int,
+        'job_duration': timedelta,
+        'output_directory': Path,
+        'absolute_paths': bool,
+        'overwrite': bool,
+        'verbose': bool,
+    }
+
 SCHISM_ARGUMENT_TYPES = {
     'platform': Platform,
     'mesh_directory': Path,
@@ -62,6 +73,7 @@ def cli_test_helper(parse_func, *test_args):
         return parse_func()
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_initialize_adcirc_noargs(capsys):
     try:
         cli_test_helper(parse_initialize_adcirc_arguments)
@@ -83,6 +95,7 @@ def test_initialize_adcirc_noargs(capsys):
         )
 
 
+@pytest.mark.skipif(not test_adcirc, reason=skip_adcircpy_msg)
 def test_initialize_adcirc_requied_args():
     results = cli_test_helper(
         parse_initialize_adcirc_arguments,
